@@ -1,0 +1,106 @@
+{
+  "all_cells_classified": true,
+  "authority_row_count": 2622,
+  "cell_count": 2162,
+  "cells_without_effective_date_count": 2162,
+  "conflict_count": 152,
+  "conflict_counts": {
+    "GLOBAL_SOURCE_SNAPSHOT_HASH_CONFLICT": 105,
+    "JURISDICTION_NORMALIZED_NAME": 5,
+    "SOURCE_SNAPSHOT_HASH": 42
+  },
+  "inputs": {
+    "decision_cell_index_sha256": "7a0529f78a863e3c848adc73111f5afa85f2b6d832b060ecbf38f0ab3da23e83",
+    "decision_cell_package_sha256": "4f634d87bd7e8bf25b44a3530caa4aa3d057f20ec5f1549bd2cecf87aa6e3078",
+    "frozen_corpus_sha256": "cffcbde6c64b14ac5a55aa6e85f0c3fba27e9d97d4e642646793425eb91c803c",
+    "generator_sha256": "94a2cab3f43f8838a888c019b7bacbc87549f94002741e7a77c90a037bc95136",
+    "permit_rule_engine_sha256": "03407c091171dd87327edfe19ca8db29af71a5a166d89edd74c5a1e26fe0ad0d",
+    "v24_manifest_sha256": "f3b9fccd6d8fdf04539ac8f79631c226d85cc5ee052186f7596803a6dfd2ad58"
+  },
+  "inspected_base_sha": "facea233ac4f821304288f14137e472e92a6fcfc",
+  "jurisdiction_row_count": 2162,
+  "legacy_tier1_complete_count": 2128,
+  "portable_request_validation_failure_count": 0,
+  "replay": {
+    "byte_parity_case_count": 12,
+    "corpus_case_count": 12,
+    "customer_payload_mutation_count": 0,
+    "divergence_counts": {
+      "AHJ_BOUNDARY_MISMATCH": 2,
+      "APPLY_ROUTE_MISMATCH": 1,
+      "AUTHORITATIVE_CELL_NOT_INJECTED": 2,
+      "AUTHORITY_MISMATCH": 1,
+      "COMPANION_CLOSURE_INCOMPLETE": 6,
+      "COVERAGE_ONLY": 1,
+      "DECISION_MISMATCH": 1,
+      "FAIL_CLOSED_VS_LEGACY_BINARY": 2,
+      "FAMILY_EXTRA_IN_LEGACY": 1,
+      "FAMILY_MISSING_IN_LEGACY": 6,
+      "FAMILY_VERDICT_MISMATCH": 5,
+      "LEGACY_PROVENANCE_GAP": 2,
+      "MATCH": 1,
+      "MODEL_OR_GENERIC_FALLBACK_GUESS": 2,
+      "POST_RECONCILIATION_MUTATION": 1,
+      "PROJECT_FAMILY_NOT_COVERED": 1,
+      "PUBLIC_RENDER_DIVERGENCE": 1,
+      "RULE_OR_EXEMPTION_MISSING": 5,
+      "SCOPE_TAXONOMY_UNSUPPORTED": 1
+    },
+    "flag_off_case_count": 12,
+    "flag_off_envelope_count": 0,
+    "locked_taxonomy_class_count": 10,
+    "locked_taxonomy_counts": {
+      "AHJ_BOUNDARY_MISMATCH": 2,
+      "AUTHORITATIVE_CELL_NOT_INJECTED": 2,
+      "COMPANION_CLOSURE_INCOMPLETE": 6,
+      "MODEL_OR_GENERIC_FALLBACK_GUESS": 2,
+      "POST_RECONCILIATION_MUTATION": 1,
+      "PROJECT_FAMILY_NOT_COVERED": 1,
+      "PUBLIC_RENDER_DIVERGENCE": 1,
+      "RULE_OR_EXEMPTION_MISSING": 5,
+      "SCOPE_TAXONOMY_UNSUPPORTED": 1,
+      "STALE_OR_CONFLICTING_RULE": 0
+    },
+    "shadow_envelope_count": 12,
+    "shadow_envelope_coverage_percent": 100.0
+  },
+  "schema_version": "permitassist.rule-engine-part1-evidence.v1",
+  "source_completeness_counts": {
+    "FAIL_CLOSED": 34,
+    "TIER1_COMPLETE": 2128
+  },
+  "source_status_counts": {
+    "FAIL_CLOSED": 34,
+    "PUBLISHABLE": 2128
+  },
+  "source_urls_without_effective_date_count": 2533,
+  "strict_classification_by_family": {
+    "commercial_tenant_improvement": {
+      "EXACT_PARTIAL": 1937,
+      "FAIL_CLOSED": 1
+    },
+    "reroof": {
+      "EXACT_COMPLETE": 24,
+      "FAIL_CLOSED": 1
+    },
+    "residential_remodel": {
+      "EXACT_COMPLETE": 12,
+      "EXACT_PARTIAL": 155,
+      "FAIL_CLOSED": 32
+    }
+  },
+  "strict_classification_counts": {
+    "EXACT_COMPLETE": 36,
+    "EXACT_PARTIAL": 2092,
+    "FAIL_CLOSED": 34
+  },
+  "strict_exact_complete_count": 36,
+  "strict_partial_or_fail_closed_count": 2126,
+  "unique_source_url_count": 2533,
+  "versions": {
+    "decision_envelope": "permitassist.decision-envelope.v1",
+    "divergence_taxonomy": "permitassist.divergence-taxonomy.v1",
+    "rule_engine_schema": "permitassist.rule-engine.v1",
+    "shadow_adapter": "permitassist.rule-engine-shadow-adapter.v1"
+  }
+}

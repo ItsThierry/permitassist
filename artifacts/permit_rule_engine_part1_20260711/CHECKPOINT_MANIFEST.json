@@ -1,0 +1,149 @@
+{
+  "baseline": {
+    "failures": 18,
+    "new_failures": 0
+  },
+  "branch": "work/permit-rule-engine-part1-20260711",
+  "cell_count": 2162,
+  "checkpoint_tag": "permit-rule-engine-part1-20260712",
+  "files": {
+    "api/permit_rule_engine.py": {
+      "bytes": 43163,
+      "sha256": "03407c091171dd87327edfe19ca8db29af71a5a166d89edd74c5a1e26fe0ad0d"
+    },
+    "api/research_engine.py": {
+      "bytes": 530380,
+      "sha256": "d82361e6615517a1846c2c46342576a3bf987c1731489275bc3afdf2f5ffe50a"
+    },
+    "artifacts/permit_rule_engine_part1_20260711/PART2_HANDOFF.md": {
+      "bytes": 5696,
+      "sha256": "fe1c9083e9813ec9db20b40d7ab7cc51490ea2e281f34dfd5e494a3d36765a11"
+    },
+    "artifacts/permit_rule_engine_part1_20260711/SCHEMA_INVARIANTS.md": {
+      "bytes": 4857,
+      "sha256": "aed1a4deba2546461f8ff5cab80538bb71374601397f8741f72fd1106d20cc85"
+    },
+    "artifacts/permit_rule_engine_part1_20260711/baseline_failure_comparison.json": {
+      "bytes": 5102,
+      "sha256": "83de4b90a59d971c0052d8a7380de861905982100d37ee4a349cf4d9007b6f1e"
+    },
+    "artifacts/permit_rule_engine_part1_20260711/baseline_failure_set_replay.txt": {
+      "bytes": 38587,
+      "sha256": "63b41825be95ab48a570605db87897118f6d4c5fd0b6394aa259feca04b8bcf1"
+    },
+    "artifacts/permit_rule_engine_part1_20260711/compile_final.txt": {
+      "bytes": 40,
+      "sha256": "5e6d4ebd157d56117b6e6cd6a329df47a5c545f5859ea523359ac1247106790b"
+    },
+    "artifacts/permit_rule_engine_part1_20260711/final_review_diff.patch": {
+      "bytes": 101345,
+      "sha256": "2965a222952e175fa6a52b8f8588630c53cb025e509daef60ac22bcd2d1d977f"
+    },
+    "artifacts/permit_rule_engine_part1_20260711/focused_pytest_final.txt": {
+      "bytes": 99,
+      "sha256": "1cf6139bed144f380a6fd570daefd6c7184985c45ca0c57761d25185179cdb58"
+    },
+    "artifacts/permit_rule_engine_part1_20260711/generated/README.md": {
+      "bytes": 1221,
+      "sha256": "e86ea372bbace32131a04ea30012561b84efef3dd726a14ae07f194108efc2f0"
+    },
+    "artifacts/permit_rule_engine_part1_20260711/generated/authority_census.csv": {
+      "bytes": 594103,
+      "sha256": "36beff8ab685936b4800e8541e4a1a820f95df4152656f2ce54359d607f9a821"
+    },
+    "artifacts/permit_rule_engine_part1_20260711/generated/cell_census.jsonl": {
+      "bytes": 2688561,
+      "sha256": "2645b422a14cda886ad009aadb5cc0effd94bb5db101e310129ce76afd9028b5"
+    },
+    "artifacts/permit_rule_engine_part1_20260711/generated/divergence_ledger.jsonl": {
+      "bytes": 12649,
+      "sha256": "fec7fca2e6bcebf3428d9acea9ad2ad1a98bdc90d50ff9672bb93508f8189f50"
+    },
+    "artifacts/permit_rule_engine_part1_20260711/generated/evidence_effective_date_conflicts.json": {
+      "bytes": 84171,
+      "sha256": "9b15a7e190e89f5dca25c985e0eb700f2fa3d6403d395b44b8d8f8b7ba245f5a"
+    },
+    "artifacts/permit_rule_engine_part1_20260711/generated/family_depth_census.csv": {
+      "bytes": 995,
+      "sha256": "f478df81334ea45d94ce7839383f110c1039cf08915feb63d20d0c42546a0f65"
+    },
+    "artifacts/permit_rule_engine_part1_20260711/generated/frozen_replay_envelopes.jsonl": {
+      "bytes": 110236,
+      "sha256": "7b44015243752df8a05f59111ccf01904a680e089e8d73661ab08db7cbbfdad1"
+    },
+    "artifacts/permit_rule_engine_part1_20260711/generated/jurisdiction_census.csv": {
+      "bytes": 194141,
+      "sha256": "fc2ca0bc8009e5212942d10b021f58514e3bb667fb0b989d9207ab531cd9f749"
+    },
+    "artifacts/permit_rule_engine_part1_20260711/generated/manifest.json": {
+      "bytes": 1277,
+      "sha256": "d2990cd03e5d9b4cb10ca9a5513eec444db940bc21eb59d26c6665d001271bac"
+    },
+    "artifacts/permit_rule_engine_part1_20260711/generated/summary.json": {
+      "bytes": 3058,
+      "sha256": "4cb771c33174bbae56a555f1477e8e8d9d1e36934d763c715d7039db729831d6"
+    },
+    "artifacts/permit_rule_engine_part1_20260711/generation_determinism.json": {
+      "bytes": 2068,
+      "sha256": "020e7eb97a915b042389cf97b325c2fd738f466cf8ddbd1326ffe5ec943c2a36"
+    },
+    "artifacts/permit_rule_engine_part1_20260711/git_diff_check_final.txt": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "artifacts/permit_rule_engine_part1_20260711/pyright_final.txt": {
+      "bytes": 37,
+      "sha256": "6d88a1b220adb7a3d62092b6e38431f0b3fe8babe9864fab90e5849766260332"
+    },
+    "artifacts/permit_rule_engine_part1_20260711/python39_import_gate.txt": {
+      "bytes": 36,
+      "sha256": "e4a8cd1afdd43a10a527e7be5cb0ff765750ef9929837a02104afce94c00d1be"
+    },
+    "artifacts/permit_rule_engine_part1_20260711/python39_research_import_gate.txt": {
+      "bytes": 282,
+      "sha256": "399efbcb1bf9ff6e45ddc2cd198f622e04f3f155ef2501e1e5255685749274b1"
+    },
+    "artifacts/permit_rule_engine_part1_20260711/ruff_final.txt": {
+      "bytes": 19,
+      "sha256": "82b3e6a6c090a57601d22943bd23fca9218d1031dbe5a7b754092f9a156b4f18"
+    },
+    "artifacts/permit_rule_engine_part1_20260711/secret_scan_detect_secrets.json": {
+      "bytes": 24816,
+      "sha256": "64566b9763254c1e86a8310b926ae43ed8d1d2d7d08f37777fbf9e11a156df4f"
+    },
+    "artifacts/permit_rule_engine_part1_20260711/secret_scan_disposition.json": {
+      "bytes": 17285,
+      "sha256": "822b653c4a8ca94a349427e1bb39289d12d7d12a5848d568dae7f10fa6799187"
+    },
+    "artifacts/permit_rule_engine_part1_20260711/tests_suite_latest.txt": {
+      "bytes": 39615,
+      "sha256": "3d66619dc5f62d9f69cf349f929557b70812ecec2344a4a36dc1042f7bd6656a"
+    },
+    "scripts/generate_permit_rule_engine_part1_evidence.py": {
+      "bytes": 26268,
+      "sha256": "94a2cab3f43f8838a888c019b7bacbc87549f94002741e7a77c90a037bc95136"
+    },
+    "tests/fixtures/permit_rule_engine_part1_frozen_corpus.json": {
+      "bytes": 6281,
+      "sha256": "cffcbde6c64b14ac5a55aa6e85f0c3fba27e9d97d4e642646793425eb91c803c"
+    },
+    "tests/test_permit_rule_engine_part1.py": {
+      "bytes": 18623,
+      "sha256": "3211f48c8c72cde5e576d7d495f4c6167b4c6967872616d25f5987ab18663ab6"
+    }
+  },
+  "final_opus_required_verdict": "APPROVE_PART1_CHECKPOINT",
+  "final_opus_review_path": "artifacts/permit_rule_engine_part1_20260711/final_opus_review.txt",
+  "inspected_base_sha": "facea233ac4f821304288f14137e472e92a6fcfc",
+  "replay": {
+    "byte_parity": 12,
+    "cases": 12,
+    "mutations": 0
+  },
+  "schema_version": "permitassist.part1-checkpoint-manifest.v1",
+  "strict_classification_counts": {
+    "EXACT_COMPLETE": 36,
+    "EXACT_PARTIAL": 2092,
+    "FAIL_CLOSED": 34
+  }
+}

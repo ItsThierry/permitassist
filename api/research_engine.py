@@ -86,6 +86,17 @@ except ImportError:  # server.py imports research_engine as a top-level module
     )
 
 try:
+    from .permit_rule_engine import (
+        observe_permit_rule_engine_shadow,
+        prepare_permit_rule_engine_shadow,
+    )
+except ImportError:  # server.py imports research_engine as a top-level module
+    from permit_rule_engine import (
+        observe_permit_rule_engine_shadow,
+        prepare_permit_rule_engine_shadow,
+    )
+
+try:
     from .filing_packet_reconciler import (
         CACHE_SCHEMA_VERSION as FILING_PACKET_CACHE_SCHEMA_VERSION,
         FILING_PACKET_RECONCILER_VERSION,
@@ -8967,6 +8978,15 @@ def research_permit(job_type: str, city: str, state: str, zip_code: str = "", us
     scope_contract = build_scope_contract(job_type, city, state, job_category=requested_job_category or None)
     inferred_job_category = str(scope_contract.get("category") or "").lower().strip()
     job_category = inferred_job_category if inferred_job_category in ("residential", "commercial") else (requested_job_category or "residential")
+    try:
+        # Part 1 shadowing is independent of PERMITASSIST_V24_MODE.  The
+        # resulting envelope is observation-only and is never merged into this
+        # function's result or cache payload.
+        rule_engine_shadow_envelope = prepare_permit_rule_engine_shadow(
+            job_type, city, state, job_category
+        )
+    except Exception:
+        rule_engine_shadow_envelope = None
     key = cache_key(job_type, city, state, job_category)
     v231_resolution = resolve_v231_cell(city, state, job_type, job_category)
     v24_resolution = resolve_v24_cell(city, state, job_type, job_category)
@@ -9041,7 +9061,21 @@ def research_permit(job_type: str, city: str, state: str, zip_code: str = "", us
             sanitize_non_food_office_breakroom_text(cached, job_type)
             reconcile_v231_result(cached, v231_resolution)
             reconcile_authoritative_result(cached, v24_resolution=v24_resolution, v231_resolution=v231_resolution)
+            rule_engine_authoritative_result = None
+            if rule_engine_shadow_envelope is not None:
+                try:
+                    rule_engine_authoritative_result = deepcopy(cached)
+                except Exception:
+                    pass
             cached.update(ensure_required_filing_rows(cached, job_type, city, state))
+            try:
+                observe_permit_rule_engine_shadow(
+                    rule_engine_shadow_envelope,
+                    cached,
+                    authoritative_result=rule_engine_authoritative_result,
+                )
+            except Exception:
+                pass
             return cached
 
     # ── Check auto-verified data first ──
@@ -10022,10 +10056,24 @@ Return ONLY the JSON object."""
     sanitize_non_food_office_breakroom_text(result, job_type)
     reconcile_v231_result(result, v231_resolution)
     reconcile_authoritative_result(result, v24_resolution=v24_resolution, v231_resolution=v231_resolution)
+    rule_engine_authoritative_result = None
+    if rule_engine_shadow_envelope is not None:
+        try:
+            rule_engine_authoritative_result = deepcopy(result)
+        except Exception:
+            pass
     result.update(ensure_required_filing_rows(result, job_type, city, state))
 
     if not suppress_cache_write:
         save_cache(key, job_type, job_category, city, state, zip_code, result)
+    try:
+        observe_permit_rule_engine_shadow(
+            rule_engine_shadow_envelope,
+            result,
+            authoritative_result=rule_engine_authoritative_result,
+        )
+    except Exception:
+        pass
     return result
 
 

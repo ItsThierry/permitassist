@@ -1,0 +1,10 @@
+Downloading pydantic-core (2.0MiB)
+Downloading pillow (6.3MiB)
+Downloading cryptography (4.5MiB)
+Downloading pdfminer-six (5.4MiB)
+ Downloaded pydantic-core
+ Downloaded cryptography
+ Downloaded pdfminer-six
+ Downloaded pillow
+Installed 29 packages in 41ms
+research_engine_import_ok

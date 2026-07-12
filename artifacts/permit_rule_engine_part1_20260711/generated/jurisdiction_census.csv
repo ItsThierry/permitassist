@@ -1,0 +1,2163 @@
+state,jurisdiction_id,ahj,cell_count,project_families,strict_classifications,source_statuses
+AK,us-ak-anchorage,Anchorage,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+AK,us-ak-angoon,Angoon,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+AK,us-ak-bethel,Bethel,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+AK,us-ak-bristol_bay_borough,Bristol Bay Borough,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+AK,us-ak-coffman_cove,Coffman Cove,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+AK,us-ak-denali_borough,Denali Borough,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+AK,us-ak-dillingham,Dillingham,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+AK,us-ak-fairbanks_city,Fairbanks City,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+AK,us-ak-fairbanks_north_star_borough,Fairbanks North Star Borough,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+AK,us-ak-haines_borough,Haines Borough,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+AK,us-ak-homer,Homer,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+AK,us-ak-juneau,Juneau,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+AK,us-ak-kake,Kake,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+AK,us-ak-kenai,Kenai,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+AK,us-ak-kenai_peninsula_borough,Kenai Peninsula Borough,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+AK,us-ak-ketchikan_city,Ketchikan City,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+AK,us-ak-ketchikan_gateway_borough,Ketchikan Gateway Borough,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+AK,us-ak-kodiak_city,Kodiak City,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+AK,us-ak-kodiak_island_borough,Kodiak Island Borough,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+AK,us-ak-kotzebue,Kotzebue,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+AK,us-ak-lake_and_peninsula_borough,Lake And Peninsula Borough,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+AK,us-ak-matanuska_susitna_borough,Matanuska Susitna Borough,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+AK,us-ak-north_slope_borough,North Slope Borough,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+AK,us-ak-northwest_arctic_borough,Northwest Arctic Borough,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+AK,us-ak-palmer,Palmer,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+AK,us-ak-pelican,Pelican,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+AK,us-ak-petersburg_borough,Petersburg Borough,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+AK,us-ak-sitka,Sitka,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+AK,us-ak-soldotna,Soldotna,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+AK,us-ak-unalaska,Unalaska,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+AK,us-ak-wasilla,Wasilla,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+AK,us-ak-yakutat,Yakutat,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+AL,us-al-alabaster,Alabaster,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+AL,us-al-albertville,Albertville,1,residential_remodel,EXACT_COMPLETE,PUBLISHABLE
+AL,us-al-andalusia,Andalusia,1,residential_remodel,EXACT_COMPLETE,PUBLISHABLE
+AL,us-al-anniston,Anniston,1,residential_remodel,EXACT_COMPLETE,PUBLISHABLE
+AL,us-al-auburn,Auburn,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+AL,us-al-baldwin_county,Baldwin County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+AL,us-al-bessemer,Bessemer,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+AL,us-al-birmingham,Birmingham,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+AL,us-al-boaz,Boaz,1,residential_remodel,EXACT_PARTIAL,PUBLISHABLE
+AL,us-al-daphne,Daphne,1,residential_remodel,EXACT_PARTIAL,PUBLISHABLE
+AL,us-al-decatur,Decatur,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+AL,us-al-dothan,Dothan,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+AL,us-al-enterprise,Enterprise,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+AL,us-al-fairhope,Fairhope,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+AL,us-al-florence,Florence,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+AL,us-al-fultondale,Fultondale,1,residential_remodel,EXACT_PARTIAL,PUBLISHABLE
+AL,us-al-gadsden,Gadsden,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+AL,us-al-gardendale,Gardendale,1,residential_remodel,EXACT_PARTIAL,PUBLISHABLE
+AL,us-al-gulf_shores,Gulf Shores,1,residential_remodel,EXACT_PARTIAL,PUBLISHABLE
+AL,us-al-hartselle,Hartselle,1,residential_remodel,EXACT_PARTIAL,PUBLISHABLE
+AL,us-al-homewood,Homewood,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+AL,us-al-hoover,Hoover,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+AL,us-al-houston_county,Houston County,1,residential_remodel,EXACT_PARTIAL,PUBLISHABLE
+AL,us-al-huntsville,Huntsville,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+AL,us-al-jefferson_county,Jefferson County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+AL,us-al-lee_county,Lee County,1,residential_remodel,EXACT_COMPLETE,PUBLISHABLE
+AL,us-al-madison,Madison,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+AL,us-al-madison_county,Madison County,1,residential_remodel,EXACT_COMPLETE,PUBLISHABLE
+AL,us-al-mobile,Mobile,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+AL,us-al-mobile_county,Mobile County,1,residential_remodel,EXACT_PARTIAL,PUBLISHABLE
+AL,us-al-montgomery,Montgomery,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+AL,us-al-montgomery_county,Montgomery County,1,residential_remodel,EXACT_PARTIAL,PUBLISHABLE
+AL,us-al-mountain_brook,Mountain Brook,1,residential_remodel,EXACT_PARTIAL,PUBLISHABLE
+AL,us-al-northport,Northport,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+AL,us-al-oneonta,Oneonta,1,residential_remodel,EXACT_PARTIAL,PUBLISHABLE
+AL,us-al-opelika,Opelika,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+AL,us-al-oxford,Oxford,1,residential_remodel,EXACT_PARTIAL,PUBLISHABLE
+AL,us-al-pelham,Pelham,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+AL,us-al-phenix_city,Phenix City,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+AL,us-al-prattville,Prattville,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+AL,us-al-scottsboro,Scottsboro,1,residential_remodel,EXACT_PARTIAL,PUBLISHABLE
+AL,us-al-selma,Selma,1,residential_remodel,EXACT_PARTIAL,PUBLISHABLE
+AL,us-al-shelby_county,Shelby County,1,residential_remodel,EXACT_PARTIAL,PUBLISHABLE
+AL,us-al-talladega,Talladega,1,residential_remodel,EXACT_PARTIAL,PUBLISHABLE
+AL,us-al-troy,Troy,1,residential_remodel,EXACT_PARTIAL,PUBLISHABLE
+AL,us-al-trussville,Trussville,1,residential_remodel,EXACT_PARTIAL,PUBLISHABLE
+AL,us-al-tuscaloosa,Tuscaloosa,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+AL,us-al-vestavia_hills,Vestavia Hills,1,residential_remodel,EXACT_PARTIAL,PUBLISHABLE
+AL,us-al-wetumpka,Wetumpka,1,residential_remodel,EXACT_PARTIAL,PUBLISHABLE
+AR,us-ar-arkadelphia,Arkadelphia,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+AR,us-ar-batesville,Batesville,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+AR,us-ar-bella_vista,Bella Vista,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+AR,us-ar-benton,Benton,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+AR,us-ar-bentonville,Bentonville,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+AR,us-ar-blytheville,Blytheville,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+AR,us-ar-bryant,Bryant,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+AR,us-ar-camden,Camden,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+AR,us-ar-centerton,Centerton,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+AR,us-ar-clarksville,Clarksville,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+AR,us-ar-conway,Conway,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+AR,us-ar-farmington,Farmington,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+AR,us-ar-fayetteville,Fayetteville,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+AR,us-ar-fort_smith,Fort Smith,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+AR,us-ar-garfield,Garfield,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+AR,us-ar-harrison,Harrison,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+AR,us-ar-highfill,Highfill,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+AR,us-ar-hope,Hope,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+AR,us-ar-hot_springs,Hot Springs,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+AR,us-ar-hot_springs_village,Hot Springs Village,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+AR,us-ar-huntsville,Huntsville,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+AR,us-ar-jacksonville,Jacksonville,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+AR,us-ar-jonesboro,Jonesboro,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+AR,us-ar-kensett,Kensett,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+AR,us-ar-little_rock,Little Rock,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+AR,us-ar-malvern,Malvern,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+AR,us-ar-marion,Marion,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+AR,us-ar-maumelle,Maumelle,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+AR,us-ar-newport,Newport,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+AR,us-ar-north_little_rock,North Little Rock,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+AR,us-ar-paragould,Paragould,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+AR,us-ar-pea_ridge,Pea Ridge,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+AR,us-ar-pine_bluff,Pine Bluff,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+AR,us-ar-pocahontas,Pocahontas,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+AR,us-ar-rogers,Rogers,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+AR,us-ar-russellville,Russellville,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+AR,us-ar-searcy,Searcy,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+AR,us-ar-sherwood,Sherwood,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+AR,us-ar-siloam_springs,Siloam Springs,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+AR,us-ar-springdale,Springdale,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+AR,us-ar-texarkana,Texarkana,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+AR,us-ar-west_memphis,West Memphis,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+AR,us-ar-wynne,Wynne,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+AZ,us-az-apache_junction,Apache Junction,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+AZ,us-az-avondale,Avondale,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+AZ,us-az-buckeye,Buckeye,1,reroof,EXACT_COMPLETE,PUBLISHABLE
+AZ,us-az-bullhead_city,Bullhead City,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+AZ,us-az-casa_grande,Casa Grande,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+AZ,us-az-chandler,Chandler,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+AZ,us-az-cochise_county,Cochise County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+AZ,us-az-coconino_county,Coconino County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+AZ,us-az-douglas,Douglas,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+AZ,us-az-el_mirage,El Mirage,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+AZ,us-az-eloy,Eloy,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+AZ,us-az-flagstaff,Flagstaff,1,reroof,EXACT_COMPLETE,PUBLISHABLE
+AZ,us-az-florence,Florence,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+AZ,us-az-fountain_hills,Fountain Hills,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+AZ,us-az-gilbert,Gilbert,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+AZ,us-az-glendale,Glendale,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+AZ,us-az-goodyear,Goodyear,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+AZ,us-az-kingman,Kingman,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+AZ,us-az-lake_havasu_city,Lake Havasu City,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+AZ,us-az-marana,Marana,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+AZ,us-az-maricopa_city,Maricopa City,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+AZ,us-az-maricopa_county,Maricopa County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+AZ,us-az-mesa,Mesa,1,residential_remodel,EXACT_PARTIAL,PUBLISHABLE
+AZ,us-az-mohave_county,Mohave County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+AZ,us-az-nogales,Nogales,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+AZ,us-az-oro_valley,Oro Valley,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+AZ,us-az-paradise_valley,Paradise Valley,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+AZ,us-az-payson,Payson,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+AZ,us-az-peoria,Peoria,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+AZ,us-az-phoenix,Phoenix,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+AZ,us-az-pima_county,Pima County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+AZ,us-az-pinal_county,Pinal County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+AZ,us-az-prescott,Prescott,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+AZ,us-az-prescott_valley,Prescott Valley,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+AZ,us-az-queen_creek,Queen Creek,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+AZ,us-az-sahuarita,Sahuarita,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+AZ,us-az-san_luis,San Luis,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+AZ,us-az-scottsdale,Scottsdale,1,residential_remodel,EXACT_PARTIAL,PUBLISHABLE
+AZ,us-az-sedona,Sedona,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+AZ,us-az-sierra_vista,Sierra Vista,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+AZ,us-az-surprise,Surprise,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+AZ,us-az-tempe,Tempe,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+AZ,us-az-tucson,Tucson,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+AZ,us-az-wickenburg,Wickenburg,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+AZ,us-az-yavapai_county,Yavapai County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+AZ,us-az-yuma,Yuma,1,residential_remodel,FAIL_CLOSED,FAIL_CLOSED
+CA,us-ca-anaheim,Anaheim,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+CA,us-ca-bakersfield,Bakersfield,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+CA,us-ca-chula_vista,Chula Vista,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+CA,us-ca-contra_costa_county,Contra Costa County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+CA,us-ca-corona,Corona,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+CA,us-ca-elk_grove,Elk Grove,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+CA,us-ca-escondido,Escondido,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+CA,us-ca-fontana,Fontana,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+CA,us-ca-fremont,Fremont,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+CA,us-ca-fresno,Fresno,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+CA,us-ca-fullerton,Fullerton,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+CA,us-ca-garden_grove,Garden Grove,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+CA,us-ca-glendale,Glendale,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+CA,us-ca-hayward,Hayward,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+CA,us-ca-huntington_beach,Huntington Beach,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+CA,us-ca-irvine,Irvine,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+CA,us-ca-lancaster,Lancaster,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+CA,us-ca-long_beach,Long Beach,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+CA,us-ca-los_angeles,Los Angeles,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+CA,us-ca-los_angeles_county,Los Angeles County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+CA,us-ca-modesto,Modesto,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+CA,us-ca-moreno_valley,Moreno Valley,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+CA,us-ca-oakland,Oakland,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+CA,us-ca-oceanside,Oceanside,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+CA,us-ca-ontario,Ontario,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+CA,us-ca-orange,Orange,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+CA,us-ca-orange_county,Orange County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+CA,us-ca-oxnard,Oxnard,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+CA,us-ca-palmdale,Palmdale,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+CA,us-ca-pasadena,Pasadena,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+CA,us-ca-pomona,Pomona,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+CA,us-ca-rancho_cucamonga,Rancho Cucamonga,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+CA,us-ca-riverside,Riverside,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+CA,us-ca-roseville,Roseville,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+CA,us-ca-sacramento,Sacramento,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+CA,us-ca-salinas,Salinas,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+CA,us-ca-san_bernardino,San Bernardino,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+CA,us-ca-san_diego,San Diego,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+CA,us-ca-san_diego_county,San Diego County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+CA,us-ca-san_francisco,San Francisco,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+CA,us-ca-san_jose,San Jose,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+CA,us-ca-santa_ana,Santa Ana,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+CA,us-ca-santa_clara,Santa Clara,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+CA,us-ca-santa_clarita,Santa Clarita,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+CA,us-ca-santa_rosa,Santa Rosa,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+CA,us-ca-stockton,Stockton,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+CA,us-ca-sunnyvale,Sunnyvale,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+CA,us-ca-torrance,Torrance,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+CA,us-ca-victorville,Victorville,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+CA,us-ca-visalia,Visalia,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+CO,us-co-adams_county,Adams County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+CO,us-co-arapahoe_county,Arapahoe County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+CO,us-co-arvada,Arvada,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+CO,us-co-aurora,Aurora,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+CO,us-co-boulder,Boulder,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+CO,us-co-boulder_county,Boulder County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+CO,us-co-brighton,Brighton,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+CO,us-co-broomfield,Broomfield,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+CO,us-co-castle_rock,Castle Rock,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+CO,us-co-centennial,Centennial,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+CO,us-co-colorado_springs_pprbd,Colorado Springs Pprbd,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+CO,us-co-commerce_city,Commerce City,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+CO,us-co-denver,Denver,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+CO,us-co-douglas_county,Douglas County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+CO,us-co-eagle_county,Eagle County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+CO,us-co-el_paso_county,El Paso County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+CO,us-co-englewood,Englewood,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+CO,us-co-erie,Erie,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+CO,us-co-federal_heights,Federal Heights,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+CO,us-co-firestone,Firestone,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+CO,us-co-fort_collins,Fort Collins,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+CO,us-co-frederick,Frederick,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+CO,us-co-garfield_county,Garfield County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+CO,us-co-grand_junction,Grand Junction,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+CO,us-co-grand_junction_mesa_county,Grand Junction Mesa County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+CO,us-co-greeley,Greeley,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+CO,us-co-greenwood_village,Greenwood Village,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+CO,us-co-jefferson_county,Jefferson County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+CO,us-co-johnstown,Johnstown,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+CO,us-co-lakewood,Lakewood,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+CO,us-co-larimer_county,Larimer County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+CO,us-co-littleton,Littleton,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+CO,us-co-lone_tree,Lone Tree,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+CO,us-co-louisville_co,Louisville Co,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+CO,us-co-loveland,Loveland,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+CO,us-co-milliken,Milliken,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+CO,us-co-parker,Parker,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+CO,us-co-pueblo_county,Pueblo County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+CO,us-co-pueblo_socobd,Pueblo Socobd,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+CO,us-co-superior_co,Superior Co,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+CO,us-co-thornton,Thornton,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+CO,us-co-weld_county,Weld County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+CO,us-co-westminster,Westminster,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+CO,us-co-wheat_ridge,Wheat Ridge,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+CO,us-co-windsor,Windsor,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+CT,us-ct-branford,Branford,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+CT,us-ct-bridgeport,Bridgeport,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+CT,us-ct-bristol,Bristol,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+CT,us-ct-cheshire,Cheshire,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+CT,us-ct-danbury,Danbury,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+CT,us-ct-enfield,Enfield,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+CT,us-ct-fairfield,Fairfield,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+CT,us-ct-farmington,Farmington,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+CT,us-ct-glastonbury,Glastonbury,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+CT,us-ct-greenwich,Greenwich,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+CT,us-ct-groton,Groton,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+CT,us-ct-guilford,Guilford,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+CT,us-ct-hamden,Hamden,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+CT,us-ct-hartford,Hartford,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+CT,us-ct-manchester,Manchester,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+CT,us-ct-mansfield,Mansfield,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+CT,us-ct-meriden,Meriden,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+CT,us-ct-middletown,Middletown,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+CT,us-ct-milford,Milford,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+CT,us-ct-naugatuck,Naugatuck,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+CT,us-ct-new_britain,New Britain,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+CT,us-ct-new_haven,New Haven,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+CT,us-ct-new_london,New London,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+CT,us-ct-newington,Newington,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+CT,us-ct-newtown,Newtown,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+CT,us-ct-north_haven,North Haven,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+CT,us-ct-norwalk,Norwalk,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+CT,us-ct-norwich,Norwich,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+CT,us-ct-ridgefield,Ridgefield,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+CT,us-ct-shelton,Shelton,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+CT,us-ct-simsbury,Simsbury,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+CT,us-ct-south_windsor,South Windsor,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+CT,us-ct-southington,Southington,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+CT,us-ct-stamford,Stamford,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+CT,us-ct-stratford,Stratford,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+CT,us-ct-torrington,Torrington,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+CT,us-ct-trumbull,Trumbull,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+CT,us-ct-vernon,Vernon,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+CT,us-ct-wallingford,Wallingford,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+CT,us-ct-waterbury,Waterbury,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+CT,us-ct-watertown,Watertown,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+CT,us-ct-west_hartford,West Hartford,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+CT,us-ct-west_haven,West Haven,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+CT,us-ct-wethersfield,Wethersfield,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+CT,us-ct-windham,Windham,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+CT,us-ct-windsor,Windsor,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+DE,us-de-arden,Arden,1,residential_remodel,EXACT_PARTIAL,PUBLISHABLE
+DE,us-de-ardencroft,Ardencroft,1,residential_remodel,EXACT_PARTIAL,PUBLISHABLE
+DE,us-de-ardentown,Ardentown,1,residential_remodel,EXACT_PARTIAL,PUBLISHABLE
+DE,us-de-bellefonte,Bellefonte,1,residential_remodel,FAIL_CLOSED,FAIL_CLOSED
+DE,us-de-bethany_beach,Bethany Beach,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+DE,us-de-blades,Blades,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+DE,us-de-bowers_beach,Bowers Beach,1,residential_remodel,FAIL_CLOSED,FAIL_CLOSED
+DE,us-de-cheswold,Cheswold,1,residential_remodel,FAIL_CLOSED,FAIL_CLOSED
+DE,us-de-clayton,Clayton,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+DE,us-de-dagsboro,Dagsboro,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+DE,us-de-delmar,Delmar,1,residential_remodel,EXACT_PARTIAL,PUBLISHABLE
+DE,us-de-dewey_beach,Dewey Beach,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+DE,us-de-dover,Dover,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+DE,us-de-elsmere,Elsmere,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+DE,us-de-felton,Felton,1,residential_remodel,FAIL_CLOSED,FAIL_CLOSED
+DE,us-de-fenwick_island,Fenwick Island,1,residential_remodel,FAIL_CLOSED,FAIL_CLOSED
+DE,us-de-frankford,Frankford,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+DE,us-de-frederica,Frederica,1,residential_remodel,FAIL_CLOSED,FAIL_CLOSED
+DE,us-de-georgetown,Georgetown,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+DE,us-de-greenwood,Greenwood,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+DE,us-de-henlopen_acres,Henlopen Acres,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+DE,us-de-kent_county,Kent County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+DE,us-de-middletown,Middletown,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+DE,us-de-millsboro,Millsboro,1,residential_remodel,FAIL_CLOSED,FAIL_CLOSED
+DE,us-de-millville,Millville,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+DE,us-de-new_castle_city,New Castle City,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+DE,us-de-new_castle_county,New Castle County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+DE,us-de-newark,Newark,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+DE,us-de-ocean_view,Ocean View,1,residential_remodel,FAIL_CLOSED,FAIL_CLOSED
+DE,us-de-odessa,Odessa,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+DE,us-de-rehoboth_beach,Rehoboth Beach,1,residential_remodel,FAIL_CLOSED,FAIL_CLOSED
+DE,us-de-seaford,Seaford,1,residential_remodel,FAIL_CLOSED,FAIL_CLOSED
+DE,us-de-smyrna,Smyrna,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+DE,us-de-south_bethany,South Bethany,1,residential_remodel,FAIL_CLOSED,FAIL_CLOSED
+DE,us-de-sussex_county,Sussex County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+DE,us-de-townsend,Townsend,1,residential_remodel,FAIL_CLOSED,FAIL_CLOSED
+DE,us-de-wilmington,Wilmington,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+FL,us-fl-boca_raton,Boca Raton,1,reroof,EXACT_COMPLETE,PUBLISHABLE
+FL,us-fl-brevard_county,Brevard County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+FL,us-fl-broward_county,Broward County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+FL,us-fl-cape_coral,Cape Coral,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+FL,us-fl-charlotte_county,Charlotte County,1,reroof,EXACT_COMPLETE,PUBLISHABLE
+FL,us-fl-clearwater,Clearwater,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+FL,us-fl-collier_county,Collier County,1,reroof,EXACT_COMPLETE,PUBLISHABLE
+FL,us-fl-coral_springs,Coral Springs,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+FL,us-fl-flagler_county,Flagler County,1,residential_remodel,FAIL_CLOSED,FAIL_CLOSED
+FL,us-fl-fort_lauderdale,Fort Lauderdale,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+FL,us-fl-gainesville,Gainesville,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+FL,us-fl-hendry_county,Hendry County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+FL,us-fl-hernando_county,Hernando County,1,reroof,EXACT_COMPLETE,PUBLISHABLE
+FL,us-fl-hialeah,Hialeah,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+FL,us-fl-highlands_county,Highlands County,1,reroof,EXACT_COMPLETE,PUBLISHABLE
+FL,us-fl-hillsborough_county,Hillsborough County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+FL,us-fl-hollywood,Hollywood,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+FL,us-fl-indian_river_county,Indian River County,1,reroof,EXACT_COMPLETE,PUBLISHABLE
+FL,us-fl-jacksonville,Jacksonville,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+FL,us-fl-lake_county,Lake County,1,reroof,EXACT_COMPLETE,PUBLISHABLE
+FL,us-fl-lake_worth_beach,Lake Worth Beach,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+FL,us-fl-lakeland,Lakeland,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+FL,us-fl-lee_county,Lee County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+FL,us-fl-manatee_county,Manatee County,1,reroof,EXACT_COMPLETE,PUBLISHABLE
+FL,us-fl-marion_county,Marion County,1,reroof,EXACT_COMPLETE,PUBLISHABLE
+FL,us-fl-martin_county,Martin County,1,reroof,EXACT_COMPLETE,PUBLISHABLE
+FL,us-fl-miami,Miami,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+FL,us-fl-miami_dade_county,Miami Dade County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+FL,us-fl-miramar,Miramar,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+FL,us-fl-orange_county,Orange County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+FL,us-fl-orlando,Orlando,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+FL,us-fl-osceola_county,Osceola County,1,reroof,EXACT_COMPLETE,PUBLISHABLE
+FL,us-fl-palm_bay,Palm Bay,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+FL,us-fl-palm_beach_county,Palm Beach County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+FL,us-fl-pasco_county,Pasco County Building Construction Services,1,reroof,EXACT_COMPLETE,PUBLISHABLE
+FL,us-fl-pembroke_pines,Pembroke Pines,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+FL,us-fl-pinellas_county,Pinellas County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+FL,us-fl-polk_county,Polk County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+FL,us-fl-pompano_beach,Pompano Beach,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+FL,us-fl-port_st_lucie,Port St Lucie,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+FL,us-fl-sarasota,City of Sarasota Building & Permitting,1,reroof,EXACT_COMPLETE,PUBLISHABLE
+FL,us-fl-sarasota_county,Sarasota County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+FL,us-fl-seminole_county,Seminole County Building Division,1,reroof,EXACT_COMPLETE,PUBLISHABLE
+FL,us-fl-st_johns_county,St Johns County,1,residential_remodel,EXACT_PARTIAL,PUBLISHABLE
+FL,us-fl-st_lucie_county,St. Lucie County Planning and Development Services,1,reroof,EXACT_COMPLETE,PUBLISHABLE
+FL,us-fl-st_petersburg,St Petersburg,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+FL,us-fl-tallahassee,Tallahassee,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+FL,us-fl-tampa,Tampa,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+FL,us-fl-volusia_county,Volusia County Building and Zoning,1,reroof,EXACT_COMPLETE,PUBLISHABLE
+FL,us-fl-west_palm_beach,West Palm Beach,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+GA,us-ga-albany,Albany,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+GA,us-ga-alpharetta,Alpharetta,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+GA,us-ga-athens_clarke,Athens Clarke,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+GA,us-ga-atlanta,Atlanta,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+GA,us-ga-augusta_richmond,Augusta Richmond,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+GA,us-ga-brookhaven,Brookhaven,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+GA,us-ga-canton,Canton,1,residential_remodel,EXACT_PARTIAL,PUBLISHABLE
+GA,us-ga-chatham_county,Chatham County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+GA,us-ga-cherokee_county,Cherokee County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+GA,us-ga-cobb_county,Cobb County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+GA,us-ga-columbia_county,Columbia County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+GA,us-ga-columbus_muscogee,Columbus Muscogee,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+GA,us-ga-commerce,Commerce,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+GA,us-ga-dalton,Dalton,1,residential_remodel,EXACT_PARTIAL,PUBLISHABLE
+GA,us-ga-decatur,Decatur,1,residential_remodel,EXACT_PARTIAL,PUBLISHABLE
+GA,us-ga-dekalb_county,Dekalb County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+GA,us-ga-douglas,Douglas,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+GA,us-ga-douglasville,Douglasville,1,residential_remodel,EXACT_PARTIAL,PUBLISHABLE
+GA,us-ga-dunwoody,Dunwoody,1,residential_remodel,EXACT_PARTIAL,PUBLISHABLE
+GA,us-ga-forsyth_county,Forsyth County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+GA,us-ga-fulton_county,Fulton County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+GA,us-ga-gainesville,Gainesville,1,residential_remodel,EXACT_PARTIAL,PUBLISHABLE
+GA,us-ga-griffin,Griffin,1,residential_remodel,EXACT_PARTIAL,PUBLISHABLE
+GA,us-ga-gwinnett_county,Gwinnett County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+GA,us-ga-hall_county,Hall County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+GA,us-ga-henry_county,Henry County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+GA,us-ga-hinesville,Hinesville,1,residential_remodel,EXACT_PARTIAL,PUBLISHABLE
+GA,us-ga-kennesaw,Kennesaw,1,residential_remodel,EXACT_PARTIAL,PUBLISHABLE
+GA,us-ga-lawrenceville,Lawrenceville,1,residential_remodel,EXACT_PARTIAL,PUBLISHABLE
+GA,us-ga-macon_bibb,Macon Bibb,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+GA,us-ga-marietta,Marietta,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+GA,us-ga-mcdonough,Mcdonough,1,residential_remodel,EXACT_PARTIAL,PUBLISHABLE
+GA,us-ga-milton,Milton,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+GA,us-ga-newnan,Newnan,1,residential_remodel,EXACT_PARTIAL,PUBLISHABLE
+GA,us-ga-paulding_county,Paulding County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+GA,us-ga-peachtree_city,Peachtree City,1,residential_remodel,EXACT_PARTIAL,PUBLISHABLE
+GA,us-ga-peachtree_corners,Peachtree Corners,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+GA,us-ga-richmond_hill,Richmond Hill,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+GA,us-ga-rome,Rome,1,residential_remodel,EXACT_PARTIAL,PUBLISHABLE
+GA,us-ga-roswell,Roswell,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+GA,us-ga-sandy_springs,Sandy Springs,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+GA,us-ga-savannah,Savannah,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+GA,us-ga-smyrna,Smyrna,1,residential_remodel,EXACT_PARTIAL,PUBLISHABLE
+GA,us-ga-snellville,Snellville,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+GA,us-ga-south_fulton,South Fulton,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+GA,us-ga-tucker,City of Tucker Community Development Department,1,residential_remodel,EXACT_COMPLETE,PUBLISHABLE
+GA,us-ga-valdosta,City of Valdosta Inspections Department,1,residential_remodel,EXACT_COMPLETE,PUBLISHABLE
+GA,us-ga-warner_robins,Warner Robins,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+GA,us-ga-woodstock,City of Woodstock Community Development Department,1,residential_remodel,EXACT_COMPLETE,PUBLISHABLE
+HI,us-hi-dhhl,Dhhl,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+HI,us-hi-east_honolulu,East Honolulu,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+HI,us-hi-ewa_beach,Ewa Beach,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+HI,us-hi-ewa_gentry,Ewa Gentry,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+HI,us-hi-ewa_villages,Ewa Villages,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+HI,us-hi-halawa,Halawa,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+HI,us-hi-hawaii_county,Hawaii County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+HI,us-hi-heeia,Heeia,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+HI,us-hi-hickam_housing,Hickam Housing,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+HI,us-hi-honolulu,Honolulu,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+HI,us-hi-kahaluu,Kahaluu,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+HI,us-hi-kapolei,Kapolei,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+HI,us-hi-kauai_county,Kauai County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+HI,us-hi-kihei,Kihei,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+HI,us-hi-makaha,Makaha,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+HI,us-hi-maui_county,Maui County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+HI,us-hi-mililani_mauka,Mililani Mauka,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+HI,us-hi-pearl_city,Pearl City,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+HI,us-hi-urban_honolulu,Urban Honolulu,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+HI,us-hi-wahiawa,Wahiawa,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+HI,us-hi-waianae,Waianae,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+HI,us-hi-waikele,Waikele,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+HI,us-hi-waipio,Waipio,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+IA,us-ia-altoona,Altoona,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+IA,us-ia-ames,Ames,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+IA,us-ia-ankeny,Ankeny,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+IA,us-ia-bettendorf,Bettendorf,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+IA,us-ia-bondurant,Bondurant,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+IA,us-ia-boone,Boone,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+IA,us-ia-burlington,Burlington,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+IA,us-ia-cedar_county,Cedar County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+IA,us-ia-cedar_falls,Cedar Falls,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+IA,us-ia-cedar_rapids,Cedar Rapids,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+IA,us-ia-clear_lake,Clear Lake,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+IA,us-ia-clinton,Clinton,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+IA,us-ia-clive,Clive,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+IA,us-ia-coralville,Coralville,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+IA,us-ia-council_bluffs,Council Bluffs,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+IA,us-ia-davenport,Davenport,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+IA,us-ia-des_moines,Des Moines,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+IA,us-ia-dubuque,Dubuque,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+IA,us-ia-fort_dodge,Fort Dodge,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+IA,us-ia-grimes,Grimes,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+IA,us-ia-grinnell,Grinnell,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+IA,us-ia-indianola,Indianola,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+IA,us-ia-iowa_city,Iowa City,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+IA,us-ia-johnston,Johnston,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+IA,us-ia-le_mars,Le Mars,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+IA,us-ia-manchester,Manchester,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+IA,us-ia-marion,Marion,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+IA,us-ia-marion_county,Marion County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+IA,us-ia-marshalltown,Marshalltown,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+IA,us-ia-mason_city,Mason City,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+IA,us-ia-muscatine,Muscatine,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+IA,us-ia-nevada,Nevada,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+IA,us-ia-newton,Newton,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+IA,us-ia-north_liberty,North Liberty,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+IA,us-ia-oskaloosa,Oskaloosa,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+IA,us-ia-ottumwa,Ottumwa,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+IA,us-ia-pleasant_hill,Pleasant Hill,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+IA,us-ia-polk_city,Polk City,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+IA,us-ia-sioux_city,Sioux City,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+IA,us-ia-spencer,Spencer,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+IA,us-ia-storm_lake,Storm Lake,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+IA,us-ia-urbandale,Urbandale,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+IA,us-ia-waterloo,Waterloo,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+IA,us-ia-waukee,Waukee,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+IA,us-ia-waverly,Waverly,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+IA,us-ia-west_burlington,West Burlington,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+IA,us-ia-west_des_moines,West Des Moines,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+ID,us-id-ada_county,Ada County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+ID,us-id-ammon,Ammon,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+ID,us-id-bannock_county,Bannock County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+ID,us-id-bingham_county,Bingham County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+ID,us-id-blaine_county,Blaine County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+ID,us-id-boise,Boise,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+ID,us-id-bonner_county,Bonner County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+ID,us-id-bonneville_county,Bonneville County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+ID,us-id-boundary_county,Boundary County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+ID,us-id-caldwell,Caldwell,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+ID,us-id-canyon_county,Canyon County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+ID,us-id-cassia_county,Cassia County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+ID,us-id-driggs,Driggs,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+ID,us-id-eagle,Eagle,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+ID,us-id-elmore_county,Elmore County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+ID,us-id-fremont_county,Fremont County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+ID,us-id-garden_city,Garden City,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+ID,us-id-gem_county,Gem County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+ID,us-id-gooding_county,Gooding County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+ID,us-id-hailey,Hailey,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+ID,us-id-idaho_falls,Idaho Falls,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+ID,us-id-jefferson_county,Jefferson County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+ID,us-id-jerome,Jerome,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+ID,us-id-jerome_county,Jerome County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+ID,us-id-kootenai_county,Kootenai County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+ID,us-id-kuna,Kuna,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+ID,us-id-lewiston,Lewiston,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+ID,us-id-madison_county,Madison County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+ID,us-id-meridian,Meridian,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+ID,us-id-middleton,Middleton,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+ID,us-id-minidoka_county,Minidoka County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+ID,us-id-moscow,Moscow,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+ID,us-id-nampa,Nampa,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+ID,us-id-nez_perce_county,Nez Perce County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+ID,us-id-payette_county,Payette County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+ID,us-id-pocatello,Pocatello,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+ID,us-id-post_falls,Post Falls,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+ID,us-id-power_county,Power County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+ID,us-id-rexburg,Rexburg,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+ID,us-id-star,Star,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+ID,us-id-twin_falls,Twin Falls,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+ID,us-id-twin_falls_county,Twin Falls County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+ID,us-id-valley_county,Valley County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+IL,us-il-arlington_heights,Arlington Heights,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+IL,us-il-aurora,Aurora,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+IL,us-il-berwyn,Berwyn,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+IL,us-il-bloomingdale,Bloomingdale,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+IL,us-il-bloomington,Bloomington,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+IL,us-il-bolingbrook,Bolingbrook,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+IL,us-il-buffalo_grove,Village of Buffalo Grove Permits and Inspections Division,1,residential_remodel,EXACT_COMPLETE,PUBLISHABLE
+IL,us-il-champaign,Champaign,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+IL,us-il-chicago,Chicago,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+IL,us-il-cicero,Cicero,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+IL,us-il-cook_county,Cook County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+IL,us-il-decatur,Decatur,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+IL,us-il-dekalb_county,DeKalb County Building and Zoning Department,1,residential_remodel,EXACT_PARTIAL,PUBLISHABLE
+IL,us-il-des_plaines,Des Plaines,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+IL,us-il-downers_grove,Village of Downers Grove Building Services,1,residential_remodel,EXACT_PARTIAL,PUBLISHABLE
+IL,us-il-dupage_county,Dupage County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+IL,us-il-elgin,Elgin,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+IL,us-il-evanston,Evanston,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+IL,us-il-grundy_county,Grundy County Land Use Department,1,residential_remodel,EXACT_PARTIAL,PUBLISHABLE
+IL,us-il-hoffman_estates,Hoffman Estates,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+IL,us-il-joliet,Joliet,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+IL,us-il-kane_county,Kane County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+IL,us-il-kankakee_county,Kankakee County Building Division,1,residential_remodel,EXACT_COMPLETE,PUBLISHABLE
+IL,us-il-kendall_county,Kendall County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+IL,us-il-lake_county,Lake County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+IL,us-il-lasalle_county,LaSalle County Land Use Department Building Division,1,residential_remodel,EXACT_PARTIAL,PUBLISHABLE
+IL,us-il-madison_county,Madison County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+IL,us-il-mchenry_county,Mchenry County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+IL,us-il-mclean_county,Mclean County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+IL,us-il-mount_prospect,Mount Prospect,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+IL,us-il-naperville,Naperville,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+IL,us-il-normal,Normal,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+IL,us-il-oak_lawn,Oak Lawn,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+IL,us-il-oak_park,Village of Oak Park Permit and Development Division,1,residential_remodel,EXACT_PARTIAL,PUBLISHABLE
+IL,us-il-orland_park,Village of Orland Park Development Services,1,residential_remodel,EXACT_PARTIAL,PUBLISHABLE
+IL,us-il-palatine,Palatine,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+IL,us-il-peoria,Peoria,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+IL,us-il-peoria_county,Peoria County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+IL,us-il-rock_island_county,Rock Island County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+IL,us-il-rockford,Rockford,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+IL,us-il-sangamon_county,Sangamon County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+IL,us-il-schaumburg,Schaumburg,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+IL,us-il-skokie,Village of Skokie Building and Renovation Permits Division,1,residential_remodel,EXACT_PARTIAL,PUBLISHABLE
+IL,us-il-st_clair_county,St Clair County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+IL,us-il-tinley_park,Tinley Park,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+IL,us-il-waukegan,City of Waukegan Building and Code Department,1,residential_remodel,EXACT_PARTIAL,PUBLISHABLE
+IL,us-il-wheaton,Wheaton,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+IL,us-il-will_county,Will County Land Use Department Building Division,1,reroof,EXACT_COMPLETE,PUBLISHABLE
+IN,us-in-anderson,Anderson,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+IN,us-in-bartholomew_county_department_of_technical_code_enforcement_for_columbus,Bartholomew County Department Of Technical Code Enforcement For Columbus,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+IN,us-in-bloomington,Bloomington,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+IN,us-in-brownsburg,Brownsburg,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+IN,us-in-carmel,Carmel,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+IN,us-in-city_of_carmel_building_safety_office,City Of Carmel Building Safety Office,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+IN,us-in-city_of_gary_building_department,City Of Gary Building Department,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+IN,us-in-city_of_greenwood_building_commissioner,City Of Greenwood Building Commissioner,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+IN,us-in-city_of_hammond_inspections_department_building_division,City Of Hammond Inspections Department Building Division,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+IN,us-in-city_of_kokomo_building_permits_office,City Of Kokomo Building Permits Office,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+IN,us-in-city_of_lafayette_engineering_public_works_building_permits,City Of Lafayette Engineering Public Works Building Permits,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+IN,us-in-city_of_mishawaka_building_department,City Of Mishawaka Building Department,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+IN,us-in-city_of_muncie_building_commissioners_office,City Of Muncie Building Commissioners Office,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+IN,us-in-city_of_noblesville_planning_department_building_inspections,City Of Noblesville Planning Department Building Inspections,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+IN,us-in-city_of_south_bend_building_department,City Of South Bend Building Department,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+IN,us-in-city_of_terre_haute_planning_building_permits,City Of Terre Haute Planning Building Permits,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+IN,us-in-city_of_west_lafayette_building_department,City Of West Lafayette Building Department,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+IN,us-in-columbus,Columbus,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+IN,us-in-crown_point,City of Crown Point Building Department,1,residential_remodel,EXACT_PARTIAL,PUBLISHABLE
+IN,us-in-elkhart,Elkhart,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+IN,us-in-evansville,Evansville,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+IN,us-in-evansville_vanderburgh_county_building_commission,Evansville Vanderburgh County Building Commission,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+IN,us-in-fishers,Fishers,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+IN,us-in-fort_wayne,Fort Wayne,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+IN,us-in-fort_wayne_allen_county,Fort Wayne Allen County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+IN,us-in-gary,Gary,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+IN,us-in-goshen,City of Goshen Building Department,1,residential_remodel,EXACT_PARTIAL,PUBLISHABLE
+IN,us-in-greenwood,Greenwood,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+IN,us-in-hammond,Hammond,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+IN,us-in-indianapolis_marion,Indianapolis Marion,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+IN,us-in-indianapolis_marion_county_department_of_business_and_neighborhood_services,Indianapolis Marion County Department Of Business And Neighborhood Services,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+IN,us-in-jeffersonville,Jeffersonville,1,residential_remodel,EXACT_PARTIAL,PUBLISHABLE
+IN,us-in-kokomo,Kokomo,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+IN,us-in-lawrence,Lawrence,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+IN,us-in-merrillville,Merrillville,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+IN,us-in-mishawaka,Mishawaka,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+IN,us-in-monroe_county_building_department_for_bloomington_commercial_non_class_2_building_permits,Monroe County Building Department For Bloomington Commercial Non Class 2 Building Permits,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+IN,us-in-muncie,Muncie,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+IN,us-in-new_albany,New Albany,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+IN,us-in-noblesville,Noblesville,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+IN,us-in-plainfield,Plainfield,1,residential_remodel,EXACT_PARTIAL,PUBLISHABLE
+IN,us-in-portage,Portage,1,residential_remodel,EXACT_PARTIAL,PUBLISHABLE
+IN,us-in-richmond,Richmond,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+IN,us-in-south_bend,South Bend,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+IN,us-in-terre_haute,Terre Haute,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+IN,us-in-valparaiso,Valparaiso,1,residential_remodel,EXACT_PARTIAL,PUBLISHABLE
+IN,us-in-west_lafayette,West Lafayette,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+IN,us-in-westfield,Westfield,1,residential_remodel,EXACT_PARTIAL,PUBLISHABLE
+KS,us-ks-arkansas_city,Arkansas City,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+KS,us-ks-atchison,Atchison,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+KS,us-ks-augusta,Augusta,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+KS,us-ks-basehor,Basehor,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+KS,us-ks-bel_aire,Bel Aire,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+KS,us-ks-bonner_springs,Bonner Springs,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+KS,us-ks-chanute,Chanute,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+KS,us-ks-coffeyville,Coffeyville,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+KS,us-ks-derby,Derby,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+KS,us-ks-dodge_city,Dodge City,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+KS,us-ks-el_dorado,El Dorado,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+KS,us-ks-emporia,Emporia,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+KS,us-ks-fort_scott,Fort Scott,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+KS,us-ks-garden_city,Garden City,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+KS,us-ks-gardner,Gardner,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+KS,us-ks-great_bend,Great Bend,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+KS,us-ks-hays,Hays,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+KS,us-ks-haysville,Haysville,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+KS,us-ks-hutchinson,Hutchinson,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+KS,us-ks-independence,Independence,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+KS,us-ks-kansas_city,Kansas City,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+KS,us-ks-kansas_city_wyandotte,Kansas City Wyandotte,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+KS,us-ks-lansing,Lansing,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+KS,us-ks-lawrence,Lawrence,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+KS,us-ks-leavenworth,Leavenworth,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+KS,us-ks-leawood,Leawood,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+KS,us-ks-lenexa,Lenexa,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+KS,us-ks-liberal,Liberal,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+KS,us-ks-maize,Maize,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+KS,us-ks-manhattan,Manhattan,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+KS,us-ks-mcpherson,Mcpherson,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+KS,us-ks-mission,Mission,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+KS,us-ks-newton,Newton,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+KS,us-ks-olathe,Olathe,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+KS,us-ks-ottawa,Ottawa,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+KS,us-ks-overland_park,Overland Park,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+KS,us-ks-park_city,Park City,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+KS,us-ks-prairie_village,Prairie Village,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+KS,us-ks-salina,Salina,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+KS,us-ks-shawnee,Shawnee,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+KS,us-ks-spring_hill,Spring Hill,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+KS,us-ks-topeka,Topeka,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+KS,us-ks-wichita,Wichita,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+KS,us-ks-wichita_mabcd,Wichita Mabcd,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+KS,us-ks-winfield,Winfield,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+KY,us-ky-ashland,Ashland,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+KY,us-ky-bardstown,Bardstown,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+KY,us-ky-boone_county_building_department,Boone County Building Department,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+KY,us-ky-bowling_green,Bowling Green,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+KY,us-ky-bullitt_county,Bullitt County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+KY,us-ky-campbell_county_planning_zoning_building_inspections,Campbell County Planning Zoning Building Inspections,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+KY,us-ky-city_of_ashland,City Of Ashland,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+KY,us-ky-city_of_berea,City Of Berea,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+KY,us-ky-city_of_bowling_green,City Of Bowling Green,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+KY,us-ky-city_of_frankfort,City Of Frankfort,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+KY,us-ky-city_of_henderson,City Of Henderson,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+KY,us-ky-city_of_jeffersontown,City Of Jeffersontown,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+KY,us-ky-city_of_murray,City Of Murray,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+KY,us-ky-city_of_nicholasville,City Of Nicholasville,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+KY,us-ky-city_of_paducah,City Of Paducah,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+KY,us-ky-city_of_winchester_clark_county_building_inspection,City Of Winchester Clark County Building Inspection,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+KY,us-ky-covington,Covington,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+KY,us-ky-elizabethtown,Elizabethtown,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+KY,us-ky-florence,Florence,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+KY,us-ky-frankfort,Frankfort,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+KY,us-ky-georgetown,Georgetown,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+KY,us-ky-georgetown_scott_county_building_inspection_department,Georgetown Scott County Building Inspection Department,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+KY,us-ky-hardin_county,Hardin County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+KY,us-ky-henderson,Henderson,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+KY,us-ky-hopkinsville,Hopkinsville,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+KY,us-ky-independence,Independence,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+KY,us-ky-kenton_county_pds,Kenton County Pds,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+KY,us-ky-lexington_fayette,Lexington Fayette,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+KY,us-ky-lexington_fayette_urban_county_government,Lexington Fayette Urban County Government,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+KY,us-ky-london,London,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+KY,us-ky-louisville_jefferson,Louisville Jefferson,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+KY,us-ky-louisville_metro_government,Louisville Metro Government,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+KY,us-ky-madison_county,Madison County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+KY,us-ky-mccracken_county,Mccracken County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+KY,us-ky-mount_washington,Mount Washington,1,residential_remodel,EXACT_PARTIAL,PUBLISHABLE
+KY,us-ky-murray,Murray,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+KY,us-ky-nicholasville,Nicholasville,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+KY,us-ky-oldham_county,Oldham County,1,residential_remodel,EXACT_PARTIAL,PUBLISHABLE
+KY,us-ky-owensboro,Owensboro,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+KY,us-ky-paducah,Paducah,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+KY,us-ky-pikeville,Pikeville,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+KY,us-ky-radcliff,Radcliff,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+KY,us-ky-richmond,Richmond,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+KY,us-ky-somerset,Somerset,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+KY,us-ky-warren_county,Warren County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+KY,us-ky-winchester,Winchester,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+LA,us-la-acadia_parish,Acadia Parish,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+LA,us-la-alexandria,Alexandria,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+LA,us-la-ascension_parish,Ascension Parish,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+LA,us-la-avoyelles_parish,Avoyelles Parish,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+LA,us-la-baker,Baker,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+LA,us-la-beauregard_parish,Beauregard Parish,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+LA,us-la-bossier_city,Bossier City,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+LA,us-la-bossier_parish,Bossier Parish,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+LA,us-la-broussard,Broussard,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+LA,us-la-caddo_parish,Caddo Parish,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+LA,us-la-calcasieu_parish,Calcasieu Parish,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+LA,us-la-central,Central,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+LA,us-la-covington,Covington,1,residential_remodel,EXACT_PARTIAL,PUBLISHABLE
+LA,us-la-east_baton_rouge_parish,East Baton Rouge Parish / Baton Rouge City-Parish,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+LA,us-la-gretna,Gretna,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+LA,us-la-hammond,Hammond,1,residential_remodel,EXACT_PARTIAL,PUBLISHABLE
+LA,us-la-iberia_parish,Iberia Parish,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+LA,us-la-jefferson_parish,Jefferson Parish,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+LA,us-la-kenner,Kenner,1,residential_remodel,EXACT_PARTIAL,PUBLISHABLE
+LA,us-la-lafayette_parish,Lafayette Parish,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+LA,us-la-lafourche_parish,Lafourche Parish,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+LA,us-la-lake_charles,Lake Charles,1,residential_remodel,EXACT_PARTIAL,PUBLISHABLE
+LA,us-la-livingston_parish,Livingston Parish,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+LA,us-la-mandeville,Mandeville,1,residential_remodel,EXACT_PARTIAL,PUBLISHABLE
+LA,us-la-monroe,Monroe,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+LA,us-la-new_iberia,New Iberia,1,residential_remodel,EXACT_PARTIAL,PUBLISHABLE
+LA,us-la-opelousas,Opelousas,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+LA,us-la-orleans_parish,Orleans Parish,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+LA,us-la-ouachita_parish,Ouachita Parish,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+LA,us-la-plaquemines_parish,Plaquemines Parish,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+LA,us-la-rapides_parish,Rapides Parish,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+LA,us-la-ruston,Ruston,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+LA,us-la-slidell,Slidell,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+LA,us-la-st_bernard_parish,St Bernard Parish,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+LA,us-la-st_charles_parish,St Charles Parish,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+LA,us-la-st_john_the_baptist_parish,St John The Baptist Parish,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+LA,us-la-st_tammany_parish,St Tammany Parish,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+LA,us-la-sulphur,Sulphur,1,residential_remodel,EXACT_PARTIAL,PUBLISHABLE
+LA,us-la-tangipahoa_parish,Tangipahoa Parish,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+LA,us-la-terrebonne_parish,Terrebonne Parish,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+LA,us-la-vernon_parish,Vernon Parish,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+LA,us-la-washington_parish,Washington Parish,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+LA,us-la-west_baton_rouge_parish,West Baton Rouge Parish,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+LA,us-la-west_monroe,West Monroe,1,residential_remodel,EXACT_PARTIAL,PUBLISHABLE
+LA,us-la-zachary,Zachary,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MA,us-ma-amherst,Amherst,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MA,us-ma-arlington,Arlington,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MA,us-ma-attleboro,Attleboro,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MA,us-ma-barnstable,Barnstable,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MA,us-ma-belmont,Belmont,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MA,us-ma-billerica,Billerica,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MA,us-ma-boston,Boston,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MA,us-ma-brockton,Brockton,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MA,us-ma-brookline,Brookline,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MA,us-ma-cambridge,Cambridge,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MA,us-ma-chelmsford,Chelmsford,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MA,us-ma-chelsea,Chelsea,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MA,us-ma-chicopee,Chicopee,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MA,us-ma-dracut,Dracut,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MA,us-ma-everett,Everett,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MA,us-ma-fall_river,Fall River,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MA,us-ma-framingham,Framingham,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MA,us-ma-haverhill,Haverhill,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MA,us-ma-lawrence,Lawrence,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MA,us-ma-lexington,Lexington,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MA,us-ma-lowell,Lowell,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MA,us-ma-lynn,Lynn,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MA,us-ma-malden,Malden,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MA,us-ma-marlborough,Marlborough,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MA,us-ma-medford,Medford,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MA,us-ma-melrose,Melrose,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MA,us-ma-methuen,Methuen,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MA,us-ma-nantucket,Nantucket,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MA,us-ma-natick,Natick,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MA,us-ma-needham,Needham,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MA,us-ma-new_bedford,New Bedford,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MA,us-ma-newton,Newton,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MA,us-ma-peabody,Peabody,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MA,us-ma-pittsfield,Pittsfield,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MA,us-ma-plymouth,Plymouth,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MA,us-ma-quincy,Quincy,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MA,us-ma-revere,Revere,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MA,us-ma-shrewsbury,Shrewsbury,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MA,us-ma-somerville,Somerville,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MA,us-ma-springfield,Springfield,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MA,us-ma-taunton,Taunton,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MA,us-ma-tewksbury,Tewksbury,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MA,us-ma-wakefield,Wakefield,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MA,us-ma-waltham,Waltham,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MA,us-ma-watertown,Watertown,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MA,us-ma-weymouth,Weymouth,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MA,us-ma-woburn,Woburn,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MA,us-ma-worcester,Worcester,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MD,us-md-allegany_county,Allegany County,1,residential_remodel,EXACT_PARTIAL,PUBLISHABLE
+MD,us-md-anne_arundel_county,Anne Arundel County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MD,us-md-baltimore_city,Baltimore City,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MD,us-md-baltimore_county,Baltimore County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MD,us-md-bel_air,Bel Air,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MD,us-md-cambridge,Cambridge,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MD,us-md-carroll_county,Carroll County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MD,us-md-cecil_county,Cecil County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MD,us-md-charles_county,Charles County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MD,us-md-chevy_chase_village,Chevy Chase Village,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MD,us-md-college_park,College Park,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MD,us-md-crisfield,Crisfield,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MD,us-md-easton,Easton,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MD,us-md-frederick_city,Frederick City,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MD,us-md-frederick_county,Frederick County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MD,us-md-harford_county,Harford County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MD,us-md-havre_de_grace,Havre de Grace,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MD,us-md-howard_county,Howard County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MD,us-md-hyattsville,Hyattsville,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MD,us-md-kensington,Kensington,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MD,us-md-la_plata,La Plata,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MD,us-md-montgomery_county,Montgomery County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MD,us-md-ocean_city,Ocean City,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MD,us-md-pocomoke_city,Pocomoke City,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MD,us-md-poolesville,Poolesville,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MD,us-md-prince_georges_county,Prince George's County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MD,us-md-rockville,Rockville,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MD,us-md-salisbury,Salisbury,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MD,us-md-somerset_county,Somerset County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MD,us-md-talbot_county,Talbot County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MD,us-md-washington_county,Washington County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MD,us-md-wicomico_county,Wicomico County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+ME,us-me-auburn,Auburn,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+ME,us-me-bangor,Bangor,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+ME,us-me-bath,Bath,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+ME,us-me-belfast,Belfast,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+ME,us-me-berwick,Berwick,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+ME,us-me-biddeford,Biddeford,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+ME,us-me-brewer,Brewer,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+ME,us-me-brunswick,Brunswick,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+ME,us-me-buxton,Buxton,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+ME,us-me-cape_elizabeth,Cape Elizabeth,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+ME,us-me-caribou,Caribou,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+ME,us-me-cumberland,Cumberland,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+ME,us-me-ellsworth,Ellsworth,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+ME,us-me-falmouth,Falmouth,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+ME,us-me-freeport,Freeport,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+ME,us-me-greenville,Greenville,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+ME,us-me-hampden,Hampden,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+ME,us-me-harpswell,Harpswell,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+ME,us-me-hermon,Hermon,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+ME,us-me-kennebunk,Kennebunk,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+ME,us-me-kittery,Kittery,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+ME,us-me-lewiston,Lewiston,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+ME,us-me-limington,Limington,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+ME,us-me-old_orchard_beach,Old Orchard Beach,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+ME,us-me-old_town,Old Town,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+ME,us-me-orono,Orono,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+ME,us-me-portland,Portland,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+ME,us-me-raymond,Raymond,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+ME,us-me-rockland,Rockland,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+ME,us-me-rockport,Rockport,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+ME,us-me-saco,Saco,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+ME,us-me-sanford,Sanford,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+ME,us-me-scarborough,Scarborough,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+ME,us-me-skowhegan,Skowhegan,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+ME,us-me-south_berwick,South Berwick,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+ME,us-me-standish,Standish,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+ME,us-me-topsham,Topsham,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+ME,us-me-waterville,Waterville,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+ME,us-me-wells,Wells,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+ME,us-me-westbrook,Westbrook,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+ME,us-me-yarmouth,Yarmouth,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+ME,us-me-york,York,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MI,us-mi-battle_creek,Battle Creek,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MI,us-mi-bay_city,Bay City,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MI,us-mi-canton_charter_township,Canton Charter Township,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MI,us-mi-clinton_charter_township,Clinton Charter Township,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MI,us-mi-clinton_county,Clinton County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MI,us-mi-dearborn_heights,Dearborn Heights,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MI,us-mi-detroit,Detroit,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MI,us-mi-east_lansing,East Lansing,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MI,us-mi-farmington_hills,Farmington Hills,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MI,us-mi-flint,Flint,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MI,us-mi-flint_charter_township,Flint Charter Township,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MI,us-mi-grand_rapids,Grand Rapids,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MI,us-mi-grand_traverse_county,Grand Traverse County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MI,us-mi-jackson,Jackson,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MI,us-mi-kalamazoo,Kalamazoo,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MI,us-mi-kalamazoo_county,Kalamazoo County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MI,us-mi-kentwood,Kentwood,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MI,us-mi-lansing,Lansing,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MI,us-mi-livonia,Livonia,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MI,us-mi-midland,Midland,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MI,us-mi-montcalm_county,Montcalm County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MI,us-mi-mount_pleasant,Mount Pleasant,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MI,us-mi-muskegon,Muskegon,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MI,us-mi-pontiac,Pontiac,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MI,us-mi-portage,Portage,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MI,us-mi-rochester_hills,Rochester Hills,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MI,us-mi-saginaw,Saginaw,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MI,us-mi-saginaw_township,Saginaw Township,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MI,us-mi-sault_ste_marie,Sault Ste Marie,1,residential_remodel,FAIL_CLOSED,FAIL_CLOSED
+MI,us-mi-southfield,Southfield,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MI,us-mi-st_clair_shores,St Clair Shores,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MI,us-mi-sterling_heights,"City of Sterling Heights, Office of Building",1,reroof,EXACT_COMPLETE,PUBLISHABLE
+MI,us-mi-taylor,Taylor,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MI,us-mi-troy,Troy,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MI,us-mi-warren,Warren,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MI,us-mi-washtenaw_county,Washtenaw County,1,residential_remodel,FAIL_CLOSED,FAIL_CLOSED
+MI,us-mi-waterford_charter_township,Waterford Charter Township,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MI,us-mi-west_bloomfield_township,West Bloomfield Township,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MI,us-mi-westland,Westland,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MI,us-mi-wyoming,Wyoming,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MN,us-mn-anoka,Anoka,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MN,us-mn-apple_valley,Apple Valley,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MN,us-mn-beltrami,Beltrami,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MN,us-mn-blaine,Blaine,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MN,us-mn-bloomington,Bloomington,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MN,us-mn-blue_earth,Blue Earth,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MN,us-mn-brooklyn_park,Brooklyn Park,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MN,us-mn-burnsville,Burnsville,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MN,us-mn-carver,Carver,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MN,us-mn-chaska,Chaska,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MN,us-mn-chisago,Chisago,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MN,us-mn-clay,Clay,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MN,us-mn-coon_rapids,Coon Rapids,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MN,us-mn-cottage_grove,Cottage Grove,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MN,us-mn-crow_wing,Crow Wing,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MN,us-mn-dakota,Dakota,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MN,us-mn-douglas,Douglas,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MN,us-mn-duluth,Duluth,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MN,us-mn-eagan,Eagan,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MN,us-mn-eden_prairie,Eden Prairie,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MN,us-mn-edina,Edina,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MN,us-mn-goodhue,Goodhue,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MN,us-mn-hennepin,Hennepin,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MN,us-mn-isanti,Isanti,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MN,us-mn-kandiyohi,Kandiyohi,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MN,us-mn-lakeville,Lakeville,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MN,us-mn-lyon,Lyon,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MN,us-mn-mankato,Mankato,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MN,us-mn-maple_grove,Maple Grove,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MN,us-mn-maplewood,Maplewood,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MN,us-mn-minneapolis,Minneapolis,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MN,us-mn-minnetonka,Minnetonka,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MN,us-mn-moorhead,Moorhead,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MN,us-mn-mower,Mower,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MN,us-mn-olmsted,Olmsted,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MN,us-mn-plymouth,Plymouth,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MN,us-mn-ramsey,Ramsey,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MN,us-mn-rice,Rice,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MN,us-mn-rochester,Rochester,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MN,us-mn-scott,Scott,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MN,us-mn-sherburne,Sherburne,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MN,us-mn-st_cloud,St Cloud,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MN,us-mn-st_louis,St Louis,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MN,us-mn-st_paul,St Paul,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MN,us-mn-stearns,Stearns,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MN,us-mn-washington,Washington,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MN,us-mn-winona,Winona,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MN,us-mn-woodbury,Woodbury,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MN,us-mn-wright,Wright,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MO,us-mo-arnold,Arnold,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MO,us-mo-ballwin,Ballwin,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MO,us-mo-belton,Belton,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MO,us-mo-blue_springs,Blue Springs,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MO,us-mo-boone_county,Boone County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MO,us-mo-camden_county,Camden County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MO,us-mo-cape_girardeau,Cape Girardeau,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MO,us-mo-cass_county,Cass County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MO,us-mo-chesterfield,Chesterfield,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MO,us-mo-christian_county,Christian County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MO,us-mo-clay_county,Clay County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MO,us-mo-cole_county,Cole County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MO,us-mo-columbia,Columbia,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MO,us-mo-festus,Festus,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MO,us-mo-florissant,Florissant,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MO,us-mo-gladstone,Gladstone,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MO,us-mo-grandview,Grandview,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MO,us-mo-greene_county,Greene County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MO,us-mo-hazelwood,Hazelwood,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MO,us-mo-independence,Independence,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MO,us-mo-jackson_county,Jackson County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MO,us-mo-jefferson_city,Jefferson City,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MO,us-mo-jefferson_county,Jefferson County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MO,us-mo-joplin,Joplin,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MO,us-mo-kansas_city,Kansas City,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MO,us-mo-kirkwood,Kirkwood,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MO,us-mo-lees_summit,Lees Summit,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MO,us-mo-liberty,Liberty,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MO,us-mo-maryland_heights,Maryland Heights,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MO,us-mo-nixa,Nixa,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MO,us-mo-ozark_city,Ozark City,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MO,us-mo-raymore,Raymore,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MO,us-mo-raytown,Raytown,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MO,us-mo-republic,Republic,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MO,us-mo-rolla,Rolla,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MO,us-mo-sedalia,Sedalia,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MO,us-mo-springfield,Springfield,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MO,us-mo-st_charles_city,St Charles City,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MO,us-mo-st_charles_county,St Charles County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MO,us-mo-st_joseph,St Joseph,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MO,us-mo-st_louis_city,St Louis City,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MO,us-mo-st_louis_county,St Louis County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MO,us-mo-st_peters,St Peters,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MO,us-mo-university_city,University City,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MO,us-mo-webster_groves,Webster Groves,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MO,us-mo-wentzville,Wentzville,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MO,us-mo-wildwood,Wildwood,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MS,us-ms-biloxi_city,Biloxi City,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MS,us-ms-brandon_city,Brandon City,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MS,us-ms-clarksdale,Clarksdale,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MS,us-ms-clinton_city,Clinton City,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MS,us-ms-columbus_city,Columbus City,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MS,us-ms-desoto_county,Desoto County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MS,us-ms-diamondhead_city,Diamondhead City,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MS,us-ms-flowood,Flowood,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MS,us-ms-flowood_city,Flowood City,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MS,us-ms-gautier_city,Gautier City,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MS,us-ms-greenville_city,Greenville City,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MS,us-ms-greenwood_city,Greenwood City,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MS,us-ms-gulfport,Gulfport,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MS,us-ms-gulfport_city,Gulfport City,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MS,us-ms-harrison_county,Harrison County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MS,us-ms-hattiesburg_city,Hattiesburg City,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MS,us-ms-horn_lake_city,Horn Lake City,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MS,us-ms-indianola,Indianola,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MS,us-ms-jackson_city,Jackson City,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MS,us-ms-jackson_county,Jackson County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MS,us-ms-madison_city,Madison City,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MS,us-ms-madison_county,Madison County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MS,us-ms-mccomb,Mccomb,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MS,us-ms-meridian_city,Meridian City,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MS,us-ms-natchez_city,Natchez City,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MS,us-ms-ocean_springs_city,Ocean Springs City,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MS,us-ms-olive_branch_city,Olive Branch City,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MS,us-ms-oxford,Oxford,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MS,us-ms-oxford_city,Oxford City,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MS,us-ms-pascagoula_city,Pascagoula City,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MS,us-ms-pearl_city,Pearl City,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MS,us-ms-rankin_county,Rankin County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MS,us-ms-richland,Richland,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MS,us-ms-senatobia,Senatobia,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MS,us-ms-southaven_city,Southaven City,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MS,us-ms-starkville_city,Starkville City,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MS,us-ms-stone_county,Stone County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MS,us-ms-the_rez,The Rez,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MS,us-ms-tupelo,Tupelo,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MS,us-ms-tupelo_city,Tupelo City,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MS,us-ms-vicksburg_city,Vicksburg City,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MT,us-mt-anaconda_deer_lodge,Anaconda Deer Lodge,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MT,us-mt-belgrade,Belgrade,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MT,us-mt-billings,Billings,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MT,us-mt-bozeman,Bozeman,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MT,us-mt-butte_silver_bow,Butte Silver Bow,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MT,us-mt-cascade_county,Cascade County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MT,us-mt-choteau,Choteau,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MT,us-mt-colstrip,Colstrip,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MT,us-mt-columbia_falls,Columbia Falls,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MT,us-mt-cut_bank,Cut Bank,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MT,us-mt-darby,Darby,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MT,us-mt-east_helena,East Helena,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MT,us-mt-flathead_county,Flathead County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MT,us-mt-forsyth,Forsyth,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MT,us-mt-gallatin_county,Gallatin County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MT,us-mt-glasgow,Glasgow,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MT,us-mt-great_falls,Great Falls,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MT,us-mt-hardin,Hardin,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MT,us-mt-havre,Havre,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MT,us-mt-helena,Helena,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MT,us-mt-kalispell,Kalispell,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MT,us-mt-laurel,Laurel,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MT,us-mt-libby,Libby,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MT,us-mt-livingston,Livingston,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MT,us-mt-manhattan,Manhattan,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MT,us-mt-miles_city,Miles City,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MT,us-mt-missoula_city,Missoula City,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MT,us-mt-missoula_county,Missoula County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MT,us-mt-mt_dli_bsd,Mt Dli Bsd,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MT,us-mt-park_county,Park County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MT,us-mt-polson,Polson,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MT,us-mt-ravalli_county,Ravalli County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MT,us-mt-red_lodge,Red Lodge,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MT,us-mt-richland_county,Richland County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MT,us-mt-ronan,Ronan,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MT,us-mt-sidney,Sidney,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MT,us-mt-toole_county,Toole County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MT,us-mt-townsend,Townsend,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MT,us-mt-west_yellowstone,West Yellowstone,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MT,us-mt-whitefish,Whitefish,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+MT,us-mt-yellowstone_county,Yellowstone County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NC,us-nc-alamance_county,Alamance County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NC,us-nc-apex,Apex,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NC,us-nc-asheville,Asheville,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NC,us-nc-banner_elk,Banner Elk,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NC,us-nc-brunswick_county,Brunswick County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NC,us-nc-buncombe_county,Buncombe County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NC,us-nc-burlington,Burlington,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NC,us-nc-cabarrus_county,Cabarrus County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NC,us-nc-carrboro,Carrboro,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NC,us-nc-cary,Cary,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NC,us-nc-catawba_county,Catawba County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NC,us-nc-chapel_hill,Chapel Hill,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NC,us-nc-charlotte,Charlotte,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NC,us-nc-clayton,Clayton,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NC,us-nc-cumberland_county,Cumberland County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NC,us-nc-durham,Durham,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NC,us-nc-durham_city_county,Durham City County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NC,us-nc-fayetteville,Fayetteville,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NC,us-nc-forsyth_county,Forsyth County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NC,us-nc-fuquay_varina,Fuquay Varina,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NC,us-nc-garner,Garner,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NC,us-nc-gaston_county,Gaston County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NC,us-nc-greensboro,Greensboro,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NC,us-nc-greenville,Greenville,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NC,us-nc-guilford_county,Guilford County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NC,us-nc-henderson_county,Henderson County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NC,us-nc-high_point,High Point,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NC,us-nc-holly_springs,Holly Springs,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NC,us-nc-iredell_county,Iredell County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NC,us-nc-jacksonville,Jacksonville,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NC,us-nc-johnston_county,Johnston County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NC,us-nc-kill_devil_hills,Kill Devil Hills,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NC,us-nc-mecklenburg_county,Mecklenburg County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NC,us-nc-monroe,Monroe,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NC,us-nc-mooresville,Mooresville,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NC,us-nc-morrisville,Morrisville,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NC,us-nc-new_hanover_county,New Hanover County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NC,us-nc-onslow_county,Onslow County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NC,us-nc-orange_county,Orange County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NC,us-nc-pitt_county,Pitt County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NC,us-nc-raleigh,Raleigh,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NC,us-nc-robbins,Robbins,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NC,us-nc-union-county,Union County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NC,us-nc-wake_county,Wake County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NC,us-nc-wake_forest,Wake Forest,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NC,us-nc-waxhaw,Waxhaw,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NC,us-nc-wilmington,Wilmington,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NC,us-nc-winston-salem,Winston Salem,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+ND,us-nd-beulah,Beulah,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+ND,us-nd-bismarck,Bismarck,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+ND,us-nd-burleigh_county,Burleigh County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+ND,us-nd-carrington,Carrington,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+ND,us-nd-cass_county,Cass County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+ND,us-nd-casselton,Casselton,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+ND,us-nd-cavalier,Cavalier,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+ND,us-nd-devils_lake,Devils Lake,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+ND,us-nd-dickinson,Dickinson,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+ND,us-nd-ellendale,Ellendale,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+ND,us-nd-fargo,Fargo,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+ND,us-nd-grafton,Grafton,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+ND,us-nd-grand_forks,Grand Forks,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+ND,us-nd-grand_forks_county,Grand Forks County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+ND,us-nd-hillsboro,Hillsboro,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+ND,us-nd-horace,Horace,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+ND,us-nd-jamestown,Jamestown,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+ND,us-nd-kenmare,Kenmare,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+ND,us-nd-lamoure_city,Lamoure City,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+ND,us-nd-lincoln,Lincoln,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+ND,us-nd-mandan,Mandan,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+ND,us-nd-mckenzie_county,Mckenzie County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+ND,us-nd-minot,Minot,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+ND,us-nd-morton_county,Morton County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+ND,us-nd-mountrail_county,Mountrail County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+ND,us-nd-oakes,Oakes,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+ND,us-nd-reiles_acres,Reiles Acres,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+ND,us-nd-stanley,Stanley,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+ND,us-nd-tioga,Tioga,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+ND,us-nd-valley_city,Valley City,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+ND,us-nd-wahpeton,Wahpeton,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+ND,us-nd-ward_county,Ward County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+ND,us-nd-watford_city,Watford City,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+ND,us-nd-west_fargo,West Fargo,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+ND,us-nd-williams_county,Williams County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+ND,us-nd-williston,Williston,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NE,us-ne-alliance,Alliance,1,residential_remodel,FAIL_CLOSED,FAIL_CLOSED
+NE,us-ne-atkinson,Atkinson,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NE,us-ne-aurora,Aurora,1,residential_remodel,FAIL_CLOSED,FAIL_CLOSED
+NE,us-ne-bellevue,Bellevue,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NE,us-ne-blair,Blair,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NE,us-ne-broken_bow,Broken Bow,1,residential_remodel,FAIL_CLOSED,FAIL_CLOSED
+NE,us-ne-cambridge,Cambridge,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NE,us-ne-chadron,Chadron,1,residential_remodel,FAIL_CLOSED,FAIL_CLOSED
+NE,us-ne-columbus,Columbus,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NE,us-ne-cozad,Cozad,1,residential_remodel,FAIL_CLOSED,FAIL_CLOSED
+NE,us-ne-crete_city,Crete City,1,residential_remodel,FAIL_CLOSED,FAIL_CLOSED
+NE,us-ne-david_city,David City,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NE,us-ne-fillmore_county,Fillmore County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NE,us-ne-firth,Firth,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NE,us-ne-fremont,Fremont,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NE,us-ne-gering,Gering,1,residential_remodel,FAIL_CLOSED,FAIL_CLOSED
+NE,us-ne-gothenburg,Gothenburg,1,residential_remodel,FAIL_CLOSED,FAIL_CLOSED
+NE,us-ne-grand_island,Grand Island,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NE,us-ne-gretna,Gretna,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NE,us-ne-hastings,Hastings,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NE,us-ne-holdrege,Holdrege,1,residential_remodel,FAIL_CLOSED,FAIL_CLOSED
+NE,us-ne-kearney,Kearney,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NE,us-ne-la_vista,La Vista,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NE,us-ne-lexington,Lexington,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NE,us-ne-lincoln,Lincoln,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NE,us-ne-mccook_city,Mccook City,1,residential_remodel,FAIL_CLOSED,FAIL_CLOSED
+NE,us-ne-nebraska_city,Nebraska City,1,residential_remodel,FAIL_CLOSED,FAIL_CLOSED
+NE,us-ne-north_platte,North Platte,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NE,us-ne-ogallala,Ogallala,1,residential_remodel,FAIL_CLOSED,FAIL_CLOSED
+NE,us-ne-omaha,Omaha,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NE,us-ne-papillion,Papillion,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NE,us-ne-plattsmouth,Plattsmouth,1,residential_remodel,EXACT_PARTIAL,PUBLISHABLE
+NE,us-ne-ralston,Ralston,1,residential_remodel,EXACT_PARTIAL,PUBLISHABLE
+NE,us-ne-schuyler,Schuyler,1,residential_remodel,EXACT_PARTIAL,PUBLISHABLE
+NE,us-ne-scottsbluff,Scottsbluff,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NE,us-ne-seward_city,Seward City,1,residential_remodel,EXACT_PARTIAL,PUBLISHABLE
+NE,us-ne-sidney,Sidney,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NE,us-ne-south_sioux_city,South Sioux City,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NE,us-ne-wahoo_city,Wahoo City,1,residential_remodel,EXACT_PARTIAL,PUBLISHABLE
+NE,us-ne-waverly,Waverly,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NE,us-ne-wayne_city,Wayne City,1,residential_remodel,EXACT_PARTIAL,PUBLISHABLE
+NE,us-ne-wilber,Wilber,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NE,us-ne-york,York,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NH,us-nh-amherst,Amherst,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NH,us-nh-atkinson,Atkinson,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NH,us-nh-auburn,Auburn,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NH,us-nh-barrington,Barrington,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NH,us-nh-bedford,Bedford,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NH,us-nh-berlin,Berlin,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NH,us-nh-brentwood,Brentwood,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NH,us-nh-candia,Candia,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NH,us-nh-chester,Chester,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NH,us-nh-claremont,Claremont,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NH,us-nh-concord,Concord,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NH,us-nh-derry,Derry,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NH,us-nh-dover,Dover,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NH,us-nh-durham,Durham,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NH,us-nh-epping,Epping,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NH,us-nh-franklin,Franklin,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NH,us-nh-fremont,Fremont,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NH,us-nh-gilsum,Gilsum,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NH,us-nh-greenland,Greenland,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NH,us-nh-hampstead,Hampstead,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NH,us-nh-hampton_falls,Hampton Falls,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NH,us-nh-holderness,Holderness,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NH,us-nh-keene,Keene,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NH,us-nh-laconia,Laconia,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NH,us-nh-lebanon,Lebanon,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NH,us-nh-londonderry,Londonderry,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NH,us-nh-manchester,Manchester,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NH,us-nh-nashua,Nashua,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NH,us-nh-newmarket,Newmarket,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NH,us-nh-plaistow,Plaistow,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NH,us-nh-portsmouth,Portsmouth,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NH,us-nh-raymond,Raymond,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NH,us-nh-rochester,Rochester,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NH,us-nh-salem,Salem,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NH,us-nh-salisbury,Salisbury,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NH,us-nh-sandown,Sandown,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NH,us-nh-seabrook,Seabrook,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NH,us-nh-somersworth,Somersworth,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NH,us-nh-stratham,Stratham,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NH,us-nh-windham,Windham,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NJ,us-nj-bayonne_city,Bayonne City,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NJ,us-nj-berkeley_twp,Berkeley Twp,1,residential_remodel,EXACT_PARTIAL,PUBLISHABLE
+NJ,us-nj-bloomfield_twp,Bloomfield Twp,1,residential_remodel,EXACT_PARTIAL,PUBLISHABLE
+NJ,us-nj-brick_twp,Brick Twp,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NJ,us-nj-bridgewater_twp,Bridgewater Twp,1,residential_remodel,EXACT_PARTIAL,PUBLISHABLE
+NJ,us-nj-camden_city,Camden City,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NJ,us-nj-cherry_hill_twp,Cherry Hill Twp,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NJ,us-nj-clifton_city,Clifton City,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NJ,us-nj-east_brunswick_twp,East Brunswick Twp,1,residential_remodel,EXACT_PARTIAL,PUBLISHABLE
+NJ,us-nj-east_orange_city,East Orange City,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NJ,us-nj-edison_twp,Edison Twp,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NJ,us-nj-egg_harbor_twp,Egg Harbor Twp,1,residential_remodel,EXACT_PARTIAL,PUBLISHABLE
+NJ,us-nj-elizabeth_city,Elizabeth City,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NJ,us-nj-evesham_twp,Evesham Twp,1,residential_remodel,EXACT_PARTIAL,PUBLISHABLE
+NJ,us-nj-franklin_twp_somerset,Franklin Twp Somerset,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NJ,us-nj-gloucester_twp,Gloucester Twp,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NJ,us-nj-hackensack_city,Hackensack City,1,residential_remodel,EXACT_PARTIAL,PUBLISHABLE
+NJ,us-nj-hamilton_twp_mercer,Hamilton Twp Mercer,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NJ,us-nj-hoboken_city,Hoboken City,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NJ,us-nj-howell_twp,Howell Twp,1,residential_remodel,EXACT_PARTIAL,PUBLISHABLE
+NJ,us-nj-irvington_twp,Irvington Twp,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NJ,us-nj-jackson_twp,Jackson Twp,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NJ,us-nj-jersey_city,Jersey City,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NJ,us-nj-lakewood_twp,Lakewood Twp,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NJ,us-nj-manchester_twp,Manchester Twp,1,residential_remodel,EXACT_PARTIAL,PUBLISHABLE
+NJ,us-nj-middletown_twp,Middletown Twp,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NJ,us-nj-monroe_twp_middlesex,Monroe Twp Middlesex,1,residential_remodel,EXACT_PARTIAL,PUBLISHABLE
+NJ,us-nj-new_brunswick_city,New Brunswick City,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NJ,us-nj-newark_city,Newark City,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NJ,us-nj-north_bergen_twp,North Bergen Twp,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NJ,us-nj-old_bridge_twp,Old Bridge Twp,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NJ,us-nj-parsippany_troy_hills_twp,Parsippany Troy Hills Twp,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NJ,us-nj-passaic_city,Passaic City,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NJ,us-nj-paterson_city,Paterson City,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NJ,us-nj-perth_amboy_city,Perth Amboy City,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NJ,us-nj-piscataway_twp,Piscataway Twp,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NJ,us-nj-toms_river_twp,Toms River Twp,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NJ,us-nj-trenton_city,Trenton City,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NJ,us-nj-union_city,Union City,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NJ,us-nj-union_twp_union,Union Twp Union,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NJ,us-nj-vineland_city,Vineland City,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NJ,us-nj-woodbridge_twp,Woodbridge Twp,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NM,us-nm-alamogordo,Alamogordo,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NM,us-nm-albuquerque,Albuquerque,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NM,us-nm-artesia,Artesia,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NM,us-nm-aztec,Aztec,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NM,us-nm-bernalillo_county,Bernalillo County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NM,us-nm-bernalillo_town,Bernalillo Town,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NM,us-nm-bloomfield,Bloomfield,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NM,us-nm-carlsbad,Carlsbad,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NM,us-nm-chaves_county,Chaves County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NM,us-nm-cibola_county,Cibola County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NM,us-nm-cid_state,Cid State,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NM,us-nm-clovis,Clovis,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NM,us-nm-colfax_county,Colfax County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NM,us-nm-corrales,Corrales,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NM,us-nm-deming,Deming,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NM,us-nm-dona_ana_county,Dona Ana County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NM,us-nm-eddy_county,Eddy County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NM,us-nm-elephant_butte,Elephant Butte,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NM,us-nm-espanola,Espanola,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NM,us-nm-farmington,Farmington,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NM,us-nm-gallup,Gallup,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NM,us-nm-grant_county,Grant County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NM,us-nm-hobbs,Hobbs,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NM,us-nm-las_cruces,Las Cruces,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NM,us-nm-las_vegas_nm,Las Vegas Nm,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NM,us-nm-lea_county,Lea County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NM,us-nm-los_alamos_county,Los Alamos County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NM,us-nm-los_lunas,Los Lunas,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NM,us-nm-lovington,Lovington,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NM,us-nm-mora_county,Mora County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NM,us-nm-otero_county,Otero County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NM,us-nm-portales,Portales,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NM,us-nm-rio_arriba_county,Rio Arriba County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NM,us-nm-rio_rancho,Rio Rancho,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NM,us-nm-ruidoso,Ruidoso,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NM,us-nm-san_juan_county,San Juan County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NM,us-nm-sandoval_county,Sandoval County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NM,us-nm-santa_fe_city,Santa Fe City,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NM,us-nm-santa_fe_county,Santa Fe County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NM,us-nm-silver_city,Silver City,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NM,us-nm-socorro_city,Socorro City,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NM,us-nm-socorro_county,Socorro County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NM,us-nm-sunland_park,Sunland Park,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NM,us-nm-taos_county,Taos County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NM,us-nm-taos_town,Taos Town,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NM,us-nm-torrance_county,Torrance County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NM,us-nm-tucumcari,Tucumcari,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NM,us-nm-valencia_county,Valencia County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NV,us-nv-boulder_city,Boulder City,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NV,us-nv-caliente,Caliente,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NV,us-nv-churchill_county,Churchill County,1,residential_remodel,EXACT_PARTIAL,PUBLISHABLE
+NV,us-nv-clark_county,Clark County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NV,us-nv-douglas_county,Douglas County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NV,us-nv-elko,Elko,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NV,us-nv-elko_county,Elko County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NV,us-nv-ely,Ely,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NV,us-nv-enterprise,Enterprise,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NV,us-nv-fernley,Fernley,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NV,us-nv-henderson,Henderson,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NV,us-nv-humboldt_county,Humboldt County,1,residential_remodel,EXACT_PARTIAL,PUBLISHABLE
+NV,us-nv-indian_springs,Indian Springs,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NV,us-nv-lander_county,Lander County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NV,us-nv-las_vegas,Las Vegas,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NV,us-nv-lincoln_county,Lincoln County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NV,us-nv-lovelock,Lovelock,1,residential_remodel,EXACT_PARTIAL,PUBLISHABLE
+NV,us-nv-lyon_county,Lyon County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NV,us-nv-mesquite,Mesquite,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NV,us-nv-mineral_county,Mineral County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NV,us-nv-moapa_valley,Moapa Valley,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NV,us-nv-mt_charleston,Mt Charleston,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NV,us-nv-nevada_state_public_works,Nevada State Public Works,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NV,us-nv-north_las_vegas,North Las Vegas,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NV,us-nv-nye_county,Nye County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NV,us-nv-paradise,Paradise,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NV,us-nv-pershing_county,Pershing County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NV,us-nv-reno,Reno,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NV,us-nv-sandy_valley,Sandy Valley,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NV,us-nv-sparks,Sparks,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NV,us-nv-storey_county,Storey County,1,residential_remodel,EXACT_PARTIAL,PUBLISHABLE
+NV,us-nv-washoe_county,Washoe County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NV,us-nv-west_wendover,West Wendover,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NV,us-nv-white_pine_county,White Pine County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NV,us-nv-whitney,Whitney,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NV,us-nv-winchester,Winchester,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NV,us-nv-winnemucca,Winnemucca,1,residential_remodel,EXACT_PARTIAL,PUBLISHABLE
+NV,us-nv-yerington,Yerington,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NY,us-ny-albany,Albany,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NY,us-ny-albany_county,Albany County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NY,us-ny-amsterdam,Amsterdam,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NY,us-ny-auburn,Auburn,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NY,us-ny-binghamton,Binghamton,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NY,us-ny-buffalo,Buffalo,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NY,us-ny-cohoes,Cohoes,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NY,us-ny-cortland,Cortland,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NY,us-ny-elmira,Elmira,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NY,us-ny-erie_county,Erie County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NY,us-ny-glen_cove,Glen Cove,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NY,us-ny-glens_falls,Glens Falls,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NY,us-ny-ithaca,Ithaca,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NY,us-ny-jamestown,Jamestown,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NY,us-ny-kingston,Kingston,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NY,us-ny-lackawanna,Lackawanna,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NY,us-ny-lockport,Lockport,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NY,us-ny-long_beach,Long Beach,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NY,us-ny-middletown,Middletown,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NY,us-ny-monroe_county,Monroe County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NY,us-ny-mount_vernon,Mount Vernon,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NY,us-ny-nassau_county,Nassau County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NY,us-ny-new_york_city,New York City,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NY,us-ny-newburgh,Newburgh,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NY,us-ny-niagara_falls,Niagara Falls,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NY,us-ny-onondaga_county,Onondaga County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NY,us-ny-orange_county,Orange County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NY,us-ny-oswego,Oswego,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NY,us-ny-peekskill,Peekskill,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NY,us-ny-poughkeepsie,Poughkeepsie,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NY,us-ny-rochester,Rochester,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NY,us-ny-rome,Rome,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NY,us-ny-saratoga_springs,Saratoga Springs,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NY,us-ny-scarsdale,Scarsdale,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NY,us-ny-schenectady,Schenectady,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NY,us-ny-syracuse,Syracuse,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NY,us-ny-town_babylon,Town Babylon,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NY,us-ny-town_brookhaven,Town Brookhaven,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NY,us-ny-town_greenburgh,Town Greenburgh,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NY,us-ny-town_hempstead,Town Hempstead,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NY,us-ny-town_islip,Town Islip,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NY,us-ny-troy,Troy,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NY,us-ny-tuxedo,Tuxedo,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NY,us-ny-utica,Utica,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NY,us-ny-white_plains,White Plains,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+NY,us-ny-yonkers,Yonkers,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+OH,us-oh-akron,Akron,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+OH,us-oh-ashtabula_county,Ashtabula County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+OH,us-oh-beavercreek,Beavercreek,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+OH,us-oh-butler_county,Butler County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+OH,us-oh-canton,Canton,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+OH,us-oh-cincinnati,Cincinnati,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+OH,us-oh-clark_county,Clark County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+OH,us-oh-cleveland,Cleveland,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+OH,us-oh-cleveland_heights,Cleveland Heights,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+OH,us-oh-columbus,Columbus,1,commercial_tenant_improvement,FAIL_CLOSED,FAIL_CLOSED
+OH,us-oh-cuyahoga_falls,Cuyahoga Falls,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+OH,us-oh-dayton,Dayton,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+OH,us-oh-delaware,Delaware,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+OH,us-oh-delaware_county,Delaware County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+OH,us-oh-dublin,Dublin,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+OH,us-oh-elyria,Elyria,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+OH,us-oh-euclid,Euclid,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+OH,us-oh-fairfield,Fairfield,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+OH,us-oh-fairfield_county,Fairfield County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+OH,us-oh-franklin_county,Franklin County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+OH,us-oh-greene_county,Greene County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+OH,us-oh-grove_city,Grove City,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+OH,us-oh-hamilton,Hamilton,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+OH,us-oh-hamilton_county,Hamilton County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+OH,us-oh-huber_heights,Huber Heights,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+OH,us-oh-kettering,Kettering,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+OH,us-oh-lake_county,Lake County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+OH,us-oh-lakewood,Lakewood,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+OH,us-oh-licking_county,Licking County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+OH,us-oh-mahoning_county,Mahoning County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+OH,us-oh-mansfield,Mansfield,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+OH,us-oh-mason,Mason,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+OH,us-oh-medina_county,Medina County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+OH,us-oh-middletown,Middletown,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+OH,us-oh-montgomery_county,Montgomery County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+OH,us-oh-newark,Newark,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+OH,us-oh-ottawa_county,Ottawa County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+OH,us-oh-parma,Parma,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+OH,us-oh-richland_county,Richland County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+OH,us-oh-seneca_county,Seneca County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+OH,us-oh-springfield,Springfield,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+OH,us-oh-stark_county,Stark County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+OH,us-oh-strongsville,Strongsville,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+OH,us-oh-summit_county,Summit County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+OH,us-oh-toledo,Toledo,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+OH,us-oh-trumbull_county,Trumbull County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+OH,us-oh-warren_county,Warren County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+OH,us-oh-youngstown,Youngstown,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+OK,us-ok-altus,Altus,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+OK,us-ok-anadarko,Anadarko,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+OK,us-ok-ardmore,Ardmore,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+OK,us-ok-bartlesville,Bartlesville,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+OK,us-ok-bixby,Bixby,1,residential_remodel,EXACT_PARTIAL,PUBLISHABLE
+OK,us-ok-broken_arrow,Broken Arrow,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+OK,us-ok-catoosa,Catoosa,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+OK,us-ok-chickasha,Chickasha,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+OK,us-ok-claremore,Claremore,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+OK,us-ok-collinsville,Collinsville,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+OK,us-ok-del_city,Del City,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+OK,us-ok-edmond,Edmond,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+OK,us-ok-el_reno,El Reno,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+OK,us-ok-elk_city,Elk City,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+OK,us-ok-enid,Enid,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+OK,us-ok-guthrie,Guthrie,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+OK,us-ok-jenks,Jenks,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+OK,us-ok-lawton,Lawton,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+OK,us-ok-mcalester,Mcalester,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+OK,us-ok-midwest_city,Midwest City,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+OK,us-ok-moore,Moore,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+OK,us-ok-muskogee,Muskogee,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+OK,us-ok-mustang,Mustang,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+OK,us-ok-newcastle,Newcastle,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+OK,us-ok-nichols_hills,Nichols Hills,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+OK,us-ok-norman,Norman,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+OK,us-ok-oklahoma_city,Oklahoma City,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+OK,us-ok-oklahoma_county,Oklahoma County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+OK,us-ok-okmulgee,Okmulgee,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+OK,us-ok-owasso,Owasso,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+OK,us-ok-ponca_city,Ponca City,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+OK,us-ok-pryor_creek,Pryor Creek,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+OK,us-ok-rogers_county,Rogers County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+OK,us-ok-sapulpa,Sapulpa,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+OK,us-ok-shawnee,Shawnee,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+OK,us-ok-skiatook,Skiatook,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+OK,us-ok-stillwater,Stillwater,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+OK,us-ok-tahlequah,Tahlequah,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+OK,us-ok-tecumseh,Tecumseh,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+OK,us-ok-tulsa,Tulsa,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+OK,us-ok-tulsa_county,Tulsa County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+OK,us-ok-wagoner_county,Wagoner County,1,residential_remodel,EXACT_PARTIAL,PUBLISHABLE
+OK,us-ok-warr_acres,Warr Acres,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+OK,us-ok-weatherford,Weatherford,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+OK,us-ok-yukon,Yukon,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+OR,us-or-albany,Albany,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+OR,us-or-beaverton,Beaverton,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+OR,us-or-bend,Bend,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+OR,us-or-benton_county,Benton County,1,residential_remodel,EXACT_PARTIAL,PUBLISHABLE
+OR,us-or-canby,Canby,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+OR,us-or-clackamas_county,Clackamas County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+OR,us-or-columbia_county,Columbia County,1,residential_remodel,EXACT_PARTIAL,PUBLISHABLE
+OR,us-or-coos_county,Coos County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+OR,us-or-corvallis,Corvallis,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+OR,us-or-deschutes_county,Deschutes County,1,residential_remodel,EXACT_PARTIAL,PUBLISHABLE
+OR,us-or-douglas_county,Douglas County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+OR,us-or-estacada,Estacada,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+OR,us-or-eugene,Eugene,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+OR,us-or-fairview,Fairview,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+OR,us-or-forest_grove,Forest Grove,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+OR,us-or-gladstone,Gladstone,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+OR,us-or-grants_pass,Grants Pass,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+OR,us-or-gresham,Gresham,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+OR,us-or-happy_valley,Happy Valley,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+OR,us-or-jackson_county,Jackson County,1,residential_remodel,EXACT_PARTIAL,PUBLISHABLE
+OR,us-or-josephine_county,Josephine County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+OR,us-or-keizer,Keizer,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+OR,us-or-klamath_county,Klamath County,1,residential_remodel,EXACT_PARTIAL,PUBLISHABLE
+OR,us-or-lafayette,Lafayette,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+OR,us-or-lane_county,Lane County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+OR,us-or-lincoln_county,Lincoln County,1,residential_remodel,EXACT_PARTIAL,PUBLISHABLE
+OR,us-or-linn_county,Linn County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+OR,us-or-marion_county,Marion County,1,residential_remodel,EXACT_PARTIAL,PUBLISHABLE
+OR,us-or-mcminnville,Mcminnville,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+OR,us-or-medford,Medford,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+OR,us-or-milwaukie,Milwaukie,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+OR,us-or-molalla,Molalla,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+OR,us-or-newberg,Newberg,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+OR,us-or-polk_county,Polk County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+OR,us-or-portland,Portland,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+OR,us-or-redmond,Redmond,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+OR,us-or-salem,Salem,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+OR,us-or-sandy,Sandy,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+OR,us-or-sherwood,Sherwood,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+OR,us-or-springfield,Springfield,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+OR,us-or-tigard,Tigard,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+OR,us-or-tualatin,Tualatin,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+OR,us-or-west_linn,West Linn,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+OR,us-or-wilsonville,Wilsonville,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+OR,us-or-woodburn,Woodburn,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+PA,us-pa-abington_twp,Abington Twp,1,residential_remodel,EXACT_PARTIAL,PUBLISHABLE
+PA,us-pa-allentown,Allentown,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+PA,us-pa-altoona,Altoona,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+PA,us-pa-bensalem_twp,Bensalem Twp,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+PA,us-pa-bethel_park,Bethel Park,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+PA,us-pa-bethlehem,Bethlehem,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+PA,us-pa-bristol_twp_bucks,Bristol Twp Bucks,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+PA,us-pa-carlisle_boro,Carlisle Boro,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+PA,us-pa-chambersburg_boro,Chambersburg Boro,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+PA,us-pa-cheltenham_twp,Cheltenham Twp,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+PA,us-pa-derry_twp_dauphin,Derry Twp Dauphin,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+PA,us-pa-erie,Erie,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+PA,us-pa-falls_twp_bucks,"Falls Township, Bucks County",1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+PA,us-pa-harrisburg,Harrisburg,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+PA,us-pa-haverford_twp,Haverford Twp,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+PA,us-pa-hazleton_city,Hazleton City,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+PA,us-pa-horsham_twp,Horsham Twp,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+PA,us-pa-lancaster_city,Lancaster City,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+PA,us-pa-lower_merion_twp,Lower Merion Twp,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+PA,us-pa-manheim_twp_lancaster,Manheim Twp Lancaster,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+PA,us-pa-manor_twp_lancaster,Manor Twp Lancaster,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+PA,us-pa-mccandless_twp,Mccandless Twp,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+PA,us-pa-middletown_twp_bucks,Middletown Twp Bucks,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+PA,us-pa-monroeville_boro,Monroeville Boro,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+PA,us-pa-mt_lebanon_twp,Mt Lebanon Twp,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+PA,us-pa-penn_hills_twp,Penn Hills Twp,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+PA,us-pa-philadelphia,Philadelphia,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+PA,us-pa-pittsburgh,Pittsburgh,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+PA,us-pa-plum_boro,Plum Boro,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+PA,us-pa-reading,Reading,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+PA,us-pa-ridley_twp,Ridley Twp,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+PA,us-pa-ross_twp,Ross Twp,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+PA,us-pa-scranton,Scranton,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+PA,us-pa-shaler_twp,Shaler Twp,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+PA,us-pa-south_whitehall_twp,South Whitehall Twp,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+PA,us-pa-springettsbury_twp,Springettsbury Twp,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+PA,us-pa-springfield_twp_delaware,Springfield Twp Delaware,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+PA,us-pa-susquehanna_twp_dauphin,Susquehanna Twp Dauphin,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+PA,us-pa-tredyffrin_twp,Tredyffrin Twp,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+PA,us-pa-upper_darby_twp,Upper Darby Twp,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+PA,us-pa-upper_st_clair_twp,Upper St Clair Twp,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+PA,us-pa-wilkes_barre,Wilkes Barre,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+PA,us-pa-williamsport_city,Williamsport City,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+PA,us-pa-york_city,York City,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+RI,us-ri-barrington,Barrington,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+RI,us-ri-bristol,Bristol,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+RI,us-ri-burrillville,Burrillville,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+RI,us-ri-central_falls,Central Falls,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+RI,us-ri-coventry,Coventry,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+RI,us-ri-cranston,Cranston,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+RI,us-ri-cumberland,Cumberland,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+RI,us-ri-east_greenwich,East Greenwich,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+RI,us-ri-foster,Foster,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+RI,us-ri-glocester,Glocester,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+RI,us-ri-hopkinton,Hopkinton,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+RI,us-ri-jamestown,Jamestown,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+RI,us-ri-johnston,Johnston,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+RI,us-ri-lincoln,Lincoln,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+RI,us-ri-narragansett,Narragansett,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+RI,us-ri-newport,Newport,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+RI,us-ri-north_kingstown,North Kingstown,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+RI,us-ri-north_providence,North Providence,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+RI,us-ri-pawtucket,Pawtucket,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+RI,us-ri-portsmouth,Portsmouth,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+RI,us-ri-providence,Providence,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+RI,us-ri-richmond,Richmond,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+RI,us-ri-smithfield,Smithfield,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+RI,us-ri-south_kingstown,South Kingstown,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+RI,us-ri-warwick,Warwick,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+RI,us-ri-west_warwick,West Warwick,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+RI,us-ri-westerly,Westerly,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+RI,us-ri-woonsocket,Woonsocket,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+SC,us-sc-aiken_city,Aiken City,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+SC,us-sc-anderson_city,Anderson City,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+SC,us-sc-anderson_county,Anderson County,1,residential_remodel,EXACT_COMPLETE,PUBLISHABLE
+SC,us-sc-beaufort_city,Beaufort City,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+SC,us-sc-beaufort_county,Beaufort County,1,residential_remodel,EXACT_PARTIAL,PUBLISHABLE
+SC,us-sc-bluffton,Bluffton,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+SC,us-sc-cayce,Cayce,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+SC,us-sc-charleston_city,Charleston City,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+SC,us-sc-charleston_county,Charleston County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+SC,us-sc-clemson,Clemson,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+SC,us-sc-columbia_city,Columbia City,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+SC,us-sc-conway,Conway,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+SC,us-sc-dorchester_county,Dorchester County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+SC,us-sc-easley,Easley,1,residential_remodel,EXACT_PARTIAL,PUBLISHABLE
+SC,us-sc-florence_city,Florence City,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+SC,us-sc-fort_mill,Fort Mill,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+SC,us-sc-fountain_inn,Fountain Inn,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+SC,us-sc-goose_creek,Goose Creek,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+SC,us-sc-greenville_city,Greenville City,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+SC,us-sc-greenville_county,Greenville County,1,residential_remodel,EXACT_PARTIAL,PUBLISHABLE
+SC,us-sc-greenwood_city,Greenwood City,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+SC,us-sc-greer,Greer,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+SC,us-sc-hardeeville,Hardeeville,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+SC,us-sc-hilton_head_island,Hilton Head Island,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+SC,us-sc-horry_county,Horry County,1,residential_remodel,EXACT_PARTIAL,PUBLISHABLE
+SC,us-sc-irmo,Irmo,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+SC,us-sc-lexington_county,Lexington County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+SC,us-sc-lexington_town,Lexington Town,1,residential_remodel,EXACT_PARTIAL,PUBLISHABLE
+SC,us-sc-mauldin,Mauldin,1,residential_remodel,EXACT_PARTIAL,PUBLISHABLE
+SC,us-sc-moncks_corner,Moncks Corner,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+SC,us-sc-mount_pleasant,Mount Pleasant,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+SC,us-sc-myrtle_beach,Myrtle Beach,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+SC,us-sc-newberry_city,Newberry City,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+SC,us-sc-north_augusta,North Augusta,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+SC,us-sc-north_charleston,North Charleston,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+SC,us-sc-richland_county,Richland County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+SC,us-sc-rock_hill,Rock Hill,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+SC,us-sc-simpsonville,Simpsonville,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+SC,us-sc-spartanburg_city,Spartanburg City,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+SC,us-sc-spartanburg_county,Spartanburg County,1,residential_remodel,EXACT_COMPLETE,PUBLISHABLE
+SC,us-sc-summerville,Summerville,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+SC,us-sc-sumter_city,Sumter City,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+SC,us-sc-tega_cay,Tega Cay,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+SC,us-sc-west_columbia,West Columbia,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+SC,us-sc-york_city,York City,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+SC,us-sc-york_county,York County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+SD,us-sd-belle_fourche,Belle Fourche,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+SD,us-sd-box_elder,Box Elder,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+SD,us-sd-brookings,Brookings,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+SD,us-sd-brookings_county,Brookings County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+SD,us-sd-brown_county,Brown County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+SD,us-sd-brule_county,Brule County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+SD,us-sd-butte_county,Butte County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+SD,us-sd-charles_mix_county,Charles Mix County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+SD,us-sd-clark_county,Clark County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+SD,us-sd-clay_county,Clay County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+SD,us-sd-codington_county,Codington County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+SD,us-sd-davison_county,Davison County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+SD,us-sd-day_county,Day County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+SD,us-sd-deuel_county,Deuel County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+SD,us-sd-groton,Groton,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+SD,us-sd-harrisburg,Harrisburg,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+SD,us-sd-hot_springs,Hot Springs,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+SD,us-sd-huron,City of Huron Inspections Department,1,reroof,EXACT_COMPLETE,PUBLISHABLE
+SD,us-sd-lawrence_county,Lawrence County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+SD,us-sd-lead,Lead,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+SD,us-sd-lincoln_county,Lincoln County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+SD,us-sd-madison,Madison,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+SD,us-sd-meade_county,Meade County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+SD,us-sd-milbank,City of Milbank Planning & Zoning,1,reroof,EXACT_COMPLETE,PUBLISHABLE
+SD,us-sd-minnehaha_county,Minnehaha County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+SD,us-sd-mitchell,Mitchell,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+SD,us-sd-north_sioux_city,North Sioux City,1,residential_remodel,EXACT_PARTIAL,PUBLISHABLE
+SD,us-sd-parkston,Parkston,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+SD,us-sd-pennington_county,Pennington County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+SD,us-sd-pierre,Pierre,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+SD,us-sd-rapid_city,Rapid City,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+SD,us-sd-redfield,Redfield,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+SD,us-sd-sioux_falls,Sioux Falls,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+SD,us-sd-spearfish,Spearfish,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+SD,us-sd-tea,Tea,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+SD,us-sd-union_county,Union County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+SD,us-sd-vermillion,City of Vermillion Code Enforcement,1,reroof,EXACT_COMPLETE,PUBLISHABLE
+SD,us-sd-volga,City of Volga Building Permits,1,reroof,EXACT_COMPLETE,PUBLISHABLE
+SD,us-sd-watertown,Watertown,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+SD,us-sd-winner,Winner,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+SD,us-sd-yankton,Yankton,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+TN,us-tn-anderson_county,Anderson County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+TN,us-tn-bartlett,Bartlett,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+TN,us-tn-blount_county,Blount County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+TN,us-tn-bradley_county,Bradley County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+TN,us-tn-brentwood,Brentwood,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+TN,us-tn-bristol,Bristol,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+TN,us-tn-chattanooga,Chattanooga,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+TN,us-tn-clarksville,Clarksville,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+TN,us-tn-collierville,Collierville,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+TN,us-tn-columbia,Columbia,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+TN,us-tn-farragut,Farragut,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+TN,us-tn-franklin,Franklin,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+TN,us-tn-gallatin,Gallatin,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+TN,us-tn-greene_county,Greene County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+TN,us-tn-hamblen_county,Hamblen County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+TN,us-tn-hamilton_county,Hamilton County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+TN,us-tn-hendersonville,Hendersonville,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+TN,us-tn-jackson,Jackson,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+TN,us-tn-johnson_city,Johnson City,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+TN,us-tn-knox_county,Knox County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+TN,us-tn-knoxville,Knoxville,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+TN,us-tn-la_vergne,La Vergne,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+TN,us-tn-lakeland,Lakeland,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+TN,us-tn-lebanon,Lebanon,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+TN,us-tn-madison_county,Madison County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+TN,us-tn-maryville,Maryville,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+TN,us-tn-maury_county,Maury County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+TN,us-tn-memphis,Memphis,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+TN,us-tn-millington,Millington,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+TN,us-tn-montgomery_county,Montgomery County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+TN,us-tn-mount_juliet,Mount Juliet,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+TN,us-tn-murfreesboro,Murfreesboro,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+TN,us-tn-nashville_davidson,Nashville Davidson,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+TN,us-tn-putnam_county,Putnam County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+TN,us-tn-robertson_county,Robertson County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+TN,us-tn-rutherford_county,Rutherford County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+TN,us-tn-sevier_county,Sevier County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+TN,us-tn-shelby_county,Shelby County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+TN,us-tn-smyrna,Smyrna,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+TN,us-tn-spring_hill,Spring Hill,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+TN,us-tn-sullivan_county,Sullivan County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+TN,us-tn-sumner_county,Sumner County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+TN,us-tn-washington_county,Washington County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+TN,us-tn-williamson_county,Williamson County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+TN,us-tn-wilson_county,Wilson County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+TX,us-tx-abilene,Abilene,1,residential_remodel,EXACT_PARTIAL,PUBLISHABLE
+TX,us-tx-allen,Allen,1,residential_remodel,EXACT_PARTIAL,PUBLISHABLE
+TX,us-tx-amarillo,Amarillo,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+TX,us-tx-arlington,Arlington,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+TX,us-tx-austin,Austin,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+TX,us-tx-bastrop_county,Bastrop County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+TX,us-tx-beaumont,Beaumont,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+TX,us-tx-bexar_county,Bexar County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+TX,us-tx-brownsville,Brownsville,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+TX,us-tx-carrollton,Carrollton,1,residential_remodel,EXACT_PARTIAL,PUBLISHABLE
+TX,us-tx-celina,Celina,1,residential_remodel,EXACT_PARTIAL,PUBLISHABLE
+TX,us-tx-college_station,College Station,1,residential_remodel,EXACT_PARTIAL,PUBLISHABLE
+TX,us-tx-corpus_christi,Corpus Christi,1,residential_remodel,EXACT_PARTIAL,PUBLISHABLE
+TX,us-tx-dallas,Dallas,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+TX,us-tx-denton,Denton,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+TX,us-tx-el_paso,El Paso,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+TX,us-tx-fate,Fate,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+TX,us-tx-fort_worth,Fort Worth,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+TX,us-tx-frisco,Frisco,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+TX,us-tx-fulshear,Fulshear,1,residential_remodel,EXACT_PARTIAL,PUBLISHABLE
+TX,us-tx-garland,Garland,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+TX,us-tx-georgetown,Georgetown,1,residential_remodel,EXACT_PARTIAL,PUBLISHABLE
+TX,us-tx-grand_prairie,Grand Prairie,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+TX,us-tx-haltom_city,Haltom City,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+TX,us-tx-harris_county,Harris County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+TX,us-tx-houston,Houston,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+TX,us-tx-irving,Irving,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+TX,us-tx-killeen,Killeen,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+TX,us-tx-laredo,Laredo,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+TX,us-tx-league_city,League City,1,residential_remodel,EXACT_PARTIAL,PUBLISHABLE
+TX,us-tx-leander,Leander,1,residential_remodel,EXACT_PARTIAL,PUBLISHABLE
+TX,us-tx-lewisville,Lewisville,1,residential_remodel,EXACT_PARTIAL,PUBLISHABLE
+TX,us-tx-lubbock,Lubbock,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+TX,us-tx-mcallen,Mcallen,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+TX,us-tx-mckinney,Mckinney,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+TX,us-tx-mesquite,Mesquite,1,residential_remodel,EXACT_PARTIAL,PUBLISHABLE
+TX,us-tx-midland,Midland,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+TX,us-tx-new_braunfels,New Braunfels,1,residential_remodel,EXACT_PARTIAL,PUBLISHABLE
+TX,us-tx-odessa,Odessa,1,residential_remodel,EXACT_PARTIAL,PUBLISHABLE
+TX,us-tx-pasadena,City of Pasadena Development Services,1,reroof,FAIL_CLOSED,FAIL_CLOSED
+TX,us-tx-pearland,Pearland,1,residential_remodel,EXACT_PARTIAL,PUBLISHABLE
+TX,us-tx-plano,Plano,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+TX,us-tx-richardson,Richardson,1,residential_remodel,EXACT_PARTIAL,PUBLISHABLE
+TX,us-tx-round_rock,Round Rock,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+TX,us-tx-san_antonio,San Antonio,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+TX,us-tx-san_juan,San Juan,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+TX,us-tx-sugar_land,Sugar Land,1,residential_remodel,EXACT_PARTIAL,PUBLISHABLE
+TX,us-tx-tarrant_county,Tarrant County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+TX,us-tx-travis_county,Travis County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+TX,us-tx-waco,Waco,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+UT,us-ut-american_fork,American Fork,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+UT,us-ut-cache_county,Cache County,1,residential_remodel,EXACT_PARTIAL,PUBLISHABLE
+UT,us-ut-cedar_city,Cedar City,1,residential_remodel,EXACT_PARTIAL,PUBLISHABLE
+UT,us-ut-clearfield,Clearfield,1,residential_remodel,EXACT_PARTIAL,PUBLISHABLE
+UT,us-ut-clinton,Clinton,1,residential_remodel,FAIL_CLOSED,FAIL_CLOSED
+UT,us-ut-cottonwood_heights,Cottonwood Heights,1,residential_remodel,EXACT_PARTIAL,PUBLISHABLE
+UT,us-ut-davis_county,Davis County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+UT,us-ut-eagle_mountain,Eagle Mountain,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+UT,us-ut-farmington,Farmington,1,residential_remodel,FAIL_CLOSED,FAIL_CLOSED
+UT,us-ut-gsl_msd,Gsl Msd,1,residential_remodel,FAIL_CLOSED,FAIL_CLOSED
+UT,us-ut-herriman,Herriman,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+UT,us-ut-holladay,Holladay,1,residential_remodel,EXACT_PARTIAL,PUBLISHABLE
+UT,us-ut-kaysville,Kaysville,1,residential_remodel,EXACT_PARTIAL,PUBLISHABLE
+UT,us-ut-kearns,Kearns,1,residential_remodel,FAIL_CLOSED,FAIL_CLOSED
+UT,us-ut-lehi,Lehi,1,residential_remodel,EXACT_PARTIAL,PUBLISHABLE
+UT,us-ut-millcreek,Millcreek,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+UT,us-ut-ogden,Ogden,1,residential_remodel,EXACT_PARTIAL,PUBLISHABLE
+UT,us-ut-orem,Orem,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+UT,us-ut-provo,Provo,1,residential_remodel,EXACT_PARTIAL,PUBLISHABLE
+UT,us-ut-riverton,Riverton,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+UT,us-ut-salt_lake_city,Salt Lake City,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+UT,us-ut-salt_lake_county,Salt Lake County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+UT,us-ut-sandy,Sandy,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+UT,us-ut-saratoga_springs,Saratoga Springs,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+UT,us-ut-spanish_fork,Spanish Fork,1,residential_remodel,EXACT_PARTIAL,PUBLISHABLE
+UT,us-ut-summit_county,Summit County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+UT,us-ut-taylorsville,Taylorsville,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+UT,us-ut-tooele_city,Tooele City,1,residential_remodel,EXACT_PARTIAL,PUBLISHABLE
+UT,us-ut-utah_county,Utah County,1,residential_remodel,EXACT_PARTIAL,PUBLISHABLE
+UT,us-ut-washington_county,Washington County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+UT,us-ut-weber_county,Weber County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+UT,us-ut-west_jordan,West Jordan,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+UT,us-ut-west_valley_city,West Valley City,1,residential_remodel,EXACT_PARTIAL,PUBLISHABLE
+VA,us-va-albemarle_county,Albemarle County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+VA,us-va-alexandria,Alexandria,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+VA,us-va-arlington_county,Arlington County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+VA,us-va-blacksburg,Blacksburg,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+VA,us-va-charlottesville,Charlottesville,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+VA,us-va-chesapeake,Chesapeake,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+VA,us-va-chesterfield_county,Chesterfield County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+VA,us-va-colonial_heights,Colonial Heights,1,residential_remodel,EXACT_PARTIAL,PUBLISHABLE
+VA,us-va-danville,Danville,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+VA,us-va-emporia,Emporia,1,residential_remodel,EXACT_PARTIAL,PUBLISHABLE
+VA,us-va-fairfax_city,Fairfax City,1,residential_remodel,EXACT_PARTIAL,PUBLISHABLE
+VA,us-va-fairfax_county,Fairfax County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+VA,us-va-falls_church,Falls Church,1,residential_remodel,EXACT_PARTIAL,PUBLISHABLE
+VA,us-va-frederick_county,Frederick County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+VA,us-va-fredericksburg,Fredericksburg,1,residential_remodel,EXACT_PARTIAL,PUBLISHABLE
+VA,us-va-galax,Galax,1,residential_remodel,EXACT_PARTIAL,PUBLISHABLE
+VA,us-va-hampton,Hampton,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+VA,us-va-hanover_county,Hanover County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+VA,us-va-harrisonburg,Harrisonburg,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+VA,us-va-henrico_county,Henrico County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+VA,us-va-hopewell,Hopewell,1,residential_remodel,EXACT_PARTIAL,PUBLISHABLE
+VA,us-va-james_city_county,James City County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+VA,us-va-leesburg,Leesburg,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+VA,us-va-loudoun_county,Loudoun County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+VA,us-va-lynchburg,Lynchburg,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+VA,us-va-manassas,Manassas,1,residential_remodel,EXACT_PARTIAL,PUBLISHABLE
+VA,us-va-manassas_park,Manassas Park,1,residential_remodel,EXACT_PARTIAL,PUBLISHABLE
+VA,us-va-martinsville,Martinsville,1,residential_remodel,EXACT_PARTIAL,PUBLISHABLE
+VA,us-va-montgomery_county,Montgomery County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+VA,us-va-newport_news,Newport News,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+VA,us-va-norfolk,Norfolk,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+VA,us-va-petersburg,Petersburg,1,residential_remodel,EXACT_PARTIAL,PUBLISHABLE
+VA,us-va-poquoson,Poquoson,1,residential_remodel,EXACT_PARTIAL,PUBLISHABLE
+VA,us-va-portsmouth,Portsmouth,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+VA,us-va-prince_william_county,Prince William County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+VA,us-va-radford,Radford,1,residential_remodel,EXACT_PARTIAL,PUBLISHABLE
+VA,us-va-richmond,Richmond,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+VA,us-va-roanoke_city,Roanoke City,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+VA,us-va-roanoke_county,Roanoke County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+VA,us-va-rockingham_county,Rockingham County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+VA,us-va-salem,Salem,1,residential_remodel,EXACT_PARTIAL,PUBLISHABLE
+VA,us-va-spotsylvania_county,Spotsylvania County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+VA,us-va-stafford_county,Stafford County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+VA,us-va-staunton,Staunton,1,residential_remodel,EXACT_PARTIAL,PUBLISHABLE
+VA,us-va-suffolk,Suffolk,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+VA,us-va-virginia_beach,Virginia Beach,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+VA,us-va-waynesboro,Waynesboro,1,residential_remodel,EXACT_PARTIAL,PUBLISHABLE
+VA,us-va-williamsburg,Williamsburg,1,residential_remodel,EXACT_PARTIAL,PUBLISHABLE
+VA,us-va-winchester,Winchester,1,residential_remodel,EXACT_PARTIAL,PUBLISHABLE
+VA,us-va-york_county,York County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+VT,us-vt-barre_city,Barre City,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+VT,us-vt-barre_town,Barre Town,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+VT,us-vt-bennington,Bennington,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+VT,us-vt-bristol,Bristol,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+VT,us-vt-burlington,Burlington,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+VT,us-vt-charlotte,Charlotte,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+VT,us-vt-colchester,Colchester,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+VT,us-vt-east_montpelier,East Montpelier,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+VT,us-vt-essex,Essex,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+VT,us-vt-essex_junction,Essex Junction,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+VT,us-vt-ferrisburgh,Ferrisburgh,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+VT,us-vt-hartford,Hartford,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+VT,us-vt-huntington,Huntington,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+VT,us-vt-jericho,Jericho,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+VT,us-vt-lyndon,Lyndon,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+VT,us-vt-middlebury,Middlebury,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+VT,us-vt-milton,Milton,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+VT,us-vt-montpelier,Montpelier,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+VT,us-vt-newport_city,Newport City,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+VT,us-vt-northfield,Northfield,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+VT,us-vt-norwich,Norwich,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+VT,us-vt-randolph,Randolph,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+VT,us-vt-richmond,Richmond,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+VT,us-vt-rutland_city,Rutland City,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+VT,us-vt-rutland_town,Rutland Town,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+VT,us-vt-shelburne,Shelburne,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+VT,us-vt-springfield,Springfield,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+VT,us-vt-st_albans_city,St Albans City,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+VT,us-vt-st_johnsbury,St Johnsbury,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+VT,us-vt-state_dfs,State Dfs,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+VT,us-vt-stowe,Stowe,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+VT,us-vt-swanton,Swanton,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+VT,us-vt-wardsboro,Wardsboro,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+VT,us-vt-waterbury,Waterbury,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+VT,us-vt-westford,Westford,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+VT,us-vt-williston,Williston,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+VT,us-vt-winooski,Winooski,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+VT,us-vt-woodstock,Woodstock,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+WA,us-wa-asotin_county,Asotin County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+WA,us-wa-auburn,Auburn,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+WA,us-wa-bellevue,Bellevue,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+WA,us-wa-bellingham,Bellingham,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+WA,us-wa-benton_county,Benton County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+WA,us-wa-bremerton,Bremerton,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+WA,us-wa-burien,Burien,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+WA,us-wa-chelan_county,Chelan County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+WA,us-wa-clallam_county,Clallam County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+WA,us-wa-clark_county,Clark County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+WA,us-wa-cowlitz_county,Cowlitz County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+WA,us-wa-douglas_county,Douglas County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+WA,us-wa-edmonds,Edmonds,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+WA,us-wa-everett,Everett,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+WA,us-wa-federal_way,Federal Way,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+WA,us-wa-ferry_county,Ferry County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+WA,us-wa-franklin_county,Franklin County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+WA,us-wa-grant_county,Grant County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+WA,us-wa-grays_harbor_county,Grays Harbor County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+WA,us-wa-island_county,Island County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+WA,us-wa-jefferson_county,Jefferson County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+WA,us-wa-kennewick,Kennewick,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+WA,us-wa-kent,Kent,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+WA,us-wa-king_county,King County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+WA,us-wa-kirkland,Kirkland,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+WA,us-wa-kitsap_county,Kitsap County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+WA,us-wa-kittitas_county,Kittitas County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+WA,us-wa-lacey,Lacey,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+WA,us-wa-lake_stevens,Lake Stevens,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+WA,us-wa-lakewood,Lakewood,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+WA,us-wa-longview,Longview,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+WA,us-wa-lynnwood,Lynnwood,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+WA,us-wa-marysville,Marysville,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+WA,us-wa-olympia,Olympia,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+WA,us-wa-pasco,Pasco,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+WA,us-wa-puyallup,Puyallup,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+WA,us-wa-redmond,Redmond,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+WA,us-wa-renton,Renton,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+WA,us-wa-richland,Richland,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+WA,us-wa-sammamish,Sammamish,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+WA,us-wa-seattle,Seattle,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+WA,us-wa-shoreline,Shoreline,1,residential_remodel,EXACT_PARTIAL,PUBLISHABLE
+WA,us-wa-spokane,Spokane,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+WA,us-wa-spokane_valley,Spokane Valley,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+WA,us-wa-tacoma,Tacoma,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+WA,us-wa-vancouver,Vancouver,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+WA,us-wa-yakima,Yakima,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+WI,us-wi-appleton,Appleton,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+WI,us-wi-beaver_dam,Beaver Dam,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+WI,us-wi-beloit,Beloit,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+WI,us-wi-brookfield,Brookfield,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+WI,us-wi-cudahy,Cudahy,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+WI,us-wi-de_pere,De Pere,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+WI,us-wi-eau-claire,Eau Claire,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+WI,us-wi-eau_claire,Eau Claire,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+WI,us-wi-fitchburg,Fitchburg,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+WI,us-wi-fond-du-lac,Fond Du Lac,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+WI,us-wi-fond_du_lac,Fond Du Lac,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+WI,us-wi-franklin,Franklin,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+WI,us-wi-green-bay,Green Bay,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+WI,us-wi-green_bay,Green Bay,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+WI,us-wi-greenfield,Greenfield,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+WI,us-wi-janesville,Janesville,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+WI,us-wi-kaukauna,Kaukauna,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+WI,us-wi-la-crosse,La Crosse,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+WI,us-wi-la_crosse,La Crosse,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+WI,us-wi-manitowoc,Manitowoc,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+WI,us-wi-menasha,Menasha,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+WI,us-wi-menomonee_falls,Menomonee Falls,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+WI,us-wi-menomonie,Menomonie,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+WI,us-wi-mequon,Mequon,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+WI,us-wi-middleton,Middleton,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+WI,us-wi-milwaukee,Milwaukee,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+WI,us-wi-muskego,Muskego,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+WI,us-wi-neenah,Neenah,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+WI,us-wi-new_berlin,New Berlin,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+WI,us-wi-oak_creek,Oak Creek,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+WI,us-wi-oconomowoc,Oconomowoc,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+WI,us-wi-onalaska,Onalaska,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+WI,us-wi-oshkosh,Oshkosh,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+WI,us-wi-racine,Racine,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+WI,us-wi-sheboygan,Sheboygan,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+WI,us-wi-south_milwaukee,South Milwaukee,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+WI,us-wi-stevens_point,Stevens Point,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+WI,us-wi-sun_prairie,Sun Prairie,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+WI,us-wi-superior,Superior,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+WI,us-wi-waukesha,Waukesha,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+WI,us-wi-wausau,Wausau,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+WI,us-wi-wauwatosa,Wauwatosa,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+WI,us-wi-west-allis,West Allis,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+WI,us-wi-west_allis,West Allis,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+WI,us-wi-west_bend,West Bend,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+WI,us-wi-wisconsin_rapids,Wisconsin Rapids,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+WV,us-wv-barboursville,Barboursville,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+WV,us-wv-beckley,Beckley,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+WV,us-wv-berkeley_county,Berkeley County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+WV,us-wv-bluefield,Bluefield,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+WV,us-wv-bridgeport,Bridgeport,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+WV,us-wv-buckhannon,Buckhannon,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+WV,us-wv-charles_town,Charles Town,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+WV,us-wv-charleston,Charleston,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+WV,us-wv-dunbar,Dunbar,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+WV,us-wv-elkins,Elkins,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+WV,us-wv-fairmont,Fairmont,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+WV,us-wv-fayette_county,Fayette County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+WV,us-wv-greenbrier_county,Greenbrier County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+WV,us-wv-harrison_county,Harrison County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+WV,us-wv-huntington,Huntington,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+WV,us-wv-hurricane,Hurricane,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+WV,us-wv-jefferson_county,Jefferson County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+WV,us-wv-kanawha_county,Kanawha County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+WV,us-wv-keyser,Keyser,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+WV,us-wv-lewisburg,Lewisburg,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+WV,us-wv-martinsburg,Martinsburg,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+WV,us-wv-monongalia_county,Monongalia County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+WV,us-wv-morgantown,Morgantown,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+WV,us-wv-moundsville,Moundsville,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+WV,us-wv-nitro,Nitro,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+WV,us-wv-oak_hill,Oak Hill,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+WV,us-wv-ohio_county,Ohio County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+WV,us-wv-parkersburg,Parkersburg,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+WV,us-wv-preston_county,Preston County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+WV,us-wv-putnam_county,Putnam County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+WV,us-wv-raleigh_county,Raleigh County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+WV,us-wv-ranson,Ranson,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+WV,us-wv-ripley,Ripley,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+WV,us-wv-south_charleston,South Charleston,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+WV,us-wv-st_albans,St Albans,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+WV,us-wv-vienna,Vienna,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+WV,us-wv-wayne_county,Wayne County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+WV,us-wv-weirton,Weirton,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+WV,us-wv-wheeling,Wheeling,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+WV,us-wv-wood_county,Wood County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+WY,us-wy-albany_county,Albany County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+WY,us-wy-big_horn_county,Big Horn County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+WY,us-wy-campbell_county,Campbell County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+WY,us-wy-carbon_county,Carbon County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+WY,us-wy-casper,Casper,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+WY,us-wy-cheyenne,Cheyenne,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+WY,us-wy-cody,Cody,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+WY,us-wy-converse_county,Converse County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+WY,us-wy-crook_county,Crook County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+WY,us-wy-douglas,Douglas,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+WY,us-wy-evanston,Evanston,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+WY,us-wy-fremont_county,Fremont County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+WY,us-wy-gillette,Gillette,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+WY,us-wy-goshen_county,Goshen County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+WY,us-wy-green_river,Green River,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+WY,us-wy-hot_springs_county,Hot Springs County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+WY,us-wy-jackson,Jackson,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+WY,us-wy-johnson_county,Johnson County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+WY,us-wy-kemmerer,Kemmerer,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+WY,us-wy-lander,Lander,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+WY,us-wy-laramie,Laramie,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+WY,us-wy-laramie_county,Laramie County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+WY,us-wy-lincoln_county,Lincoln County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+WY,us-wy-natrona_county,Natrona County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+WY,us-wy-newcastle,Newcastle,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+WY,us-wy-niobrara_county,Niobrara County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+WY,us-wy-park_county,Park County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+WY,us-wy-pinedale,Pinedale,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+WY,us-wy-platte_county,Platte County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+WY,us-wy-powell,Powell,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+WY,us-wy-rawlins,Rawlins,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+WY,us-wy-riverton,Riverton,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+WY,us-wy-rock_springs,Rock Springs,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+WY,us-wy-sheridan,Sheridan,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+WY,us-wy-sheridan_county,Sheridan County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+WY,us-wy-star_valley_ranch,Star Valley Ranch,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+WY,us-wy-sublette_county,Sublette County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+WY,us-wy-sweetwater_county,Sweetwater County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+WY,us-wy-teton_county,Teton County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+WY,us-wy-thermopolis,Thermopolis,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+WY,us-wy-torrington,Torrington,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+WY,us-wy-weston_county,Weston County,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE
+WY,us-wy-wheatland,Wheatland,1,commercial_tenant_improvement,EXACT_PARTIAL,PUBLISHABLE

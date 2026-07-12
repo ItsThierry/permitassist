@@ -1,0 +1,69 @@
+{
+  "schema_version": "permitassist.part1-frozen-replay-corpus.v1",
+  "corpus_kind": "deterministic_contract_replay",
+  "description": "Synthetic, non-customer contract fixtures spanning complete, partial, fail-closed, unsupported-scope, and uncovered-AHJ paths. These are not represented as production or historical customer outputs.",
+  "cases": [
+    {
+      "case_id": "ak-anchorage-commercial-partial",
+      "request": {"job_type": "commercial tenant improvement", "city": "Anchorage", "state": "AK", "job_category": "commercial"},
+      "legacy_result": {"permit_decision": "required", "permit_required": true, "permit_verdict": "yes", "permits_required": [{"permit_kind": "building", "required": true}], "sources": [{"url": "https://example.test/official"}]}
+    },
+    {
+      "case_id": "ak-matsu-commercial-complete",
+      "request": {"job_type": "commercial tenant improvement", "city": "Matanuska-Susitna Borough", "state": "AK", "job_category": "commercial"},
+      "legacy_result": {"permit_decision": "required", "permit_required": true, "permit_verdict": "yes", "permits_required": [{"permit_kind": "building", "required": true}, {"permit_kind": "electrical", "required": true}, {"permit_kind": "mechanical", "required": true}, {"permit_kind": "plumbing", "required": true}, {"permit_kind": "fire", "required": true}, {"permit_kind": "occupancy", "required": true}, {"permit_kind": "zoning", "required": true}], "sources": [{"url": "https://example.test/official"}]}
+    },
+    {
+      "case_id": "az-buckeye-reroof-complete",
+      "request": {"job_type": "residential reroof", "city": "Buckeye", "state": "AZ", "job_category": "residential"},
+      "legacy_result": {"permit_decision": "required", "permit_required": true, "permit_verdict": "yes", "permits_required": [{"permit_kind": "building", "required": true}], "sources": [{"url": "https://example.test/official"}]}
+    },
+    {
+      "case_id": "az-yuma-residential-fail-closed-vs-binary",
+      "request": {"job_type": "residential remodel", "city": "Yuma", "state": "AZ", "job_category": "residential"},
+      "legacy_result": {"permit_decision": "required", "permit_required": true, "permit_verdict": "yes", "permits_required": [{"permit_kind": "building", "required": true}], "sources": []}
+    },
+    {
+      "case_id": "al-albertville-residential-complete",
+      "request": {"job_type": "residential remodel", "city": "Albertville", "state": "AL", "job_category": "residential"},
+      "legacy_result": {"permit_decision": "required", "permit_required": true, "permit_verdict": "yes", "permits_required": [{"permit_kind": "building", "required": true}, {"permit_kind": "electrical", "required": true}, {"permit_kind": "mechanical", "required": true}, {"permit_kind": "plumbing", "required": true}, {"permit_kind": "demolition", "required": true}], "sources": [{"url": "https://example.test/official"}]}
+    },
+    {
+      "case_id": "al-boaz-residential-partial",
+      "request": {"job_type": "residential remodel", "city": "Boaz", "state": "AL", "job_category": "residential"},
+      "legacy_result": {"permit_decision": "required", "permit_required": true, "permit_verdict": "yes", "permits_required": [{"permit_kind": "building", "required": true}], "sources": []}
+    },
+    {
+      "case_id": "oh-columbus-commercial-fail-closed",
+      "request": {"job_type": "commercial tenant improvement", "city": "Columbus", "state": "OH", "job_category": "commercial"},
+      "legacy_result": {"permit_decision": "unknown", "permit_required": null, "permit_verdict": "verify", "permits_required": [], "sources": []}
+    },
+    {
+      "case_id": "tx-pasadena-reroof-fail-closed",
+      "request": {"job_type": "residential reroof", "city": "City of Pasadena Development Services", "state": "TX", "job_category": "residential"},
+      "legacy_result": {"permit_decision": "not_required", "permit_required": false, "permit_verdict": "no", "permits_required": [], "sources": []}
+    },
+    {
+      "case_id": "ak-anchorage-unsupported-scope",
+      "request": {"job_type": "ground mount solar array", "city": "Anchorage", "state": "AK", "job_category": "commercial"},
+      "legacy_result": {"permit_decision": "unknown", "permit_required": null, "permit_verdict": "verify", "permits_required": [], "sources": []}
+    },
+    {
+      "case_id": "zz-atlantis-uncovered-ahj",
+      "request": {"job_type": "residential remodel", "city": "Atlantis", "state": "ZZ", "job_category": "residential"},
+      "legacy_result": {"permit_decision": "unknown", "permit_required": null, "permit_verdict": "verify", "permits_required": [], "sources": []}
+    },
+    {
+      "case_id": "ak-anchorage-top-decision-mismatch",
+      "request": {"job_type": "commercial tenant improvement", "city": "Anchorage", "state": "AK", "job_category": "commercial"},
+      "legacy_result": {"permit_decision": "not_required", "permit_required": false, "permit_verdict": "no", "permits_required": [{"permit_kind": "building", "required": false}], "sources": [{"url": "https://example.test/official"}]}
+    },
+    {
+      "case_id": "ak-matsu-family-and-authority-divergence",
+      "request": {"job_type": "commercial tenant improvement", "city": "Matanuska-Susitna Borough", "state": "AK", "job_category": "commercial"},
+      "legacy_result": {"permit_decision": "required", "permit_required": true, "permit_verdict": "yes", "jurisdiction_id": "synthetic-wrong-jurisdiction", "permits_required": [{"permit_kind": "building", "required": true}], "applying_office": "Synthetic Wrong Office", "apply_url": "https://example.test/wrong-route", "sources": []},
+      "authoritative_result": {"permit_decision": "required", "permit_required": true, "permit_verdict": "yes", "permits_required": [{"permit_kind": "building", "required": true}, {"permit_kind": "electrical", "required": true}, {"permit_kind": "mechanical", "required": true}, {"permit_kind": "plumbing", "required": true}, {"permit_kind": "fire", "required": true}, {"permit_kind": "occupancy", "required": true}, {"permit_kind": "zoning", "required": true}], "sources": [{"url": "https://example.test/official"}]},
+      "public_result": {"permit_decision": "not_required", "permit_required": false, "permit_verdict": "no", "permits_required": [], "sources": []}
+    }
+  ]
+}

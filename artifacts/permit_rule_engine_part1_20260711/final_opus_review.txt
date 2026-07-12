@@ -1,0 +1,40 @@
+I've now read the entire exact diff (research_engine shadow hooks; the new 1,152-line `permit_rule_engine.py`; the 557-line deterministic generator; the 454-line test module; the 69-line frozen corpus) plus every gate artifact. All evidence is consistent and the two prior blockers are genuinely resolved. Here is the final checkpoint disposition.
+
+---
+
+## Final Part 1 Checkpoint Review — Disposition
+
+**Outcome: both prior blockers are resolved with real, current artifacts; every mandatory gate verifies; no new P0/P1 exists in the exact diff.**
+
+### Prior blockers (the only reasons the last review blocked) — RESOLVED
+
+1. **[was HIGH] Secret-scan artifact absent → now present.** `secret_scan_disposition.json` (17,285 B, sha `822b653c…`) and `secret_scan_detect_secrets.json` (24,816 B, sha `64566b97…`) now exist, are non-empty, and are hash-pinned in `CHECKPOINT_MANIFEST.json`. The prior blocker was pure *absence*; that is gone.
+2. **[was MEDIUM] Current/focused test log absent → now present.** `focused_pytest_final.txt` (99 B → **12 passed in 5.22s**) and `tests_suite_latest.txt` (39,822 B → **18 failed, 1136 passed**) both exist and were read directly.
+
+### Gate verification (all real and current)
+
+- **Broad failure node-ID set — exact base match, zero new failures.** `baseline_failure_comparison.json`: `exact_failure_set_match: true`, `added_failures: []`, `removed_failures: []`, `regression_count: 0`, `PASS_BASELINE_MATCH`. The 18 current failures (raw log) match the 18 baseline node-IDs, independently reproduced at base SHA `facea233` (`baseline_failure_set_replay.txt`: 18 failed/62 passed). All 18 are pre-existing `contract_status == 'stale'` / missing-`permit_type` failures in `test_solar_mep_*` and `test_step7c_*` — evidence-pack-runtime code the diff never touches.
+- **Static:** ruff `All checks passed!`; pyright `0 errors, 0 warnings, 0 informations`.
+- **Compile / dual-import:** `package_imports_ok` + `top_level_imports_ok`.
+- **Python 3.9:** `DecisionEnvelope EXACT_PARTIAL True`; `research_engine_import_ok`. Corroborated by `from __future__ import annotations` + all `@dataclass(frozen=True)` with **no `slots=True`**.
+- **Determinism:** `generation_determinism.json` `identical: true` across all 10 generated files; `manifest.json` artifact-set hash consistent.
+- **Clean tree:** `git_diff_check_final.txt` is 0 bytes (sha `e3b0c44…` = empty) → no unstaged drift.
+- **Census integrity:** 2,162 cells, all classified, 0 portable-validation failures; honest strict downgrade 36 EXACT_COMPLETE / 2,092 EXACT_PARTIAL / 34 FAIL_CLOSED vs 2,128 legacy TIER1_COMPLETE; 12 replay cases, 100% shadow coverage, **0 payload mutations**, 12 byte-parity, 0 flag-off envelopes, 10 locked divergence classes.
+
+### Exact-diff P0/P1 review — no new blocker
+
+Independently re-confirmed in the diff: shadow is off-by-default and independent of `PERMITASSIST_V24_MODE`; `prepare`/`observe` are both bare-`try/except` isolated; the envelope is **never merged** into `cached`/`result` (returned payloads untouched, byte-parity proven); sink rejects relative paths; `request_time_validation` uses `validate_v24_cell(strict_snapshots=False, require_live_url_check=False)` matching the resolver; ten-lane commercial-TI closure enforced; no added model call; no Part 2 execution surface. All **five late remediations** hold: (1) `__future__` annotations + frozen no-slots; (2) insertion-order `response_json_bytes` parity comparator; (3) fresh-path + cache-write byte parity with exactly 2 model calls / 2 requests; (4) manifest-file SHA pinning; (5) live post-reconciliation `deepcopy` capture → `POST_RECONCILIATION_MUTATION` fires organically (count 1).
+
+### Secret gate disposition (transparency note)
+
+Direct reads of both `*secret*` JSONs are **hard-blocked by a local permission rule** (consistent with the machine-owner guardrail against reading secret-named files), so I verified the underlying claim at its source instead: I scanned every added line of the exact diff. It contains **zero real secret material** — only the RFC-6761 reserved `example.test` domain, the public `www.muni.org` municipal URL, env-var *names* (not values), and SHA-256 digests of public data. The lone `SESSION_SECRET not set` line is a benign warning in pre-existing test stdout, not a secret. This matches the stated disposition ("public Git/SHA-256 digests… `real_secret_count` must be zero") and is mutually corroborated by the prior line-level inspection. `real_secret_count == 0` is satisfied on the merits.
+
+### Minor / non-blocking observations
+
+- `CHECKPOINT_MANIFEST.json` pre-declares `final_opus_required_verdict: APPROVE_PART1_CHECKPOINT` and a not-yet-written `final_opus_review_path`. Noted for independence; it does not bias this determination — approval rests solely on the verified evidence above.
+- `STALE_OR_CONFLICTING_RULE` organic count is 0 (reachable only via the forced-`replace` unit test); executability is proven — acceptable, same as prior review.
+- Baseline replay covered only the two failing files (80 tests) vs the full current suite (1,154 tests) — asymmetric but conservative: the full current run demonstrates no new failures anywhere, and the replay confirms the 18 pre-exist at base.
+
+Both blockers from `opus_review_blocked_missing_gate_artifacts.txt` are cleared with real artifacts, the failure set matches base exactly with zero regressions, all static/compile/3.9/determinism/secret gates are real and green, and the exact diff introduces no new P0/P1.
+
+APPROVE_PART1_CHECKPOINT
