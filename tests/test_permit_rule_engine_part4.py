@@ -316,7 +316,13 @@ def test_part4_share_storage_hash_seals_and_preserves_exact_projection(
     payload_node = soup.find("script", {"id": "report-data"})
     assert payload_node is not None
     payload = json.loads(payload_node.string or "{}")
-    assert payload["share"]["data"] == sealed
+    expected_embedded = {
+        key: value
+        for key, value in sealed.items()
+        if key not in _fixture()["report_embed_forbidden_fields"]
+    }
+    assert payload["share"]["data"] == expected_embedded
+    assert not set(_fixture()["report_embed_forbidden_fields"]) & set(payload["share"]["data"])
 
 
 def test_part4_tampered_shared_storage_is_rejected(

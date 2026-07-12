@@ -2236,6 +2236,231 @@ def extract_sealed_public_projection(
     return copy.deepcopy(payload)
 
 
+_CORE_PUBLIC_PROJECTION_FIELDS = frozenset(
+    {
+        "projection_schema_version",
+        "decision_source",
+        "jurisdiction_id",
+        "jurisdiction_name",
+        "city",
+        "state",
+        "project_family",
+        "permit_required",
+        "permit_decision",
+        "permit_verdict",
+        "permit_name",
+        "permit_kind",
+        "customer_headline",
+        "customer_next_step",
+        "summary",
+        "coverage_status",
+        "coverage_reason",
+        "source_cell_id",
+        "seed_classification",
+        "family_decisions",
+        "family_authority_routes",
+        "permits_required",
+        "companion_permits",
+        "related_permits",
+        "verification_tasks",
+        "applying_office",
+        "apply_url",
+        "online_application_url",
+        "sources",
+        "claim_citations",
+        "warnings",
+    }
+)
+
+
+def _validated_public_core_projection(
+    result: Mapping[str, Any],
+    *,
+    city: str,
+    state: str,
+) -> dict[str, Any] | None:
+    """Validate a previously unsealed public DTO without re-resolving truth."""
+    if result.get("projection_schema_version") != CORE_PROJECTION_SCHEMA_VERSION:
+        return None
+    if city and _slug(result.get("city")) != _slug(city):
+        return None
+    if state and _normalize_text(result.get("state")).upper() != _normalize_text(state).upper():
+        return None
+    decision = _normalize_text(result.get("permit_decision")).upper()
+    required = result.get("permit_required")
+    if decision not in {"REQUIRED", "NOT_REQUIRED", "UNKNOWN"}:
+        return None
+    if decision == "REQUIRED" and required is not True:
+        return None
+    if decision == "NOT_REQUIRED" and required is not False:
+        return None
+    if decision == "UNKNOWN" and required is not None:
+        return None
+    project_family = _slug(result.get("project_family")) or "unsupported"
+    rows = result.get("family_decisions")
+    if not isinstance(rows, list) or not rows:
+        return None
+    families: set[str] = set()
+    allowed_verdicts = {item.value for item in FamilyVerdict}
+    for row in rows:
+        if not isinstance(row, Mapping):
+            return None
+        family = normalize_exact_source_family(row.get("family"))
+        if family not in _CORE_FAMILIES:
+            return None
+        if _normalize_text(row.get("verdict")).upper() not in allowed_verdicts:
+            return None
+        families.add(family)
+    required_families = FAMILY_CLOSURE_REQUIREMENTS.get(project_family, frozenset())
+    if required_families and not required_families.issubset(families):
+        return None
+    return copy.deepcopy(
+        {
+            key: result[key]
+            for key in result
+            if key in _CORE_PUBLIC_PROJECTION_FIELDS
+        }
+    )
+
+
+def project_core_customer_boundary(
+    result: Mapping[str, Any],
+    *,
+    job_type: str,
+    city: str,
+    state: str,
+    job_category: str = "",
+) -> dict[str, Any] | None:
+    """Return the one core customer DTO, failing closed on integrity errors.
+
+    A valid active envelope returns its byte-sealed public projection. If an
+    active, allowlisted request carries core cache/envelope markers but the
+    envelope, projection hash, schema, or request location cannot be validated,
+    legacy fields are untrusted and must never become a fallback binary answer.
+    The integrity fallback keeps every applicable permit-family lane visible as
+    ABSTAIN with a concrete office-verification task.
+
+    Flag-off, unallowlisted, and marker-free legacy traffic returns ``None`` so
+    the pre-core path remains byte-for-byte unchanged.
+    """
+    sealed = extract_sealed_public_projection(result, city=city, state=state)
+    if sealed is not None:
+        return sealed
+    if isinstance(result, Mapping):
+        public_projection = _validated_public_core_projection(result, city=city, state=state)
+        if public_projection is not None:
+            return public_projection
+    if not isinstance(result, Mapping):
+        return None
+    has_core_markers = any(
+        key in result
+        for key in (
+            "_permit_rule_engine_core",
+            "_permit_rule_engine_cache_schema_version",
+        )
+    )
+    if not has_core_markers or get_rule_engine_core_mode() != "active":
+        return None
+    identity = resolve_jurisdiction_identity(city, state)
+    if identity.status is not JurisdictionResolutionStatus.EXACT or identity.selected is None:
+        return None
+    if not core_activation_allowed(identity.selected.jurisdiction_id):
+        return None
+
+    work = normalize_work_atoms(job_type, job_category)
+    project_family = next(
+        (
+            atom.project_family
+            for atom in work.positive_atoms
+            if atom.project_family in FAMILY_CLOSURE_REQUIREMENTS
+        ),
+        "unsupported",
+    )
+    families = tuple(
+        sorted(FAMILY_CLOSURE_REQUIREMENTS.get(project_family, _CORE_FAMILIES))
+    )
+    issue_code = "decision_integrity_validation_failed"
+    office = f"{identity.selected.ahj_name} permit office"
+    family_decisions = [
+        {
+            "family": family,
+            "verdict": FamilyVerdict.ABSTAIN.value,
+            "trigger": issue_code,
+            "authority": "",
+            "apply_url": "",
+            "validation_issue_codes": [issue_code],
+        }
+        for family in families
+    ]
+    permits_required = [
+        {
+            "permit_kind": family,
+            "permit_type": f"{family.replace('_', ' ').title()} Permit",
+            "required": "maybe",
+            "required_status": FamilyVerdict.ABSTAIN.value,
+            "trigger": issue_code,
+            "applying_office": "",
+            "apply_url": "",
+        }
+        for family in families
+    ]
+    verification_tasks = [
+        {
+            "family": family,
+            "action": (
+                f"Verify {family.replace('_', ' ')} applicability, filing authority, "
+                f"and application route with {office} before filing."
+            ),
+            "authority": "",
+            "apply_url": "",
+            "unresolved_dimensions": [
+                "decision integrity",
+                "applicability",
+                "filing authority",
+                "application route",
+            ],
+        }
+        for family in families
+    ]
+    summary = (
+        "The saved permit decision could not be validated. Contact the permit "
+        "office before quoting, filing, or starting work."
+    )
+    return {
+        "projection_schema_version": CORE_PROJECTION_SCHEMA_VERSION,
+        "decision_source": "permit_rule_engine_integrity_fail_closed",
+        "jurisdiction_id": identity.selected.jurisdiction_id,
+        "jurisdiction_name": identity.selected.ahj_name,
+        "city": identity.selected.ahj_name,
+        "state": identity.selected.state,
+        "project_family": project_family,
+        "permit_required": None,
+        "permit_decision": "UNKNOWN",
+        "permit_verdict": "CONTACT_AHJ",
+        "permit_name": None,
+        "permit_kind": "Verification Required",
+        "customer_headline": "Verify permit requirements with the permit office.",
+        "customer_next_step": f"Contact {office} before filing or starting work.",
+        "summary": summary,
+        "coverage_status": "integrity_fail_closed",
+        "coverage_reason": issue_code,
+        "source_cell_id": "",
+        "seed_classification": SeedClassification.FAIL_CLOSED.value,
+        "family_decisions": family_decisions,
+        "family_authority_routes": [],
+        "permits_required": permits_required,
+        "companion_permits": [],
+        "related_permits": [],
+        "verification_tasks": verification_tasks,
+        "applying_office": office,
+        "apply_url": "",
+        "online_application_url": "",
+        "sources": [],
+        "claim_citations": [],
+        "warnings": [summary],
+    }
+
+
 def core_cache_schema_for_request(city: str, state: str) -> str | None:
     """Return the active namespace only for one exact, allowlisted jurisdiction."""
     if get_rule_engine_core_mode() != "active":

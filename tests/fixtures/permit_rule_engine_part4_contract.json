@@ -24,6 +24,9 @@
     "POISON_LEGACY_BINARY",
     "POISON_INTERNAL_SECRET"
   ],
+  "report_embed_forbidden_fields": [
+    "claim_citations"
+  ],
   "required_fail_closed_decision": "UNKNOWN",
   "required_fail_closed_verdict": "CONTACT_AHJ",
   "activation_environment_must_be_absent": [

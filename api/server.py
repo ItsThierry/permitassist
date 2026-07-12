@@ -73,9 +73,9 @@ from filing_packet_reconciler import ensure_required_filing_rows
 from residential_universal_gate import apply_residential_universal_gate
 from permit_model import build_permit_package, project_permit_package, validate_customer_view
 try:
-    from permit_rule_engine import extract_sealed_public_projection
+    from permit_rule_engine import project_core_customer_boundary
 except ImportError:  # package import path in focused tests
-    from api.permit_rule_engine import extract_sealed_public_projection
+    from api.permit_rule_engine import project_core_customer_boundary
 from openai import OpenAI as _OpenAI
 import requests as _requests
 from model_config import (
@@ -4246,12 +4246,18 @@ def _normalize_segment_scope_labels(result: dict, scope_contract: dict) -> dict:
 
 def build_customer_permit_view_model(result: dict, job_type: str = "", city: str = "", state: str = "", job_category: str | None = None, explicit_vertical: str | None = None) -> dict:
     """Allowlisted customer ViewModel used by API, share, report, and checklist surfaces."""
-    sealed_projection = extract_sealed_public_projection(result, city=city, state=state)
-    if sealed_projection is not None:
-        # Part 2 core activation seals the complete customer DTO.  Returning it
-        # before legacy repair/reconciliation prevents every later mirror from
-        # independently recomputing regulated truth.
-        return sealed_projection
+    core_projection = project_core_customer_boundary(
+        result,
+        job_type=job_type,
+        city=city,
+        state=state,
+        job_category=job_category or "",
+    )
+    if core_projection is not None:
+        # Core activation seals the complete customer DTO. Integrity failures
+        # return a separate family-visible abstention DTO; neither path may fall
+        # through to legacy binary fields.
+        return core_projection
     working = copy.deepcopy(result) if isinstance(result, dict) else {}
     original_required_rows_for_companion_contract = [
         copy.deepcopy(row)
@@ -5832,9 +5838,15 @@ def evidence_pack_allowed_for_request(path: str, headers, *, is_sample_demo: boo
 
 def finalize_permit_lookup_result(result: dict, job_type: str, city: str, state: str, *, is_cached: bool = False, explicit_vertical: str | None = None, evidence_allowed: bool | None = None, job_category: str | None = None) -> dict:
     """Shared final response safety pipeline for all permit lookup endpoints."""
-    sealed_projection = extract_sealed_public_projection(result, city=city, state=state)
-    if sealed_projection is not None:
-        return sealed_projection
+    core_projection = project_core_customer_boundary(
+        result,
+        job_type=job_type,
+        city=city,
+        state=state,
+        job_category=job_category or "",
+    )
+    if core_projection is not None:
+        return core_projection
     if not isinstance(result, dict):
         result = {}
     jurisdiction_check = resolve_customer_decision({"result": result, "job_type": job_type, "city": city, "state": state})
@@ -6033,13 +6045,15 @@ def save_beta_feedback(email: str, job_type: str, city: str, state: str, useful:
 def render_white_label_report_html(data: dict) -> str:
     result = copy.deepcopy(data.get("result") or {}) if isinstance(data, dict) else {}
     if isinstance(data, dict):
-        sealed_projection = extract_sealed_public_projection(
+        core_projection = project_core_customer_boundary(
             result,
+            job_type=str(data.get("job_type") or ""),
             city=str(data.get("city") or ""),
             state=str(data.get("state") or ""),
+            job_category=str(data.get("job_category") or ""),
         )
-        if sealed_projection is not None:
-            result = sealed_projection
+        if core_projection is not None:
+            result = core_projection
     contractor = html.escape(str(data.get("contractor_name") or "Contractor"))
     client = html.escape(str(data.get("client_name") or "Client / Property"))
     job = html.escape(str(data.get("job_type") or result.get("job_summary") or "Permit research"))
@@ -7289,21 +7303,58 @@ def save_email_capture(email: str, source: str = "gate"):
 # ── Shared result links ──────────────────────────────────────────────────────
 import secrets
 
+SHARED_RESULT_SCHEMA_VERSION = "permitassist.shared-result.v2"
+
+
+def _seal_shared_public_result(result: dict) -> dict:
+    payload_json = json.dumps(
+        result if isinstance(result, dict) else {},
+        sort_keys=True,
+        separators=(",", ":"),
+        ensure_ascii=False,
+    )
+    return {
+        "schema_version": SHARED_RESULT_SCHEMA_VERSION,
+        "payload_json": payload_json,
+        "payload_sha256": hashlib.sha256(payload_json.encode("utf-8")).hexdigest(),
+    }
+
+
+def _unseal_shared_public_result(stored: object) -> dict | None:
+    if not isinstance(stored, dict) or stored.get("schema_version") != SHARED_RESULT_SCHEMA_VERSION:
+        return None
+    payload_json = stored.get("payload_json")
+    payload_hash = str(stored.get("payload_sha256") or "")
+    if not isinstance(payload_json, str):
+        return None
+    if hashlib.sha256(payload_json.encode("utf-8")).hexdigest() != payload_hash:
+        return None
+    try:
+        payload = json.loads(payload_json)
+    except (TypeError, ValueError):
+        return None
+    if not isinstance(payload, dict):
+        return None
+    canonical = json.dumps(payload, sort_keys=True, separators=(",", ":"), ensure_ascii=False)
+    return payload if canonical == payload_json else None
+
+
 def create_share(job_type: str, city: str, state: str, result: dict) -> str:
-    """Store a result and return a short slug. Expires in SHARE_TTL_DAYS days."""
+    """Store a hash-sealed public result and return a short expiring slug."""
     slug = secrets.token_urlsafe(8)  # e.g. 'aB3xY7qR'
     now  = utc_now()
     exp  = now + timedelta(days=SHARE_TTL_DAYS)
-    # Store only the public customer ViewModel; old internal/debug fields never
-    # enter shared JSON, report HTML, or embedded report data.
+    # Store only the public customer ViewModel. The wrapper detects storage
+    # corruption without retaining the internal core envelope or debug fields.
     clean = build_customer_permit_view_model(result, job_type, city, state)
+    stored = _seal_shared_public_result(clean)
     try:
         conn = sqlite3.connect(CACHE_DB)
         conn.execute(
             "INSERT OR REPLACE INTO shared_results "
             "(slug, job_type, city, state, result_json, created_at, expires_at, views) "
             "VALUES (?,?,?,?,?,?,?,0)",
-            (slug, job_type, city, state, json.dumps(clean), now.isoformat(), exp.isoformat())
+            (slug, job_type, city, state, json.dumps(stored), now.isoformat(), exp.isoformat())
         )
         conn.commit()
         conn.close()
@@ -7312,7 +7363,7 @@ def create_share(job_type: str, city: str, state: str, result: dict) -> str:
     return slug
 
 def get_share(slug: str) -> dict | None:
-    """Retrieve a shared result by slug. Returns None if expired or not found."""
+    """Retrieve a shared result, rejecting expired or hash-invalid v2 rows."""
     try:
         conn = sqlite3.connect(CACHE_DB)
         row = conn.execute(
@@ -7324,21 +7375,35 @@ def get_share(slug: str) -> dict | None:
             return None
         result_json, expires_at, job_type, city, state = row
         if utc_now() > parse_timestamp(expires_at):
-            # Expired — delete and return None
             conn.execute("DELETE FROM shared_results WHERE slug=?", [slug])
             conn.commit()
             conn.close()
             return None
-        # Increment view counter
+        stored = json.loads(result_json)
+        if isinstance(stored, dict) and stored.get("schema_version") == SHARED_RESULT_SCHEMA_VERSION:
+            data = _unseal_shared_public_result(stored)
+            if data is None:
+                conn.execute("DELETE FROM shared_results WHERE slug=?", [slug])
+                conn.commit()
+                conn.close()
+                return None
+        else:
+            # Backward-compatible migration path for pre-v2 public rows. Old
+            # content passes the current customer boundary once, then remains
+            # default-deny at report embedding.
+            data = build_customer_permit_view_model(stored if isinstance(stored, dict) else {}, job_type, city, state)
         conn.execute("UPDATE shared_results SET views=views+1 WHERE slug=?", [slug])
         conn.commit()
         conn.close()
-        data = build_customer_permit_view_model(json.loads(result_json), job_type, city, state)
         return {
             "data": data,
             "job_type": job_type,
             "city": city,
             "state": state,
+            "_sealed_public_projection_verified": bool(
+                isinstance(stored, dict)
+                and stored.get("schema_version") == SHARED_RESULT_SCHEMA_VERSION
+            ),
         }
     except Exception as e:
         print(f"[share] Read error: {e}")
@@ -7480,9 +7545,14 @@ def generate_checklist(result: dict, job_type: str = "", city: str = "", state: 
 
 def _sanitize_customer_result_for_request_scope(result: dict, job_type: str = "", city: str = "", state: str = "") -> dict:
     """Apply canonical public ViewModel plus request-scope firebreak."""
-    sealed_projection = extract_sealed_public_projection(result, city=city, state=state)
-    if sealed_projection is not None:
-        return sealed_projection
+    core_projection = project_core_customer_boundary(
+        result,
+        job_type=job_type,
+        city=city,
+        state=state,
+    )
+    if core_projection is not None:
+        return core_projection
     public = build_customer_permit_view_model(result, job_type, city, state)
     # Saved report/share artifacts may carry already-customer-visible inspection
     # checklist strings. The customer ViewModel may regenerate permit-family
@@ -7560,14 +7630,19 @@ def _sanitize_checklist_customer_output(checklist: dict, job_type: str = "", cit
 
 
 def get_or_create_checklist(result: dict, job_type: str = "", city: str = "", state: str = "") -> dict:
-    sealed_projection = extract_sealed_public_projection(result, city=city, state=state)
-    if sealed_projection is not None:
-        # A core-active checklist is a deterministic renderer of the same sealed
-        # projection.  It never asks a model or a legacy mutator to manufacture
-        # permit truth after the envelope boundary.
+    core_projection = project_core_customer_boundary(
+        result,
+        job_type=job_type,
+        city=city,
+        state=state,
+    )
+    if core_projection is not None:
+        # A core-active checklist is a deterministic renderer of the same one
+        # customer projection. Integrity-fail-closed projections retain all
+        # applicable family lanes and never invoke an AI/legacy mutator.
         core = result.get("_permit_rule_engine_core") if isinstance(result, dict) else {}
         sealed = core.get("sealed_projection") if isinstance(core, dict) else {}
-        raw_family_rows = sealed_projection.get("family_decisions")
+        raw_family_rows = core_projection.get("family_decisions")
         family_rows: list[dict] = raw_family_rows if isinstance(raw_family_rows, list) else []
         items = [
             {
@@ -7580,7 +7655,7 @@ def get_or_create_checklist(result: dict, job_type: str = "", city: str = "", st
         ]
         return {
             "title": f"Permit checklist — {city}, {state}",
-            "summary": str(sealed_projection.get("coverage_reason") or "Source-backed permit decision checklist"),
+            "summary": str(core_projection.get("coverage_reason") or "Source-backed permit decision checklist"),
             "items": items[:12],
             "cached": False,
             "decision_projection_sha256": str(sealed.get("payload_sha256") or "") if isinstance(sealed, dict) else "",
@@ -7629,6 +7704,20 @@ def load_report_template() -> str:
 
 PUBLIC_SHARE_FIELDS = frozenset({"data", "job_type", "city", "state"})
 PUBLIC_REPORT_RESULT_FIELDS = frozenset({
+    "projection_schema_version",
+    "decision_source",
+    "jurisdiction_id",
+    "jurisdiction_name",
+    "city",
+    "state",
+    "project_family",
+    "coverage_status",
+    "coverage_reason",
+    "source_cell_id",
+    "seed_classification",
+    "family_decisions",
+    "family_authority_routes",
+    "verification_tasks",
     "permit_required",
     "permit_verdict",
     "permit_decision",
@@ -7644,6 +7733,7 @@ PUBLIC_REPORT_RESULT_FIELDS = frozenset({
     "primary_permit",
     "permits_required",
     "companion_permits",
+    "related_permits",
     "companion_reviews",
     "companion_permits_or_reviews",
     "trade_permits",
@@ -7668,12 +7758,14 @@ PUBLIC_REPORT_RESULT_FIELDS = frozenset({
     "inspection_notes",
     "zoning_hoa_flag",
     "apply_url",
+    "online_application_url",
     "apply_path",
     "applying_office",
     "apply_address",
     "apply_phone",
     "source_urls",
     "sources",
+    "warnings",
 })
 PUBLIC_CHECKLIST_FIELDS = frozenset({"title", "summary", "items"})
 PUBLIC_REPORT_INTERNAL_FIELDS = frozenset({
