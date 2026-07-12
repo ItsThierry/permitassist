@@ -1,0 +1,103 @@
+{
+  "fixture_version": "permitassist.rule-engine-part2-red.v1",
+  "fixture_kind": "synthetic_contract_only",
+  "frozen_before_behavior_edits": true,
+  "cases": {
+    "exact_identity": {
+      "city": "Exampleville",
+      "state": "EX",
+      "index": {
+        "EX|exampleville|reroof": {
+          "cell_id": "cell-exampleville-reroof",
+          "jurisdiction_id": "us-ex-exampleville",
+          "ahj": "Exampleville",
+          "state": "EX",
+          "county": "Example County",
+          "project_family": "reroof"
+        },
+        "EX|exampleville|residential_remodel": {
+          "cell_id": "cell-exampleville-remodel",
+          "jurisdiction_id": "us-ex-exampleville",
+          "ahj": "Exampleville",
+          "state": "EX",
+          "county": "Example County",
+          "project_family": "residential_remodel"
+        }
+      }
+    },
+    "ambiguous_identity": {
+      "city": "Shared Place",
+      "state": "EX",
+      "index": {
+        "EX|shared_place|reroof": {
+          "cell_id": "cell-shared-city",
+          "jurisdiction_id": "us-ex-shared-city",
+          "ahj": "Shared Place",
+          "state": "EX",
+          "county": "North County",
+          "project_family": "reroof"
+        },
+        "EX|shared_place|residential_remodel": {
+          "cell_id": "cell-shared-county",
+          "jurisdiction_id": "us-ex-shared-county",
+          "ahj": "Shared Place",
+          "state": "EX",
+          "county": "South County",
+          "project_family": "residential_remodel"
+        }
+      }
+    },
+    "no_neuter_ten_lane": {
+      "project_family": "commercial_tenant_improvement",
+      "families": [
+        "building",
+        "electrical",
+        "plumbing",
+        "mechanical",
+        "fire",
+        "health",
+        "liquor",
+        "wastewater",
+        "occupancy",
+        "zoning"
+      ],
+      "weak_families": [
+        "health",
+        "liquor",
+        "wastewater"
+      ],
+      "expected_weak_verdicts": [
+        "CONDITIONAL",
+        "VERIFY",
+        "ABSTAIN"
+      ],
+      "forbidden_maps_url": "https://www.google.com/maps"
+    },
+    "source_floor": {
+      "source_free_required": {
+        "family": "building",
+        "verdict": "REQUIRED",
+        "trigger": "roof replacement",
+        "provenance": []
+      },
+      "source_backed_exemption": {
+        "family": "building",
+        "verdict": "NOT_REQUIRED",
+        "trigger": "ordinary repair exemption applies",
+        "provenance": [
+          {
+            "source_url": "https://example.gov/code/repair-exemption",
+            "source_quote": "A permit is not required for the listed ordinary repair when no structural member is altered.",
+            "retrieved_at": "2026-07-11T00:00:00Z",
+            "snapshot_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "snapshot_path": "synthetic://ordinary-repair",
+            "effective_date": "2026-01-01",
+            "freshness_class": "current",
+            "last_verified_at": "2026-07-11T00:00:00Z",
+            "publishable": true
+          }
+        ]
+      }
+    }
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "manifest_version": "permitassist.rule-engine-part2-red-manifest.v1",
+  "frozen_before_behavior_edits": true,
+  "files": {
+    "tests/fixtures/permit_rule_engine_part2_red_no_neuter.json": "6ed10204a54ae37469b79a9b969ad95769cdbe101d1b00c3cada59c157c5991a",
+    "tests/test_permit_rule_engine_part2.py": "ac2a9e938103fc0fe4c957b4a92579916427fe936926880683f096e1b556e220"
+  }
+}
