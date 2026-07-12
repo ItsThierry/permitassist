@@ -16,7 +16,7 @@
     .card { background:var(--card); border:1px solid var(--border); border-radius:18px; padding:22px; box-shadow:0 10px 30px rgba(15,23,42,.05); }
     .label { font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:.08em; color:var(--brand); margin-bottom:10px; }
     .headline { font-size:32px; line-height:1.08; font-weight:900; margin:0 0 6px; }
-    .sub { color:var(--muted); font-size:15px; }
+    .sub { color:var(--muted); font-size:15px; overflow-wrap:anywhere; }
     .pill { display:inline-flex; align-items:center; gap:8px; margin-top:14px; padding:8px 14px; border-radius:999px; background:rgba(5,150,105,.12); color:var(--green); font-weight:800; }
     .meta { display:grid; gap:12px; }
     .meta-row { display:flex; justify-content:space-between; gap:16px; padding-bottom:12px; border-bottom:1px solid var(--border); font-size:14px; }
@@ -26,7 +26,19 @@
     .cta { margin-top:18px; background:#0f172a; color:#fff; border-radius:20px; padding:20px; display:flex; align-items:center; justify-content:space-between; gap:16px; }
     .cta a, .print-btn { background:#fff; color:#0f172a; text-decoration:none; border:none; border-radius:12px; padding:12px 16px; font-weight:800; cursor:pointer; }
     .source-list a { color:var(--brand); overflow-wrap:anywhere; }
-    @media (max-width: 760px) { .grid { grid-template-columns:1fr; } .headline { font-size:26px; } .cta { flex-direction:column; align-items:flex-start; } }
+    .decision-matrix { grid-column:1 / -1; }
+    .decision-list { display:grid; gap:10px; }
+    .decision-row { border:1px solid var(--border); border-radius:14px; padding:14px 16px; background:#f8fafc; }
+    .decision-row-head { display:flex; align-items:center; justify-content:space-between; gap:12px; }
+    .decision-family { font-weight:850; color:#0f172a; }
+    .decision-status { display:inline-flex; align-items:center; border-radius:999px; padding:5px 10px; font-size:11px; font-weight:900; letter-spacing:.04em; text-transform:uppercase; }
+    .decision-status.required { background:rgba(5,150,105,.12); color:#047857; }
+    .decision-status.not-required { background:rgba(71,85,105,.12); color:#475569; }
+    .decision-status.verify { background:rgba(217,119,6,.14); color:#92400e; }
+    .decision-detail { margin-top:7px; color:#475569; font-size:13px; line-height:1.45; }
+    .decision-route { margin-top:7px; color:#64748b; font-size:12px; }
+    .decision-route a { color:var(--brand); font-weight:750; }
+    @media (max-width: 760px) { .grid { grid-template-columns:1fr; } .headline { font-size:26px; } .cta { flex-direction:column; align-items:flex-start; } .decision-row-head { align-items:flex-start; flex-direction:column; } }
     @media print {
       body { background:#fff; }
       .wrap { max-width:none; padding:0; }
@@ -66,8 +78,10 @@
     const sources = safeArray(d.sources);
     const sourceUrl = (src) => typeof src === 'string' ? src : ((src && src.url) || '');
     const safeExternalUrl = (url, fallback = '') => {
+      const raw = String(url || '').trim();
+      if (!raw) return fallback;
       try {
-        const parsed = new URL(String(url || '').trim(), window.location.origin);
+        const parsed = new URL(raw, window.location.origin);
         if (parsed.protocol === 'http:' || parsed.protocol === 'https:') return parsed.href;
       } catch {}
       return fallback;
@@ -84,6 +98,46 @@
     const applyPhone = looksLikeRawUrl(d.apply_phone) ? '' : d.apply_phone;
     const applyContactLabel = [applyOffice, applyAddress, applyPhone].filter(Boolean).join(' • ');
     const whereToApply = textValue(applyContactLabel || applyPathLabel, 'Contact local building department');
+    const permitRows = safeArray(d.permits_required).filter(row => row && typeof row === 'object');
+    const verificationTasks = safeArray(d.verification_tasks).filter(row => row && typeof row === 'object');
+    const familyKey = (row) => textValue(row && (row.family || row.permit_kind || row.kind)).trim().toLowerCase();
+    const familyTitle = (family) => textValue(family)
+      .replace(/[_-]+/g, ' ')
+      .replace(/\b\w/g, char => char.toUpperCase());
+    const humanizeTrigger = (value) => textValue(value)
+      .replace(/[_-]+/g, ' ')
+      .replace(/\bti\b/gi, 'TI')
+      .replace(/^\w/, char => char.toUpperCase());
+    const decisionStatus = (raw) => {
+      if (raw === true) return { label: 'Required', className: 'required' };
+      if (raw === false) return { label: 'Not required', className: 'not-required' };
+      const status = textValue(raw).trim().toUpperCase();
+      if (status === 'REQUIRED' || status === 'YES' || status === 'PERMIT_REQUIRED') {
+        return { label: 'Required', className: 'required' };
+      }
+      if (status === 'NOT_REQUIRED' || status === 'NO' || status === 'NO_PERMIT_REQUIRED') {
+        return { label: 'Not required', className: 'not-required' };
+      }
+      return { label: 'Verify', className: 'verify' };
+    };
+    const canonicalFamilyRows = safeArray(d.family_decisions).filter(row => row && typeof row === 'object');
+    const decisionRows = (canonicalFamilyRows.length ? canonicalFamilyRows : permitRows).map((row) => {
+      const family = familyKey(row);
+      const permitRow = permitRows.find(candidate => familyKey(candidate) === family) || {};
+      const task = verificationTasks.find(candidate => familyKey(candidate) === family) || {};
+      const status = decisionStatus(row.verdict || row.required_status || row.decision || permitRow.required_status || permitRow.decision || permitRow.required);
+      const trigger = status.className === 'verify'
+        ? textValue(task.action || row.trigger || row.required_if || permitRow.trigger || permitRow.required_if)
+        : humanizeTrigger(row.trigger || row.required_if || permitRow.trigger || permitRow.required_if);
+      return {
+        family,
+        label: textValue(permitRow.permit_type || permitRow.permit_name || row.permit_type || row.permit_name, `${familyTitle(family)} Permit`),
+        status,
+        trigger,
+        authority: textValue(row.authority || row.applying_office || permitRow.authority || permitRow.applying_office),
+        applyUrl: safeExternalUrl(row.apply_url || permitRow.apply_url),
+      };
+    });
 
     const el = (tag, options = {}, children = []) => {
       const node = document.createElement(tag);
@@ -155,8 +209,35 @@
     addText(summaryCard, 'div', {
       className: 'sub',
       style: 'color:#334155',
-      text: d.job_summary || d.permit_summary || 'Permit requirements generated from PermitAssist research.'
+      text: d.job_summary || d.permit_summary || d.customer_next_step || d.customer_headline || 'Permit requirements generated from PermitAssist research.'
     });
+
+    if (decisionRows.length) {
+      const matrixCard = addText(grid, 'div', { className: 'card decision-matrix' });
+      addText(matrixCard, 'div', { className: 'label', text: 'Permit decision matrix' });
+      addText(matrixCard, 'div', {
+        className: 'sub',
+        style: 'margin-bottom:14px;color:#475569',
+        text: 'Every permit family in the sealed decision is shown below. Verify lanes are not approvals or denials.'
+      });
+      const decisionList = addText(matrixCard, 'div', { className: 'decision-list' });
+      for (const row of decisionRows) {
+        const decisionRow = addText(decisionList, 'div', {
+          className: 'decision-row',
+          attrs: { 'data-family': row.family, 'data-status': row.status.className }
+        });
+        const rowHead = addText(decisionRow, 'div', { className: 'decision-row-head' });
+        addText(rowHead, 'div', { className: 'decision-family', text: row.label });
+        addText(rowHead, 'div', { className: `decision-status ${row.status.className}`, text: row.status.label });
+        if (row.trigger) addText(decisionRow, 'div', { className: 'decision-detail', text: row.trigger });
+        if (row.authority || row.applyUrl) {
+          const route = addText(decisionRow, 'div', { className: 'decision-route' });
+          if (row.authority) addText(route, 'span', { text: `Authority: ${row.authority}` });
+          if (row.authority && row.applyUrl) route.appendChild(document.createTextNode(' • '));
+          if (row.applyUrl) addText(route, 'a', { text: 'Official application path', attrs: { href: row.applyUrl, target: '_blank', rel: 'noopener' } });
+        }
+      }
+    }
 
     grid.appendChild(listCard('Required documents', docs, 'Scope of work'));
     const inspectionFallback = safeArray(checklist.items).filter(i => i && i.category === 'inspection').map(i => i.label).filter(Boolean).slice(0, 8);

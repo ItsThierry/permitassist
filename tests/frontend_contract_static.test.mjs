@@ -47,6 +47,29 @@ test('report renders non-binary decision as verify', () => {
   assert.match(reportHtml, /Permit status: Verify/);
 });
 
+test('report summary prefers actionable customer copy over raw coverage diagnostics', () => {
+  assert.match(reportHtml, /d\.customer_next_step \|\| d\.customer_headline/);
+  assert.doesNotMatch(reportHtml, /d\.summary \|\|/);
+});
+
+test('report does not synthesize application links from empty unresolved routes', () => {
+  assert.match(reportHtml, /const raw = String\(url \|\| ''\)\.trim\(\)/);
+  assert.match(reportHtml, /if \(!raw\) return fallback/);
+});
+
+test('report uses actionable verification tasks and humanizes machine trigger labels', () => {
+  assert.match(reportHtml, /safeArray\(d\.verification_tasks\)/);
+  assert.match(reportHtml, /task\.action/);
+  assert.match(reportHtml, /replace\(\/\[_-\]\+\/g, ' '\)/);
+});
+
+test('report renders every canonical family decision as a visible matrix row', () => {
+  assert.match(reportHtml, /safeArray\(d\.family_decisions\)/);
+  assert.match(reportHtml, /Permit decision matrix/);
+  assert.match(reportHtml, /decision-matrix/);
+  assert.match(reportHtml, /decision-row/);
+});
+
 test('every customer server surface uses the one core boundary projector', () => {
   assert.ok((serverPy.match(/project_core_customer_boundary\(/g) || []).length >= 5);
 });
