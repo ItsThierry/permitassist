@@ -1,0 +1,2378 @@
+diff --git a/api/permit_rule_engine.py b/api/permit_rule_engine.py
+index e79d22c..00cd8c5 100644
+--- a/api/permit_rule_engine.py
++++ b/api/permit_rule_engine.py
+@@ -1169,6 +1169,16 @@ CORE_ALLOWLIST_SETTING = "PERMITASSIST_RULE_ENGINE_CORE_ALLOWLIST"
+ DecisionVerdict = FamilyVerdict
+ 
+ 
++def normalize_exact_source_family(value: Any) -> str:
++    """Preserve an exact v2.4 permit-family label for Part 3 customer truth.
++
++    Part 1 intentionally used coarse aliases for comparison. Part 3 must not
++    collapse separately sourced lanes such as ``gas`` or
++    ``building_construction`` into another family.
++    """
++    return _slug(value)
++
++
+ class JurisdictionResolutionStatus(str, Enum):
+     EXACT = "exact"
+     AMBIGUOUS = "ambiguous"
+@@ -1276,6 +1286,7 @@ class CoreDecisionEnvelope:
+ 
+ _CORE_FAMILIES = frozenset(
+     {
++        # Locked W4 ten-lane filing-packet boundary.
+         "building",
+         "electrical",
+         "plumbing",
+@@ -1286,6 +1297,17 @@ _CORE_FAMILIES = frozenset(
+         "wastewater",
+         "occupancy",
+         "zoning",
++        # Exact additional families present in the immutable v2.4 seed corpus.
++        # Part 3 preserves these labels rather than collapsing or dropping them.
++        "building_construction",
++        "building_trade",
++        "demolition",
++        "gas",
++        "manufactured_structure_installation",
++        "moving",
++        "pool",
++        "septic_oss_health",
++        "sign",
+     }
+ )
+ 
+@@ -1301,6 +1323,13 @@ _CORE_FACT_KEYS = frozenset(
+         "liquor_service_scope",
+         "wastewater_scope",
+         "zoning_trigger",
++        "gas_scope",
++        "demolition_scope",
++        "pool_scope",
++        "sign_scope",
++        "structure_moving_scope",
++        "manufactured_structure_scope",
++        "septic_oss_scope",
+         "area_sq_ft",
+         "valuation_usd",
+         "stories",
+@@ -1316,11 +1345,18 @@ _WORK_ONTOLOGY: tuple[tuple[str, str, tuple[str, ...]], ...] = (
+     ("electrical_work", "residential_remodel", (r"\belectrical\b", r"\bpanel (?:replacement|upgrade|change)\b", r"\bwiring\b")),
+     ("plumbing_work", "residential_remodel", (r"\bplumbing\b", r"\brepipe\b", r"\bwater heater\b")),
+     ("mechanical_work", "residential_remodel", (r"\bmechanical\b", r"\bhvac\b", r"\bfurnace\b", r"\bair conditioner\b")),
++    ("gas_work", "residential_remodel", (r"\bgas (?:line|piping|work|permit)\b", r"\bfuel gas\b")),
++    ("demolition_work", "residential_remodel", (r"\bdemolition\b", r"\bdemolish\b")),
++    ("pool_work", "residential_remodel", (r"\bswimming pool\b", r"\bpool (?:installation|work|permit)\b")),
++    ("sign_work", "residential_remodel", (r"\bsign (?:installation|work|permit)\b",)),
++    ("structure_moving", "residential_remodel", (r"\bmov(?:e|ing) (?:a )?(?:building|structure)\b",)),
++    ("manufactured_structure_installation", "residential_remodel", (r"\bmanufactured (?:home|housing|structure)\b",)),
++    ("septic_oss_work", "residential_remodel", (r"\bseptic\b", r"\bonsite sew(?:age|er)\b", r"\boss\b")),
+     ("fire_life_safety_work", "commercial_tenant_improvement", (r"\bfire (?:alarm|sprinkler|suppression|life safety)\b",)),
+     ("food_health_work", "commercial_tenant_improvement", (r"\bcommercial kitchen\b", r"\bfood service\b", r"\bhealth permit\b")),
+     ("liquor_service_work", "commercial_tenant_improvement", (r"\bliquor\b", r"\balcohol service\b")),
+     ("wastewater_work", "commercial_tenant_improvement", (r"\bwastewater\b", r"\bgrease interceptor\b")),
+-    ("occupancy_change", "commercial_tenant_improvement", (r"\bchange of (?:use|occupancy)\b", r"\boccupancy change\b")),
++    ("occupancy_change", "commercial_tenant_improvement", (r"\bchange of (?:use|occupancy)\b", r"\boccupancy change\b", r"\boccupancy\b")),
+     ("zoning_review", "commercial_tenant_improvement", (r"\bzoning\b", r"\bplanning review\b")),
+     ("commercial_tenant_improvement", "commercial_tenant_improvement", (r"\bcommercial tenant improvement\b", r"\btenant improvement\b", r"\bcommercial build[- ]?out\b")),
+     ("residential_remodel", "residential_remodel", (r"\bresidential remodel\b", r"\bkitchen remodel\b", r"\bbath(?:room)? remodel\b")),
+@@ -1477,6 +1513,13 @@ def normalize_work_atoms(
+             "electrical_work": "electrical_scope",
+             "plumbing_work": "plumbing_scope",
+             "mechanical_work": "mechanical_scope",
++            "gas_work": "gas_scope",
++            "demolition_work": "demolition_scope",
++            "pool_work": "pool_scope",
++            "sign_work": "sign_scope",
++            "structure_moving": "structure_moving_scope",
++            "manufactured_structure_installation": "manufactured_structure_scope",
++            "septic_oss_work": "septic_oss_scope",
+             "fire_life_safety_work": "fire_life_safety_scope",
+             "food_health_work": "food_service_scope",
+             "liquor_service_work": "liquor_service_scope",
+@@ -1563,7 +1606,7 @@ def _publishable_provenance(record: ProvenanceRecord) -> bool:
+ 
+ 
+ def normalize_family_decision(value: Mapping[str, Any]) -> CoreFamilyDecision:
+-    family = normalize_family(value.get("family") or value.get("permit_kind") or value.get("trade"))
++    family = normalize_exact_source_family(value.get("family") or value.get("permit_kind") or value.get("trade"))
+     raw_verdict = _slug(value.get("verdict") or value.get("required_status") or value.get("value"))
+     verdict_map = {
+         "required": FamilyVerdict.REQUIRED,
+@@ -1600,7 +1643,7 @@ def normalize_family_decision(value: Mapping[str, Any]) -> CoreFamilyDecision:
+ 
+ 
+ def _coerce_authority(row: Mapping[str, Any]) -> AuthorityRef | None:
+-    family = normalize_family(row.get("permit_family") or row.get("trade"))
++    family = normalize_exact_source_family(row.get("permit_family") or row.get("trade"))
+     if family not in _CORE_FAMILIES:
+         return None
+     issuing_raw = row.get("issuing_authority")
+@@ -1745,7 +1788,37 @@ def build_sealed_projection_payload(
+     coverage_status: str,
+     coverage_reason: str,
+     source_cell_id: str | None,
++    seed_classification: SeedClassification | str | None = None,
+ ) -> dict[str, Any]:
++    seed_classification_value = (
++        seed_classification.value
++        if isinstance(seed_classification, SeedClassification)
++        else _normalize_text(seed_classification)
++    )
++    fail_closed_projection = seed_classification_value in {
++        SeedClassification.FAIL_CLOSED.value,
++        SeedClassification.JURISDICTION_HOLD.value,
++        SeedClassification.UNSUPPORTED_SCOPE.value,
++    }
++    if fail_closed_projection:
++        main_decision = CoreFamilyDecision(
++            family=main_decision.family,
++            verdict=FamilyVerdict.ABSTAIN,
++            trigger=main_decision.trigger,
++            provenance=(),
++            validation_issue_codes=tuple(sorted(set(main_decision.validation_issue_codes) | {"part3_fail_closed"})),
++        )
++        family_decisions = tuple(
++            CoreFamilyDecision(
++                family=decision.family,
++                verdict=FamilyVerdict.ABSTAIN,
++                trigger=decision.trigger,
++                provenance=(),
++                validation_issue_codes=tuple(sorted(set(decision.validation_issue_codes) | {"part3_fail_closed"})),
++            )
++            for decision in family_decisions
++        )
++        family_routes = ()
+     main_binary = main_decision.verdict in {FamilyVerdict.REQUIRED, FamilyVerdict.NOT_REQUIRED}
+     permit_required = True if main_decision.verdict is FamilyVerdict.REQUIRED else False if main_decision.verdict is FamilyVerdict.NOT_REQUIRED else None
+     route_by_family = {route.family: route for route in family_routes}
+@@ -1771,6 +1844,38 @@ def build_sealed_projection_payload(
+         }
+         for decision in family_decisions
+     ]
++    verification_tasks = []
++    for decision in family_decisions:
++        route = route_by_family.get(decision.family)
++        authority = route.authority.application_authority if route else ""
++        apply_url = route.application_route.apply_url if route else ""
++        sourced_binary = (
++            decision.verdict in {FamilyVerdict.REQUIRED, FamilyVerdict.NOT_REQUIRED}
++            and any(_publishable_provenance(record) for record in decision.provenance)
++        )
++        if sourced_binary:
++            continue
++        unresolved = []
++        if decision.verdict not in {FamilyVerdict.REQUIRED, FamilyVerdict.NOT_REQUIRED}:
++            unresolved.append("applicability")
++        if not any(_publishable_provenance(record) for record in decision.provenance):
++            unresolved.append("source evidence")
++        if not authority:
++            unresolved.append("filing authority")
++        if not apply_url:
++            unresolved.append("application route")
++        verification_tasks.append(
++            {
++                "family": decision.family,
++                "unresolved_dimensions": unresolved,
++                "authority": authority,
++                "apply_url": apply_url,
++                "action": (
++                    f"Verify {decision.family.replace('_', ' ')} "
++                    f"{', '.join(unresolved)} with {authority or 'the official permit authority'} before filing."
++                ),
++            }
++        )
+     permits_required = [
+         {
+             "permit_type": decision.family.replace("_", " ").title() + " Permit",
+@@ -1806,15 +1911,26 @@ def build_sealed_projection_payload(
+     )
+     verdict_text = "YES" if permit_required is True else "NO" if permit_required is False else "VERIFY"
+     decision_text = main_decision.verdict.value if main_binary else "UNKNOWN"
+-    next_step = (
+-        f"Apply with {main_route.authority.application_authority}."
+-        if main_route and main_route.authority.application_authority
+-        else "Verify the listed family decisions with the official permit authority before filing."
+-    )
++    unresolved_family_rows = [
++        row for row in family_rows if row["verdict"] in {"CONDITIONAL", "VERIFY", "ABSTAIN"}
++    ]
++    if seed_classification_value == SeedClassification.EXACT_PARTIAL.value and unresolved_family_rows:
++        next_step = (
++            f"Verify unresolved permit families, then apply with {main_route.authority.application_authority}."
++            if main_route and main_route.authority.application_authority
++            else "Verify unresolved permit families with the official permit authority before filing."
++        )
++    else:
++        next_step = (
++            f"Apply with {main_route.authority.application_authority}."
++            if main_route and main_route.authority.application_authority
++            else "Verify the listed family decisions with the official permit authority before filing."
++        )
+     return {
+         "projection_schema_version": CORE_PROJECTION_SCHEMA_VERSION,
+         "decision_source": "sealed_permit_rule_engine_envelope",
+         "source_cell_id": source_cell_id,
++        "seed_classification": seed_classification_value,
+         "jurisdiction_id": jurisdiction_id,
+         "jurisdiction_name": jurisdiction_name,
+         "city": jurisdiction_name,
+@@ -1831,6 +1947,7 @@ def build_sealed_projection_payload(
+         "companion_permits": related,
+         "related_permits": copy.deepcopy(related),
+         "family_decisions": family_rows,
++        "verification_tasks": verification_tasks,
+         "family_authority_routes": [_public_family_authority_route(route) for route in family_routes],
+         "applying_office": main_route.authority.application_authority if main_route else "",
+         "apply_url": main_route.application_route.apply_url if main_route else "",
+@@ -1849,6 +1966,13 @@ def build_sealed_projection_payload(
+ 
+ 
+ def _identity_from_resolution(resolution: V24Resolution, city: str, state: str) -> JurisdictionIdentityResolution:
++    # A carried cell must never override a known ambiguous AHJ identity. This
++    # makes the duplicate-name boundary fail closed before any family truth is
++    # projected. Uncovered synthetic/query cells may still carry an explicit
++    # stable jurisdiction id for deterministic tests and official-query flows.
++    indexed_identity = resolve_jurisdiction_identity(city, state)
++    if indexed_identity.status is JurisdictionResolutionStatus.AMBIGUOUS:
++        return indexed_identity
+     cell = resolution.cell if isinstance(resolution.cell, Mapping) else None
+     if cell and _normalize_text(cell.get("jurisdiction_id")):
+         candidate = JurisdictionCandidate(
+@@ -1895,6 +2019,7 @@ def build_core_decision_envelope(
+     if not isinstance(resolution, V24Resolution):
+         raise TypeError("resolution must be V24Resolution")
+     identity = _identity_from_resolution(resolution, city, state)
++    seed = _classification_for_resolution(resolution, identity)
+     work = normalize_work_atoms(job_type, job_category, facts=facts)
+     cell = _mapping(resolution.cell)
+     legacy_envelope = build_decision_envelope(
+@@ -1921,6 +2046,13 @@ def build_core_decision_envelope(
+         and work.valid
+     )
+     stage = select_precedence_stage(resolution.status, coverage, query_valid)
++    if seed.classification is SeedClassification.FAIL_CLOSED:
++        stage = PrecedenceStage.EXACT_FAIL_CLOSED
++    elif seed.classification in {
++        SeedClassification.JURISDICTION_HOLD,
++        SeedClassification.UNSUPPORTED_SCOPE,
++    }:
++        stage = PrecedenceStage.INTERNAL_ABSTAIN
+     if not work.valid or identity.status is not JurisdictionResolutionStatus.EXACT:
+         stage = PrecedenceStage.INTERNAL_ABSTAIN
+ 
+@@ -1970,19 +2102,35 @@ def build_core_decision_envelope(
+                 family=decision.family,
+                 verdict=FamilyVerdict.ABSTAIN,
+                 trigger=decision.trigger,
+-                provenance=decision.provenance,
++                provenance=(),
+                 validation_issue_codes=tuple(sorted(set(decision.validation_issue_codes) | {abstain_issue})),
+             )
+             for decision in decisions
+         ]
+-    routes = build_family_authority_routes(cell) if cell else ()
++    project_family = _slug(cell.get("project_family")) or (
++        work.positive_atoms[0].project_family if work.positive_atoms else "unsupported"
++    )
++    decisions = list(
++        _complete_part3_family_decisions(
++            decisions,
++            project_family,
++            seed.classification,
++        )
++    )
++    routes = (
++        build_family_authority_routes(cell)
++        if cell
++        and seed.classification in {
++            SeedClassification.EXACT_COMPLETE,
++            SeedClassification.EXACT_PARTIAL,
++        }
++        and identity.status is JurisdictionResolutionStatus.EXACT
++        else ()
++    )
+     selected = identity.selected
+     jurisdiction_id = selected.jurisdiction_id if selected else ""
+     jurisdiction_name = selected.ahj_name if selected else _normalize_text(city)
+     jurisdiction_state = selected.state if selected else _normalize_text(state).upper()
+-    project_family = normalize_family(cell.get("project_family")) or (
+-        work.positive_atoms[0].project_family if work.positive_atoms else "unsupported"
+-    )
+     coverage_reason = legacy_envelope.coverage_reason
+     payload = build_sealed_projection_payload(
+         jurisdiction_id=jurisdiction_id,
+@@ -1995,6 +2143,7 @@ def build_core_decision_envelope(
+         coverage_status=stage.value,
+         coverage_reason=coverage_reason,
+         source_cell_id=legacy_envelope.source_cell_id,
++        seed_classification=seed.classification,
+     )
+     sealed = _seal_projection(payload)
+     base = {
+@@ -2122,3 +2271,692 @@ def maybe_attach_core_decision_envelope(
+         facts=facts,
+     )
+     return attach_core_decision_envelope(result, envelope)
++
++
++# ─── Part 3: immutable seed migration and evidence-gated factory ─────────────
++
++PART3_MIGRATION_SCHEMA_VERSION = "permitassist.rule-engine-seed-migration.v1"
++PART3_PREDICATE_SCHEMA_VERSION = "permitassist.sourced-predicate.v1"
++PART3_FACTORY_SCHEMA_VERSION = "permitassist.evidence-gated-factory.v1"
++PART3_TEMPLATE_SCHEMA_VERSION = "permitassist.code-adoption-template.v1"
++PART3_OVERLAY_SCHEMA_VERSION = "permitassist.ahj-overlay.v1"
++
++
++class SeedClassification(str, Enum):
++    EXACT_COMPLETE = "exact_complete"
++    EXACT_PARTIAL = "exact_partial"
++    FAIL_CLOSED = "fail_closed"
++    JURISDICTION_HOLD = "jurisdiction_hold"
++    UNSUPPORTED_SCOPE = "unsupported_scope"
++
++
++@dataclass(frozen=True)
++class MigratedSeed:
++    schema_version: str
++    source_index_key: str
++    source_cell_id: str
++    jurisdiction_id: str
++    ahj_name: str
++    state: str
++    project_family: str
++    classification: SeedClassification
++    source_families: tuple[str, ...]
++    binary_families: tuple[str, ...]
++    source_cell_sha256: str
++    issue_codes: tuple[str, ...]
++    seed_sha256: str
++
++
++@dataclass(frozen=True)
++class SeedReverification:
++    ok: bool
++    issue_codes: tuple[str, ...]
++    expected_seed_sha256: str
++    actual_seed_sha256: str
++
++
++@dataclass(frozen=True)
++class SourcedPredicate:
++    predicate_id: str
++    ontology_node: str
++    family: str
++    operator: str
++    fact_key: str
++    expected_value: Any
++    provenance: tuple[ProvenanceRecord, ...]
++    template_id: str
++
++
++@dataclass(frozen=True)
++class CodeAdoptionTemplate:
++    template_id: str
++    code_family: str
++    adoption_basis: str
++    predicate_ids: tuple[str, ...]
++    provenance: tuple[ProvenanceRecord, ...]
++
++
++@dataclass(frozen=True)
++class AHJOverlay:
++    jurisdiction_id: str
++    template_ids: tuple[str, ...]
++    predicate_overrides: tuple[tuple[str, str], ...]
++    provenance: tuple[ProvenanceRecord, ...]
++
++
++_PART3_SCOPE_ONTOLOGY_ORDER = (
++    "commercial_tenant_improvement",
++    "residential_remodel",
++    "roof_covering_replacement",
++    "structural_alteration",
++    "electrical_work",
++    "plumbing_work",
++    "mechanical_work",
++    "gas_work",
++    "fire_life_safety_work",
++    "food_health_work",
++    "liquor_service_work",
++    "wastewater_work",
++    "occupancy_change",
++    "zoning_review",
++    "demolition_work",
++    "pool_work",
++    "sign_work",
++    "structure_moving",
++    "manufactured_structure_installation",
++    "septic_oss_work",
++)
++
++_PART3_PROJECT_FAMILIES = frozenset(
++    {"commercial_tenant_improvement", "residential_remodel", "reroof"}
++)
++
++_PART3_TEMPLATE_BY_PROJECT = {
++    "commercial_tenant_improvement": "commercial-ti-local-adoption-seed-v1",
++    "residential_remodel": "residential-remodel-local-adoption-seed-v1",
++    "reroof": "residential-reroof-local-adoption-seed-v1",
++}
++
++_PART3_PREDICATE_BY_PROJECT = {
++    "commercial_tenant_improvement": "commercial-ti-building-seed-required-v1",
++    "residential_remodel": "residential-remodel-building-seed-required-v1",
++    "reroof": "reroof-building-seed-required-v1",
++}
++
++_PART3_REPRESENTATIVE_KEYS = {
++    "commercial_tenant_improvement": "AK|anchorage|commercial_tenant_improvement",
++    "residential_remodel": "AL|albertville|residential_remodel",
++    "reroof": "AZ|buckeye|reroof",
++}
++
++
++def minimum_scope_ontology() -> dict[str, dict[str, Any]]:
++    """Return the closed minimum production ontology in contract order."""
++    patterns_by_node = {node: patterns for node, _family, patterns in _WORK_ONTOLOGY}
++    family_by_node = {node: family for node, family, _patterns in _WORK_ONTOLOGY}
++    broad = {
++        "commercial_tenant_improvement": "commercial_tenant_improvement",
++        "residential_remodel": "residential_remodel",
++        "roof_covering_replacement": "reroof",
++    }
++    return {
++        node: {
++            "ontology_node": node,
++            "project_family": family_by_node.get(node, broad.get(node, "unsupported")),
++            "patterns": list(patterns_by_node.get(node, ())),
++            "closed": True,
++        }
++        for node in _PART3_SCOPE_ONTOLOGY_ORDER
++    }
++
++
++def _cell_publishable_provenance(cell: Mapping[str, Any]) -> tuple[ProvenanceRecord, ...]:
++    tier1 = _mapping(cell.get("tier1"))
++    records: list[ProvenanceRecord | None] = []
++    main = _mapping(tier1.get("main_decision"))
++    records.extend(_provenance_from_dict(item) for item in _list(main.get("provenance")))
++    if isinstance(main.get("provenance"), Mapping):
++        records.append(_provenance_from_dict(main.get("provenance")))
++    for collection in ("permits_required", "trade_authority", "apply"):
++        for row in _list(tier1.get(collection)):
++            if not isinstance(row, Mapping):
++                continue
++            provenance = row.get("provenance")
++            if isinstance(provenance, list):
++                records.extend(_provenance_from_dict(item) for item in provenance)
++            else:
++                records.append(_provenance_from_dict(provenance))
++    return tuple(record for record in _dedupe_sorted_provenance(records) if _publishable_provenance(record))
++
++
++def _main_provenance_hash_bound(cell: Mapping[str, Any]) -> bool:
++    tier1 = _mapping(cell.get("tier1"))
++    main = _mapping(tier1.get("main_decision"))
++    raw_provenance = main.get("provenance")
++    provenance = _provenance_records(raw_provenance)
++    if not provenance or not all(_publishable_provenance(item) for item in provenance):
++        return False
++    # Legacy waves used several non-equivalent hash domains (live snapshots,
++    # normalized snapshots, and aggregate source packs). Part 3 therefore
++    # requires a non-placeholder SHA-256-shaped provenance hash here and binds
++    # the complete immutable source cell through ``source_cell_sha256``. The
++    # re-verification gate detects any subsequent change to any provenance
++    # field without falsely demoting legacy seeds whose aggregate watch hash is
++    # intentionally different from the main-decision snapshot hash.
++    return all(
++        bool(re.fullmatch(r"[0-9a-f]{64}", record.snapshot_hash))
++        and len(set(record.snapshot_hash)) > 1
++        for record in provenance
++    )
++
++
++def _binary_source_families(cell: Mapping[str, Any]) -> tuple[str, ...]:
++    tier1 = _mapping(cell.get("tier1"))
++    output: set[str] = set()
++    for row in _list(tier1.get("permits_required")):
++        if not isinstance(row, Mapping):
++            continue
++        family = normalize_exact_source_family(row.get("permit_kind"))
++        verdict = _slug(row.get("required_status") or row.get("decision"))
++        records = _provenance_records(row.get("provenance"))
++        if (
++            family
++            and verdict in {"required", "not_required"}
++            and records
++            and all(_publishable_provenance(record) for record in records)
++        ):
++            output.add(family)
++    return tuple(sorted(output))
++
++
++def _source_families(cell: Mapping[str, Any]) -> tuple[str, ...]:
++    return tuple(
++        sorted(
++            {
++                family
++                for row in _list(_mapping(cell.get("tier1")).get("permits_required"))
++                if isinstance(row, Mapping)
++                for family in (normalize_exact_source_family(row.get("permit_kind")),)
++                if family
++            }
++        )
++    )
++
++
++def seed_hash_payload(seed: MigratedSeed) -> dict[str, Any]:
++    payload = to_primitive(seed)
++    payload.pop("seed_sha256", None)
++    return payload
++
++
++def _make_seed(
++    *,
++    source_index_key: str,
++    source_cell_id: str,
++    jurisdiction_id: str,
++    ahj_name: str,
++    state: str,
++    project_family: str,
++    classification: SeedClassification,
++    source_families: tuple[str, ...],
++    binary_families: tuple[str, ...],
++    source_cell_sha256: str,
++    issue_codes: tuple[str, ...],
++) -> MigratedSeed:
++    base = {
++        "schema_version": PART3_MIGRATION_SCHEMA_VERSION,
++        "source_index_key": source_index_key,
++        "source_cell_id": source_cell_id,
++        "jurisdiction_id": jurisdiction_id,
++        "ahj_name": ahj_name,
++        "state": state,
++        "project_family": project_family,
++        "classification": classification,
++        "source_families": source_families,
++        "binary_families": binary_families,
++        "source_cell_sha256": source_cell_sha256,
++        "issue_codes": issue_codes,
++    }
++    return MigratedSeed(**base, seed_sha256=stable_sha256(to_primitive(base)))
++
++
++def build_fail_closed_factory_seed(
++    *,
++    jurisdiction_id: str,
++    ahj_name: str,
++    state: str,
++    project_family: str,
++    source_index_key: str,
++    issue_codes: Iterable[str] = ("factory_born_fail_closed",),
++    source_cell: Mapping[str, Any] | None = None,
++) -> MigratedSeed:
++    source = dict(source_cell or {})
++    return _make_seed(
++        source_index_key=_normalize_text(source_index_key),
++        source_cell_id=_normalize_text(source.get("cell_id")) or (
++            f"factory::{_normalize_text(jurisdiction_id).lower()}::{_slug(project_family) or 'unsupported'}"
++        ),
++        jurisdiction_id=_normalize_text(jurisdiction_id).lower(),
++        ahj_name=_normalize_text(ahj_name),
++        state=_normalize_text(state).upper(),
++        project_family=_slug(project_family) or "unsupported",
++        classification=SeedClassification.FAIL_CLOSED,
++        source_families=_source_families(source),
++        binary_families=(),
++        source_cell_sha256=stable_sha256(source),
++        issue_codes=tuple(sorted(set(issue_codes))),
++    )
++
++
++def classify_v24_seed(
++    source_index_key: str,
++    cell: Mapping[str, Any],
++    *,
++    identity_ambiguous: bool = False,
++) -> MigratedSeed:
++    source = dict(cell)
++    project_family = _slug(source.get("project_family")) or "unsupported"
++    source_families = _source_families(source)
++    common = {
++        "source_index_key": _normalize_text(source_index_key),
++        "source_cell_id": _normalize_text(source.get("cell_id")) or f"missing::{_normalize_text(source_index_key)}",
++        "jurisdiction_id": _normalize_text(source.get("jurisdiction_id")).lower(),
++        "ahj_name": _normalize_text(source.get("ahj")),
++        "state": _normalize_text(source.get("state")).upper(),
++        "project_family": project_family,
++        "source_families": source_families,
++        "source_cell_sha256": stable_sha256(source),
++    }
++    if identity_ambiguous:
++        return _make_seed(
++            **common,
++            classification=SeedClassification.JURISDICTION_HOLD,
++            binary_families=(),
++            issue_codes=("jurisdiction_identity_ambiguous",),
++        )
++    if project_family not in _PART3_PROJECT_FAMILIES:
++        return _make_seed(
++            **common,
++            classification=SeedClassification.UNSUPPORTED_SCOPE,
++            binary_families=(),
++            issue_codes=("project_family_not_in_closed_ontology",),
++        )
++    if source.get("status") == "FAIL_CLOSED" or source.get("serving_status") == "FAIL_CLOSED":
++        return _make_seed(
++            **common,
++            classification=SeedClassification.FAIL_CLOSED,
++            binary_families=(),
++            issue_codes=("legacy_seed_explicit_fail_closed",),
++        )
++    validation_ok, validation_issues = request_time_validation(source)
++    if not validation_ok or not _main_provenance_hash_bound(source):
++        issue_codes = set(validation_issues)
++        if not _main_provenance_hash_bound(source):
++            issue_codes.add("main_provenance_not_hash_bound")
++        return _make_seed(
++            **common,
++            classification=SeedClassification.FAIL_CLOSED,
++            binary_families=(),
++            issue_codes=tuple(sorted(issue_codes or {"legacy_seed_evidence_gate_failed"})),
++        )
++    coverage, _reason, _ok, coverage_issues = classify_cell_coverage(source)
++    classification = (
++        SeedClassification.EXACT_COMPLETE
++        if coverage is CoverageStatus.EXACT_COMPLETE
++        else SeedClassification.EXACT_PARTIAL
++        if coverage is CoverageStatus.EXACT_PARTIAL
++        else SeedClassification.FAIL_CLOSED
++    )
++    return _make_seed(
++        **common,
++        classification=classification,
++        binary_families=(
++            _binary_source_families(source)
++            if classification in {SeedClassification.EXACT_COMPLETE, SeedClassification.EXACT_PARTIAL}
++            else ()
++        ),
++        issue_codes=tuple(sorted(coverage_issues)),
++    )
++
++
++def safe_factory_migrate_seed(
++    source_index_key: str,
++    cell: Mapping[str, Any],
++    *,
++    identity_ambiguous: bool = False,
++) -> MigratedSeed:
++    try:
++        return classify_v24_seed(
++            source_index_key,
++            cell,
++            identity_ambiguous=identity_ambiguous,
++        )
++    except Exception:
++        return build_fail_closed_factory_seed(
++            jurisdiction_id=_normalize_text(cell.get("jurisdiction_id")),
++            ahj_name=_normalize_text(cell.get("ahj")),
++            state=_normalize_text(cell.get("state")),
++            project_family=_normalize_text(cell.get("project_family")),
++            source_index_key=source_index_key,
++            issue_codes=("factory_exception",),
++            source_cell=cell,
++        )
++
++
++def migrate_v24_seed_index(
++    *,
++    index: Mapping[str, Mapping[str, Any]] | None = None,
++) -> dict[str, MigratedSeed]:
++    source_index = index if index is not None else (load_v24_index() or {})
++    identities: dict[tuple[str, str], set[str]] = {}
++    for key in sorted(source_index):
++        cell = source_index[key]
++        identity_key = (_slug(cell.get("ahj")), _normalize_text(cell.get("state")).upper())
++        identities.setdefault(identity_key, set()).add(_normalize_text(cell.get("jurisdiction_id")).lower())
++    return {
++        key: safe_factory_migrate_seed(
++            key,
++            source_index[key],
++            identity_ambiguous=len(
++                identities.get(
++                    (_slug(source_index[key].get("ahj")), _normalize_text(source_index[key].get("state")).upper()),
++                    set(),
++                )
++            )
++            > 1,
++        )
++        for key in sorted(source_index)
++    }
++
++
++def reverify_migrated_seed(seed: MigratedSeed, source_cell: Mapping[str, Any]) -> SeedReverification:
++    issues: set[str] = set()
++    if seed.source_cell_sha256 != stable_sha256(source_cell):
++        issues.add("source_cell_hash_mismatch")
++    recomputed = safe_factory_migrate_seed(
++        seed.source_index_key,
++        source_cell,
++        identity_ambiguous=seed.classification is SeedClassification.JURISDICTION_HOLD,
++    )
++    if seed.seed_sha256 != recomputed.seed_sha256:
++        issues.add("seed_hash_mismatch")
++    return SeedReverification(
++        ok=not issues,
++        issue_codes=tuple(sorted(issues)),
++        expected_seed_sha256=seed.seed_sha256,
++        actual_seed_sha256=recomputed.seed_sha256,
++    )
++
++
++def _overlay_promotion_gate(seed: MigratedSeed, cell: Mapping[str, Any]) -> tuple[bool, tuple[str, ...]]:
++    issues: set[str] = set()
++    overlay = build_ahj_overlay(cell)
++    if overlay.jurisdiction_id != _normalize_text(cell.get("jurisdiction_id")).lower():
++        issues.add("overlay_jurisdiction_mismatch")
++    if not overlay.template_ids:
++        issues.add("missing_local_adoption_template")
++    if not overlay.provenance or not all(_publishable_provenance(item) for item in overlay.provenance):
++        issues.add("missing_local_adoption_evidence")
++    override_families = {family for family, _verdict in overlay.predicate_overrides}
++    missing_overrides = set(seed.binary_families) - override_families
++    if missing_overrides:
++        issues.add("missing_local_administrative_override")
++    route_families = {
++        route.family
++        for route in build_family_authority_routes(cell)
++        if (
++            route.authority.issuing_authority
++            or route.authority.application_authority
++        )
++        and (
++            route.application_route.apply_url
++            or route.application_route.office_name
++        )
++    }
++    if set(seed.binary_families) - route_families:
++        issues.add("missing_local_authority_evidence")
++    predicate = next(
++        (
++            item
++            for item in minimum_sourced_predicates().values()
++            if item.expected_value == seed.project_family
++        ),
++        None,
++    )
++    if predicate is None or evaluate_sourced_predicate(
++        predicate,
++        {"project_family": seed.project_family},
++    ) is not True:
++        issues.add("template_predicate_not_satisfied")
++    return not issues, tuple(sorted(issues))
++
++
++def promote_factory_seed(candidate: MigratedSeed, *, source_cell: Mapping[str, Any]) -> MigratedSeed:
++    """Promote only after source, adoption, administration, and authority gates."""
++    if not source_cell:
++        return candidate
++    identity = resolve_jurisdiction_identity(
++        _normalize_text(source_cell.get("ahj")),
++        _normalize_text(source_cell.get("state")),
++    )
++    if identity.status is not JurisdictionResolutionStatus.EXACT:
++        return candidate
++    migrated = safe_factory_migrate_seed(candidate.source_index_key, source_cell)
++    if migrated.classification not in {
++        SeedClassification.EXACT_COMPLETE,
++        SeedClassification.EXACT_PARTIAL,
++    }:
++        return candidate
++    promoted, _issues = _overlay_promotion_gate(migrated, source_cell)
++    return migrated if promoted else candidate
++
++
++def deterministic_seed_sample(
++    index: Mapping[str, Any],
++    *,
++    seed: str,
++    sample_size: int,
++) -> tuple[str, ...]:
++    if sample_size < 0:
++        raise ValueError("sample_size must be non-negative")
++    ranked = sorted(
++        index,
++        key=lambda key: (hashlib.sha256(f"{seed}\0{key}".encode("utf-8")).hexdigest(), key),
++    )
++    return tuple(ranked[: min(sample_size, len(ranked))])
++
++
++def audit_pre_activation_family_preservation(
++    index: Mapping[str, Any] | None = None,
++    *,
++    allowlisted_jurisdiction_ids: Iterable[str] | None = None,
++) -> dict[str, Any]:
++    """Prove exact-family preservation/routing before any jurisdiction activation."""
++
++    source_index = dict(index or load_v24_index() or {})
++    allowlist = {
++        _normalize_text(item).lower()
++        for item in (allowlisted_jurisdiction_ids or ())
++        if _normalize_text(item)
++    }
++    migrated = migrate_v24_seed_index(index=source_index)
++    violations: list[dict[str, Any]] = []
++    checked = 0
++    binary_family_count = 0
++    for key, cell in sorted(source_index.items()):
++        seed = migrated[key]
++        if allowlist and seed.jurisdiction_id not in allowlist:
++            continue
++        if seed.classification not in {
++            SeedClassification.EXACT_COMPLETE,
++            SeedClassification.EXACT_PARTIAL,
++        }:
++            continue
++        checked += 1
++        binary_family_count += len(seed.binary_families)
++        routes = {route.family for route in build_family_authority_routes(_mapping(cell))}
++        missing_from_closed_ontology = sorted(set(seed.binary_families) - _CORE_FAMILIES)
++        missing_from_preserved_seed = sorted(set(seed.binary_families) - set(seed.source_families))
++        missing_routes = sorted(set(seed.binary_families) - routes)
++        if missing_from_closed_ontology or missing_from_preserved_seed or missing_routes:
++            violations.append(
++                {
++                    "source_index_key": key,
++                    "jurisdiction_id": seed.jurisdiction_id,
++                    "missing_from_closed_ontology": missing_from_closed_ontology,
++                    "missing_from_preserved_seed": missing_from_preserved_seed,
++                    "missing_routes": missing_routes,
++                }
++            )
++    return {
++        "schema_version": "permitassist.rule-engine-part3-preactivation-family-audit.v1",
++        "checked_cells": checked,
++        "binary_family_occurrences": binary_family_count,
++        "violation_count": len(violations),
++        "violations": violations,
++        "passed": not violations,
++    }
++
++
++def classify_request_scope(job_type: str, job_category: str = "") -> SeedClassification:
++    work = normalize_work_atoms(job_type, job_category)
++    return (
++        SeedClassification.EXACT_PARTIAL
++        if work.valid
++        else SeedClassification.UNSUPPORTED_SCOPE
++    )
++
++
++def _representative_provenance(project_family: str) -> tuple[ProvenanceRecord, ...]:
++    index = load_v24_index() or {}
++    cell = index.get(_PART3_REPRESENTATIVE_KEYS[project_family], {})
++    records = _cell_publishable_provenance(cell)
++    if not records:
++        raise RuntimeError(f"no publishable representative provenance for {project_family}")
++    return records
++
++
++def minimum_sourced_predicates() -> dict[str, SourcedPredicate]:
++    node_by_project = {
++        "commercial_tenant_improvement": "commercial_tenant_improvement",
++        "residential_remodel": "residential_remodel",
++        "reroof": "roof_covering_replacement",
++    }
++    output: dict[str, SourcedPredicate] = {}
++    for project_family in ("commercial_tenant_improvement", "residential_remodel", "reroof"):
++        predicate_id = _PART3_PREDICATE_BY_PROJECT[project_family]
++        output[predicate_id] = SourcedPredicate(
++            predicate_id=predicate_id,
++            ontology_node=node_by_project[project_family],
++            family="building",
++            operator="equals",
++            fact_key="project_family",
++            expected_value=project_family,
++            provenance=_representative_provenance(project_family),
++            template_id=_PART3_TEMPLATE_BY_PROJECT[project_family],
++        )
++    return output
++
++
++def evaluate_sourced_predicate(predicate: SourcedPredicate, facts: Mapping[str, Any]) -> bool | None:
++    """Evaluate a closed sourced predicate without manufacturing truth.
++
++    Missing facts, unsupported operators, and unsourced predicates return
++    ``None``. Factory promotion may proceed only on an explicit ``True``.
++    """
++
++    if predicate.operator != "equals" or predicate.fact_key not in facts:
++        return None
++    if not predicate.provenance or not all(_publishable_provenance(item) for item in predicate.provenance):
++        return None
++    return _slug(facts.get(predicate.fact_key)) == _slug(predicate.expected_value)
++
++
++def minimum_code_adoption_templates() -> dict[str, CodeAdoptionTemplate]:
++    code_family_by_project = {
++        "commercial_tenant_improvement": "commercial_building_local_adoption",
++        "residential_remodel": "residential_building_local_adoption",
++        "reroof": "residential_roofing_local_adoption",
++    }
++    output: dict[str, CodeAdoptionTemplate] = {}
++    for project_family in ("commercial_tenant_improvement", "residential_remodel", "reroof"):
++        template_id = _PART3_TEMPLATE_BY_PROJECT[project_family]
++        output[template_id] = CodeAdoptionTemplate(
++            template_id=template_id,
++            code_family=code_family_by_project[project_family],
++            adoption_basis="reusable structure only; exact AHJ overlay and source evidence required",
++            predicate_ids=(_PART3_PREDICATE_BY_PROJECT[project_family],),
++            provenance=_representative_provenance(project_family),
++        )
++    return output
++
++
++def build_ahj_overlay(cell: Mapping[str, Any]) -> AHJOverlay:
++    project_family = _slug(cell.get("project_family"))
++    template_id = _PART3_TEMPLATE_BY_PROJECT.get(project_family)
++    overrides: list[tuple[str, str]] = []
++    for row in _list(_mapping(cell.get("tier1")).get("permits_required")):
++        if not isinstance(row, Mapping):
++            continue
++        family = normalize_exact_source_family(row.get("permit_kind"))
++        verdict = _slug(row.get("required_status") or row.get("decision")).upper()
++        if family:
++            overrides.append((family, verdict or "VERIFY"))
++    return AHJOverlay(
++        jurisdiction_id=_normalize_text(cell.get("jurisdiction_id")).lower(),
++        template_ids=(template_id,) if template_id else (),
++        predicate_overrides=tuple(sorted(set(overrides))),
++        provenance=_cell_publishable_provenance(cell),
++    )
++
++
++def _classification_for_resolution(
++    resolution: V24Resolution,
++    identity: JurisdictionIdentityResolution,
++) -> MigratedSeed:
++    cell = _mapping(resolution.cell)
++    if not cell:
++        classification = (
++            SeedClassification.JURISDICTION_HOLD
++            if identity.status is JurisdictionResolutionStatus.AMBIGUOUS
++            else SeedClassification.UNSUPPORTED_SCOPE
++        )
++        return _make_seed(
++            source_index_key=_normalize_text(resolution.key),
++            source_cell_id="",
++            jurisdiction_id="",
++            ahj_name=identity.candidates[0].ahj_name if identity.candidates else "",
++            state=identity.candidates[0].state if identity.candidates else "",
++            project_family="unsupported",
++            classification=classification,
++            source_families=(),
++            binary_families=(),
++            source_cell_sha256=stable_sha256({}),
++            issue_codes=(classification.value,),
++        )
++    return safe_factory_migrate_seed(
++        _normalize_text(resolution.key),
++        cell,
++        identity_ambiguous=identity.status is JurisdictionResolutionStatus.AMBIGUOUS,
++    )
++
++
++def _complete_part3_family_decisions(
++    decisions: Iterable[CoreFamilyDecision],
++    project_family: str,
++    classification: SeedClassification,
++) -> tuple[CoreFamilyDecision, ...]:
++    existing = {decision.family: decision for decision in decisions}
++    if classification is SeedClassification.EXACT_PARTIAL:
++        for family in sorted(FAMILY_CLOSURE_REQUIREMENTS.get(project_family, frozenset())):
++            existing.setdefault(
++                family,
++                CoreFamilyDecision(
++                    family=family,
++                    verdict=FamilyVerdict.VERIFY,
++                    trigger=f"{family} applicability is not closed by the exact seed",
++                    provenance=(),
++                    validation_issue_codes=("verified_partial_dimension_unclosed",),
++                ),
++            )
++    return tuple(existing[key] for key in sorted(existing))
+diff --git a/artifacts/permit_rule_engine_part3_20260712/CONTRACT_AMENDMENT_1.md b/artifacts/permit_rule_engine_part3_20260712/CONTRACT_AMENDMENT_1.md
+new file mode 100644
+index 0000000..70dc53d
+--- /dev/null
++++ b/artifacts/permit_rule_engine_part3_20260712/CONTRACT_AMENDMENT_1.md
+@@ -0,0 +1,13 @@
++# Part 3 Frozen Contract Amendment 1
++
++Date: 2026-07-12
++
++## Correction
++
++The original frozen fixture included `"unsupported_scope": 0` in the expected `Counter` serialization for the real-corpus census. Python's `Counter` does not serialize keys that were never observed, so the assertion was mathematically impossible for a corpus with zero unsupported-scope seeds.
++
++The zero-valued entry was removed. No denominator, positive threshold, expected failure class, canary, random seed, counterfactual, or customer-truth assertion changed. The expected non-zero classes still sum to the immutable 2,162-cell corpus.
++
++## Timing and integrity
++
++This amendment was committed while the worktree contained no behavior changes. The in-progress behavior diff was saved outside the repository, the worktree was reset to the frozen-contract checkpoint, this correction was applied and re-hashed, and only then was implementation resumed.
+diff --git a/artifacts/permit_rule_engine_part3_20260712/gates/contract_amendment_1_red_status.json b/artifacts/permit_rule_engine_part3_20260712/gates/contract_amendment_1_red_status.json
+new file mode 100644
+index 0000000..31d2956
+--- /dev/null
++++ b/artifacts/permit_rule_engine_part3_20260712/gates/contract_amendment_1_red_status.json
+@@ -0,0 +1,7 @@
++{
++  "contract_state": "RED",
++  "exit_code": 1,
++  "reason": "expected missing Part 3 implementation symbols and projection fields",
++  "amendment": "removed only impossible zero-count Counter key",
++  "behavior_changes_present_when_amended": false
++}
+diff --git a/artifacts/permit_rule_engine_part3_20260712/gates/red_contract_before_behavior.log b/artifacts/permit_rule_engine_part3_20260712/gates/red_contract_before_behavior.log
+new file mode 100644
+index 0000000..52defc7
+--- /dev/null
++++ b/artifacts/permit_rule_engine_part3_20260712/gates/red_contract_before_behavior.log
+@@ -0,0 +1,203 @@
++FEEEEFFFEFEEF.                                                           [100%]
++==================================== ERRORS ====================================
++_ ERROR at setup of test_every_legacy_cell_is_migrated_once_with_immutable_source_hash _
++
++index = {'AK|anchorage|commercial_tenant_improvement': {'ahj': 'Anchorage', 'cell_id': 'us-ak-anchorage__commercial__commercia...er1_snapshot_hashes': ['241fe5b83bed25b82a51b44134a007c3307e0836b3a8600aa8a371f65421a3fe']}, 'county': None, ...}, ...}
++
++    @pytest.fixture(scope="module")
++    def migrated(index: dict) -> dict:
++>       return pre.migrate_v24_seed_index(index=index)
++               ^^^^^^^^^^^^^^^^^^^^^^^^^^
++E       AttributeError: module 'api.permit_rule_engine' has no attribute 'migrate_v24_seed_index'
++
++tests/test_permit_rule_engine_part3.py:36: AttributeError
++_ ERROR at setup of test_real_corpus_has_exact_locked_honest_classification_counts _
++
++index = {'AK|anchorage|commercial_tenant_improvement': {'ahj': 'Anchorage', 'cell_id': 'us-ak-anchorage__commercial__commercia...er1_snapshot_hashes': ['241fe5b83bed25b82a51b44134a007c3307e0836b3a8600aa8a371f65421a3fe']}, 'county': None, ...}, ...}
++
++    @pytest.fixture(scope="module")
++    def migrated(index: dict) -> dict:
++>       return pre.migrate_v24_seed_index(index=index)
++               ^^^^^^^^^^^^^^^^^^^^^^^^^^
++E       AttributeError: module 'api.permit_rule_engine' has no attribute 'migrate_v24_seed_index'
++
++tests/test_permit_rule_engine_part3.py:36: AttributeError
++_ ERROR at setup of test_migration_preserves_every_observed_exact_permit_family _
++
++index = {'AK|anchorage|commercial_tenant_improvement': {'ahj': 'Anchorage', 'cell_id': 'us-ak-anchorage__commercial__commercia...er1_snapshot_hashes': ['241fe5b83bed25b82a51b44134a007c3307e0836b3a8600aa8a371f65421a3fe']}, 'county': None, ...}, ...}
++
++    @pytest.fixture(scope="module")
++    def migrated(index: dict) -> dict:
++>       return pre.migrate_v24_seed_index(index=index)
++               ^^^^^^^^^^^^^^^^^^^^^^^^^^
++E       AttributeError: module 'api.permit_rule_engine' has no attribute 'migrate_v24_seed_index'
++
++tests/test_permit_rule_engine_part3.py:36: AttributeError
++_ ERROR at setup of test_ambiguous_identity_cells_become_jurisdiction_holds_not_binary _
++
++index = {'AK|anchorage|commercial_tenant_improvement': {'ahj': 'Anchorage', 'cell_id': 'us-ak-anchorage__commercial__commercia...er1_snapshot_hashes': ['241fe5b83bed25b82a51b44134a007c3307e0836b3a8600aa8a371f65421a3fe']}, 'county': None, ...}, ...}
++
++    @pytest.fixture(scope="module")
++    def migrated(index: dict) -> dict:
++>       return pre.migrate_v24_seed_index(index=index)
++               ^^^^^^^^^^^^^^^^^^^^^^^^^^
++E       AttributeError: module 'api.permit_rule_engine' has no attribute 'migrate_v24_seed_index'
++
++tests/test_permit_rule_engine_part3.py:36: AttributeError
++_ ERROR at setup of test_verified_partial_customer_projection_is_useful_and_preserves_proven_families _
++
++index = {'AK|anchorage|commercial_tenant_improvement': {'ahj': 'Anchorage', 'cell_id': 'us-ak-anchorage__commercial__commercia...er1_snapshot_hashes': ['241fe5b83bed25b82a51b44134a007c3307e0836b3a8600aa8a371f65421a3fe']}, 'county': None, ...}, ...}
++
++    @pytest.fixture(scope="module")
++    def migrated(index: dict) -> dict:
++>       return pre.migrate_v24_seed_index(index=index)
++               ^^^^^^^^^^^^^^^^^^^^^^^^^^
++E       AttributeError: module 'api.permit_rule_engine' has no attribute 'migrate_v24_seed_index'
++
++tests/test_permit_rule_engine_part3.py:36: AttributeError
++__ ERROR at setup of test_authority_scope_canaries_preserve_exact_family_rows __
++
++index = {'AK|anchorage|commercial_tenant_improvement': {'ahj': 'Anchorage', 'cell_id': 'us-ak-anchorage__commercial__commercia...er1_snapshot_hashes': ['241fe5b83bed25b82a51b44134a007c3307e0836b3a8600aa8a371f65421a3fe']}, 'county': None, ...}, ...}
++
++    @pytest.fixture(scope="module")
++    def migrated(index: dict) -> dict:
++>       return pre.migrate_v24_seed_index(index=index)
++               ^^^^^^^^^^^^^^^^^^^^^^^^^^
++E       AttributeError: module 'api.permit_rule_engine' has no attribute 'migrate_v24_seed_index'
++
++tests/test_permit_rule_engine_part3.py:36: AttributeError
++_ ERROR at setup of test_seeded_random_validation_is_deterministic_and_counterfactuals_fail_closed _
++
++index = {'AK|anchorage|commercial_tenant_improvement': {'ahj': 'Anchorage', 'cell_id': 'us-ak-anchorage__commercial__commercia...er1_snapshot_hashes': ['241fe5b83bed25b82a51b44134a007c3307e0836b3a8600aa8a371f65421a3fe']}, 'county': None, ...}, ...}
++
++    @pytest.fixture(scope="module")
++    def migrated(index: dict) -> dict:
++>       return pre.migrate_v24_seed_index(index=index)
++               ^^^^^^^^^^^^^^^^^^^^^^^^^^
++E       AttributeError: module 'api.permit_rule_engine' has no attribute 'migrate_v24_seed_index'
++
++tests/test_permit_rule_engine_part3.py:36: AttributeError
++=================================== FAILURES ===================================
++___________ test_part3_contract_versions_and_closed_classifications ____________
++
++frozen_contract = {'fixture_version': 'permitassist.rule-engine-part3-red.v1', 'fixture_kind': 'synthetic_and_immutable_corpus_contract', 'frozen_before_behavior_edits': True, 'source_tag': 'permit-rule-engine-part2-20260712', ...}
++
++    def test_part3_contract_versions_and_closed_classifications(frozen_contract: dict) -> None:
++>       assert pre.PART3_MIGRATION_SCHEMA_VERSION == "permitassist.rule-engine-seed-migration.v1"
++               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
++E       AttributeError: module 'api.permit_rule_engine' has no attribute 'PART3_MIGRATION_SCHEMA_VERSION'
++
++tests/test_permit_rule_engine_part3.py:57: AttributeError
++_ test_minimum_ontology_predicates_templates_and_overlay_are_closed_and_sourced _
++
++frozen_contract = {'fixture_version': 'permitassist.rule-engine-part3-red.v1', 'fixture_kind': 'synthetic_and_immutable_corpus_contract', 'frozen_before_behavior_edits': True, 'source_tag': 'permit-rule-engine-part2-20260712', ...}
++index = {'AK|anchorage|commercial_tenant_improvement': {'ahj': 'Anchorage', 'cell_id': 'us-ak-anchorage__commercial__commercia...er1_snapshot_hashes': ['241fe5b83bed25b82a51b44134a007c3307e0836b3a8600aa8a371f65421a3fe']}, 'county': None, ...}, ...}
++
++    def test_minimum_ontology_predicates_templates_and_overlay_are_closed_and_sourced(
++        frozen_contract: dict, index: dict
++    ) -> None:
++>       ontology = pre.minimum_scope_ontology()
++                   ^^^^^^^^^^^^^^^^^^^^^^^^^^
++E       AttributeError: module 'api.permit_rule_engine' has no attribute 'minimum_scope_ontology'
++
++tests/test_permit_rule_engine_part3.py:108: AttributeError
++_____ test_factory_is_born_fail_closed_and_only_evidence_gate_can_promote ______
++
++index = {'AK|anchorage|commercial_tenant_improvement': {'ahj': 'Anchorage', 'cell_id': 'us-ak-anchorage__commercial__commercia...er1_snapshot_hashes': ['241fe5b83bed25b82a51b44134a007c3307e0836b3a8600aa8a371f65421a3fe']}, 'county': None, ...}, ...}
++
++    def test_factory_is_born_fail_closed_and_only_evidence_gate_can_promote(index: dict) -> None:
++>       candidate = pre.build_fail_closed_factory_seed(
++                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
++            jurisdiction_id="us-ex-exampleville",
++            ahj_name="Exampleville",
++            state="EX",
++            project_family="reroof",
++            source_index_key="EX|exampleville|reroof",
++        )
++E       AttributeError: module 'api.permit_rule_engine' has no attribute 'build_fail_closed_factory_seed'
++
++tests/test_permit_rule_engine_part3.py:129: AttributeError
++______________ test_factory_exception_is_fail_closed_not_partial _______________
++
++monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x728518508450>
++
++    def test_factory_exception_is_fail_closed_not_partial(monkeypatch: pytest.MonkeyPatch) -> None:
++>       monkeypatch.setattr(pre, "classify_v24_seed", lambda *_args, **_kwargs: (_ for _ in ()).throw(RuntimeError("boom")))
++E       AttributeError: <module 'api.permit_rule_engine' from '/home/boban/projects/permitassist-rule-engine-part3-20260712/api/permit_rule_engine.py'> has no attribute 'classify_v24_seed'
++
++tests/test_permit_rule_engine_part3.py:147: AttributeError
++_____ test_fail_closed_customer_projection_clears_claims_routes_and_binary _____
++
++index = {'AK|anchorage|commercial_tenant_improvement': {'ahj': 'Anchorage', 'cell_id': 'us-ak-anchorage__commercial__commercia...er1_snapshot_hashes': ['241fe5b83bed25b82a51b44134a007c3307e0836b3a8600aa8a371f65421a3fe']}, 'county': None, ...}, ...}
++
++    def test_fail_closed_customer_projection_clears_claims_routes_and_binary(index: dict) -> None:
++        key, cell = next((key, cell) for key, cell in sorted(index.items()) if cell.get("status") == "FAIL_CLOSED")
++        job_type, category = _family_scope(cell["project_family"])
++        envelope = pre.build_core_decision_envelope(
++            _resolution(key, cell),
++            job_type=job_type,
++            city=cell["ahj"],
++            state=cell["state"],
++            job_category=category,
++        )
++        payload = json.loads(envelope.sealed_projection.payload_json)
++>       assert payload["seed_classification"] == "fail_closed"
++               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
++E       KeyError: 'seed_classification'
++
++tests/test_permit_rule_engine_part3.py:188: KeyError
++___________ test_no_neuter_ten_lane_projection_keeps_all_weak_lanes ____________
++
++frozen_contract = {'fixture_version': 'permitassist.rule-engine-part3-red.v1', 'fixture_kind': 'synthetic_and_immutable_corpus_contract', 'frozen_before_behavior_edits': True, 'source_tag': 'permit-rule-engine-part2-20260712', ...}
++
++    def test_no_neuter_ten_lane_projection_keeps_all_weak_lanes(frozen_contract: dict) -> None:
++        families = frozen_contract["w4_ten_lane_families"]
++        decisions = tuple(
++            pre.normalize_family_decision(
++                {
++                    "family": family,
++                    "verdict": "REQUIRED" if family == "building" else "VERIFY",
++                    "trigger": f"{family} review",
++                    "provenance": [{
++                        "source_url": "https://example.gov/rules",
++                        "source_quote": "A building permit is required for construction work.",
++                        "snapshot_hash": "a" * 64,
++                        "snapshot_path": "synthetic://part3",
++                        "publishable": True,
++                    }] if family == "building" else [],
++                }
++            )
++            for family in families
++        )
++        payload = pre.build_sealed_projection_payload(
++            jurisdiction_id="us-ex-exampleville",
++            jurisdiction_name="Exampleville",
++            state="EX",
++            project_family="commercial_tenant_improvement",
++            main_decision=decisions[0],
++            family_decisions=decisions,
++            family_routes=(),
++            coverage_status="validated_exact_partial",
++            coverage_reason="verified building decision; remaining lanes require verification",
++            source_cell_id="synthetic-part3-ten-lane",
++>           seed_classification=pre.SeedClassification.EXACT_PARTIAL,
++                                ^^^^^^^^^^^^^^^^^^^^^^
++        )
++E       AttributeError: module 'api.permit_rule_engine' has no attribute 'SeedClassification'
++
++tests/test_permit_rule_engine_part3.py:268: AttributeError
++=========================== short test summary info ============================
++FAILED tests/test_permit_rule_engine_part3.py::test_part3_contract_versions_and_closed_classifications
++FAILED tests/test_permit_rule_engine_part3.py::test_minimum_ontology_predicates_templates_and_overlay_are_closed_and_sourced
++FAILED tests/test_permit_rule_engine_part3.py::test_factory_is_born_fail_closed_and_only_evidence_gate_can_promote
++FAILED tests/test_permit_rule_engine_part3.py::test_factory_exception_is_fail_closed_not_partial
++FAILED tests/test_permit_rule_engine_part3.py::test_fail_closed_customer_projection_clears_claims_routes_and_binary
++FAILED tests/test_permit_rule_engine_part3.py::test_no_neuter_ten_lane_projection_keeps_all_weak_lanes
++ERROR tests/test_permit_rule_engine_part3.py::test_every_legacy_cell_is_migrated_once_with_immutable_source_hash
++ERROR tests/test_permit_rule_engine_part3.py::test_real_corpus_has_exact_locked_honest_classification_counts
++ERROR tests/test_permit_rule_engine_part3.py::test_migration_preserves_every_observed_exact_permit_family
++ERROR tests/test_permit_rule_engine_part3.py::test_ambiguous_identity_cells_become_jurisdiction_holds_not_binary
++ERROR tests/test_permit_rule_engine_part3.py::test_verified_partial_customer_projection_is_useful_and_preserves_proven_families
++ERROR tests/test_permit_rule_engine_part3.py::test_authority_scope_canaries_preserve_exact_family_rows
++ERROR tests/test_permit_rule_engine_part3.py::test_seeded_random_validation_is_deterministic_and_counterfactuals_fail_closed
++6 failed, 1 passed, 7 errors in 0.33s
+diff --git a/artifacts/permit_rule_engine_part3_20260712/gates/red_contract_status.json b/artifacts/permit_rule_engine_part3_20260712/gates/red_contract_status.json
+new file mode 100644
+index 0000000..e0c1685
+--- /dev/null
++++ b/artifacts/permit_rule_engine_part3_20260712/gates/red_contract_status.json
+@@ -0,0 +1 @@
++{"expected_red_exit_code":1,"contract":"tests/test_permit_rule_engine_part3.py","python":"/home/boban/projects/permitassist/.venv/bin/python"}
+diff --git a/scripts/generate_permit_rule_engine_part3_evidence.py b/scripts/generate_permit_rule_engine_part3_evidence.py
+new file mode 100644
+index 0000000..a079542
+--- /dev/null
++++ b/scripts/generate_permit_rule_engine_part3_evidence.py
+@@ -0,0 +1,431 @@
++#!/usr/bin/env python3
++"""Generate deterministic Part 3 Permit Rule Engine production-candidate evidence."""
++
++from __future__ import annotations
++
++import argparse
++import copy
++import hashlib
++import json
++import os
++import sys
++from collections import Counter
++from pathlib import Path
++from typing import Any, Mapping
++
++DEFAULT_REPO_ROOT = Path(__file__).resolve().parents[1]
++if str(DEFAULT_REPO_ROOT) not in sys.path:
++    sys.path.insert(0, str(DEFAULT_REPO_ROOT))
++
++from api import permit_rule_engine as pre
++from api.v24_decision_cells import V24Resolution, V24ResolutionStatus, load_v24_index
++
++SCHEMA_VERSION = "permitassist.rule-engine-part3-evidence.v1"
++PROJECT_SCOPE = {
++    "commercial_tenant_improvement": ("commercial tenant improvement", "commercial"),
++    "residential_remodel": ("residential remodel", "residential"),
++    "reroof": ("residential reroof", "residential"),
++}
++
++
++def canonical_bytes(value: Any) -> bytes:
++    return (json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":")) + "\n").encode("utf-8")
++
++
++def write_json(path: Path, value: Any) -> None:
++    path.write_bytes(canonical_bytes(value))
++
++
++def write_jsonl(path: Path, rows: list[Any]) -> None:
++    path.write_bytes(b"".join(canonical_bytes(row) for row in rows))
++
++
++def sha256_bytes(data: bytes) -> str:
++    return hashlib.sha256(data).hexdigest()
++
++
++def resolution(key: str, cell: Mapping[str, Any]) -> V24Resolution:
++    status = (
++        V24ResolutionStatus.EXACT_CELL_FAIL_CLOSED
++        if cell.get("status") == "FAIL_CLOSED" or cell.get("serving_status") == "FAIL_CLOSED"
++        else V24ResolutionStatus.EXACT_CELL_PUBLISHABLE
++    )
++    return V24Resolution(
++        status=status,
++        key=key,
++        cell=copy.deepcopy(dict(cell)),
++        reason="part3 deterministic evidence replay",
++    )
++
++
++def scope(cell: Mapping[str, Any]) -> tuple[str, str]:
++    return PROJECT_SCOPE[str(cell["project_family"])]
++
++
++def public_projection(key: str, cell: Mapping[str, Any]) -> dict[str, Any]:
++    job_type, category = scope(cell)
++    envelope = pre.build_core_decision_envelope(
++        resolution(key, cell),
++        job_type=job_type,
++        city=str(cell["ahj"]),
++        state=str(cell["state"]),
++        job_category=category,
++    )
++    return json.loads(envelope.sealed_projection.payload_json)
++
++
++def source_family_verdicts(cell: Mapping[str, Any]) -> dict[str, str]:
++    output: dict[str, str] = {}
++    for row in cell.get("tier1", {}).get("permits_required", []):
++        family = pre.normalize_exact_source_family(row.get("permit_kind"))
++        verdict = str(row.get("required_status") or row.get("decision") or "").strip().upper()
++        if family and verdict in {"REQUIRED", "NOT_REQUIRED"}:
++            output[family] = verdict
++    return output
++
++
++def ambiguous_identity_names(index: Mapping[str, Any]) -> set[tuple[str, str]]:
++    ids: dict[tuple[str, str], set[str]] = {}
++    for cell in index.values():
++        pair = (str(cell.get("state", "")).upper(), str(cell.get("ahj", "")).casefold())
++        ids.setdefault(pair, set()).add(str(cell.get("jurisdiction_id", "")).lower())
++    return {pair for pair, values in ids.items() if len(values) > 1}
++
++
++def generate(repo_root: Path, output_dir: Path, source_commit: str) -> dict[str, Any]:
++    output_dir.mkdir(parents=True, exist_ok=True)
++    index = load_v24_index() or {}
++    contract_path = repo_root / "tests/fixtures/permit_rule_engine_part3_red_no_neuter.json"
++    contract = json.loads(contract_path.read_text(encoding="utf-8"))
++    canary_keys = [row["index_key"] for row in contract["authority_scope_canaries"]]
++    canary_keys.append(contract["jurisdiction_hold_canary"]["index_key"])
++    canary_key_set = set(canary_keys)
++    seeds = pre.migrate_v24_seed_index(index=index)
++
++    seed_rows = [pre.to_primitive(seeds[key]) for key in sorted(seeds)]
++    reverify_rows: list[dict[str, Any]] = []
++    for key in sorted(index):
++        verification = pre.reverify_migrated_seed(seeds[key], index[key])
++        reverify_rows.append({"source_index_key": key, **pre.to_primitive(verification)})
++
++    classification_counts = Counter(seed.classification.value for seed in seeds.values())
++    family_occurrences = Counter(family for seed in seeds.values() for family in seed.source_families)
++    binary_occurrences = Counter(family for seed in seeds.values() for family in seed.binary_families)
++    ambiguous_names = ambiguous_identity_names(index)
++
++    customer_violations: list[dict[str, Any]] = []
++    projection_rows: list[dict[str, Any]] = []
++    verified_partial_actionable = 0
++    verified_partial_with_tasks = 0
++    w4_checked = 0
++    for key in sorted(index):
++        cell = index[key]
++        seed = seeds[key]
++        payload = public_projection(key, cell)
++        family_rows = {row["family"]: row for row in payload["family_decisions"]}
++        issues: list[str] = []
++        if payload["seed_classification"] != seed.classification.value:
++            issues.append("seed_classification_mismatch")
++        for family, verdict in source_family_verdicts(cell).items():
++            if seed.classification in {pre.SeedClassification.EXACT_COMPLETE, pre.SeedClassification.EXACT_PARTIAL}:
++                if family not in family_rows:
++                    issues.append(f"missing_source_family:{family}")
++                elif family_rows[family]["verdict"] != verdict:
++                    issues.append(f"source_family_verdict_changed:{family}")
++        if seed.classification in {
++            pre.SeedClassification.FAIL_CLOSED,
++            pre.SeedClassification.JURISDICTION_HOLD,
++            pre.SeedClassification.UNSUPPORTED_SCOPE,
++        }:
++            if payload["permit_decision"] != "UNKNOWN" or payload["permit_required"] is not None:
++                issues.append("unsafe_top_line_binary")
++            if any(row["verdict"] in {"REQUIRED", "NOT_REQUIRED"} for row in payload["family_decisions"]):
++                issues.append("unsafe_family_binary")
++            if payload["sources"] or payload["claim_citations"] or payload["family_authority_routes"]:
++                issues.append("fail_closed_claim_or_route_leak")
++        if seed.classification is pre.SeedClassification.EXACT_PARTIAL:
++            if payload["customer_next_step"].startswith("Verify"):
++                verified_partial_actionable += 1
++            if payload["verification_tasks"]:
++                verified_partial_with_tasks += 1
++        if seed.project_family == "commercial_tenant_improvement" and seed.classification is pre.SeedClassification.EXACT_PARTIAL:
++            w4_checked += 1
++            missing = sorted(set(contract["w4_ten_lane_families"]) - set(family_rows))
++            if missing:
++                issues.append("w4_lane_neutering:" + ",".join(missing))
++        public_serialized = json.dumps(payload, sort_keys=True)
++        for forbidden in ("snapshot_path", "publishable", "authority_tier", "handled_by_local_ahj"):
++            if forbidden in public_serialized:
++                issues.append(f"public_internal_metadata:{forbidden}")
++        if "https://www.google.com/maps\"" in public_serialized:
++            issues.append("bare_maps_destination")
++        if issues:
++            customer_violations.append({"source_index_key": key, "issues": sorted(set(issues))})
++        if key in canary_key_set:
++            projection_rows.append({"source_index_key": key, "projection": payload})
++
++    canary_rows: list[dict[str, Any]] = []
++    for key in canary_keys:
++        seed = seeds[key]
++        overlay = pre.build_ahj_overlay(index[key])
++        promotion_ok, promotion_issues = pre._overlay_promotion_gate(seed, index[key])
++        candidate = pre.build_fail_closed_factory_seed(
++            jurisdiction_id=seed.jurisdiction_id,
++            ahj_name=seed.ahj_name,
++            state=seed.state,
++            project_family=seed.project_family,
++            source_index_key=key,
++        )
++        promoted = pre.promote_factory_seed(candidate, source_cell=index[key])
++        final_promotion_accepted = promoted.classification in {
++            pre.SeedClassification.EXACT_COMPLETE,
++            pre.SeedClassification.EXACT_PARTIAL,
++        }
++        expected_promotion_accepted = seed.classification in {
++            pre.SeedClassification.EXACT_COMPLETE,
++            pre.SeedClassification.EXACT_PARTIAL,
++        }
++        canary_rows.append(
++            {
++                "source_index_key": key,
++                "classification": seed.classification.value,
++                "source_families": list(seed.source_families),
++                "binary_families": list(seed.binary_families),
++                "overlay": pre.to_primitive(overlay),
++                "promotion_gate_passed": promotion_ok,
++                "promotion_issue_codes": list(promotion_issues),
++                "final_promotion_accepted": final_promotion_accepted,
++                "expected_promotion_accepted": expected_promotion_accepted,
++                "outcome_passed": final_promotion_accepted == expected_promotion_accepted,
++            }
++        )
++
++    random_keys = pre.deterministic_seed_sample(
++        index,
++        seed=contract["random_validation"]["seed"],
++        sample_size=int(contract["random_validation"]["sample_size"]),
++    )
++    random_rows = []
++    for key in random_keys:
++        check = pre.reverify_migrated_seed(seeds[key], index[key])
++        random_rows.append({"source_index_key": key, **pre.to_primitive(check)})
++
++    counterfactual_rows: list[dict[str, Any]] = []
++    tampered = copy.deepcopy(index["AZ|buckeye|reroof"])
++    tampered["tier1"]["main_decision"]["provenance"]["snapshot_hash"] = "0" * 64
++    tampered_seed = pre.safe_factory_migrate_seed("AZ|buckeye|reroof", tampered)
++    counterfactual_rows.append(
++        {
++            "case_id": "tampered_provenance_hash",
++            "classification": tampered_seed.classification.value,
++            "binary_families": list(tampered_seed.binary_families),
++            "passed": tampered_seed.classification is pre.SeedClassification.FAIL_CLOSED and not tampered_seed.binary_families,
++        }
++    )
++    unsupported_unknown = pre.classify_request_scope("install quantum flux widget", "")
++    counterfactual_rows.append(
++        {
++            "case_id": "unknown_scope",
++            "classification": unsupported_unknown.value,
++            "passed": unsupported_unknown is pre.SeedClassification.UNSUPPORTED_SCOPE,
++        }
++    )
++    unsupported = pre.classify_request_scope(
++        "no roof replacement and no structural alteration; inspection only",
++        "residential",
++    )
++    counterfactual_rows.append(
++        {
++            "case_id": "negated_unknown_scope",
++            "classification": unsupported.value,
++            "passed": unsupported is pre.SeedClassification.UNSUPPORTED_SCOPE,
++        }
++    )
++    ambiguous_key = next(
++        key
++        for key, cell in sorted(index.items())
++        if (str(cell.get("state", "")).upper(), str(cell.get("ahj", "")).casefold()) in ambiguous_names
++    )
++    ambiguous_projection = public_projection(ambiguous_key, index[ambiguous_key])
++    counterfactual_rows.append(
++        {
++            "case_id": "ambiguous_jurisdiction",
++            "source_index_key": ambiguous_key,
++            "classification": ambiguous_projection["seed_classification"],
++            "permit_decision": ambiguous_projection["permit_decision"],
++            "passed": ambiguous_projection["seed_classification"] == "jurisdiction_hold" and ambiguous_projection["permit_decision"] == "UNKNOWN",
++        }
++    )
++    original_classifier = pre.classify_v24_seed
++    try:
++        def _raise_factory_exception(*_args: Any, **_kwargs: Any) -> pre.MigratedSeed:
++            raise RuntimeError("deterministic factory exception counterfactual")
++
++        pre.classify_v24_seed = _raise_factory_exception  # type: ignore[assignment]
++        factory_exception_seed = pre.safe_factory_migrate_seed(
++            "AZ|buckeye|reroof",
++            index["AZ|buckeye|reroof"],
++        )
++    finally:
++        pre.classify_v24_seed = original_classifier  # type: ignore[assignment]
++    counterfactual_rows.append(
++        {
++            "case_id": "factory_exception",
++            "classification": factory_exception_seed.classification.value,
++            "binary_families": list(factory_exception_seed.binary_families),
++            "passed": (
++                factory_exception_seed.classification is pre.SeedClassification.FAIL_CLOSED
++                and not factory_exception_seed.binary_families
++                and "factory_exception" in factory_exception_seed.issue_codes
++            ),
++        }
++    )
++
++    preactivation = pre.audit_pre_activation_family_preservation(index)
++    predicates = pre.minimum_sourced_predicates()
++    templates = pre.minimum_code_adoption_templates()
++    model_package = {
++        "migration_schema_version": pre.PART3_MIGRATION_SCHEMA_VERSION,
++        "factory_schema_version": pre.PART3_FACTORY_SCHEMA_VERSION,
++        "overlay_schema_version": pre.PART3_OVERLAY_SCHEMA_VERSION,
++        "scope_ontology": pre.minimum_scope_ontology(),
++        "sourced_predicates": {key: pre.to_primitive(value) for key, value in sorted(predicates.items())},
++        "code_adoption_templates": {key: pre.to_primitive(value) for key, value in sorted(templates.items())},
++    }
++
++    original_core = os.environ.pop(pre.CORE_SETTING, None)
++    original_allowlist = os.environ.pop(pre.CORE_ALLOWLIST_SETTING, None)
++    try:
++        parity_input = {"permit_decision": "REQUIRED", "nested": {"families": ["building", "electrical"]}}
++        before = pre.response_json_bytes(parity_input)
++        after = pre.response_json_bytes(
++            pre.maybe_attach_core_decision_envelope(
++                parity_input,
++                job_type="residential reroof",
++                city="Buckeye",
++                state="AZ",
++                job_category="residential",
++            )
++        )
++    finally:
++        if original_core is not None:
++            os.environ[pre.CORE_SETTING] = original_core
++        if original_allowlist is not None:
++            os.environ[pre.CORE_ALLOWLIST_SETTING] = original_allowlist
++    flag_off = {"byte_identical": before == after, "before_sha256": sha256_bytes(before), "after_sha256": sha256_bytes(after)}
++
++    expected_counts = contract["expected_real_corpus_classification_counts"]
++    actual_counts = dict(sorted(classification_counts.items()))
++    identity_name_count = len(
++        {
++            (str(cell.get("ahj", "")).casefold(), str(cell.get("state", "")).upper())
++            for cell in index.values()
++        }
++    )
++    summary = {
++        "schema_version": SCHEMA_VERSION,
++        "source_commit": source_commit,
++        "source_tag": contract["source_tag"],
++        "source_contract_sha256": sha256_bytes(contract_path.read_bytes()),
++        "cell_count": len(index),
++        "migrated_seed_count": len(seeds),
++        "unique_source_cell_id_count": len({seed.source_cell_id for seed in seeds.values()}),
++        "unique_seed_sha256_count": len({seed.seed_sha256 for seed in seeds.values()}),
++        "classification_counts": actual_counts,
++        "classification_counts_match_frozen_contract": actual_counts == expected_counts,
++        "classification_total": sum(classification_counts.values()),
++        "jurisdiction_cell_id_count": len({str(cell.get("jurisdiction_id", "")).lower() for cell in index.values()}),
++        "jurisdiction_identity_name_count": identity_name_count,
++        "ambiguous_identity_name_count": len(ambiguous_names),
++        "ambiguous_seed_count": classification_counts["jurisdiction_hold"],
++        "reverification_pass_count": sum(1 for row in reverify_rows if row["ok"]),
++        "reverification_failure_count": sum(1 for row in reverify_rows if not row["ok"]),
++        "source_family_labels": sorted(family_occurrences),
++        "source_family_occurrences": dict(sorted(family_occurrences.items())),
++        "binary_family_occurrences": dict(sorted(binary_occurrences.items())),
++        "customer_projection_checked_count": len(index),
++        "customer_projection_violation_count": len(customer_violations),
++        "verified_partial_actionable_next_step_count": verified_partial_actionable,
++        "verified_partial_with_family_verification_tasks_count": verified_partial_with_tasks,
++        "w4_exact_partial_checked_count": w4_checked,
++        "preactivation_family_audit_passed": preactivation["passed"],
++        "preactivation_family_violation_count": preactivation["violation_count"],
++        "canary_count": len(canary_rows),
++        "canary_outcome_pass_count": sum(1 for row in canary_rows if row["outcome_passed"]),
++        "canary_promotion_pass_count": sum(1 for row in canary_rows if row["promotion_gate_passed"]),
++        "seeded_random_seed": contract["random_validation"]["seed"],
++        "seeded_random_sample_count": len(random_rows),
++        "seeded_random_pass_count": sum(1 for row in random_rows if row["ok"]),
++        "counterfactual_count": len(counterfactual_rows),
++        "counterfactual_pass_count": sum(1 for row in counterfactual_rows if row["passed"]),
++        "flag_off_byte_parity": flag_off,
++        "activation_boundary": "disabled_by_default_exact_allowlist_only",
++        "production_push_or_deploy": False,
++    }
++
++    hard_failures = {
++        "cell_count": summary["cell_count"] != 2162,
++        "migration_count": summary["migrated_seed_count"] != 2162,
++        "classification_contract": not summary["classification_counts_match_frozen_contract"],
++        "reverification": summary["reverification_failure_count"] != 0,
++        "customer_projection": summary["customer_projection_violation_count"] != 0,
++        "verified_partial_ux": (
++            summary["verified_partial_actionable_next_step_count"] != classification_counts["exact_partial"]
++            or summary["verified_partial_with_family_verification_tasks_count"] != classification_counts["exact_partial"]
++        ),
++        "preactivation_family_audit": not summary["preactivation_family_audit_passed"],
++        "canaries": summary["canary_outcome_pass_count"] != summary["canary_count"],
++        "seeded_random": summary["seeded_random_pass_count"] != summary["seeded_random_sample_count"],
++        "counterfactuals": summary["counterfactual_pass_count"] != summary["counterfactual_count"],
++        "flag_off_parity": not flag_off["byte_identical"],
++        "exact_family_preservation": sorted(family_occurrences) != contract["observed_exact_permit_families"],
++        "seed_uniqueness": summary["unique_source_cell_id_count"] != 2162 or summary["unique_seed_sha256_count"] != 2162,
++        "identity_topology": (
++            summary["jurisdiction_identity_name_count"] != 2157
++            or summary["ambiguous_identity_name_count"] != 5
++            or summary["ambiguous_seed_count"] != 10
++        ),
++    }
++    summary["hard_failures"] = hard_failures
++    summary["passed"] = not any(hard_failures.values())
++
++    write_jsonl(output_dir / "migration_seeds.jsonl", seed_rows)
++    write_jsonl(output_dir / "reverification.jsonl", reverify_rows)
++    write_json(output_dir / "canary_results.json", {"schema_version": SCHEMA_VERSION, "rows": canary_rows})
++    write_json(output_dir / "seeded_random_and_counterfactual_results.json", {"schema_version": SCHEMA_VERSION, "random_rows": random_rows, "counterfactual_rows": counterfactual_rows})
++    write_json(output_dir / "customer_projection_audit.json", {"schema_version": SCHEMA_VERSION, "violations": customer_violations, "canary_projections": projection_rows})
++    write_json(output_dir / "preactivation_family_audit.json", preactivation)
++    write_json(output_dir / "ontology_predicates_templates.json", model_package)
++    write_json(output_dir / "flag_off_parity.json", flag_off)
++    write_json(output_dir / "summary.json", summary)
++
++    files: dict[str, dict[str, Any]] = {}
++    for path in sorted(output_dir.iterdir()):
++        if not path.is_file() or path.name == "manifest.json":
++            continue
++        data = path.read_bytes()
++        files[path.name] = {"bytes": len(data), "sha256": sha256_bytes(data)}
++    manifest = {
++        "schema_version": SCHEMA_VERSION,
++        "source_commit": source_commit,
++        "files": files,
++        "artifact_set_sha256": pre.stable_sha256(files),
++        "manifest_self_hash_excluded": True,
++    }
++    write_json(output_dir / "manifest.json", manifest)
++    return summary
++
++
++def main() -> int:
++    parser = argparse.ArgumentParser()
++    parser.add_argument("--repo-root", type=Path, default=Path(__file__).resolve().parents[1])
++    parser.add_argument("--output-dir", type=Path, required=True)
++    parser.add_argument("--source-commit", required=True)
++    args = parser.parse_args()
++    summary = generate(args.repo_root.resolve(), args.output_dir.resolve(), args.source_commit)
++    print(json.dumps(summary, sort_keys=True))
++    return 0 if summary["passed"] else 1
++
++
++if __name__ == "__main__":
++    raise SystemExit(main())
+diff --git a/tests/fixtures/permit_rule_engine_part3_red_no_neuter.json b/tests/fixtures/permit_rule_engine_part3_red_no_neuter.json
+new file mode 100644
+index 0000000..2342c52
+--- /dev/null
++++ b/tests/fixtures/permit_rule_engine_part3_red_no_neuter.json
+@@ -0,0 +1,171 @@
++{
++  "fixture_version": "permitassist.rule-engine-part3-red.v1",
++  "fixture_kind": "synthetic_and_immutable_corpus_contract",
++  "frozen_before_behavior_edits": true,
++  "source_tag": "permit-rule-engine-part2-20260712",
++  "source_commit": "c3a05b10eb3876d15e97e1484ecdd84b616e20cb",
++  "legacy_cell_count": 2162,
++  "legacy_project_family_counts": {
++    "commercial_tenant_improvement": 1938,
++    "residential_remodel": 199,
++    "reroof": 25
++  },
++  "required_seed_classifications": [
++    "exact_complete",
++    "exact_partial",
++    "fail_closed",
++    "jurisdiction_hold",
++    "unsupported_scope"
++  ],
++  "expected_real_corpus_classification_counts": {
++    "exact_complete": 36,
++    "exact_partial": 2082,
++    "fail_closed": 34,
++    "jurisdiction_hold": 10
++  },
++  "observed_exact_permit_families": [
++    "building",
++    "building_construction",
++    "building_trade",
++    "demolition",
++    "electrical",
++    "fire",
++    "gas",
++    "manufactured_structure_installation",
++    "mechanical",
++    "moving",
++    "occupancy",
++    "plumbing",
++    "pool",
++    "septic_oss_health",
++    "sign",
++    "zoning"
++  ],
++  "w4_ten_lane_families": [
++    "building",
++    "electrical",
++    "plumbing",
++    "mechanical",
++    "fire",
++    "health",
++    "liquor",
++    "wastewater",
++    "occupancy",
++    "zoning"
++  ],
++  "scope_ontology_nodes": [
++    "commercial_tenant_improvement",
++    "residential_remodel",
++    "roof_covering_replacement",
++    "structural_alteration",
++    "electrical_work",
++    "plumbing_work",
++    "mechanical_work",
++    "gas_work",
++    "fire_life_safety_work",
++    "food_health_work",
++    "liquor_service_work",
++    "wastewater_work",
++    "occupancy_change",
++    "zoning_review",
++    "demolition_work",
++    "pool_work",
++    "sign_work",
++    "structure_moving",
++    "manufactured_structure_installation",
++    "septic_oss_work"
++  ],
++  "required_predicate_fields": [
++    "predicate_id",
++    "ontology_node",
++    "family",
++    "operator",
++    "fact_key",
++    "expected_value",
++    "provenance",
++    "template_id"
++  ],
++  "required_template_fields": [
++    "template_id",
++    "code_family",
++    "adoption_basis",
++    "predicate_ids",
++    "provenance"
++  ],
++  "required_overlay_fields": [
++    "jurisdiction_id",
++    "template_ids",
++    "predicate_overrides",
++    "provenance"
++  ],
++  "authority_scope_canaries": [
++    {
++      "index_key": "AZ|buckeye|reroof",
++      "job_type": "residential reroof replace asphalt shingles",
++      "job_category": "residential",
++      "expected_primary_family": "building"
++    },
++    {
++      "index_key": "AL|albertville|residential_remodel",
++      "job_type": "residential remodel with electrical plumbing mechanical gas and demolition work",
++      "job_category": "residential",
++      "expected_exact_families": ["building", "demolition", "electrical", "gas", "mechanical", "plumbing"]
++    },
++    {
++      "index_key": "AK|matanuska_susitna_borough|commercial_tenant_improvement",
++      "job_type": "commercial tenant improvement with occupancy electrical fire mechanical plumbing and zoning scope",
++      "job_category": "commercial",
++      "expected_exact_families": ["building", "electrical", "fire", "mechanical", "occupancy", "plumbing", "zoning"]
++    }
++  ],
++  "jurisdiction_hold_canary": {
++    "index_key": "WI|eau_claire|commercial_tenant_improvement",
++    "expected_classification": "jurisdiction_hold"
++  },
++  "random_validation": {
++    "algorithm": "sha256-ranked-index-key",
++    "seed": "permit-rule-engine-part3-20260712",
++    "sample_size": 128
++  },
++  "counterfactuals": [
++    {
++      "name": "unknown_scope",
++      "job_type": "install quantum flux widget",
++      "expected_classification": "unsupported_scope",
++      "expected_binary": false
++    },
++    {
++      "name": "negated_scope",
++      "job_type": "no roof replacement and no structural alteration; inspection only",
++      "expected_classification": "unsupported_scope",
++      "expected_binary": false
++    },
++    {
++      "name": "ambiguous_jurisdiction",
++      "city": "Eau Claire",
++      "state": "WI",
++      "expected_classification": "jurisdiction_hold",
++      "expected_binary": false
++    },
++    {
++      "name": "tampered_provenance",
++      "expected_classification": "fail_closed",
++      "expected_binary": false
++    },
++    {
++      "name": "factory_exception",
++      "expected_classification": "fail_closed",
++      "expected_binary": false
++    }
++  ],
++  "customer_partial_contract": {
++    "preserve_source_backed_binary": true,
++    "preserve_every_source_family": true,
++    "weak_dimensions_visible": true,
++    "weak_dimensions_statuses": ["CONDITIONAL", "VERIFY", "ABSTAIN"],
++    "required_next_step_fields": ["family", "action", "authority", "apply_url"],
++    "forbidden_bare_maps_url": "https://www.google.com/maps",
++    "fail_closed_sources_empty": true,
++    "fail_closed_claim_citations_empty": true
++  }
++}
+diff --git a/tests/fixtures/permit_rule_engine_part3_red_no_neuter_manifest.json b/tests/fixtures/permit_rule_engine_part3_red_no_neuter_manifest.json
+new file mode 100644
+index 0000000..437f95b
+--- /dev/null
++++ b/tests/fixtures/permit_rule_engine_part3_red_no_neuter_manifest.json
+@@ -0,0 +1,10 @@
++{
++  "fixture_version": "permitassist.rule-engine-part3-red-manifest.v1",
++  "frozen_before_behavior_edits": true,
++  "source_tag": "permit-rule-engine-part2-20260712",
++  "source_commit": "c3a05b10eb3876d15e97e1484ecdd84b616e20cb",
++  "files": {
++    "tests/fixtures/permit_rule_engine_part3_red_no_neuter.json": "22a26a1bd816c3bd590c780fc1ea7c24631ad250222acd0965916723f8bc486f",
++    "tests/test_permit_rule_engine_part3.py": "37e1f3b8f3e2005acd13e981e295482dc07b781d857e9b6143ee3bdad5275142"
++  }
++}
+diff --git a/tests/test_permit_rule_engine_part3.py b/tests/test_permit_rule_engine_part3.py
+new file mode 100644
+index 0000000..790ecac
+--- /dev/null
++++ b/tests/test_permit_rule_engine_part3.py
+@@ -0,0 +1,288 @@
++from __future__ import annotations
++
++import copy
++import hashlib
++import json
++from collections import Counter
++from pathlib import Path
++
++import pytest
++
++from api import permit_rule_engine as pre
++from api.v24_decision_cells import V24Resolution, V24ResolutionStatus, load_v24_index
++
++
++ROOT = Path(__file__).parents[1]
++FIXTURE_PATH = ROOT / "tests" / "fixtures" / "permit_rule_engine_part3_red_no_neuter.json"
++MANIFEST_PATH = ROOT / "tests" / "fixtures" / "permit_rule_engine_part3_red_no_neuter_manifest.json"
++
++
++@pytest.fixture(scope="module")
++def frozen_contract() -> dict:
++    manifest = json.loads(MANIFEST_PATH.read_text(encoding="utf-8"))
++    for relative_path, expected in manifest["files"].items():
++        assert hashlib.sha256((ROOT / relative_path).read_bytes()).hexdigest() == expected
++    assert manifest["frozen_before_behavior_edits"] is True
++    return json.loads(FIXTURE_PATH.read_text(encoding="utf-8"))
++
++
++@pytest.fixture(scope="module")
++def index() -> dict:
++    return load_v24_index() or {}
++
++
++@pytest.fixture(scope="module")
++def migrated(index: dict) -> dict:
++    return pre.migrate_v24_seed_index(index=index)
++
++
++def _family_scope(project_family: str) -> tuple[str, str]:
++    if project_family == "commercial_tenant_improvement":
++        return "commercial tenant improvement", "commercial"
++    if project_family == "residential_remodel":
++        return "residential remodel", "residential"
++    return "residential reroof", "residential"
++
++
++def _resolution(index_key: str, cell: dict) -> V24Resolution:
++    status = (
++        V24ResolutionStatus.EXACT_CELL_FAIL_CLOSED
++        if cell.get("status") == "FAIL_CLOSED" or cell.get("serving_status") == "FAIL_CLOSED"
++        else V24ResolutionStatus.EXACT_CELL_PUBLISHABLE
++    )
++    return V24Resolution(status, cell=cell, key=index_key, reason="Part 3 frozen contract")
++
++
++def test_part3_contract_versions_and_closed_classifications(frozen_contract: dict) -> None:
++    assert pre.PART3_MIGRATION_SCHEMA_VERSION == "permitassist.rule-engine-seed-migration.v1"
++    assert pre.PART3_PREDICATE_SCHEMA_VERSION == "permitassist.sourced-predicate.v1"
++    assert pre.PART3_FACTORY_SCHEMA_VERSION == "permitassist.evidence-gated-factory.v1"
++    assert tuple(item.value for item in pre.SeedClassification) == tuple(frozen_contract["required_seed_classifications"])
++
++
++def test_every_legacy_cell_is_migrated_once_with_immutable_source_hash(
++    frozen_contract: dict, index: dict, migrated: dict
++) -> None:
++    assert len(index) == frozen_contract["legacy_cell_count"]
++    assert set(migrated) == set(index)
++    assert len({seed.source_cell_id for seed in migrated.values()}) == len(index)
++    assert all(seed.source_cell_sha256 == pre.stable_sha256(index[key]) for key, seed in migrated.items())
++    assert all(seed.seed_sha256 == pre.stable_sha256(pre.seed_hash_payload(seed)) for seed in migrated.values())
++
++
++def test_real_corpus_has_exact_locked_honest_classification_counts(
++    frozen_contract: dict, migrated: dict
++) -> None:
++    counts = Counter(seed.classification.value for seed in migrated.values())
++    assert dict(sorted(counts.items())) == frozen_contract["expected_real_corpus_classification_counts"]
++
++
++def test_migration_preserves_every_observed_exact_permit_family(
++    frozen_contract: dict, index: dict, migrated: dict
++) -> None:
++    observed = {
++        str(row.get("permit_kind"))
++        for cell in index.values()
++        for row in (cell.get("tier1") or {}).get("permits_required") or []
++        if row.get("permit_kind")
++    }
++    assert sorted(observed) == frozen_contract["observed_exact_permit_families"]
++    migrated_families = {family for seed in migrated.values() for family in seed.source_families}
++    assert migrated_families == observed
++    assert all(set(seed.binary_families).issubset(set(seed.source_families)) for seed in migrated.values())
++
++
++def test_ambiguous_identity_cells_become_jurisdiction_holds_not_binary(
++    frozen_contract: dict, migrated: dict
++) -> None:
++    key = frozen_contract["jurisdiction_hold_canary"]["index_key"]
++    seed = migrated[key]
++    assert seed.classification is pre.SeedClassification.JURISDICTION_HOLD
++    assert seed.binary_families == ()
++    assert "jurisdiction_identity_ambiguous" in seed.issue_codes
++
++
++def test_minimum_ontology_predicates_templates_and_overlay_are_closed_and_sourced(
++    frozen_contract: dict, index: dict
++) -> None:
++    ontology = pre.minimum_scope_ontology()
++    predicates = pre.minimum_sourced_predicates()
++    templates = pre.minimum_code_adoption_templates()
++    assert list(ontology) == frozen_contract["scope_ontology_nodes"]
++    assert predicates
++    assert templates
++    for predicate in predicates.values():
++        assert set(frozen_contract["required_predicate_fields"]).issubset(pre.to_primitive(predicate))
++        assert predicate.provenance and all(pre._publishable_provenance(item) for item in predicate.provenance)
++    for template in templates.values():
++        assert set(frozen_contract["required_template_fields"]).issubset(pre.to_primitive(template))
++        assert template.provenance and all(pre._publishable_provenance(item) for item in template.provenance)
++        assert set(template.predicate_ids).issubset(predicates)
++
++    overlay = pre.build_ahj_overlay(index["AZ|buckeye|reroof"])
++    assert set(frozen_contract["required_overlay_fields"]).issubset(pre.to_primitive(overlay))
++    assert overlay.jurisdiction_id == "us-az-buckeye"
++    assert overlay.provenance and all(pre._publishable_provenance(item) for item in overlay.provenance)
++
++
++def test_factory_is_born_fail_closed_and_only_evidence_gate_can_promote(index: dict) -> None:
++    candidate = pre.build_fail_closed_factory_seed(
++        jurisdiction_id="us-ex-exampleville",
++        ahj_name="Exampleville",
++        state="EX",
++        project_family="reroof",
++        source_index_key="EX|exampleville|reroof",
++    )
++    assert candidate.classification is pre.SeedClassification.FAIL_CLOSED
++    assert candidate.binary_families == ()
++    assert pre.promote_factory_seed(candidate, source_cell={}) is candidate
++
++    promoted = pre.promote_factory_seed(candidate, source_cell=index["AZ|buckeye|reroof"])
++    assert promoted.classification in {pre.SeedClassification.EXACT_COMPLETE, pre.SeedClassification.EXACT_PARTIAL}
++    assert promoted.binary_families
++    assert promoted.seed_sha256 != candidate.seed_sha256
++
++
++def test_factory_exception_is_fail_closed_not_partial(monkeypatch: pytest.MonkeyPatch) -> None:
++    monkeypatch.setattr(pre, "classify_v24_seed", lambda *_args, **_kwargs: (_ for _ in ()).throw(RuntimeError("boom")))
++    result = pre.safe_factory_migrate_seed("EX|exampleville|reroof", {"jurisdiction_id": "us-ex-exampleville"})
++    assert result.classification is pre.SeedClassification.FAIL_CLOSED
++    assert result.binary_families == ()
++    assert "factory_exception" in result.issue_codes
++
++
++def test_verified_partial_customer_projection_is_useful_and_preserves_proven_families(
++    frozen_contract: dict, index: dict, migrated: dict
++) -> None:
++    key = "AL|albertville|residential_remodel"
++    cell = index[key]
++    job_type, category = _family_scope(cell["project_family"])
++    envelope = pre.build_core_decision_envelope(
++        _resolution(key, cell),
++        job_type=job_type,
++        city=cell["ahj"],
++        state=cell["state"],
++        job_category=category,
++    )
++    payload = json.loads(envelope.sealed_projection.payload_json)
++    seed = migrated[key]
++    assert payload["seed_classification"] == seed.classification.value
++    assert payload["permit_required"] is True
++    assert set(seed.source_families).issubset({row["family"] for row in payload["family_decisions"]})
++    assert payload["verification_tasks"]
++    assert all(set(frozen_contract["customer_partial_contract"]["required_next_step_fields"]).issubset(task) for task in payload["verification_tasks"])
++    assert frozen_contract["customer_partial_contract"]["forbidden_bare_maps_url"] not in json.dumps(payload, sort_keys=True)
++
++
++def test_fail_closed_customer_projection_clears_claims_routes_and_binary(index: dict) -> None:
++    key, cell = next((key, cell) for key, cell in sorted(index.items()) if cell.get("status") == "FAIL_CLOSED")
++    job_type, category = _family_scope(cell["project_family"])
++    envelope = pre.build_core_decision_envelope(
++        _resolution(key, cell),
++        job_type=job_type,
++        city=cell["ahj"],
++        state=cell["state"],
++        job_category=category,
++    )
++    payload = json.loads(envelope.sealed_projection.payload_json)
++    assert payload["seed_classification"] == "fail_closed"
++    assert payload["permit_required"] is None
++    assert payload["sources"] == []
++    assert payload["claim_citations"] == []
++    assert payload["family_authority_routes"] == []
++    assert all(row["verdict"] == "ABSTAIN" for row in payload["family_decisions"])
++
++
++def test_authority_scope_canaries_preserve_exact_family_rows(
++    frozen_contract: dict, index: dict, migrated: dict
++) -> None:
++    for canary in frozen_contract["authority_scope_canaries"]:
++        key = canary["index_key"]
++        cell = index[key]
++        envelope = pre.build_core_decision_envelope(
++            _resolution(key, cell),
++            job_type=canary["job_type"],
++            city=cell["ahj"],
++            state=cell["state"],
++            job_category=canary["job_category"],
++        )
++        payload = json.loads(envelope.sealed_projection.payload_json)
++        families = {row["family"] for row in payload["family_decisions"]}
++        if canary.get("expected_primary_family"):
++            assert payload["permit_kind"] == canary["expected_primary_family"]
++        if canary.get("expected_exact_families"):
++            assert set(canary["expected_exact_families"]).issubset(families)
++        assert payload["source_cell_id"] == migrated[key].source_cell_id
++
++
++def test_seeded_random_validation_is_deterministic_and_counterfactuals_fail_closed(
++    frozen_contract: dict, index: dict, migrated: dict
++) -> None:
++    config = frozen_contract["random_validation"]
++    first = pre.deterministic_seed_sample(index, seed=config["seed"], sample_size=config["sample_size"])
++    second = pre.deterministic_seed_sample(dict(reversed(list(index.items()))), seed=config["seed"], sample_size=config["sample_size"])
++    assert first == second
++    assert len(first) == config["sample_size"]
++    assert all(pre.reverify_migrated_seed(migrated[key], index[key]).ok for key in first)
++
++    assert pre.classify_request_scope("install quantum flux widget", "other") is pre.SeedClassification.UNSUPPORTED_SCOPE
++    assert pre.classify_request_scope("no roof replacement and no structural alteration; inspection only", "residential") is pre.SeedClassification.UNSUPPORTED_SCOPE
++
++    tampered = copy.deepcopy(index["AZ|buckeye|reroof"])
++    tampered["tier1"]["main_decision"]["provenance"]["snapshot_hash"] = "0" * 64
++    classified = pre.safe_factory_migrate_seed("AZ|buckeye|reroof", tampered)
++    assert classified.classification is pre.SeedClassification.FAIL_CLOSED
++    assert classified.binary_families == ()
++
++
++def test_no_neuter_ten_lane_projection_keeps_all_weak_lanes(frozen_contract: dict) -> None:
++    families = frozen_contract["w4_ten_lane_families"]
++    decisions = tuple(
++        pre.normalize_family_decision(
++            {
++                "family": family,
++                "verdict": "REQUIRED" if family == "building" else "VERIFY",
++                "trigger": f"{family} review",
++                "provenance": [{
++                    "source_url": "https://example.gov/rules",
++                    "source_quote": "A building permit is required for construction work.",
++                    "snapshot_hash": "a" * 64,
++                    "snapshot_path": "synthetic://part3",
++                    "publishable": True,
++                }] if family == "building" else [],
++            }
++        )
++        for family in families
++    )
++    payload = pre.build_sealed_projection_payload(
++        jurisdiction_id="us-ex-exampleville",
++        jurisdiction_name="Exampleville",
++        state="EX",
++        project_family="commercial_tenant_improvement",
++        main_decision=decisions[0],
++        family_decisions=decisions,
++        family_routes=(),
++        coverage_status="validated_exact_partial",
++        coverage_reason="verified building decision; remaining lanes require verification",
++        source_cell_id="synthetic-part3-ten-lane",
++        seed_classification=pre.SeedClassification.EXACT_PARTIAL,
++    )
++    assert [row["family"] for row in payload["family_decisions"]] == families
++    assert len(payload["verification_tasks"]) == 9
++    assert payload["permit_required"] is True
++
++
++def test_core_flag_off_remains_byte_exact_noop(monkeypatch: pytest.MonkeyPatch) -> None:
++    monkeypatch.delenv(pre.CORE_SETTING, raising=False)
++    monkeypatch.delenv(pre.CORE_ALLOWLIST_SETTING, raising=False)
++    original = {"permit_decision": "REQUIRED", "nested": {"families": ["building", "electrical"]}}
++    before = pre.response_json_bytes(original)
++    after = pre.maybe_attach_core_decision_envelope(
++        original,
++        job_type="residential remodel",
++        city="Albertville",
++        state="AL",
++        job_category="residential",
++    )
++    assert after is original
++    assert pre.response_json_bytes(after) == before
+diff --git a/tests/test_permit_rule_engine_part3_integration.py b/tests/test_permit_rule_engine_part3_integration.py
+new file mode 100644
+index 0000000..dccfeb0
+--- /dev/null
++++ b/tests/test_permit_rule_engine_part3_integration.py
+@@ -0,0 +1,192 @@
++from __future__ import annotations
++
++import copy
++import json
++from datetime import datetime
++from types import SimpleNamespace
++
++from api import permit_rule_engine as pre
++from api import research_engine
++from api.v24_decision_cells import V24Resolution, V24ResolutionStatus, load_v24_index
++
++
++def test_pre_activation_family_audit_preserves_every_binary_family_and_route() -> None:
++    audit = pre.audit_pre_activation_family_preservation()
++    assert audit["checked_cells"] == 2118
++    assert audit["binary_family_occurrences"] > 0
++    assert audit["violation_count"] == 0
++    assert audit["violations"] == []
++    assert audit["passed"] is True
++
++
++def test_sourced_predicates_fail_unknown_and_evaluate_only_with_fact_and_source() -> None:
++    predicate = next(iter(pre.minimum_sourced_predicates().values()))
++    assert pre.evaluate_sourced_predicate(predicate, {}) is None
++    assert pre.evaluate_sourced_predicate(
++        predicate,
++        {"project_family": predicate.expected_value},
++    ) is True
++    assert pre.evaluate_sourced_predicate(
++        predicate,
++        {"project_family": "unsupported"},
++    ) is False
++
++
++def test_factory_promotion_requires_local_authority_evidence() -> None:
++    index = load_v24_index() or {}
++    source = copy.deepcopy(index["AZ|buckeye|reroof"])
++    candidate = pre.build_fail_closed_factory_seed(
++        jurisdiction_id="us-ex-exampleville",
++        ahj_name="Exampleville",
++        state="EX",
++        project_family="reroof",
++        source_index_key="EX|exampleville|reroof",
++    )
++    source["tier1"]["trade_authority"] = []
++    source["tier1"]["apply"] = []
++    source["tier1"]["permits_required"][0]["issuing_authority"] = ""
++    source["tier1"]["permits_required"][0]["application_authority"] = ""
++    source["tier1"]["permits_required"][0]["applying_office"] = ""
++    source["tier1"]["permits_required"][0]["apply_url"] = ""
++    assert pre.promote_factory_seed(candidate, source_cell=source).classification is pre.SeedClassification.FAIL_CLOSED
++
++
++def test_factory_promotion_composes_identity_hold_after_overlay_evidence_passes() -> None:
++    index = load_v24_index() or {}
++    key = "WI|eau_claire|commercial_tenant_improvement"
++    source = index[key]
++    held_seed = pre.migrate_v24_seed_index(index=index)[key]
++    overlay_ok, overlay_issues = pre._overlay_promotion_gate(held_seed, source)
++    assert overlay_ok is True
++    assert overlay_issues == ()
++
++    candidate = pre.build_fail_closed_factory_seed(
++        jurisdiction_id=str(source["jurisdiction_id"]),
++        ahj_name=str(source["ahj"]),
++        state=str(source["state"]),
++        project_family=str(source["project_family"]),
++        source_index_key=key,
++    )
++    promoted = pre.promote_factory_seed(candidate, source_cell=source)
++    assert promoted.classification is pre.SeedClassification.FAIL_CLOSED
++    assert promoted.binary_families == ()
++
++
++def test_verified_partial_next_step_requires_verification_before_application() -> None:
++    index = load_v24_index() or {}
++    migrated = pre.migrate_v24_seed_index(index=index)
++    key = next(
++        key
++        for key in sorted(index)
++        if migrated[key].classification is pre.SeedClassification.EXACT_PARTIAL
++        and any(
++            route.authority.application_authority
++            for route in pre.build_family_authority_routes(index[key])
++        )
++    )
++    cell = index[key]
++    job_type, job_category = {
++        "commercial_tenant_improvement": ("commercial tenant improvement", "commercial"),
++        "residential_remodel": ("residential remodel", "residential"),
++        "reroof": ("residential reroof", "residential"),
++    }[str(cell["project_family"])]
++    envelope = pre.build_core_decision_envelope(
++        V24Resolution(
++            V24ResolutionStatus.EXACT_CELL_PUBLISHABLE,
++            cell=cell,
++            key=key,
++            reason="Part 3 verified-partial next-step integration",
++        ),
++        job_type=job_type,
++        city=str(cell["ahj"]),
++        state=str(cell["state"]),
++        job_category=job_category,
++    )
++    projection = json.loads(envelope.sealed_projection.payload_json)
++    assert projection["seed_classification"] == "exact_partial"
++    assert projection["verification_tasks"]
++    assert projection["customer_next_step"].startswith("Verify unresolved permit families")
++    assert "then apply" in projection["customer_next_step"]
++
++
++def test_active_non_cached_research_path_writes_and_serves_validated_sealed_projection(
++    monkeypatch,
++) -> None:
++    model_payload = {
++        "permit_verdict": "YES",
++        "permit_required": True,
++        "permit_decision": "required",
++        "permit_name": "Building Permit",
++        "permit_type": "Building Permit",
++        "permits_required": [{"permit_type": "Building Permit", "kind": "building", "required": True}],
++        "apply_url": "https://www.buckeyeaz.gov/government/development-services/building-safety",
++        "applying_office": "City of Buckeye Development Services",
++        "sources": [{"url": "https://www.buckeyeaz.gov/government/development-services/building-safety", "quote": "Synthetic non-cached integration replay."}],
++        "confidence": "high",
++        "confidence_reason": "Synthetic non-cached integration replay.",
++        "summary": "Synthetic non-cached integration replay.",
++        "warnings": [],
++    }
++
++    class FakeClient:
++        def with_options(self, **_kwargs: object) -> "FakeClient":
++            return self
++
++    class FrozenDateTime(datetime):
++        @classmethod
++        def now(cls, tz: object = None) -> "FrozenDateTime":
++            return cls(2026, 7, 12, 1, 0, 0, tzinfo=tz)  # type: ignore[arg-type]
++
++        @classmethod
++        def utcnow(cls) -> "FrozenDateTime":
++            return cls(2026, 7, 12, 1, 0, 0)
++
++    model_calls: list[dict[str, object]] = []
++    cache_writes: list[dict[str, object]] = []
++
++    def fake_completion(_client: object, **kwargs: object) -> SimpleNamespace:
++        model_calls.append(dict(kwargs))
++        return SimpleNamespace(choices=[SimpleNamespace(message=SimpleNamespace(content=json.dumps(model_payload)))])
++
++    def capture_cache(
++        _key: str,
++        _job_type: str,
++        _job_category: str,
++        _city: str,
++        _state: str,
++        _zip_code: str | None,
++        result: dict[str, object],
++    ) -> None:
++        cache_writes.append(copy.deepcopy(result))
++
++    monkeypatch.setattr(research_engine, "init_cache", lambda: None)
++    monkeypatch.setattr(research_engine, "build_search_context", lambda *_args, **_kwargs: "")
++    monkeypatch.setattr(research_engine, "enrich_result_with_serper_sources", lambda result, *_args: result)
++    monkeypatch.setattr(research_engine, "_get_openai_client", lambda: FakeClient())
++    monkeypatch.setattr(research_engine, "create_permitassist_chat_completion", fake_completion)
++    monkeypatch.setattr(research_engine, "save_cache", capture_cache)
++    monkeypatch.setattr(research_engine.time, "time", lambda: 1_700_000_000.0)
++    monkeypatch.setattr(research_engine, "datetime", FrozenDateTime)
++    monkeypatch.setenv("PERMITASSIST_V24_MODE", "off")
++    monkeypatch.setenv(pre.CORE_SETTING, "active")
++    monkeypatch.setenv(pre.CORE_ALLOWLIST_SETTING, "us-az-buckeye")
++
++    result = research_engine.research_permit(
++        "residential reroof",
++        "Buckeye",
++        "AZ",
++        use_cache=False,
++        job_category="residential",
++    )
++    projection = pre.extract_sealed_public_projection(result, city="Buckeye", state="AZ")
++
++    assert len(model_calls) == 1
++    assert len(cache_writes) == 1
++    assert projection is not None
++    assert projection["seed_classification"] == "exact_complete"
++    assert projection["permit_decision"] in {"REQUIRED", "NOT_REQUIRED"}
++    assert pre.validate_rule_engine_cache_payload(
++        cache_writes[0],
++        required_version=pre.CORE_CACHE_SCHEMA_VERSION,
++    )
++    assert pre.extract_sealed_public_projection(cache_writes[0], city="Buckeye", state="AZ") == projection

@@ -1,0 +1,50 @@
+I have now traced every controlling requirement against the actual symbols and cross-checked the recorded evidence. The review is complete. Here is my finding.
+
+---
+
+## 1. CHECKPOINT
+
+- **Candidate source commit reviewed:** `41f8c367150877c477b456bc0585f74d5390a777`
+- **Base tag/commit:** `permit-rule-engine-part2-20260712` = `c3a05b10eb3876d15e97e1484ecdd84b616e20cb`
+- **Exact diff reviewed:** `artifacts/permit_rule_engine_part3_20260712/review/final/exact_candidate_diff.patch` (declared SHA-256 `8c107e9a…c7f2c7e1`)
+- **Sole production file changed:** `api/permit_rule_engine.py`. Everything else in the diff is tests, fixtures, the evidence script, and artifacts.
+
+## 2. BLOCKERS
+
+**NONE.**
+
+Each blocking category was verified against exact symbols, not summaries:
+
+- **Correctness / promotion composition** — `promote_factory_seed` (`api/permit_rule_engine.py:780`) requires, in order: non-empty source cell → `resolve_jurisdiction_identity(...).status is EXACT` → re-migrated classification in {exact_complete, exact_partial} → `_overlay_promotion_gate` pass. The gate (`:737`) independently requires a present template, publishable adoption provenance, administrative overrides covering every binary family, authority+application routing covering every binary family, and a satisfied sourced predicate. `canary_results.json` proves both directions: three real cells promote (`final_promotion_accepted=true`), and it is not vacuously always-reject.
+- **Fail-closed safety** — `build_sealed_projection_payload` (`:1803`) forces ABSTAIN + empty provenance on main and every family decision and empties routes for FAIL_CLOSED/JURISDICTION_HOLD/UNSUPPORTED_SCOPE. `sources`/`claim_citations` derive *only* from decision provenance via `_projection_sources` (`:1731`, `:1902`, `:1956`), so both collapse to `[]`. `permit_required` becomes `None`, `permit_decision` becomes `UNKNOWN`. Factory exceptions route through `safe_factory_migrate_seed` (`:668`) → FAIL_CLOSED. Customer audit: 0 violations / 2,162.
+- **Source / provenance integrity + hash-domain rule** — `_main_provenance_hash_bound` (`:478`) requires a SHA-256-shaped, non-placeholder (`len(set)>1`) main-decision hash and binds the full immutable cell via `source_cell_sha256 = stable_sha256(source)`. No unlike hash domains are compared for equality. The tampered-hash counterfactual (`"0"*64`) correctly yields FAIL_CLOSED with no binary families.
+- **Canary rule (overlay gate ≠ final promotion)** — `resolve_jurisdiction_identity` (`:1388`) and `migrate_v24_seed_index` (`:692`) detect ambiguity by the *same* key `(_slug(ahj), state.upper()) → distinct jurisdiction_ids > 1`, so they cannot diverge. `WI|eau_claire|commercial_tenant_improvement` in `canary_results.json` shows `promotion_gate_passed=true` **and** `final_promotion_accepted=false` — valid local evidence, promotion still rejected. Exactly the required distinction.
+- **Verified-partial UX** — proven binary retained (`permit_required is True` for the Albertville partial), `_complete_part3_family_decisions` (`:990`) backfills every unresolved closure lane as VERIFY, `verification_tasks` emitted per unresolved lane, and `customer_next_step` becomes “Verify unresolved permit families, then apply…”. Evidence: 2,082/2,082 actionable and 2,082/2,082 with tasks.
+- **No-neuter** — `_CORE_FAMILIES` extended with the 9 additional exact families; `normalize_exact_source_family`=`_slug` preserves labels (Albertville canary keeps `gas`/`demolition` distinct); `FAMILY_CLOSURE_REQUIREMENTS["commercial_tenant_improvement"]` is exactly the W4 ten lanes and `classify_cell_coverage` requires all of them for EXACT_COMPLETE. Pre-activation audit: 0 violations across 2,118 checked cells, 2,544 binary-family occurrences.
+- **Determinism** — `deterministic_seed_sample` (`:800`) ranks by `sha256(seed\0key)`, no RNG/time; reverse-ordered input yields identical output; 10/10 evidence files byte-identical run1↔run2.
+- **Part 1–2 preservation** — baseline comparison: 18↔18, `exact_failure_set_match=true`, zero new/resolved node IDs; flag-off path is `after is original` and byte-identical.
+
+## 3. NONBLOCKING
+
+1. **Referenced secret-scan artifact is absent.** The prompt lists `gates/pre_opus_secret_scan.json`, but no secret-scan file exists in the tree (`**/*secret*` → none). I mitigated by inspecting the added lines directly: they are schema-version strings, family slugs, regexes, dataclasses, and public `.gov` source URLs/quotes — **no credentials, keys, or tokens**. The claim’s substance holds, but the named evidence file is missing and should be regenerated for a complete gate set.
+2. **`_publishable_provenance` (`:1598`) accepts placeholder hashes (e.g. `"0"*64`) at the family-row level** — only the seed-level `_main_provenance_hash_bound` enforces the non-placeholder `len(set)>1` rule. A cell whose *main* provenance is valid but which carries an individual family row with an all-zeros hash could surface that row as a sourced binary. This does not occur in the real corpus (0 audit violations; canary provenance all real) and the full-cell hash binding + reverification catch any post-migration tamper, so it is defense-in-depth hardening, not a corpus defect. Consider applying the same non-placeholder check wherever provenance backs a binary conclusion.
+3. **Frozen-contract Amendment 1 is a post-freeze fixture edit.** It removed only the mathematically-impossible `"unsupported_scope": 0` key (a `Counter` never serializes unobserved keys, so a correct implementation could never satisfy it). The manifest hash was re-synced, the RED log predates behavior, and `contract_amendment_1_red_status.json` records `behavior_changes_present_when_amended=false`. Legitimate and well-documented; noted for transparency.
+4. **`unsupported_scope` is reachable but unobserved** in the real corpus (0 cells). It is exercised via `classify_request_scope` counterfactuals and the closed-ontology branch in `classify_v24_seed`, so the classification is honest, not dead.
+
+## 4. EVIDENCE ASSESSMENT
+
+The recorded artifacts support the claims and are internally consistent:
+
+- `summary.json`: 2,162 cells / 2,162 seeds; classification {36, 2082, 34, 10} matching the frozen contract; unique `source_cell_id`=2,162 and unique `seed_sha256`=2,162; reverification 2,162/2,162; customer violations 0; verified-partial 2,082/2,082 (next-step + tasks); pre-activation audit passed; canaries 4/4; seeded-random 128/128; counterfactuals 5/5; flag-off byte-identical; identity topology 2,157 names / 5 ambiguous / 10 holds; `passed=true` with every `hard_failure=false`.
+- `determinism_report.json`: all 10 files byte-identical (`all_byte_identical=true`).
+- `pre_opus_baseline_comparison.json`: `exact_failure_set_match=true`, `new_failures=[]`, `resolved_failures=[]`, “18 failed, 1129 passed, 47 skipped” — the 18 are pre-existing solar-MEP/step7c failures unrelated to Part 3.
+- `pre_opus_focused_tests.txt`: 52 passed. `pre_opus_static_checks.txt`: contract hashes OK, `static_checks=PASS`.
+- `canary_results.json` independently substantiates label preservation, honest binary vs. CONDITIONAL, and the overlay-gate-passes/promotion-rejects composition for the ambiguous jurisdiction.
+
+The one gap is the missing secret-scan artifact (NONBLOCKING #1), whose underlying claim I re-verified by direct inspection of the diff.
+
+## 5. VERDICT
+
+All controlling requirements (1–10), the hash-domain rule, and the canary rule are satisfied in the exact candidate code and corroborated by consistent, deterministic, byte-reproducible evidence. No correctness, fail-closed, source-integrity, verified-partial, determinism, or no-neuter issue remains unresolved. The nonblocking items do not gate this checkpoint.
+
+APPROVE_CHECKPOINT

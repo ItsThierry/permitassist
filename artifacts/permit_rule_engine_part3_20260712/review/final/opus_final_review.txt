@@ -1,0 +1,54 @@
+I now have everything needed. Let me record what I verified before writing the verdict.
+
+**Verification performed (read-only, synchronous):**
+- Read the complete exact diff (all 2,394 lines) at the specified artifact path.
+- Read the actual production functions (not just diff context): `_publishable_provenance`, `normalize_family_decision`, `build_sealed_projection_payload`, `_identity_from_resolution`, `build_core_decision_envelope`, `resolve_jurisdiction_identity`, `classify_cell_coverage`, `FAMILY_CLOSURE_REQUIREMENTS`, `_slug`/`normalize_family`.
+- Cross-checked every evidence artifact against the code logic (summary, canaries, determinism, baseline, preactivation audit, customer audit, static checks, focused tests).
+
+Every controlling requirement traces to code + evidence. The one thing I could not do is recompute the diff SHA-256 or re-run tests (shell is forbidden by the task), so those rest on the recorded gate artifacts, which are internally consistent and all stamped `403ef154…`.
+
+---
+
+# CHECKPOINT
+
+- **Reviewed final source commit:** `403ef1543076da6097ccf134c90ef43c005f6532`
+- **Base:** `c3a05b10eb3876d15e97e1484ecdd84b616e20cb` (tag `permit-rule-engine-part2-20260712`)
+- **Exact diff artifact reviewed:** `artifacts/permit_rule_engine_part3_20260712/review/final/exact_candidate_diff.patch`
+- **Declared diff SHA-256:** `e8a5cb897572285335edba9da66fe01d207278b4f347f99f406f3dc83d419810` (shell forbidden, so not independently recomputed; the reviewed artifact carries the distinguishing `403ef154` change — the `_publishable_provenance` all‑zero rejection plus its regression test — and every gate/evidence file is stamped `403ef154…`, so I am confident this is the final candidate, not superseded `41f8c36`).
+- Superseded review under `review/superseded_41f8c36/` was ignored.
+
+# BLOCKERS
+
+`NONE`
+
+I specifically hunted the auto-blocking categories and found each resolved:
+
+- **Source-integrity (the fix under review):** `_publishable_provenance` (permit_rule_engine.py:1598) now returns `bool(… and re.fullmatch(r"[0-9a-f]{64}", record.snapshot_hash or "") and record.snapshot_hash.lower() != "0"*64 and …)`. The `re.fullmatch` guarantees `snapshot_hash` is a non-empty 64-char lowercase hex string before `.lower()` runs, so the added guard cannot crash and correctly rejects the all-zero family placeholder. Regression test `test_family_binary_rejects_placeholder_provenance_hash` confirms an all-zero hash on a binary row downgrades REQUIRED→VERIFY with code `binary_without_publishable_provenance`. Cell-level integrity is additionally bound by `source_cell_sha256 = stable_sha256(full_cell)` + `_main_provenance_hash_bound` (stricter `len(set)>1`), and reverified 2,162/2,162.
+- **Fail-closed / ambiguous / unsupported / factory-error:** `build_sealed_projection_payload` forces main + all family decisions to ABSTAIN with empty provenance, `family_routes=()` for the three closed classes; `build_core_decision_envelope` also gates routes to EXACT_* + EXACT identity. Verified by `test_fail_closed_customer_projection_clears_claims_routes_and_binary` and 5/5 counterfactuals (tamper→fail_closed, unknown/negated→unsupported, ambiguous→jurisdiction_hold+UNKNOWN, exception→fail_closed).
+- **Verified-partial:** binary truth preserved (source-backed REQUIRED kept), every unresolved lane emits a `verification_tasks` entry, and next-step copy is verify-first (“Verify unresolved permit families, then apply with …”). Evidence: 2,082/2,082 actionable + tasked; customer audit 0 violations.
+- **No-neuter:** all 16 observed exact families ∈ `_CORE_FAMILIES` (so none get `unknown_family`/ABSTAIN); W4’s ten lanes are always completed via `FAMILY_CLOSURE_REQUIREMENTS`. Pre-activation audit 0 violations over 2,118 exact cells; W4 exact-partial checked 1,927 with 0 neutering.
+- **Layered canary distinction:** the `WI|eau_claire` jurisdiction-hold canary shows `promotion_gate_passed: true` (evidence layer) but `final_promotion_accepted: false` (composed promotion rejects on ambiguous identity) — exactly the required separation; corroborated by `test_factory_promotion_composes_identity_hold_after_overlay_evidence_passes`.
+- **Determinism / regression:** two runs byte-identical across all 10 files; full suite 1,130 passed / 47 skipped / 18 failed with `exact_failure_set_match: true`, `new_failures: []`, and all 18 pre-existing failures confined to untouched `solar_mep`/`step7c` files.
+
+# NONBLOCKING
+
+1. **Degenerate-hash check asymmetry (defense-in-depth).** `_publishable_provenance` rejects only the all-zero placeholder, whereas `_main_provenance_hash_bound` rejects any single-character-repeat hash (`len(set)>1`). A non-zero degenerate hash (e.g. 64×`a`) on a *non-main* family row inside an otherwise-valid cell would pass the family-level check. Zero corpus impact (real SHA-256 snapshots are never degenerate; the only placeholder in play is all-zero, which is handled, and any degenerate *main* provenance already fail-closes the whole cell). Optional hardening: mirror the `len(set)>1` rule in `_publishable_provenance`.
+2. **`permits_required` enumeration on cleared projections.** For fail_closed/jurisdiction_hold/unsupported, `permits_required` still lists family names with `required:"maybe"` / `required_status:"abstain"` while `permit_decision`=UNKNOWN, `permit_required`=None, and sources/citations/routes are empty. This is honest and within contract (no binary claim, no source leak), but a downstream consumer reading only permit *names* could over-read; the audit intentionally guards verdicts/sources/routes rather than the name list.
+
+# EVIDENCE ASSESSMENT
+
+Strong and internally consistent.
+
+- **Migration/reverification:** 2,162 cells → 2,162 seeds; 2,162 unique cell-ids and seed hashes; reverification 2,162/2,162; each seed binds the full-cell SHA-256.
+- **Classification:** {complete 36, partial 2,082, fail_closed 34, jurisdiction_hold 10} = 2,162, matching the frozen contract (and CONTRACT_AMENDMENT_1 correctly removed only an impossible zero-count `Counter` key, with `behavior_changes_present_when_amended: false`).
+- **Source-family preservation:** 16 observed exact labels preserved; binary families ⊆ source families ⊆ closed ontology, each with an authority route (pre-activation audit 0 violations).
+- **Customer truth:** 2,162 checked, 0 violations; verified-partial UX 2,082/2,082; `violations:[]` confirmed directly in the artifact.
+- **Canaries 4/4, random 128/128, counterfactuals 5/5; flag-off byte-identical no-op** (`before==after` SHA match).
+- **Determinism report:** all 10 files byte-identical across two runs. **Baseline:** exact 18-node match, no new/resolved. **Static checks:** PASS with contract hashes verified. **Focused tests:** 53 passed.
+- **Not independently reproducible here:** the diff SHA-256 and test execution (shell forbidden); and the two `*secret*` gate files are blocked by my local secret-file guardrail. I mitigated the latter by reading the entire diff myself — the added lines contain only rule-engine logic, public `.gov` URLs, and public-content SHA-256 hashes; no credentials — consistent with the recorded “3 passed / zero added-line hits.”
+
+No unresolved correctness, fail-closed, source-integrity, verified-partial, determinism, or no-neuter issue remains. Activation stays disabled-by-default / exact-allowlist-only; no deployment or production activation is present or performed.
+
+# VERDICT
+
+APPROVE_CHECKPOINT

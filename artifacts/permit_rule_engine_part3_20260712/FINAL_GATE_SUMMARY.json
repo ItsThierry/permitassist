@@ -1,0 +1,67 @@
+{
+  "schema_version": "permitassist.rule-engine-part3-final-gates.v1",
+  "source_candidate_commit": "403ef1543076da6097ccf134c90ef43c005f6532",
+  "base_tag": "permit-rule-engine-part2-20260712",
+  "base_commit": "c3a05b10eb3876d15e97e1484ecdd84b616e20cb",
+  "focused": {
+    "passed": 53,
+    "failed": 0
+  },
+  "full_suite": {
+    "passed": 1130,
+    "skipped": 47,
+    "failed": 18,
+    "baseline_failures": 18,
+    "exact_failure_set_match": true,
+    "new_failure_node_ids": 0,
+    "resolved_failure_node_ids": 0
+  },
+  "migration": {
+    "legacy_cells": 2162,
+    "migrated_seeds": 2162,
+    "reverified": 2162,
+    "reverification_failures": 0,
+    "classification_counts": {
+      "exact_complete": 36,
+      "exact_partial": 2082,
+      "fail_closed": 34,
+      "jurisdiction_hold": 10
+    }
+  },
+  "customer_projection": {
+    "checked": 2162,
+    "violations": 0,
+    "verified_partial_actionable_next_steps": 2082,
+    "verified_partial_with_tasks": 2082
+  },
+  "validation": {
+    "canaries_passed": 4,
+    "canaries_total": 4,
+    "seeded_random_passed": 128,
+    "seeded_random_total": 128,
+    "counterfactuals_passed": 5,
+    "counterfactuals_total": 5,
+    "preactivation_family_violations": 0,
+    "deterministic_files_byte_identical": 10,
+    "deterministic_files_total": 10,
+    "flag_off_byte_parity": true,
+    "secret_contract_tests_passed": 3,
+    "secret_scan_hits": 0,
+    "static_checks_passed": true
+  },
+  "final_review": {
+    "model": "claude-opus",
+    "candidate_commit": "403ef1543076da6097ccf134c90ef43c005f6532",
+    "diff_sha256": "e8a5cb897572285335edba9da66fe01d207278b4f347f99f406f3dc83d419810",
+    "verdict": "APPROVE_CHECKPOINT",
+    "blockers": 0
+  },
+  "production_boundary": {
+    "activation": "disabled_by_default_exact_allowlist_only",
+    "pushes": 0,
+    "deployments": 0,
+    "production_mutations": 0,
+    "paid_live_runs": 0
+  },
+  "passed": true
+}

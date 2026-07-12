@@ -1,0 +1,18 @@
+{
+  "schema_version": "permitassist.rule-engine-part3-determinism.v1",
+  "source_commit": "403ef1543076da6097ccf134c90ef43c005f6532",
+  "file_count": 10,
+  "all_byte_identical": true,
+  "files": [
+    {"file": "canary_results.json", "bytes": 14591, "sha256": "c977f96aca97d3d220ce83daa60a32200258ec4a3f0a7c8233dd7f941dfdc28f", "byte_identical": true},
+    {"file": "customer_projection_audit.json", "bytes": 70126, "sha256": "8d51d89b7a9edd17388285a22a008b7a7137f8085d647032a6405513c6f57b54", "byte_identical": true},
+    {"file": "flag_off_parity.json", "bytes": 189, "sha256": "720365e705c3e1983f5cb0ab6eaf600ea5fe27d4812d170fb695e6c86de932e5", "byte_identical": true},
+    {"file": "manifest.json", "bytes": 1342, "sha256": "6b2760b755116a1f18edc90b3a06de286ce9d7ad053234f7210372931307d871", "byte_identical": true},
+    {"file": "migration_seeds.jsonl", "bytes": 1358798, "sha256": "5f41a8d8d8feff07094829b56a3cdfbf8609a5e9be695bd7475c338101b65be8", "byte_identical": true},
+    {"file": "ontology_predicates_templates.json", "bytes": 18674, "sha256": "5234a9152105b8378afae5d884b7899c8a66c957a6901272a496f7293f9a2f5e", "byte_identical": true},
+    {"file": "preactivation_family_audit.json", "bytes": 186, "sha256": "e4f3411fe35183486587df6216d8044d4d4f377a3d331c60f788d66f5857448c", "byte_identical": true},
+    {"file": "reverification.jsonl", "bytes": 587526, "sha256": "9c8e1ada361b31b1dea170a84ee9042f2921733ce59672fdc37099b02edd8479", "byte_identical": true},
+    {"file": "seeded_random_and_counterfactual_results.json", "bytes": 35471, "sha256": "3a3f3fab799b3a0762ad88d4d58e17c0e5fc4698efd3b7ab1e850f72e5aa6784", "byte_identical": true},
+    {"file": "summary.json", "bytes": 2777, "sha256": "9d79c170a92a39e3a5a6df921c3de408bb729a74fd95616d5be8f8f8e0097ec8", "byte_identical": true}
+  ]
+}

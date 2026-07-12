@@ -1,0 +1,31 @@
+{
+  "schema_version": "permitassist.rule-engine-part3.pre-opus-baseline-comparison.v1",
+  "source_commit": "403ef1543076da6097ccf134c90ef43c005f6532",
+  "baseline_count": 18,
+  "current_count": 18,
+  "current_failure_nodeids": [
+    "tests/test_solar_mep_controlled_activation_runtime.py::test_solar_mep_dallas_step7u_preview_still_works",
+    "tests/test_solar_mep_controlled_activation_runtime.py::test_solar_mep_positive_battery_storage_match",
+    "tests/test_solar_mep_controlled_activation_runtime.py::test_solar_mep_positive_commercial_electrical_match",
+    "tests/test_solar_mep_controlled_activation_runtime.py::test_solar_mep_positive_commercial_mechanical_match",
+    "tests/test_solar_mep_controlled_activation_runtime.py::test_solar_mep_positive_commercial_plumbing_match",
+    "tests/test_solar_mep_controlled_activation_runtime.py::test_solar_mep_positive_cross_trade_commercial_mep_match",
+    "tests/test_solar_mep_controlled_activation_runtime.py::test_solar_mep_positive_solar_pv_match",
+    "tests/test_solar_mep_controlled_activation_runtime.py::test_solar_mep_preview_header_route_gating_works",
+    "tests/test_solar_mep_controlled_activation_runtime.py::test_solar_mep_promotion_identity_is_pinned_to_checked_in_pack",
+    "tests/test_solar_mep_controlled_activation_runtime.py::test_solar_mep_unsupported_city_state_fail_closed",
+    "tests/test_step7c_evidence_pack_local_gates.py::test_step7m_dallas_only_staging_pack_is_supported_by_runtime_contract",
+    "tests/test_step7c_evidence_pack_local_gates.py::test_step7u_coffee_shop_preview_maps_to_restaurant_evidence",
+    "tests/test_step7c_evidence_pack_local_gates.py::test_step7u_doctors_office_preview_maps_to_medical_evidence",
+    "tests/test_step7c_evidence_pack_local_gates.py::test_step7u_office_negated_restaurant_cues_stay_office_and_warnings_merge",
+    "tests/test_step7c_evidence_pack_local_gates.py::test_step7u_office_negations_do_not_surface_restaurant_companions_in_http_preview",
+    "tests/test_step7c_evidence_pack_local_gates.py::test_step7u_preview_http_matrix_surfaces_contractor_fields_and_keeps_scope_gated",
+    "tests/test_step7c_evidence_pack_local_gates.py::test_step7u_production_preview_pack_requires_dedicated_mode",
+    "tests/test_step7c_evidence_pack_local_gates.py::test_step7u_production_preview_response_surfaces_contractor_safe_fields"
+  ],
+  "new_failures": [],
+  "resolved_failures": [],
+  "exact_failure_set_match": true,
+  "full_suite_sha256": "a0835c424db119dcbe9f490eb41bd20010ae51a71236d88b9762c5d5a7d970a3",
+  "summary": "18 failed, 1130 passed, 47 skipped"
+}

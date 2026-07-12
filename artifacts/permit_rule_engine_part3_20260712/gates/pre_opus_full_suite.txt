@@ -1,0 +1,601 @@
+........................................................................ [  6%]
+.................................s...................................... [ 12%]
+........................................................................ [ 18%]
+.............................................................ssssss..s.. [ 24%]
+.................................ss..................................sss [ 30%]
+sssssssssssssssssssssssssss............................................. [ 36%]
+........................................................................ [ 42%]
+...............ss.ss...sss.............................................. [ 48%]
+........................................................................ [ 54%]
+........................................................................ [ 60%]
+.......................................................................F [ 66%]
+....FFFFFFF...F.F....................................................... [ 72%]
+..............................FFFFFFFF.................................. [ 78%]
+........................................................................ [ 84%]
+........................................................................ [ 90%]
+........................................................................ [ 96%]
+...........................................                              [100%]
+=================================== FAILURES ===================================
+________ test_solar_mep_promotion_identity_is_pinned_to_checked_in_pack ________
+
+tmp_path = PosixPath('/tmp/pytest-of-boban/pytest-282/test_solar_mep_promotion_ident0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x79be3c874510>
+
+    def test_solar_mep_promotion_identity_is_pinned_to_checked_in_pack(tmp_path, monkeypatch):
+        _enable_pack(monkeypatch)
+        server = _import_server(tmp_path, monkeypatch)
+        promotion = sys.modules["evidence_pack_runtime"].SOLAR_MEP_CONTROLLED_PROMOTION
+        data = json.loads(SOLAR_MEP_PACK.read_text(encoding="utf-8"))
+        metadata = data["metadata"]
+        assert str(SOLAR_MEP_PACK).replace("\\", "/").endswith(promotion["path_suffix"])
+        assert hashlib.sha256(SOLAR_MEP_PACK.read_bytes()).hexdigest() == promotion["raw_sha256"]
+        assert metadata["fingerprint_sha256"] == promotion["fingerprint_sha256"]
+        assert metadata["evidence_pack_version"] == promotion["evidence_pack_version"] == "step7b_offline_v1"
+        assert len(data["records"]) == promotion["record_count"] == 9
+        assert {record["pack_family"] for record in data["records"]} == {promotion["pack_family"]}
+        pack = sys.modules["evidence_pack_runtime"].get_local_evidence_pack()
+>       assert pack.contract_status == "valid"
+E       AssertionError: assert 'stale' == 'valid'
+E         
+E         - valid
+E         + stale
+
+tests/test_solar_mep_controlled_activation_runtime.py:101: AssertionError
+----------------------------- Captured stdout call -----------------------------
+[db] Drift fixed in /tmp/pytest-of-boban/pytest-282/test_solar_mep_promotion_ident0/cache.db: users: added columns free_limit_notice_sent_at, free_limit_email_sent; created missing tables api_keys, beta_events, beta_feedback, checklist_cache, city_watch, onboarding_emails, permit_issued_reminders, rate_limits, referrals, saved_jurisdictions, webhook_integrations
+____________________ test_solar_mep_positive_solar_pv_match ____________________
+
+tmp_path = PosixPath('/tmp/pytest-of-boban/pytest-282/test_solar_mep_positive_solar_0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x79be2a9f93d0>
+
+    def test_solar_mep_positive_solar_pv_match(tmp_path, monkeypatch):
+        result = _finalize(tmp_path, monkeypatch, "NYC roof-mounted solar PV installation", "New York", "NY")
+>       _assert_valid_meta(result, "solar_pv_battery")
+
+tests/test_solar_mep_controlled_activation_runtime.py:206: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+result = {'permit_verdict': 'YES', 'confidence': 'medium', 'permit_required': True, 'permits_required': [{'permit_type': 'Solar / Electrical Permit', 'kind': 'Solar', 'required': True}], ...}
+expected_vertical = 'solar_pv_battery'
+
+    def _assert_valid_meta(result: dict, expected_vertical: str):
+        meta = result["_evidence_pack"]
+        assert meta["enabled"] is True
+        assert meta["mode"] == "solar_mep_controlled_preview"
+>       assert meta["contract_status"] == "valid"
+E       AssertionError: assert 'stale' == 'valid'
+E         
+E         - valid
+E         + stale
+
+tests/test_solar_mep_controlled_activation_runtime.py:79: AssertionError
+----------------------------- Captured stdout call -----------------------------
+[db] Drift fixed in /tmp/pytest-of-boban/pytest-282/test_solar_mep_positive_solar_0/cache.db: users: added columns free_limit_notice_sent_at, free_limit_email_sent; created missing tables api_keys, beta_events, beta_feedback, checklist_cache, city_watch, onboarding_emails, permit_issued_reminders, rate_limits, referrals, saved_jurisdictions, webhook_integrations
+________________ test_solar_mep_positive_battery_storage_match _________________
+
+tmp_path = PosixPath('/tmp/pytest-of-boban/pytest-282/test_solar_mep_positive_batter0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x79be2a9c0390>
+
+    def test_solar_mep_positive_battery_storage_match(tmp_path, monkeypatch):
+        result = _finalize(tmp_path, monkeypatch, "NYC rooftop solar PV with battery storage ESS", "New York", "NY")
+>       _assert_valid_meta(result, "solar_pv_battery")
+
+tests/test_solar_mep_controlled_activation_runtime.py:213: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+result = {'permit_verdict': 'YES', 'confidence': 'medium', 'permit_required': True, 'permits_required': [{'permit_type': 'Solar / Electrical Permit', 'kind': 'Solar', 'required': True}], ...}
+expected_vertical = 'solar_pv_battery'
+
+    def _assert_valid_meta(result: dict, expected_vertical: str):
+        meta = result["_evidence_pack"]
+        assert meta["enabled"] is True
+        assert meta["mode"] == "solar_mep_controlled_preview"
+>       assert meta["contract_status"] == "valid"
+E       AssertionError: assert 'stale' == 'valid'
+E         
+E         - valid
+E         + stale
+
+tests/test_solar_mep_controlled_activation_runtime.py:79: AssertionError
+----------------------------- Captured stdout call -----------------------------
+[db] Drift fixed in /tmp/pytest-of-boban/pytest-282/test_solar_mep_positive_batter0/cache.db: users: added columns free_limit_notice_sent_at, free_limit_email_sent; created missing tables api_keys, beta_events, beta_feedback, checklist_cache, city_watch, onboarding_emails, permit_issued_reminders, rate_limits, referrals, saved_jurisdictions, webhook_integrations
+_____________ test_solar_mep_positive_commercial_mechanical_match ______________
+
+tmp_path = PosixPath('/tmp/pytest-of-boban/pytest-282/test_solar_mep_positive_commer0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x79be4bdff050>
+
+    def test_solar_mep_positive_commercial_mechanical_match(tmp_path, monkeypatch):
+        result = _finalize(tmp_path, monkeypatch, "Dallas commercial mechanical RTU replacement and duct alterations", "Dallas", "TX")
+>       _assert_valid_meta(result, "commercial_mechanical")
+
+tests/test_solar_mep_controlled_activation_runtime.py:220: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+result = {'permit_verdict': 'YES', 'confidence': 'medium', 'permit_required': True, 'permits_required': [{'permit_type': 'Mecha...Tenant Improvement Permit. Confirm the exact portal category with the listed permit office before filing.', ...}], ...}
+expected_vertical = 'commercial_mechanical'
+
+    def _assert_valid_meta(result: dict, expected_vertical: str):
+        meta = result["_evidence_pack"]
+        assert meta["enabled"] is True
+        assert meta["mode"] == "solar_mep_controlled_preview"
+>       assert meta["contract_status"] == "valid"
+E       AssertionError: assert 'stale' == 'valid'
+E         
+E         - valid
+E         + stale
+
+tests/test_solar_mep_controlled_activation_runtime.py:79: AssertionError
+----------------------------- Captured stdout call -----------------------------
+[db] Drift fixed in /tmp/pytest-of-boban/pytest-282/test_solar_mep_positive_commer0/cache.db: users: added columns free_limit_notice_sent_at, free_limit_email_sent; created missing tables api_keys, beta_events, beta_feedback, checklist_cache, city_watch, onboarding_emails, permit_issued_reminders, rate_limits, referrals, saved_jurisdictions, webhook_integrations
+_____________ test_solar_mep_positive_commercial_electrical_match ______________
+
+tmp_path = PosixPath('/tmp/pytest-of-boban/pytest-282/test_solar_mep_positive_commer1')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x79be3c870a50>
+
+    def test_solar_mep_positive_commercial_electrical_match(tmp_path, monkeypatch):
+        result = _finalize(tmp_path, monkeypatch, "Dallas commercial electrical panel and branch circuit alteration", "Dallas", "TX")
+>       _assert_valid_meta(result, "commercial_electrical")
+
+tests/test_solar_mep_controlled_activation_runtime.py:227: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+result = {'permit_verdict': 'YES', 'confidence': 'medium', 'permit_required': True, 'permits_required': [{'permit_type': 'Elect...Tenant Improvement Permit. Confirm the exact portal category with the listed permit office before filing.', ...}], ...}
+expected_vertical = 'commercial_electrical'
+
+    def _assert_valid_meta(result: dict, expected_vertical: str):
+        meta = result["_evidence_pack"]
+        assert meta["enabled"] is True
+        assert meta["mode"] == "solar_mep_controlled_preview"
+>       assert meta["contract_status"] == "valid"
+E       AssertionError: assert 'stale' == 'valid'
+E         
+E         - valid
+E         + stale
+
+tests/test_solar_mep_controlled_activation_runtime.py:79: AssertionError
+----------------------------- Captured stdout call -----------------------------
+[db] Drift fixed in /tmp/pytest-of-boban/pytest-282/test_solar_mep_positive_commer1/cache.db: users: added columns free_limit_notice_sent_at, free_limit_email_sent; created missing tables api_keys, beta_events, beta_feedback, checklist_cache, city_watch, onboarding_emails, permit_issued_reminders, rate_limits, referrals, saved_jurisdictions, webhook_integrations
+______________ test_solar_mep_positive_commercial_plumbing_match _______________
+
+tmp_path = PosixPath('/tmp/pytest-of-boban/pytest-282/test_solar_mep_positive_commer2')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x79be2a9716d0>
+
+    def test_solar_mep_positive_commercial_plumbing_match(tmp_path, monkeypatch):
+        result = _finalize(tmp_path, monkeypatch, "Dallas commercial plumbing fixture relocation and DWV work", "Dallas", "TX")
+>       _assert_valid_meta(result, "commercial_plumbing")
+
+tests/test_solar_mep_controlled_activation_runtime.py:234: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+result = {'permit_verdict': 'YES', 'confidence': 'medium', 'permit_required': True, 'permits_required': [{'permit_type': 'Plumb...Tenant Improvement Permit. Confirm the exact portal category with the listed permit office before filing.', ...}], ...}
+expected_vertical = 'commercial_plumbing'
+
+    def _assert_valid_meta(result: dict, expected_vertical: str):
+        meta = result["_evidence_pack"]
+        assert meta["enabled"] is True
+        assert meta["mode"] == "solar_mep_controlled_preview"
+>       assert meta["contract_status"] == "valid"
+E       AssertionError: assert 'stale' == 'valid'
+E         
+E         - valid
+E         + stale
+
+tests/test_solar_mep_controlled_activation_runtime.py:79: AssertionError
+----------------------------- Captured stdout call -----------------------------
+[db] Drift fixed in /tmp/pytest-of-boban/pytest-282/test_solar_mep_positive_commer2/cache.db: users: added columns free_limit_notice_sent_at, free_limit_email_sent; created missing tables api_keys, beta_events, beta_feedback, checklist_cache, city_watch, onboarding_emails, permit_issued_reminders, rate_limits, referrals, saved_jurisdictions, webhook_integrations
+___________ test_solar_mep_positive_cross_trade_commercial_mep_match ___________
+
+tmp_path = PosixPath('/tmp/pytest-of-boban/pytest-282/test_solar_mep_positive_cross_0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x79be4bbdfa50>
+
+    def test_solar_mep_positive_cross_trade_commercial_mep_match(tmp_path, monkeypatch):
+        result = _finalize(
+            tmp_path,
+            monkeypatch,
+            "Dallas commercial MEP tenant improvement with mechanical electrical and plumbing scope",
+            "Dallas",
+            "TX",
+        )
+>       _assert_valid_meta(result, "commercial_mep_ti")
+
+tests/test_solar_mep_controlled_activation_runtime.py:247: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+result = {'permit_verdict': 'YES', 'confidence': 'medium', 'permit_required': True, 'permits_required': [{'permit_type': 'Plumb...Tenant Improvement Permit. Confirm the exact portal category with the listed permit office before filing.', ...}], ...}
+expected_vertical = 'commercial_mep_ti'
+
+    def _assert_valid_meta(result: dict, expected_vertical: str):
+        meta = result["_evidence_pack"]
+        assert meta["enabled"] is True
+        assert meta["mode"] == "solar_mep_controlled_preview"
+>       assert meta["contract_status"] == "valid"
+E       AssertionError: assert 'stale' == 'valid'
+E         
+E         - valid
+E         + stale
+
+tests/test_solar_mep_controlled_activation_runtime.py:79: AssertionError
+----------------------------- Captured stdout call -----------------------------
+[db] Drift fixed in /tmp/pytest-of-boban/pytest-282/test_solar_mep_positive_cross_0/cache.db: users: added columns free_limit_notice_sent_at, free_limit_email_sent; created missing tables api_keys, beta_events, beta_feedback, checklist_cache, city_watch, onboarding_emails, permit_issued_reminders, rate_limits, referrals, saved_jurisdictions, webhook_integrations
+______________ test_solar_mep_unsupported_city_state_fail_closed _______________
+
+tmp_path = PosixPath('/tmp/pytest-of-boban/pytest-282/test_solar_mep_unsupported_cit0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x79be3c875890>
+
+    def test_solar_mep_unsupported_city_state_fail_closed(tmp_path, monkeypatch):
+        result = _finalize(tmp_path, monkeypatch, "solar PV with battery storage", "Boston", "MA")
+        meta = result["_evidence_pack"]
+>       assert meta["contract_status"] == "valid"
+E       AssertionError: assert 'stale' == 'valid'
+E         
+E         - valid
+E         + stale
+
+tests/test_solar_mep_controlled_activation_runtime.py:255: AssertionError
+----------------------------- Captured stdout call -----------------------------
+[db] Drift fixed in /tmp/pytest-of-boban/pytest-282/test_solar_mep_unsupported_cit0/cache.db: users: added columns free_limit_notice_sent_at, free_limit_email_sent; created missing tables api_keys, beta_events, beta_feedback, checklist_cache, city_watch, onboarding_emails, permit_issued_reminders, rate_limits, referrals, saved_jurisdictions, webhook_integrations
+_______________ test_solar_mep_preview_header_route_gating_works _______________
+
+tmp_path = PosixPath('/tmp/pytest-of-boban/pytest-282/test_solar_mep_preview_header_0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x79be2a8e1e90>
+
+    def test_solar_mep_preview_header_route_gating_works(tmp_path, monkeypatch):
+        _enable_pack(monkeypatch)
+        monkeypatch.setenv("PERMITASSIST_EVIDENCE_PACK_PREVIEW_ONLY", "true")
+        monkeypatch.setenv("PERMITASSIST_EVIDENCE_PACK_PREVIEW_HEADER", "X-Sample-Demo")
+        controlled_token = _enable_controlled_preview_token(monkeypatch)
+        server = _import_server(tmp_path, monkeypatch)
+        calls = []
+    
+        def fake_research(*args, **kwargs):
+            calls.append(kwargs)
+            return copy.deepcopy(_base_engine_result())
+    
+        server.research_permit = fake_research
+        server.is_paid_user = lambda email: True
+        token = server.create_session_token("paid@example.com")
+        body = {"job_type": "NYC solar PV with battery storage", "city": "New York", "state": "NY", "job_category": "commercial"}
+        with _LiveServer(server.Handler) as live:
+            status, preview_body = _post_json_response(
+                f"{live.base}/api/permit",
+                body,
+                {"X-Session-Token": token, "X-Sample-Demo": "1", "X-Evidence-Pack-Preview-Token": controlled_token},
+            )
+            batch_status, batch_body = _post_json_response(
+                f"{live.base}/api/batch-permit",
+                {"lookups": [body]},
+                {"X-Sample-Demo": "1"},
+            )
+        assert status == batch_status == 200
+        assert calls[0]["use_cache"] is False
+        assert calls[0]["suppress_cache_write"] is True
+        assert preview_body["_evidence_pack"]["mode"] == "solar_mep_controlled_preview"
+>       assert "permit_type" in preview_body["_evidence_pack"]["matched_fields"]
+E       AssertionError: assert 'permit_type' in []
+
+tests/test_solar_mep_controlled_activation_runtime.py:354: AssertionError
+----------------------------- Captured stdout call -----------------------------
+[db] Drift fixed in /tmp/pytest-of-boban/pytest-282/test_solar_mep_preview_header_0/cache.db: users: added columns free_limit_notice_sent_at, free_limit_email_sent; created missing tables api_keys, beta_events, beta_feedback, checklist_cache, city_watch, onboarding_emails, permit_issued_reminders, rate_limits, referrals, saved_jurisdictions, webhook_integrations
+[permit] NYC solar PV with battery storage in New York, NY — user=paid@example.com plan=paid ip=127.0.0.1 used=0
+[127.0.0.1] POST /api/permit HTTP/1.1 200
+[127.0.0.1] POST /api/batch-permit HTTP/1.1 200
+_______________ test_solar_mep_dallas_step7u_preview_still_works _______________
+
+tmp_path = PosixPath('/tmp/pytest-of-boban/pytest-282/test_solar_mep_dallas_step7u_p0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x79be2b75ae10>
+
+    def test_solar_mep_dallas_step7u_preview_still_works(tmp_path, monkeypatch):
+        _enable_pack(monkeypatch, DALLAS_STEP7U_PACK, mode="dallas_step7u_production_preview")
+        server = _import_server(tmp_path, monkeypatch)
+        result = server.finalize_permit_lookup_result(
+            _base_engine_result(),
+            "medical clinic tenant improvement with exam rooms and accessibility review",
+            "Dallas",
+            "TX",
+            explicit_vertical="medical_clinic_ti",
+        )
+        assert result["_evidence_pack"]["mode"] == "dallas_step7u_production_preview"
+>       assert result["_evidence_pack"]["contract_status"] == "valid"
+E       AssertionError: assert 'stale' == 'valid'
+E         
+E         - valid
+E         + stale
+
+tests/test_solar_mep_controlled_activation_runtime.py:383: AssertionError
+----------------------------- Captured stdout call -----------------------------
+[db] Drift fixed in /tmp/pytest-of-boban/pytest-282/test_solar_mep_dallas_step7u_p0/cache.db: users: added columns free_limit_notice_sent_at, free_limit_email_sent; created missing tables api_keys, beta_events, beta_feedback, checklist_cache, city_watch, onboarding_emails, permit_issued_reminders, rate_limits, referrals, saved_jurisdictions, webhook_integrations
+____ test_step7m_dallas_only_staging_pack_is_supported_by_runtime_contract _____
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x79be2b5c7150>
+tmp_path = PosixPath('/tmp/pytest-of-boban/pytest-282/test_step7m_dallas_only_stagin0')
+
+    def test_step7m_dallas_only_staging_pack_is_supported_by_runtime_contract(monkeypatch, tmp_path):
+        pack_path = Path(__file__).resolve().parents[1] / "evidence_packs" / "dallas" / "step7h" / "permitassist-step7h-dallas-only-staging-evidence-pack-20260505.json"
+        assert pack_path.exists()
+        _enable_pack(monkeypatch, pack_path)
+        server = _import_server(tmp_path, monkeypatch)
+    
+        result = server.finalize_permit_lookup_result(
+            _base_engine_result(),
+            "office tenant improvement with demising partitions, lighting controls, HVAC diffuser relocation, and accessibility review",
+            "Dallas",
+            "TX",
+            explicit_vertical="office_ti",
+        )
+    
+        meta = result["_evidence_pack"]
+>       assert meta["contract_status"] == "valid"
+E       AssertionError: assert 'stale' == 'valid'
+E         
+E         - valid
+E         + stale
+
+tests/test_step7c_evidence_pack_local_gates.py:147: AssertionError
+----------------------------- Captured stdout call -----------------------------
+[db] Drift fixed in /tmp/pytest-of-boban/pytest-282/test_step7m_dallas_only_stagin0/cache.db: users: added columns free_limit_notice_sent_at, free_limit_email_sent; created missing tables api_keys, beta_events, beta_feedback, checklist_cache, city_watch, onboarding_emails, permit_issued_reminders, rate_limits, referrals, saved_jurisdictions, webhook_integrations
+_________ test_step7u_production_preview_pack_requires_dedicated_mode __________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x79be2b7c8f50>
+tmp_path = PosixPath('/tmp/pytest-of-boban/pytest-282/test_step7u_production_preview0')
+
+    def test_step7u_production_preview_pack_requires_dedicated_mode(monkeypatch, tmp_path):
+        pack_path = Path(__file__).resolve().parents[1] / "evidence_packs" / "dallas" / "step7u" / "permitassist-step7u-dallas-only-production-preview-evidence-pack-20260506.json"
+        assert pack_path.exists()
+    
+        _enable_pack(monkeypatch, pack_path, mode="dallas_step7u_production_preview")
+        server = _import_server(tmp_path, monkeypatch)
+    
+        result = server.finalize_permit_lookup_result(
+            _base_engine_result(),
+            "medical clinic tenant improvement with exam rooms and accessibility review",
+            "Dallas",
+            "TX",
+            explicit_vertical="medical_clinic_ti",
+        )
+    
+        meta = result["_evidence_pack"]
+>       assert meta["contract_status"] == "valid"
+E       AssertionError: assert 'stale' == 'valid'
+E         
+E         - valid
+E         + stale
+
+tests/test_step7c_evidence_pack_local_gates.py:171: AssertionError
+----------------------------- Captured stdout call -----------------------------
+[db] Drift fixed in /tmp/pytest-of-boban/pytest-282/test_step7u_production_preview0/cache.db: users: added columns free_limit_notice_sent_at, free_limit_email_sent; created missing tables api_keys, beta_events, beta_feedback, checklist_cache, city_watch, onboarding_emails, permit_issued_reminders, rate_limits, referrals, saved_jurisdictions, webhook_integrations
+___ test_step7u_production_preview_response_surfaces_contractor_safe_fields ____
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x79be2b665990>
+tmp_path = PosixPath('/tmp/pytest-of-boban/pytest-282/test_step7u_production_preview1')
+
+    def test_step7u_production_preview_response_surfaces_contractor_safe_fields(monkeypatch, tmp_path):
+        pack_path = Path(__file__).resolve().parents[1] / "evidence_packs" / "dallas" / "step7u" / "permitassist-step7u-dallas-only-production-preview-evidence-pack-20260506.json"
+        _enable_pack(monkeypatch, pack_path, mode="dallas_step7u_production_preview")
+        server = _import_server(tmp_path, monkeypatch)
+    
+        result = server.finalize_permit_lookup_result(
+            _base_engine_result(),
+            "medical clinic tenant improvement with exam rooms and accessibility review",
+            "Dallas",
+            "TX",
+            explicit_vertical="medical_clinic_ti",
+        )
+    
+>       assert result["permit_type"] == "Commercial Building Permit"
+               ^^^^^^^^^^^^^^^^^^^^^
+E       KeyError: 'permit_type'
+
+tests/test_step7c_evidence_pack_local_gates.py:192: KeyError
+----------------------------- Captured stdout call -----------------------------
+[db] Drift fixed in /tmp/pytest-of-boban/pytest-282/test_step7u_production_preview1/cache.db: users: added columns free_limit_notice_sent_at, free_limit_email_sent; created missing tables api_keys, beta_events, beta_feedback, checklist_cache, city_watch, onboarding_emails, permit_issued_reminders, rate_limits, referrals, saved_jurisdictions, webhook_integrations
+_________ test_step7u_coffee_shop_preview_maps_to_restaurant_evidence __________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x79be2b3f4650>
+tmp_path = PosixPath('/tmp/pytest-of-boban/pytest-282/test_step7u_coffee_shop_previe0')
+
+    def test_step7u_coffee_shop_preview_maps_to_restaurant_evidence(monkeypatch, tmp_path):
+        pack_path = Path(__file__).resolve().parents[1] / "evidence_packs" / "dallas" / "step7u" / "permitassist-step7u-dallas-only-production-preview-evidence-pack-20260506.json"
+        _enable_pack(monkeypatch, pack_path, mode="dallas_step7u_production_preview")
+        server = _import_server(tmp_path, monkeypatch)
+    
+        result = server.finalize_permit_lookup_result(
+            _base_engine_result(),
+            "coffee shop tenant improvement with limited warming equipment, espresso bar plumbing, no fryer, possible health review, Dallas TX",
+            "Dallas",
+            "TX",
+        )
+    
+        meta = result["_evidence_pack"]
+        assert meta["request_vertical"] == "restaurant_ti"
+>       assert "apply_url" in meta["matched_fields"]
+E       AssertionError: assert 'apply_url' in []
+
+tests/test_step7c_evidence_pack_local_gates.py:217: AssertionError
+----------------------------- Captured stdout call -----------------------------
+[db] Drift fixed in /tmp/pytest-of-boban/pytest-282/test_step7u_coffee_shop_previe0/cache.db: users: added columns free_limit_notice_sent_at, free_limit_email_sent; created missing tables api_keys, beta_events, beta_feedback, checklist_cache, city_watch, onboarding_emails, permit_issued_reminders, rate_limits, referrals, saved_jurisdictions, webhook_integrations
+__ test_step7u_office_negated_restaurant_cues_stay_office_and_warnings_merge ___
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x79be2b631f50>
+tmp_path = PosixPath('/tmp/pytest-of-boban/pytest-282/test_step7u_office_negated_res0')
+
+    def test_step7u_office_negated_restaurant_cues_stay_office_and_warnings_merge(monkeypatch, tmp_path):
+        pack_path = Path(__file__).resolve().parents[1] / "evidence_packs" / "dallas" / "step7u" / "permitassist-step7u-dallas-only-production-preview-evidence-pack-20260506.json"
+        _enable_pack(monkeypatch, pack_path, mode="dallas_step7u_production_preview")
+        server = _import_server(tmp_path, monkeypatch)
+    
+        for job_type in [
+            "office TI without commercial kitchen, no hood, no fryer, no restaurant expansion",
+            "non-restaurant office tenant improvement with conference rooms and no commercial kitchen needed",
+            "professional office TI, not a restaurant, without fryer or griddle",
+        ]:
+            base = _base_engine_result()
+            base["warnings"] = ["Existing upstream warning should survive."]
+            result = server.finalize_permit_lookup_result(base, job_type, "Dallas", "TX")
+            assert result["_evidence_pack"]["request_vertical"] == "office_ti"
+>           assert result["permit_type"] == "Commercial Building Permit"
+                   ^^^^^^^^^^^^^^^^^^^^^
+E           KeyError: 'permit_type'
+
+tests/test_step7c_evidence_pack_local_gates.py:237: KeyError
+----------------------------- Captured stdout call -----------------------------
+[db] Drift fixed in /tmp/pytest-of-boban/pytest-282/test_step7u_office_negated_res0/cache.db: users: added columns free_limit_notice_sent_at, free_limit_email_sent; created missing tables api_keys, beta_events, beta_feedback, checklist_cache, city_watch, onboarding_emails, permit_issued_reminders, rate_limits, referrals, saved_jurisdictions, webhook_integrations
+_________ test_step7u_doctors_office_preview_maps_to_medical_evidence __________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x79be2a985a50>
+tmp_path = PosixPath('/tmp/pytest-of-boban/pytest-282/test_step7u_doctors_office_pre0')
+
+    def test_step7u_doctors_office_preview_maps_to_medical_evidence(monkeypatch, tmp_path):
+        pack_path = Path(__file__).resolve().parents[1] / "evidence_packs" / "dallas" / "step7u" / "permitassist-step7u-dallas-only-production-preview-evidence-pack-20260506.json"
+        _enable_pack(monkeypatch, pack_path, mode="dallas_step7u_production_preview")
+        server = _import_server(tmp_path, monkeypatch)
+    
+        result = server.finalize_permit_lookup_result(
+            _base_engine_result(),
+            "doctor's office TI with two exam rooms and accessibility upgrades",
+            "Dallas",
+            "TX",
+        )
+    
+        assert result["_evidence_pack"]["request_vertical"] == "medical_clinic_ti"
+>       assert result["permit_type"] == "Commercial Building Permit"
+               ^^^^^^^^^^^^^^^^^^^^^
+E       KeyError: 'permit_type'
+
+tests/test_step7c_evidence_pack_local_gates.py:255: KeyError
+----------------------------- Captured stdout call -----------------------------
+[db] Drift fixed in /tmp/pytest-of-boban/pytest-282/test_step7u_doctors_office_pre0/cache.db: users: added columns free_limit_notice_sent_at, free_limit_email_sent; created missing tables api_keys, beta_events, beta_feedback, checklist_cache, city_watch, onboarding_emails, permit_issued_reminders, rate_limits, referrals, saved_jurisdictions, webhook_integrations
+_ test_step7u_preview_http_matrix_surfaces_contractor_fields_and_keeps_scope_gated _
+
+tmp_path = PosixPath('/tmp/pytest-of-boban/pytest-282/test_step7u_preview_http_matri0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x79be3c871910>
+
+    def test_step7u_preview_http_matrix_surfaces_contractor_fields_and_keeps_scope_gated(tmp_path, monkeypatch):
+        pack_path = Path(__file__).resolve().parents[1] / "evidence_packs" / "dallas" / "step7u" / "permitassist-step7u-dallas-only-production-preview-evidence-pack-20260506.json"
+        _enable_pack(monkeypatch, pack_path, mode="dallas_step7u_production_preview")
+        monkeypatch.setenv("PERMITASSIST_EVIDENCE_PACK_PREVIEW_ONLY", "true")
+        monkeypatch.setenv("PERMITASSIST_EVIDENCE_PACK_PREVIEW_HEADER", "X-Sample-Demo")
+        server = _import_server(tmp_path, monkeypatch)
+    
+        def fake_research(*_args, **_kwargs):
+            return copy.deepcopy(_base_engine_result())
+    
+        server.research_permit = fake_research
+        server.is_paid_user = lambda email: True
+        token = server.create_session_token("paid@example.com")
+        cases = [
+            ("restaurant", "restaurant tenant improvement with Type I hood and grease interceptor"),
+            ("restaurant", "coffee shop tenant improvement with espresso bar plumbing and limited warming equipment"),
+            ("restaurant", "second generation restaurant remodel with hood replacement and ANSUL"),
+            ("medical", "medical clinic tenant improvement with exam rooms and hand sinks"),
+            ("medical", "dental clinic TI with x-ray equipment and sterilization room"),
+            ("medical", "physical therapy clinic TI with accessible route upgrades"),
+            ("office", "office tenant improvement with demising partitions and lighting controls"),
+            ("office", "corporate office TI with conference rooms and sprinkler head relocation"),
+            ("office", "tech office TI with server room, plenum cabling, and card readers"),
+        ]
+    
+        with _LiveServer(server.Handler) as live:
+            public_status, public_body = _post_json_response(
+                f"{live.base}/api/permit",
+                {"job_type": cases[0][1], "city": "Dallas", "state": "TX", "job_category": "commercial"},
+                {"X-Session-Token": token},
+            )
+            assert public_status == 200
+            assert "_evidence_pack" not in public_body
+            assert "_approval_timeline_evidence_detail" not in public_body
+    
+            for _vertical, job_type in cases:
+                status, body = _post_json_response(
+                    f"{live.base}/api/permit",
+                    {"job_type": job_type, "city": "Dallas", "state": "TX", "job_category": "commercial"},
+                    {"X-Session-Token": token, "X-Sample-Demo": "1"},
+                )
+                assert status == 200
+                assert body["_evidence_pack"]["enabled"] is True
+                assert body["_evidence_pack"]["cache_bypassed"] is True
+>               assert body["apply_url"] == "https://aca-prod.accela.com/DALLASTX/Default.aspx"
+E               AssertionError: assert None == 'https://aca-prod.accela.com/DALLASTX/Default.aspx'
+
+tests/test_step7c_evidence_pack_local_gates.py:302: AssertionError
+----------------------------- Captured stdout call -----------------------------
+[db] Drift fixed in /tmp/pytest-of-boban/pytest-282/test_step7u_preview_http_matri0/cache.db: users: added columns free_limit_notice_sent_at, free_limit_email_sent; created missing tables api_keys, beta_events, beta_feedback, checklist_cache, city_watch, onboarding_emails, permit_issued_reminders, rate_limits, referrals, saved_jurisdictions, webhook_integrations
+[permit] restaurant tenant improvement with Type I hood and grease interceptor in Dallas, TX — user=paid@example.com plan=paid ip=127.0.0.1 used=0
+[127.0.0.1] POST /api/permit HTTP/1.1 200
+[permit] restaurant tenant improvement with Type I hood and grease interceptor in Dallas, TX — user=paid@example.com plan=paid ip=127.0.0.1 used=0
+[127.0.0.1] POST /api/permit HTTP/1.1 200
+_ test_step7u_office_negations_do_not_surface_restaurant_companions_in_http_preview _
+
+tmp_path = PosixPath('/tmp/pytest-of-boban/pytest-282/test_step7u_office_negations_d0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x79be2b378ad0>
+
+    def test_step7u_office_negations_do_not_surface_restaurant_companions_in_http_preview(tmp_path, monkeypatch):
+        repo_root = str(Path(__file__).resolve().parents[1])
+        if repo_root not in sys.path:
+            sys.path.insert(0, repo_root)
+        from api import research_engine as engine
+        from api import evidence_pack_runtime
+    
+        assert evidence_pack_runtime._vertical_for_job(
+            "commercial office tenant improvement, no restaurant, no food service; demising walls and data cabling"
+        ) == "office_ti"
+    
+        pack_path = Path(__file__).resolve().parents[1] / "evidence_packs" / "dallas" / "step7u" / "permitassist-step7u-dallas-only-production-preview-evidence-pack-20260506.json"
+        _enable_pack(monkeypatch, pack_path, mode="dallas_step7u_production_preview")
+        monkeypatch.setenv("PERMITASSIST_EVIDENCE_PACK_PREVIEW_ONLY", "true")
+        monkeypatch.setenv("PERMITASSIST_EVIDENCE_PACK_PREVIEW_HEADER", "X-Sample-Demo")
+        server = _import_server(tmp_path, monkeypatch)
+    
+        def fake_research(job_type, *_args, **_kwargs):
+            classified = engine.classify_scope_required_permits(job_type)
+            result = _base_engine_result()
+            result.update(classified or {})
+            return result
+    
+        server.research_permit = fake_research
+        server.is_paid_user = lambda email: True
+        token = server.create_session_token("paid@example.com")
+        scope = (
+            "commercial office tenant improvement, non-restaurant office suite, no restaurant, no food service, "
+            "no commercial kitchen, no Type I hood, no fryer, no ANSUL, no grease interceptor; demising walls, "
+            "conference rooms, lighting, HVAC diffuser relocation, data cabling, card reader access control, "
+            "sprinkler head relocation"
+        )
+    
+        with _LiveServer(server.Handler) as live:
+            status, body = _post_json_response(
+                f"{live.base}/api/permit",
+                {"job_type": scope, "city": "Dallas", "state": "TX", "job_category": "commercial"},
+                {"X-Session-Token": token, "X-Sample-Demo": "1"},
+            )
+    
+        assert status == 200
+        assert body["_evidence_pack"]["request_vertical"] == "office_ti"
+>       assert body["permit_type"] == "Commercial Building Permit"
+               ^^^^^^^^^^^^^^^^^^^
+E       KeyError: 'permit_type'
+
+tests/test_step7c_evidence_pack_local_gates.py:363: KeyError
+----------------------------- Captured stdout call -----------------------------
+[db] Drift fixed in /tmp/pytest-of-boban/pytest-282/test_step7u_office_negations_d0/cache.db: users: added columns free_limit_notice_sent_at, free_limit_email_sent; created missing tables api_keys, beta_events, beta_feedback, checklist_cache, city_watch, onboarding_emails, permit_issued_reminders, rate_limits, referrals, saved_jurisdictions, webhook_integrations
+[permit] commercial office tenant improvement, non-restaurant office suite, no restaurant, no food service, no commercial kitchen, no Type I hood, no fryer, no ANSUL, no grease interceptor; demising walls, conference rooms, lighting, HVAC diffuser relocation, data cabling, card reader access control, sprinkler head relocation in Dallas, TX — user=paid@example.com plan=paid ip=127.0.0.1 used=0
+[127.0.0.1] POST /api/permit HTTP/1.1 200
+=========================== short test summary info ============================
+FAILED tests/test_solar_mep_controlled_activation_runtime.py::test_solar_mep_promotion_identity_is_pinned_to_checked_in_pack
+FAILED tests/test_solar_mep_controlled_activation_runtime.py::test_solar_mep_positive_solar_pv_match
+FAILED tests/test_solar_mep_controlled_activation_runtime.py::test_solar_mep_positive_battery_storage_match
+FAILED tests/test_solar_mep_controlled_activation_runtime.py::test_solar_mep_positive_commercial_mechanical_match
+FAILED tests/test_solar_mep_controlled_activation_runtime.py::test_solar_mep_positive_commercial_electrical_match
+FAILED tests/test_solar_mep_controlled_activation_runtime.py::test_solar_mep_positive_commercial_plumbing_match
+FAILED tests/test_solar_mep_controlled_activation_runtime.py::test_solar_mep_positive_cross_trade_commercial_mep_match
+FAILED tests/test_solar_mep_controlled_activation_runtime.py::test_solar_mep_unsupported_city_state_fail_closed
+FAILED tests/test_solar_mep_controlled_activation_runtime.py::test_solar_mep_preview_header_route_gating_works
+FAILED tests/test_solar_mep_controlled_activation_runtime.py::test_solar_mep_dallas_step7u_preview_still_works
+FAILED tests/test_step7c_evidence_pack_local_gates.py::test_step7m_dallas_only_staging_pack_is_supported_by_runtime_contract
+FAILED tests/test_step7c_evidence_pack_local_gates.py::test_step7u_production_preview_pack_requires_dedicated_mode
+FAILED tests/test_step7c_evidence_pack_local_gates.py::test_step7u_production_preview_response_surfaces_contractor_safe_fields
+FAILED tests/test_step7c_evidence_pack_local_gates.py::test_step7u_coffee_shop_preview_maps_to_restaurant_evidence
+FAILED tests/test_step7c_evidence_pack_local_gates.py::test_step7u_office_negated_restaurant_cues_stay_office_and_warnings_merge
+FAILED tests/test_step7c_evidence_pack_local_gates.py::test_step7u_doctors_office_preview_maps_to_medical_evidence
+FAILED tests/test_step7c_evidence_pack_local_gates.py::test_step7u_preview_http_matrix_surfaces_contractor_fields_and_keeps_scope_gated
+FAILED tests/test_step7c_evidence_pack_local_gates.py::test_step7u_office_negations_do_not_surface_restaurant_companions_in_http_preview
+18 failed, 1130 passed, 47 skipped in 246.93s (0:04:06)

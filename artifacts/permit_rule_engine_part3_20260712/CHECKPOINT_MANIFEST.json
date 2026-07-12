@@ -1,0 +1,233 @@
+{
+  "branch": "work/permit-rule-engine-part3-20260712",
+  "checkpoint_tag": "permit-rule-engine-part3-20260712",
+  "contract_amendment_commit": "849be24",
+  "files": {
+    "api/permit_rule_engine.py": {
+      "bytes": 114829,
+      "sha256": "4e6a862aeeec6540f95304b65e45451723b4c3112bf156c1096d03f240c81c55"
+    },
+    "artifacts/permit_rule_engine_4_session_plan_20260711/LOCKED_FOUR_SESSION_PLAN.md": {
+      "bytes": 15849,
+      "sha256": "954dc7c34e7976122bbbef557ab31f0849ebd2facd65a18fce54cff31e521d47"
+    },
+    "artifacts/permit_rule_engine_part3_20260712/CONTRACT_AMENDMENT_1.md": {
+      "bytes": 923,
+      "sha256": "ccdbf59a138b2974519d3a8bcda3b914d48b15ff540a168f0e87caf417dc8cbd"
+    },
+    "artifacts/permit_rule_engine_part3_20260712/FINAL_GATE_SUMMARY.json": {
+      "bytes": 1903,
+      "sha256": "36b9d4f3691dde2fd1855eaf0792dc6bf0e6091c354a31c2fbde91093bbaab66"
+    },
+    "artifacts/permit_rule_engine_part3_20260712/PART3_CLOSEOUT.md": {
+      "bytes": 4322,
+      "sha256": "f626efdfe9641631684c230dd5942e5699f12516a1ff2721143a0bb078491be8"
+    },
+    "artifacts/permit_rule_engine_part3_20260712/PART4_HANDOFF.md": {
+      "bytes": 4190,
+      "sha256": "5e9d73b6c868fa1ace5429dd7c546b9ca81ada1dd41d138bde4c5def3acf7944"
+    },
+    "artifacts/permit_rule_engine_part3_20260712/gates/contract_amendment_1_red_status.json": {
+      "bytes": 247,
+      "sha256": "abdf6f23952923bf432582dce521c316d29c9eabfced8004424cceede69d3f48"
+    },
+    "artifacts/permit_rule_engine_part3_20260712/gates/determinism_report.json": {
+      "bytes": 1804,
+      "sha256": "b968d6587db57005445b5e57d297435eba74fa5142ac86604b73a8575d512549"
+    },
+    "artifacts/permit_rule_engine_part3_20260712/gates/pre_opus_baseline_comparison.json": {
+      "bytes": 2586,
+      "sha256": "b268dd8d96fb9d0af096bfc8b4d5cb8678a4fd505017fb8ed5e925bd61ccba67"
+    },
+    "artifacts/permit_rule_engine_part3_20260712/gates/pre_opus_focused_tests.txt": {
+      "bytes": 99,
+      "sha256": "38c47bd2704706a047a7b53de6e576fe5b061963224d3ff68009f2b01a11f04f"
+    },
+    "artifacts/permit_rule_engine_part3_20260712/gates/pre_opus_full_suite.txt": {
+      "bytes": 39834,
+      "sha256": "a0835c424db119dcbe9f490eb41bd20010ae51a71236d88b9762c5d5a7d970a3"
+    },
+    "artifacts/permit_rule_engine_part3_20260712/gates/pre_opus_full_suite_status.txt": {
+      "bytes": 14,
+      "sha256": "25d0f7d25acb9996e3d5a451dde5907c6b896419eac5fbd433d5a9afb98847b3"
+    },
+    "artifacts/permit_rule_engine_part3_20260712/gates/pre_opus_secret_contract_tests.txt": {
+      "bytes": 98,
+      "sha256": "58e7a3f0a73bf799298880f12d89f07e3a060906e7d16ad36b1b29806bbb580b"
+    },
+    "artifacts/permit_rule_engine_part3_20260712/gates/pre_opus_secret_scan.json": {
+      "bytes": 280,
+      "sha256": "e982e376c27e5335cfacc901f48ef9a0de1334443dff9f0656a16ce41df11925"
+    },
+    "artifacts/permit_rule_engine_part3_20260712/gates/pre_opus_static_checks.txt": {
+      "bytes": 336,
+      "sha256": "351b7dd71075aceb592b34f7d309f61ab05664c675f68aeaed9adb80b919ae5e"
+    },
+    "artifacts/permit_rule_engine_part3_20260712/gates/red_contract_before_behavior.log": {
+      "bytes": 12918,
+      "sha256": "1bc2406017ef27c38159eb177acd81ae2005e96aae47484caaacf17c7aedc56b"
+    },
+    "artifacts/permit_rule_engine_part3_20260712/gates/red_contract_status.json": {
+      "bytes": 143,
+      "sha256": "a7cd5f9bed685ba74cc7033b73d15f4f3ebdad59873c7aafce625d9bcfea0dc5"
+    },
+    "artifacts/permit_rule_engine_part3_20260712/generated_run1/canary_results.json": {
+      "bytes": 14591,
+      "sha256": "c977f96aca97d3d220ce83daa60a32200258ec4a3f0a7c8233dd7f941dfdc28f"
+    },
+    "artifacts/permit_rule_engine_part3_20260712/generated_run1/customer_projection_audit.json": {
+      "bytes": 70126,
+      "sha256": "8d51d89b7a9edd17388285a22a008b7a7137f8085d647032a6405513c6f57b54"
+    },
+    "artifacts/permit_rule_engine_part3_20260712/generated_run1/flag_off_parity.json": {
+      "bytes": 189,
+      "sha256": "720365e705c3e1983f5cb0ab6eaf600ea5fe27d4812d170fb695e6c86de932e5"
+    },
+    "artifacts/permit_rule_engine_part3_20260712/generated_run1/manifest.json": {
+      "bytes": 1342,
+      "sha256": "6b2760b755116a1f18edc90b3a06de286ce9d7ad053234f7210372931307d871"
+    },
+    "artifacts/permit_rule_engine_part3_20260712/generated_run1/migration_seeds.jsonl": {
+      "bytes": 1358798,
+      "sha256": "5f41a8d8d8feff07094829b56a3cdfbf8609a5e9be695bd7475c338101b65be8"
+    },
+    "artifacts/permit_rule_engine_part3_20260712/generated_run1/ontology_predicates_templates.json": {
+      "bytes": 18674,
+      "sha256": "5234a9152105b8378afae5d884b7899c8a66c957a6901272a496f7293f9a2f5e"
+    },
+    "artifacts/permit_rule_engine_part3_20260712/generated_run1/preactivation_family_audit.json": {
+      "bytes": 186,
+      "sha256": "e4f3411fe35183486587df6216d8044d4d4f377a3d331c60f788d66f5857448c"
+    },
+    "artifacts/permit_rule_engine_part3_20260712/generated_run1/reverification.jsonl": {
+      "bytes": 587526,
+      "sha256": "9c8e1ada361b31b1dea170a84ee9042f2921733ce59672fdc37099b02edd8479"
+    },
+    "artifacts/permit_rule_engine_part3_20260712/generated_run1/seeded_random_and_counterfactual_results.json": {
+      "bytes": 35471,
+      "sha256": "3a3f3fab799b3a0762ad88d4d58e17c0e5fc4698efd3b7ab1e850f72e5aa6784"
+    },
+    "artifacts/permit_rule_engine_part3_20260712/generated_run1/summary.json": {
+      "bytes": 2777,
+      "sha256": "9d79c170a92a39e3a5a6df921c3de408bb729a74fd95616d5be8f8f8e0097ec8"
+    },
+    "artifacts/permit_rule_engine_part3_20260712/generated_run2/canary_results.json": {
+      "bytes": 14591,
+      "sha256": "c977f96aca97d3d220ce83daa60a32200258ec4a3f0a7c8233dd7f941dfdc28f"
+    },
+    "artifacts/permit_rule_engine_part3_20260712/generated_run2/customer_projection_audit.json": {
+      "bytes": 70126,
+      "sha256": "8d51d89b7a9edd17388285a22a008b7a7137f8085d647032a6405513c6f57b54"
+    },
+    "artifacts/permit_rule_engine_part3_20260712/generated_run2/flag_off_parity.json": {
+      "bytes": 189,
+      "sha256": "720365e705c3e1983f5cb0ab6eaf600ea5fe27d4812d170fb695e6c86de932e5"
+    },
+    "artifacts/permit_rule_engine_part3_20260712/generated_run2/manifest.json": {
+      "bytes": 1342,
+      "sha256": "6b2760b755116a1f18edc90b3a06de286ce9d7ad053234f7210372931307d871"
+    },
+    "artifacts/permit_rule_engine_part3_20260712/generated_run2/migration_seeds.jsonl": {
+      "bytes": 1358798,
+      "sha256": "5f41a8d8d8feff07094829b56a3cdfbf8609a5e9be695bd7475c338101b65be8"
+    },
+    "artifacts/permit_rule_engine_part3_20260712/generated_run2/ontology_predicates_templates.json": {
+      "bytes": 18674,
+      "sha256": "5234a9152105b8378afae5d884b7899c8a66c957a6901272a496f7293f9a2f5e"
+    },
+    "artifacts/permit_rule_engine_part3_20260712/generated_run2/preactivation_family_audit.json": {
+      "bytes": 186,
+      "sha256": "e4f3411fe35183486587df6216d8044d4d4f377a3d331c60f788d66f5857448c"
+    },
+    "artifacts/permit_rule_engine_part3_20260712/generated_run2/reverification.jsonl": {
+      "bytes": 587526,
+      "sha256": "9c8e1ada361b31b1dea170a84ee9042f2921733ce59672fdc37099b02edd8479"
+    },
+    "artifacts/permit_rule_engine_part3_20260712/generated_run2/seeded_random_and_counterfactual_results.json": {
+      "bytes": 35471,
+      "sha256": "3a3f3fab799b3a0762ad88d4d58e17c0e5fc4698efd3b7ab1e850f72e5aa6784"
+    },
+    "artifacts/permit_rule_engine_part3_20260712/generated_run2/summary.json": {
+      "bytes": 2777,
+      "sha256": "9d79c170a92a39e3a5a6df921c3de408bb729a74fd95616d5be8f8f8e0097ec8"
+    },
+    "artifacts/permit_rule_engine_part3_20260712/review/final/exact_candidate_diff.patch": {
+      "bytes": 108653,
+      "sha256": "e8a5cb897572285335edba9da66fe01d207278b4f347f99f406f3dc83d419810"
+    },
+    "artifacts/permit_rule_engine_part3_20260712/review/final/opus_final_review.txt": {
+      "bytes": 7494,
+      "sha256": "a7ed3b2a4c721be1f5d223ba66b5d2b1c60c8cf359965a58de3a87215820e5a8"
+    },
+    "artifacts/permit_rule_engine_part3_20260712/review/final/review_prompt.md": {
+      "bytes": 5342,
+      "sha256": "af0ebd28bfc949c2e00771184301729d915e5c331f8c90400fec0f0625e8344c"
+    },
+    "artifacts/permit_rule_engine_part3_20260712/review/superseded_41f8c36/exact_candidate_diff.patch": {
+      "bytes": 107979,
+      "sha256": "8c107e9a018dc50863f7ced6e1846d976d06fb5421ce7031e8eb0ed3c7f2c7e1"
+    },
+    "artifacts/permit_rule_engine_part3_20260712/review/superseded_41f8c36/opus_final_review.txt": {
+      "bytes": 7818,
+      "sha256": "af73b689ee3bf308ceb7dc884eec2377aefcb3e7c7324b6861a6a9f83040b3a5"
+    },
+    "artifacts/permit_rule_engine_part3_20260712/review/superseded_41f8c36/review_prompt.md": {
+      "bytes": 5609,
+      "sha256": "95bf14de183aefcffadaca9c294a65c6ae2d7ecd03302822338bd064418296f4"
+    },
+    "scripts/generate_permit_rule_engine_part3_evidence.py": {
+      "bytes": 20853,
+      "sha256": "504061548ffad761c21597d87c7388d62d06951926833cb5e934e9f499683c1d"
+    },
+    "tests/fixtures/permit_rule_engine_part3_red_no_neuter.json": {
+      "bytes": 4797,
+      "sha256": "22a26a1bd816c3bd590c780fc1ea7c24631ad250222acd0965916723f8bc486f"
+    },
+    "tests/fixtures/permit_rule_engine_part3_red_no_neuter_manifest.json": {
+      "bytes": 495,
+      "sha256": "7c54b231c62c0c03d78ff9e51f070b39f138928df7abb472d96d9e1042fa7283"
+    },
+    "tests/test_permit_rule_engine_part3.py": {
+      "bytes": 13242,
+      "sha256": "37e1f3b8f3e2005acd13e981e295482dc07b781d857e9b6143ee3bdad5275142"
+    },
+    "tests/test_permit_rule_engine_part3_integration.py": {
+      "bytes": 8368,
+      "sha256": "7b4ab48bfbeaf52ce93d9b946299b166479780f8586faee66685a556933fab36"
+    }
+  },
+  "frozen_red_commit": "8edc8cd",
+  "gates": {
+    "baseline_failures": 18,
+    "customer_projection_violations": 0,
+    "determinism_byte_identical": true,
+    "exact_complete": 36,
+    "exact_failure_set_match": true,
+    "exact_partial": 2082,
+    "fail_closed": 34,
+    "final_opus_blockers": 0,
+    "final_opus_verdict": "APPROVE_CHECKPOINT",
+    "focused_passed": 53,
+    "full_suite_passed": 1130,
+    "full_suite_skipped": 47,
+    "jurisdiction_hold": 10,
+    "legacy_cells": 2162,
+    "migrated_seeds": 2162,
+    "new_failures": 0,
+    "reverified_seeds": 2162,
+    "secret_scan_hits": 0
+  },
+  "manifest_self_hash_excluded": true,
+  "production_boundary": {
+    "activation": "disabled_by_default_exact_allowlist_only",
+    "deployments": 0,
+    "paid_live_runs": 0,
+    "production_mutations": 0,
+    "pushes": 0
+  },
+  "schema_version": "permitassist.rule-engine-part3-checkpoint-manifest.v1",
+  "sealed_part1_tag": "permit-rule-engine-part1-20260712",
+  "sealed_part2_commit": "c3a05b10eb3876d15e97e1484ecdd84b616e20cb",
+  "sealed_part2_tag": "permit-rule-engine-part2-20260712",
+  "source_candidate_commit": "403ef1543076da6097ccf134c90ef43c005f6532"
+}
