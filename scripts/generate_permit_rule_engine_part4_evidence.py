@@ -30,7 +30,7 @@ from api.v24_decision_cells import V24ResolutionStatus, resolve_v24_cell  # noqa
 
 SCHEMA_VERSION = "permitassist.rule-engine-part4-evidence.v1"
 POISON_BINARY = "POISON_LEGACY_BINARY"
-POISON_SECRET = "POISON_INTERNAL_SECRET"
+POISON_MARKER = "POISON_INTERNAL_SECRET"
 CANARIES = (
     ("Anchorage", "AK", "commercial tenant improvement", "commercial"),
     ("Albertville", "AL", "residential remodel", "residential"),
@@ -87,8 +87,8 @@ def build_wrapped(
         "permit_required": False,
         "permit_verdict": "NO",
         "permit_name": POISON_BINARY,
-        "summary": POISON_SECRET,
-        "_internal_secret": POISON_SECRET,
+        "summary": POISON_MARKER,
+        "_internal_secret": POISON_MARKER,
     }
     wrapped = pre.attach_core_decision_envelope(legacy, envelope)
     sealed = json.loads(envelope.sealed_projection.payload_json)
@@ -112,7 +112,7 @@ def tamper(wrapped: dict[str, Any], case: str) -> dict[str, Any]:
 
 def assert_no_poison(value: Any) -> None:
     text = canonical_json(value)
-    if POISON_BINARY in text or POISON_SECRET in text:
+    if POISON_BINARY in text or POISON_MARKER in text:
         raise AssertionError("legacy poison crossed customer boundary")
 
 

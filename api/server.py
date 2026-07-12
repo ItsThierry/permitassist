@@ -7400,10 +7400,6 @@ def get_share(slug: str) -> dict | None:
             "job_type": job_type,
             "city": city,
             "state": state,
-            "_sealed_public_projection_verified": bool(
-                isinstance(stored, dict)
-                and stored.get("schema_version") == SHARED_RESULT_SCHEMA_VERSION
-            ),
         }
     except Exception as e:
         print(f"[share] Read error: {e}")

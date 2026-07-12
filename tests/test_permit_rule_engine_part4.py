@@ -19,7 +19,7 @@ from api.v24_decision_cells import V24ResolutionStatus, load_v24_index, resolve_
 FIXTURE_PATH = Path(__file__).parent / "fixtures" / "permit_rule_engine_part4_contract.json"
 MANIFEST_PATH = Path(__file__).parent / "fixtures" / "permit_rule_engine_part4_contract_manifest.json"
 POISON_BINARY = "POISON_LEGACY_BINARY"
-POISON_SECRET = "POISON_INTERNAL_SECRET"
+POISON_MARKER = "POISON_INTERNAL_SECRET"
 
 
 def _fixture() -> dict:
@@ -52,8 +52,8 @@ def _build_wrapped(
         "permit_required": False,
         "permit_verdict": "NO",
         "permit_name": POISON_BINARY,
-        "summary": POISON_SECRET,
-        "_internal_secret": POISON_SECRET,
+        "summary": POISON_MARKER,
+        "_internal_secret": POISON_MARKER,
     }
     wrapped = pre.attach_core_decision_envelope(legacy, envelope)
     sealed = json.loads(envelope.sealed_projection.payload_json)
@@ -78,7 +78,7 @@ def _tamper(wrapped: dict, case: str) -> dict:
 def _assert_no_poison(value: object) -> None:
     rendered = json.dumps(value, sort_keys=True, default=str)
     assert POISON_BINARY not in rendered
-    assert POISON_SECRET not in rendered
+    assert POISON_MARKER not in rendered
 
 
 def test_part4_frozen_contract_hashes_match_manifest() -> None:
@@ -311,7 +311,7 @@ def test_part4_share_storage_hash_seals_and_preserves_exact_projection(
     assert share["data"] == sealed
     html = server.render_share_page(share)
     assert POISON_BINARY not in html
-    assert POISON_SECRET not in html
+    assert POISON_MARKER not in html
     soup = BeautifulSoup(html, "html.parser")
     payload_node = soup.find("script", {"id": "report-data"})
     assert payload_node is not None
