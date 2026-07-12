@@ -1,0 +1,9 @@
+{
+  "schema_version": "permitassist.rule-engine-part4-frozen-contract-manifest.v1",
+  "frozen_before_behavior_change": true,
+  "base_checkpoint_sha": "44bbaf887be8a994e3d61c4845dc7eb5a351deef",
+  "sha256": {
+    "tests/test_permit_rule_engine_part4.py": "2f2cb304b89cc41f2416af0d0df66528a044c6c4d5e5604e4c8f20205730e7a1",
+    "tests/fixtures/permit_rule_engine_part4_contract.json": "3eb8e0d9bcc14f9ea1173749bdfa1729455c32b38ae4952f6b81044f9611c42a"
+  }
+}

@@ -1,0 +1,52 @@
+{
+  "schema_version": "permit-rule-engine-part4-rollback-v1",
+  "recorded_at_utc": "2026-07-12T20:34:42Z",
+  "production_checkpoint": {
+    "sha": "facea233ac4f821304288f14137e472e92a6fcfc",
+    "tree_sha": "377d78ef28a5038c649c975fe0370fd57d40e414",
+    "subject": "Pin PermitAssist AI to GPT-5.6 Luna only",
+    "origin_master_at_freeze": "facea233ac4f821304288f14137e472e92a6fcfc",
+    "railway_project": "alluring-benevolence",
+    "railway_service": "permitassist",
+    "railway_environment": "production",
+    "railway_deployment_id": "812af8e1-afe7-4dba-955b-90bd8106fe65",
+    "railway_status": "SUCCESS",
+    "railway_commit_sha": "facea233ac4f821304288f14137e472e92a6fcfc"
+  },
+  "local_checkpoint": {
+    "annotated_tag": "permit-rule-engine-part4-rollback-20260712",
+    "peeled_sha": "facea233ac4f821304288f14137e472e92a6fcfc",
+    "detached_worktree": "/home/boban/projects/permitassist-rule-engine-part4-rollback-20260712",
+    "verified_clean": true
+  },
+  "candidate_lineage": {
+    "part3_base_tag": "permit-rule-engine-part3-20260712",
+    "part3_base_sha": "44bbaf887be8a994e3d61c4845dc7eb5a351deef",
+    "rollback_is_ancestor_of_part3": true,
+    "sealed_part4_candidate_sha": null
+  },
+  "restore_strategy": {
+    "type": "forward rollback commit restoring the exact checkpoint tree; never rewrite history",
+    "approval_required": true,
+    "commands_after_deploy_if_rollback_is_authorized": [
+      "git fetch origin --prune",
+      "git worktree add -b rollback/permit-rule-engine-part4-20260712 /home/boban/projects/permitassist-rule-engine-part4-forward-rollback origin/master",
+      "git -C /home/boban/projects/permitassist-rule-engine-part4-forward-rollback restore --source=facea233ac4f821304288f14137e472e92a6fcfc --staged --worktree -- .",
+      "test \"$(git -C /home/boban/projects/permitassist-rule-engine-part4-forward-rollback write-tree)\" = \"377d78ef28a5038c649c975fe0370fd57d40e414\"",
+      "git -C /home/boban/projects/permitassist-rule-engine-part4-forward-rollback commit -m 'rollback: restore pre-Part-4 production checkpoint'",
+      "git -C /home/boban/projects/permitassist-rule-engine-part4-forward-rollback push origin HEAD:master"
+    ],
+    "post_restore_proof": [
+      "Railway production deployment metadata reports the forward rollback commit and SUCCESS",
+      "deployed source tree equals 377d78ef28a5038c649c975fe0370fd57d40e414",
+      "production /health succeeds",
+      "production logs have no startup/runtime errors",
+      "customer API and rendered-browser rollback smokes pass"
+    ]
+  },
+  "boundaries": [
+    "This record does not authorize a rollback, push, deployment, or production mutation.",
+    "A Railway redeploy of an old deployment is not accepted as exact source rollback proof unless its source tree and deployment SHA are independently verified.",
+    "Volume/database rollback is outside this code-only restore path and must be separately authorized if Part 4 introduces any data migration; Part 4 is expected to introduce none."
+  ]
+}

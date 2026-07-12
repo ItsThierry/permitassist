@@ -1,0 +1,284 @@
+...FFFFFF..FFF                                                           [100%]
+=================================== FAILURES ===================================
+_ test_part4_tampered_active_payload_fails_closed_without_legacy_fallback[sealed_projection_payload_json] _
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7c7bbe1cf310>
+tamper_case = 'sealed_projection_payload_json'
+
+    @pytest.mark.parametrize("tamper_case", _fixture()["tamper_cases"])
+    def test_part4_tampered_active_payload_fails_closed_without_legacy_fallback(
+        monkeypatch: pytest.MonkeyPatch,
+        tamper_case: str,
+    ) -> None:
+        wrapped, _sealed = _build_wrapped(
+            monkeypatch,
+            city="Buckeye",
+            state="AZ",
+            job_type="residential reroof",
+            job_category="residential",
+        )
+        broken = _tamper(wrapped, tamper_case)
+>       projection = pre.project_core_customer_boundary(
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+            broken,
+            job_type="residential reroof",
+            city="Buckeye",
+            state="AZ",
+            job_category="residential",
+        )
+E       AttributeError: module 'api.permit_rule_engine' has no attribute 'project_core_customer_boundary'
+
+tests/test_permit_rule_engine_part4.py:147: AttributeError
+_ test_part4_tampered_active_payload_fails_closed_without_legacy_fallback[sealed_projection_payload_sha256] _
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7c7bbe1cfcd0>
+tamper_case = 'sealed_projection_payload_sha256'
+
+    @pytest.mark.parametrize("tamper_case", _fixture()["tamper_cases"])
+    def test_part4_tampered_active_payload_fails_closed_without_legacy_fallback(
+        monkeypatch: pytest.MonkeyPatch,
+        tamper_case: str,
+    ) -> None:
+        wrapped, _sealed = _build_wrapped(
+            monkeypatch,
+            city="Buckeye",
+            state="AZ",
+            job_type="residential reroof",
+            job_category="residential",
+        )
+        broken = _tamper(wrapped, tamper_case)
+>       projection = pre.project_core_customer_boundary(
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+            broken,
+            job_type="residential reroof",
+            city="Buckeye",
+            state="AZ",
+            job_category="residential",
+        )
+E       AttributeError: module 'api.permit_rule_engine' has no attribute 'project_core_customer_boundary'
+
+tests/test_permit_rule_engine_part4.py:147: AttributeError
+_ test_part4_tampered_active_payload_fails_closed_without_legacy_fallback[envelope_sha256] _
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7c7bbbe71110>
+tamper_case = 'envelope_sha256'
+
+    @pytest.mark.parametrize("tamper_case", _fixture()["tamper_cases"])
+    def test_part4_tampered_active_payload_fails_closed_without_legacy_fallback(
+        monkeypatch: pytest.MonkeyPatch,
+        tamper_case: str,
+    ) -> None:
+        wrapped, _sealed = _build_wrapped(
+            monkeypatch,
+            city="Buckeye",
+            state="AZ",
+            job_type="residential reroof",
+            job_category="residential",
+        )
+        broken = _tamper(wrapped, tamper_case)
+>       projection = pre.project_core_customer_boundary(
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+            broken,
+            job_type="residential reroof",
+            city="Buckeye",
+            state="AZ",
+            job_category="residential",
+        )
+E       AttributeError: module 'api.permit_rule_engine' has no attribute 'project_core_customer_boundary'
+
+tests/test_permit_rule_engine_part4.py:147: AttributeError
+_ test_part4_tampered_active_payload_fails_closed_without_legacy_fallback[cache_schema_version] _
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7c7bbbe71510>
+tamper_case = 'cache_schema_version'
+
+    @pytest.mark.parametrize("tamper_case", _fixture()["tamper_cases"])
+    def test_part4_tampered_active_payload_fails_closed_without_legacy_fallback(
+        monkeypatch: pytest.MonkeyPatch,
+        tamper_case: str,
+    ) -> None:
+        wrapped, _sealed = _build_wrapped(
+            monkeypatch,
+            city="Buckeye",
+            state="AZ",
+            job_type="residential reroof",
+            job_category="residential",
+        )
+        broken = _tamper(wrapped, tamper_case)
+>       projection = pre.project_core_customer_boundary(
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+            broken,
+            job_type="residential reroof",
+            city="Buckeye",
+            state="AZ",
+            job_category="residential",
+        )
+E       AttributeError: module 'api.permit_rule_engine' has no attribute 'project_core_customer_boundary'
+
+tests/test_permit_rule_engine_part4.py:147: AttributeError
+_____________ test_part4_valid_active_payload_stays_exactly_sealed _____________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7c7bb570d050>
+
+    def test_part4_valid_active_payload_stays_exactly_sealed(monkeypatch: pytest.MonkeyPatch) -> None:
+        wrapped, sealed = _build_wrapped(
+            monkeypatch,
+            city="Buckeye",
+            state="AZ",
+            job_type="residential reroof",
+            job_category="residential",
+        )
+>       projection = pre.project_core_customer_boundary(
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+            wrapped,
+            job_type="residential reroof",
+            city="Buckeye",
+            state="AZ",
+            job_category="residential",
+        )
+E       AttributeError: module 'api.permit_rule_engine' has no attribute 'project_core_customer_boundary'
+
+tests/test_permit_rule_engine_part4.py:179: AttributeError
+________ test_part4_tampered_w4_keeps_all_ten_lanes_visible_as_abstain _________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7c7bbbe6ee90>
+
+    def test_part4_tampered_w4_keeps_all_ten_lanes_visible_as_abstain(monkeypatch: pytest.MonkeyPatch) -> None:
+        wrapped, _sealed = _build_wrapped(
+            monkeypatch,
+            city="Anchorage",
+            state="AK",
+            job_type="commercial tenant improvement",
+            job_category="commercial",
+        )
+>       projection = pre.project_core_customer_boundary(
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+            _tamper(wrapped, "sealed_projection_payload_json"),
+            job_type="commercial tenant improvement",
+            city="Anchorage",
+            state="AK",
+            job_category="commercial",
+        )
+E       AttributeError: module 'api.permit_rule_engine' has no attribute 'project_core_customer_boundary'
+
+tests/test_permit_rule_engine_part4.py:198: AttributeError
+_ test_part4_server_surfaces_use_one_safe_projection_for_tampered_active_payload _
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7c7bb57525d0>
+tmp_path = PosixPath('/tmp/pytest-of-boban/pytest-286/test_part4_server_surfaces_use0')
+
+    def test_part4_server_surfaces_use_one_safe_projection_for_tampered_active_payload(
+        monkeypatch: pytest.MonkeyPatch,
+        tmp_path: Path,
+    ) -> None:
+        from api import server
+    
+        server.CACHE_DB = str(tmp_path / "part4.db")
+        server.DATA_DIR = str(tmp_path)
+        server.init_db()
+        wrapped, _sealed = _build_wrapped(
+            monkeypatch,
+            city="Anchorage",
+            state="AK",
+            job_type="commercial tenant improvement",
+            job_category="commercial",
+        )
+        broken = _tamper(wrapped, "sealed_projection_payload_json")
+>       expected = pre.project_core_customer_boundary(
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+            broken,
+            job_type="commercial tenant improvement",
+            city="Anchorage",
+            state="AK",
+            job_category="commercial",
+        )
+E       AttributeError: module 'api.permit_rule_engine' has no attribute 'project_core_customer_boundary'
+
+tests/test_permit_rule_engine_part4.py:255: AttributeError
+----------------------------- Captured stdout call -----------------------------
+⚠️  [SECURITY] SESSION_SECRET not set in env — generated ephemeral secret.
+   Sessions will be invalidated on restart. Set SESSION_SECRET in Railway env!
+[sentry] backend enabled
+[db] Drift fixed in /tmp/pytest-of-boban/pytest-286/test_part4_server_surfaces_use0/part4.db: users: added columns free_limit_notice_sent_at, free_limit_email_sent; created missing tables api_keys, beta_events, beta_feedback, checklist_cache, city_watch, onboarding_emails, permit_issued_reminders, rate_limits, referrals, saved_jurisdictions, webhook_integrations
+______ test_part4_share_storage_hash_seals_and_preserves_exact_projection ______
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7c7bb8646dd0>
+tmp_path = PosixPath('/tmp/pytest-of-boban/pytest-286/test_part4_share_storage_hash_0')
+
+    def test_part4_share_storage_hash_seals_and_preserves_exact_projection(
+        monkeypatch: pytest.MonkeyPatch,
+        tmp_path: Path,
+    ) -> None:
+        from api import server
+    
+        server.CACHE_DB = str(tmp_path / "part4-share.db")
+        server.DATA_DIR = str(tmp_path)
+        server.init_db()
+        wrapped, sealed = _build_wrapped(
+            monkeypatch,
+            city="Buckeye",
+            state="AZ",
+            job_type="residential reroof",
+            job_category="residential",
+        )
+        slug = server.create_share("residential reroof", "Buckeye", "AZ", wrapped)
+        share = server.get_share(slug)
+        assert share is not None
+>       assert share["data"] == sealed
+E       AssertionError: assert {'apply_url':...enter'}], ...} == {'apply_url':...', ...}], ...}
+E         
+E         Omitting 8 identical items, use -vv to show
+E         Differing items:
+E         {'summary': 'Permit required: Roofing / Building Permit.'} != {'summary': 'source-backed exact AHJ/project row closes family, authority, provenance, and routing requirements'}
+E         {'permit_name': 'Roofing / Building Permit'} != {'permit_name': 'Building Permit'}
+E         {'customer_next_step': 'File the required permit categories with City of Buckeye Development Services Permit Center: Roofing / Building Permit. Confirm exact portal subcategories before final submission.'} != {'customer_next_step': 'Apply with City of Buckeye ...
+E         
+E         ...Full output truncated (388 lines hidden), use '-vv' to show
+
+tests/test_permit_rule_engine_part4.py:311: AssertionError
+----------------------------- Captured stdout call -----------------------------
+[db] Drift fixed in /tmp/pytest-of-boban/pytest-286/test_part4_share_storage_hash_0/part4-share.db: users: added columns free_limit_notice_sent_at, free_limit_email_sent; created missing tables api_keys, beta_events, beta_feedback, checklist_cache, city_watch, onboarding_emails, permit_issued_reminders, rate_limits, referrals, saved_jurisdictions, webhook_integrations
+________________ test_part4_tampered_shared_storage_is_rejected ________________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7c7bb7619510>
+tmp_path = PosixPath('/tmp/pytest-of-boban/pytest-286/test_part4_tampered_shared_sto0')
+
+    def test_part4_tampered_shared_storage_is_rejected(
+        monkeypatch: pytest.MonkeyPatch,
+        tmp_path: Path,
+    ) -> None:
+        from api import server
+        import sqlite3
+    
+        server.CACHE_DB = str(tmp_path / "part4-share-tamper.db")
+        server.DATA_DIR = str(tmp_path)
+        server.init_db()
+        wrapped, _sealed = _build_wrapped(
+            monkeypatch,
+            city="Buckeye",
+            state="AZ",
+            job_type="residential reroof",
+            job_category="residential",
+        )
+        slug = server.create_share("residential reroof", "Buckeye", "AZ", wrapped)
+        with sqlite3.connect(server.CACHE_DB) as conn:
+            raw = conn.execute("SELECT result_json FROM shared_results WHERE slug=?", [slug]).fetchone()[0]
+            stored = json.loads(raw)
+>           assert stored["schema_version"] == _fixture()["shared_result_schema_version"]
+                   ^^^^^^^^^^^^^^^^^^^^^^^^
+E           KeyError: 'schema_version'
+
+tests/test_permit_rule_engine_part4.py:343: KeyError
+----------------------------- Captured stdout call -----------------------------
+[db] Drift fixed in /tmp/pytest-of-boban/pytest-286/test_part4_tampered_shared_sto0/part4-share-tamper.db: users: added columns free_limit_notice_sent_at, free_limit_email_sent; created missing tables api_keys, beta_events, beta_feedback, checklist_cache, city_watch, onboarding_emails, permit_issued_reminders, rate_limits, referrals, saved_jurisdictions, webhook_integrations
+=========================== short test summary info ============================
+FAILED tests/test_permit_rule_engine_part4.py::test_part4_tampered_active_payload_fails_closed_without_legacy_fallback[sealed_projection_payload_json]
+FAILED tests/test_permit_rule_engine_part4.py::test_part4_tampered_active_payload_fails_closed_without_legacy_fallback[sealed_projection_payload_sha256]
+FAILED tests/test_permit_rule_engine_part4.py::test_part4_tampered_active_payload_fails_closed_without_legacy_fallback[envelope_sha256]
+FAILED tests/test_permit_rule_engine_part4.py::test_part4_tampered_active_payload_fails_closed_without_legacy_fallback[cache_schema_version]
+FAILED tests/test_permit_rule_engine_part4.py::test_part4_valid_active_payload_stays_exactly_sealed
+FAILED tests/test_permit_rule_engine_part4.py::test_part4_tampered_w4_keeps_all_ten_lanes_visible_as_abstain
+FAILED tests/test_permit_rule_engine_part4.py::test_part4_server_surfaces_use_one_safe_projection_for_tampered_active_payload
+FAILED tests/test_permit_rule_engine_part4.py::test_part4_share_storage_hash_seals_and_preserves_exact_projection
+FAILED tests/test_permit_rule_engine_part4.py::test_part4_tampered_shared_storage_is_rejected
+9 failed, 5 passed in 1.71s

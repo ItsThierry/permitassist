@@ -1,0 +1,33 @@
+{
+  "schema_version": "permitassist.rule-engine-part4-contract-fixtures.v1",
+  "core_projection_schema_version": "permitassist.customer-decision-projection.v1",
+  "shared_result_schema_version": "permitassist.shared-result.v2",
+  "w4_family_order": [
+    "building",
+    "electrical",
+    "fire",
+    "health",
+    "liquor",
+    "mechanical",
+    "occupancy",
+    "plumbing",
+    "wastewater",
+    "zoning"
+  ],
+  "tamper_cases": [
+    "sealed_projection_payload_json",
+    "sealed_projection_payload_sha256",
+    "envelope_sha256",
+    "cache_schema_version"
+  ],
+  "forbidden_poison_markers": [
+    "POISON_LEGACY_BINARY",
+    "POISON_INTERNAL_SECRET"
+  ],
+  "required_fail_closed_decision": "UNKNOWN",
+  "required_fail_closed_verdict": "CONTACT_AHJ",
+  "activation_environment_must_be_absent": [
+    "PERMITASSIST_RULE_ENGINE_CORE",
+    "PERMITASSIST_RULE_ENGINE_CORE_ALLOWLIST"
+  ]
+}
