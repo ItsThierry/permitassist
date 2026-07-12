@@ -1169,6 +1169,16 @@ CORE_ALLOWLIST_SETTING = "PERMITASSIST_RULE_ENGINE_CORE_ALLOWLIST"
 DecisionVerdict = FamilyVerdict
 
 
+def normalize_exact_source_family(value: Any) -> str:
+    """Preserve an exact v2.4 permit-family label for Part 3 customer truth.
+
+    Part 1 intentionally used coarse aliases for comparison. Part 3 must not
+    collapse separately sourced lanes such as ``gas`` or
+    ``building_construction`` into another family.
+    """
+    return _slug(value)
+
+
 class JurisdictionResolutionStatus(str, Enum):
     EXACT = "exact"
     AMBIGUOUS = "ambiguous"
@@ -1276,6 +1286,7 @@ class CoreDecisionEnvelope:
 
 _CORE_FAMILIES = frozenset(
     {
+        # Locked W4 ten-lane filing-packet boundary.
         "building",
         "electrical",
         "plumbing",
@@ -1286,6 +1297,17 @@ _CORE_FAMILIES = frozenset(
         "wastewater",
         "occupancy",
         "zoning",
+        # Exact additional families present in the immutable v2.4 seed corpus.
+        # Part 3 preserves these labels rather than collapsing or dropping them.
+        "building_construction",
+        "building_trade",
+        "demolition",
+        "gas",
+        "manufactured_structure_installation",
+        "moving",
+        "pool",
+        "septic_oss_health",
+        "sign",
     }
 )
 
@@ -1301,6 +1323,13 @@ _CORE_FACT_KEYS = frozenset(
         "liquor_service_scope",
         "wastewater_scope",
         "zoning_trigger",
+        "gas_scope",
+        "demolition_scope",
+        "pool_scope",
+        "sign_scope",
+        "structure_moving_scope",
+        "manufactured_structure_scope",
+        "septic_oss_scope",
         "area_sq_ft",
         "valuation_usd",
         "stories",
@@ -1316,11 +1345,18 @@ _WORK_ONTOLOGY: tuple[tuple[str, str, tuple[str, ...]], ...] = (
     ("electrical_work", "residential_remodel", (r"\belectrical\b", r"\bpanel (?:replacement|upgrade|change)\b", r"\bwiring\b")),
     ("plumbing_work", "residential_remodel", (r"\bplumbing\b", r"\brepipe\b", r"\bwater heater\b")),
     ("mechanical_work", "residential_remodel", (r"\bmechanical\b", r"\bhvac\b", r"\bfurnace\b", r"\bair conditioner\b")),
+    ("gas_work", "residential_remodel", (r"\bgas (?:line|piping|work|permit)\b", r"\bfuel gas\b")),
+    ("demolition_work", "residential_remodel", (r"\bdemolition\b", r"\bdemolish\b")),
+    ("pool_work", "residential_remodel", (r"\bswimming pool\b", r"\bpool (?:installation|work|permit)\b")),
+    ("sign_work", "residential_remodel", (r"\bsign (?:installation|work|permit)\b",)),
+    ("structure_moving", "residential_remodel", (r"\bmov(?:e|ing) (?:a )?(?:building|structure)\b",)),
+    ("manufactured_structure_installation", "residential_remodel", (r"\bmanufactured (?:home|housing|structure)\b",)),
+    ("septic_oss_work", "residential_remodel", (r"\bseptic\b", r"\bonsite sew(?:age|er)\b", r"\boss\b")),
     ("fire_life_safety_work", "commercial_tenant_improvement", (r"\bfire (?:alarm|sprinkler|suppression|life safety)\b",)),
     ("food_health_work", "commercial_tenant_improvement", (r"\bcommercial kitchen\b", r"\bfood service\b", r"\bhealth permit\b")),
     ("liquor_service_work", "commercial_tenant_improvement", (r"\bliquor\b", r"\balcohol service\b")),
     ("wastewater_work", "commercial_tenant_improvement", (r"\bwastewater\b", r"\bgrease interceptor\b")),
-    ("occupancy_change", "commercial_tenant_improvement", (r"\bchange of (?:use|occupancy)\b", r"\boccupancy change\b")),
+    ("occupancy_change", "commercial_tenant_improvement", (r"\bchange of (?:use|occupancy)\b", r"\boccupancy change\b", r"\boccupancy\b")),
     ("zoning_review", "commercial_tenant_improvement", (r"\bzoning\b", r"\bplanning review\b")),
     ("commercial_tenant_improvement", "commercial_tenant_improvement", (r"\bcommercial tenant improvement\b", r"\btenant improvement\b", r"\bcommercial build[- ]?out\b")),
     ("residential_remodel", "residential_remodel", (r"\bresidential remodel\b", r"\bkitchen remodel\b", r"\bbath(?:room)? remodel\b")),
@@ -1477,6 +1513,13 @@ def normalize_work_atoms(
             "electrical_work": "electrical_scope",
             "plumbing_work": "plumbing_scope",
             "mechanical_work": "mechanical_scope",
+            "gas_work": "gas_scope",
+            "demolition_work": "demolition_scope",
+            "pool_work": "pool_scope",
+            "sign_work": "sign_scope",
+            "structure_moving": "structure_moving_scope",
+            "manufactured_structure_installation": "manufactured_structure_scope",
+            "septic_oss_work": "septic_oss_scope",
             "fire_life_safety_work": "fire_life_safety_scope",
             "food_health_work": "food_service_scope",
             "liquor_service_work": "liquor_service_scope",
@@ -1563,7 +1606,7 @@ def _publishable_provenance(record: ProvenanceRecord) -> bool:
 
 
 def normalize_family_decision(value: Mapping[str, Any]) -> CoreFamilyDecision:
-    family = normalize_family(value.get("family") or value.get("permit_kind") or value.get("trade"))
+    family = normalize_exact_source_family(value.get("family") or value.get("permit_kind") or value.get("trade"))
     raw_verdict = _slug(value.get("verdict") or value.get("required_status") or value.get("value"))
     verdict_map = {
         "required": FamilyVerdict.REQUIRED,
@@ -1600,7 +1643,7 @@ def normalize_family_decision(value: Mapping[str, Any]) -> CoreFamilyDecision:
 
 
 def _coerce_authority(row: Mapping[str, Any]) -> AuthorityRef | None:
-    family = normalize_family(row.get("permit_family") or row.get("trade"))
+    family = normalize_exact_source_family(row.get("permit_family") or row.get("trade"))
     if family not in _CORE_FAMILIES:
         return None
     issuing_raw = row.get("issuing_authority")
@@ -1745,7 +1788,37 @@ def build_sealed_projection_payload(
     coverage_status: str,
     coverage_reason: str,
     source_cell_id: str | None,
+    seed_classification: SeedClassification | str | None = None,
 ) -> dict[str, Any]:
+    seed_classification_value = (
+        seed_classification.value
+        if isinstance(seed_classification, SeedClassification)
+        else _normalize_text(seed_classification)
+    )
+    fail_closed_projection = seed_classification_value in {
+        SeedClassification.FAIL_CLOSED.value,
+        SeedClassification.JURISDICTION_HOLD.value,
+        SeedClassification.UNSUPPORTED_SCOPE.value,
+    }
+    if fail_closed_projection:
+        main_decision = CoreFamilyDecision(
+            family=main_decision.family,
+            verdict=FamilyVerdict.ABSTAIN,
+            trigger=main_decision.trigger,
+            provenance=(),
+            validation_issue_codes=tuple(sorted(set(main_decision.validation_issue_codes) | {"part3_fail_closed"})),
+        )
+        family_decisions = tuple(
+            CoreFamilyDecision(
+                family=decision.family,
+                verdict=FamilyVerdict.ABSTAIN,
+                trigger=decision.trigger,
+                provenance=(),
+                validation_issue_codes=tuple(sorted(set(decision.validation_issue_codes) | {"part3_fail_closed"})),
+            )
+            for decision in family_decisions
+        )
+        family_routes = ()
     main_binary = main_decision.verdict in {FamilyVerdict.REQUIRED, FamilyVerdict.NOT_REQUIRED}
     permit_required = True if main_decision.verdict is FamilyVerdict.REQUIRED else False if main_decision.verdict is FamilyVerdict.NOT_REQUIRED else None
     route_by_family = {route.family: route for route in family_routes}
@@ -1771,6 +1844,38 @@ def build_sealed_projection_payload(
         }
         for decision in family_decisions
     ]
+    verification_tasks = []
+    for decision in family_decisions:
+        route = route_by_family.get(decision.family)
+        authority = route.authority.application_authority if route else ""
+        apply_url = route.application_route.apply_url if route else ""
+        sourced_binary = (
+            decision.verdict in {FamilyVerdict.REQUIRED, FamilyVerdict.NOT_REQUIRED}
+            and any(_publishable_provenance(record) for record in decision.provenance)
+        )
+        if sourced_binary:
+            continue
+        unresolved = []
+        if decision.verdict not in {FamilyVerdict.REQUIRED, FamilyVerdict.NOT_REQUIRED}:
+            unresolved.append("applicability")
+        if not any(_publishable_provenance(record) for record in decision.provenance):
+            unresolved.append("source evidence")
+        if not authority:
+            unresolved.append("filing authority")
+        if not apply_url:
+            unresolved.append("application route")
+        verification_tasks.append(
+            {
+                "family": decision.family,
+                "unresolved_dimensions": unresolved,
+                "authority": authority,
+                "apply_url": apply_url,
+                "action": (
+                    f"Verify {decision.family.replace('_', ' ')} "
+                    f"{', '.join(unresolved)} with {authority or 'the official permit authority'} before filing."
+                ),
+            }
+        )
     permits_required = [
         {
             "permit_type": decision.family.replace("_", " ").title() + " Permit",
@@ -1815,6 +1920,7 @@ def build_sealed_projection_payload(
         "projection_schema_version": CORE_PROJECTION_SCHEMA_VERSION,
         "decision_source": "sealed_permit_rule_engine_envelope",
         "source_cell_id": source_cell_id,
+        "seed_classification": seed_classification_value,
         "jurisdiction_id": jurisdiction_id,
         "jurisdiction_name": jurisdiction_name,
         "city": jurisdiction_name,
@@ -1831,6 +1937,7 @@ def build_sealed_projection_payload(
         "companion_permits": related,
         "related_permits": copy.deepcopy(related),
         "family_decisions": family_rows,
+        "verification_tasks": verification_tasks,
         "family_authority_routes": [_public_family_authority_route(route) for route in family_routes],
         "applying_office": main_route.authority.application_authority if main_route else "",
         "apply_url": main_route.application_route.apply_url if main_route else "",
@@ -1849,6 +1956,13 @@ def build_sealed_projection_payload(
 
 
 def _identity_from_resolution(resolution: V24Resolution, city: str, state: str) -> JurisdictionIdentityResolution:
+    # A carried cell must never override a known ambiguous AHJ identity. This
+    # makes the duplicate-name boundary fail closed before any family truth is
+    # projected. Uncovered synthetic/query cells may still carry an explicit
+    # stable jurisdiction id for deterministic tests and official-query flows.
+    indexed_identity = resolve_jurisdiction_identity(city, state)
+    if indexed_identity.status is JurisdictionResolutionStatus.AMBIGUOUS:
+        return indexed_identity
     cell = resolution.cell if isinstance(resolution.cell, Mapping) else None
     if cell and _normalize_text(cell.get("jurisdiction_id")):
         candidate = JurisdictionCandidate(
@@ -1895,6 +2009,7 @@ def build_core_decision_envelope(
     if not isinstance(resolution, V24Resolution):
         raise TypeError("resolution must be V24Resolution")
     identity = _identity_from_resolution(resolution, city, state)
+    seed = _classification_for_resolution(resolution, identity)
     work = normalize_work_atoms(job_type, job_category, facts=facts)
     cell = _mapping(resolution.cell)
     legacy_envelope = build_decision_envelope(
@@ -1921,6 +2036,13 @@ def build_core_decision_envelope(
         and work.valid
     )
     stage = select_precedence_stage(resolution.status, coverage, query_valid)
+    if seed.classification is SeedClassification.FAIL_CLOSED:
+        stage = PrecedenceStage.EXACT_FAIL_CLOSED
+    elif seed.classification in {
+        SeedClassification.JURISDICTION_HOLD,
+        SeedClassification.UNSUPPORTED_SCOPE,
+    }:
+        stage = PrecedenceStage.INTERNAL_ABSTAIN
     if not work.valid or identity.status is not JurisdictionResolutionStatus.EXACT:
         stage = PrecedenceStage.INTERNAL_ABSTAIN
 
@@ -1970,19 +2092,35 @@ def build_core_decision_envelope(
                 family=decision.family,
                 verdict=FamilyVerdict.ABSTAIN,
                 trigger=decision.trigger,
-                provenance=decision.provenance,
+                provenance=(),
                 validation_issue_codes=tuple(sorted(set(decision.validation_issue_codes) | {abstain_issue})),
             )
             for decision in decisions
         ]
-    routes = build_family_authority_routes(cell) if cell else ()
+    project_family = _slug(cell.get("project_family")) or (
+        work.positive_atoms[0].project_family if work.positive_atoms else "unsupported"
+    )
+    decisions = list(
+        _complete_part3_family_decisions(
+            decisions,
+            project_family,
+            seed.classification,
+        )
+    )
+    routes = (
+        build_family_authority_routes(cell)
+        if cell
+        and seed.classification in {
+            SeedClassification.EXACT_COMPLETE,
+            SeedClassification.EXACT_PARTIAL,
+        }
+        and identity.status is JurisdictionResolutionStatus.EXACT
+        else ()
+    )
     selected = identity.selected
     jurisdiction_id = selected.jurisdiction_id if selected else ""
     jurisdiction_name = selected.ahj_name if selected else _normalize_text(city)
     jurisdiction_state = selected.state if selected else _normalize_text(state).upper()
-    project_family = normalize_family(cell.get("project_family")) or (
-        work.positive_atoms[0].project_family if work.positive_atoms else "unsupported"
-    )
     coverage_reason = legacy_envelope.coverage_reason
     payload = build_sealed_projection_payload(
         jurisdiction_id=jurisdiction_id,
@@ -1995,6 +2133,7 @@ def build_core_decision_envelope(
         coverage_status=stage.value,
         coverage_reason=coverage_reason,
         source_cell_id=legacy_envelope.source_cell_id,
+        seed_classification=seed.classification,
     )
     sealed = _seal_projection(payload)
     base = {
@@ -2122,3 +2261,686 @@ def maybe_attach_core_decision_envelope(
         facts=facts,
     )
     return attach_core_decision_envelope(result, envelope)
+
+
+# ─── Part 3: immutable seed migration and evidence-gated factory ─────────────
+
+PART3_MIGRATION_SCHEMA_VERSION = "permitassist.rule-engine-seed-migration.v1"
+PART3_PREDICATE_SCHEMA_VERSION = "permitassist.sourced-predicate.v1"
+PART3_FACTORY_SCHEMA_VERSION = "permitassist.evidence-gated-factory.v1"
+PART3_TEMPLATE_SCHEMA_VERSION = "permitassist.code-adoption-template.v1"
+PART3_OVERLAY_SCHEMA_VERSION = "permitassist.ahj-overlay.v1"
+
+
+class SeedClassification(str, Enum):
+    EXACT_COMPLETE = "exact_complete"
+    EXACT_PARTIAL = "exact_partial"
+    FAIL_CLOSED = "fail_closed"
+    JURISDICTION_HOLD = "jurisdiction_hold"
+    UNSUPPORTED_SCOPE = "unsupported_scope"
+
+
+@dataclass(frozen=True)
+class MigratedSeed:
+    schema_version: str
+    source_index_key: str
+    source_cell_id: str
+    jurisdiction_id: str
+    ahj_name: str
+    state: str
+    project_family: str
+    classification: SeedClassification
+    source_families: tuple[str, ...]
+    binary_families: tuple[str, ...]
+    source_cell_sha256: str
+    issue_codes: tuple[str, ...]
+    seed_sha256: str
+
+
+@dataclass(frozen=True)
+class SeedReverification:
+    ok: bool
+    issue_codes: tuple[str, ...]
+    expected_seed_sha256: str
+    actual_seed_sha256: str
+
+
+@dataclass(frozen=True)
+class SourcedPredicate:
+    predicate_id: str
+    ontology_node: str
+    family: str
+    operator: str
+    fact_key: str
+    expected_value: Any
+    provenance: tuple[ProvenanceRecord, ...]
+    template_id: str
+
+
+@dataclass(frozen=True)
+class CodeAdoptionTemplate:
+    template_id: str
+    code_family: str
+    adoption_basis: str
+    predicate_ids: tuple[str, ...]
+    provenance: tuple[ProvenanceRecord, ...]
+
+
+@dataclass(frozen=True)
+class AHJOverlay:
+    jurisdiction_id: str
+    template_ids: tuple[str, ...]
+    predicate_overrides: tuple[tuple[str, str], ...]
+    provenance: tuple[ProvenanceRecord, ...]
+
+
+_PART3_SCOPE_ONTOLOGY_ORDER = (
+    "commercial_tenant_improvement",
+    "residential_remodel",
+    "roof_covering_replacement",
+    "structural_alteration",
+    "electrical_work",
+    "plumbing_work",
+    "mechanical_work",
+    "gas_work",
+    "fire_life_safety_work",
+    "food_health_work",
+    "liquor_service_work",
+    "wastewater_work",
+    "occupancy_change",
+    "zoning_review",
+    "demolition_work",
+    "pool_work",
+    "sign_work",
+    "structure_moving",
+    "manufactured_structure_installation",
+    "septic_oss_work",
+)
+
+_PART3_PROJECT_FAMILIES = frozenset(
+    {"commercial_tenant_improvement", "residential_remodel", "reroof"}
+)
+
+_PART3_TEMPLATE_BY_PROJECT = {
+    "commercial_tenant_improvement": "commercial-ti-local-adoption-seed-v1",
+    "residential_remodel": "residential-remodel-local-adoption-seed-v1",
+    "reroof": "residential-reroof-local-adoption-seed-v1",
+}
+
+_PART3_PREDICATE_BY_PROJECT = {
+    "commercial_tenant_improvement": "commercial-ti-building-seed-required-v1",
+    "residential_remodel": "residential-remodel-building-seed-required-v1",
+    "reroof": "reroof-building-seed-required-v1",
+}
+
+_PART3_REPRESENTATIVE_KEYS = {
+    "commercial_tenant_improvement": "AK|anchorage|commercial_tenant_improvement",
+    "residential_remodel": "AL|albertville|residential_remodel",
+    "reroof": "AZ|buckeye|reroof",
+}
+
+
+def minimum_scope_ontology() -> dict[str, dict[str, Any]]:
+    """Return the closed minimum production ontology in contract order."""
+    patterns_by_node = {node: patterns for node, _family, patterns in _WORK_ONTOLOGY}
+    family_by_node = {node: family for node, family, _patterns in _WORK_ONTOLOGY}
+    broad = {
+        "commercial_tenant_improvement": "commercial_tenant_improvement",
+        "residential_remodel": "residential_remodel",
+        "roof_covering_replacement": "reroof",
+    }
+    return {
+        node: {
+            "ontology_node": node,
+            "project_family": family_by_node.get(node, broad.get(node, "unsupported")),
+            "patterns": list(patterns_by_node.get(node, ())),
+            "closed": True,
+        }
+        for node in _PART3_SCOPE_ONTOLOGY_ORDER
+    }
+
+
+def _cell_publishable_provenance(cell: Mapping[str, Any]) -> tuple[ProvenanceRecord, ...]:
+    tier1 = _mapping(cell.get("tier1"))
+    records: list[ProvenanceRecord | None] = []
+    main = _mapping(tier1.get("main_decision"))
+    records.extend(_provenance_from_dict(item) for item in _list(main.get("provenance")))
+    if isinstance(main.get("provenance"), Mapping):
+        records.append(_provenance_from_dict(main.get("provenance")))
+    for collection in ("permits_required", "trade_authority", "apply"):
+        for row in _list(tier1.get(collection)):
+            if not isinstance(row, Mapping):
+                continue
+            provenance = row.get("provenance")
+            if isinstance(provenance, list):
+                records.extend(_provenance_from_dict(item) for item in provenance)
+            else:
+                records.append(_provenance_from_dict(provenance))
+    return tuple(record for record in _dedupe_sorted_provenance(records) if _publishable_provenance(record))
+
+
+def _main_provenance_hash_bound(cell: Mapping[str, Any]) -> bool:
+    tier1 = _mapping(cell.get("tier1"))
+    main = _mapping(tier1.get("main_decision"))
+    raw_provenance = main.get("provenance")
+    provenance = _provenance_records(raw_provenance)
+    if not provenance or not all(_publishable_provenance(item) for item in provenance):
+        return False
+    # Legacy waves used several non-equivalent hash domains (live snapshots,
+    # normalized snapshots, and aggregate source packs). Part 3 therefore
+    # requires a non-placeholder SHA-256-shaped provenance hash here and binds
+    # the complete immutable source cell through ``source_cell_sha256``. The
+    # re-verification gate detects any subsequent change to any provenance
+    # field without falsely demoting legacy seeds whose aggregate watch hash is
+    # intentionally different from the main-decision snapshot hash.
+    return all(
+        bool(re.fullmatch(r"[0-9a-f]{64}", record.snapshot_hash))
+        and len(set(record.snapshot_hash)) > 1
+        for record in provenance
+    )
+
+
+def _binary_source_families(cell: Mapping[str, Any]) -> tuple[str, ...]:
+    tier1 = _mapping(cell.get("tier1"))
+    output: set[str] = set()
+    for row in _list(tier1.get("permits_required")):
+        if not isinstance(row, Mapping):
+            continue
+        family = normalize_exact_source_family(row.get("permit_kind"))
+        verdict = _slug(row.get("required_status") or row.get("decision"))
+        records = _provenance_records(row.get("provenance"))
+        if (
+            family
+            and verdict in {"required", "not_required"}
+            and records
+            and all(_publishable_provenance(record) for record in records)
+        ):
+            output.add(family)
+    return tuple(sorted(output))
+
+
+def _source_families(cell: Mapping[str, Any]) -> tuple[str, ...]:
+    return tuple(
+        sorted(
+            {
+                family
+                for row in _list(_mapping(cell.get("tier1")).get("permits_required"))
+                if isinstance(row, Mapping)
+                for family in (normalize_exact_source_family(row.get("permit_kind")),)
+                if family
+            }
+        )
+    )
+
+
+def seed_hash_payload(seed: MigratedSeed) -> dict[str, Any]:
+    payload = to_primitive(seed)
+    payload.pop("seed_sha256", None)
+    return payload
+
+
+def _make_seed(
+    *,
+    source_index_key: str,
+    source_cell_id: str,
+    jurisdiction_id: str,
+    ahj_name: str,
+    state: str,
+    project_family: str,
+    classification: SeedClassification,
+    source_families: tuple[str, ...],
+    binary_families: tuple[str, ...],
+    source_cell_sha256: str,
+    issue_codes: tuple[str, ...],
+) -> MigratedSeed:
+    base = {
+        "schema_version": PART3_MIGRATION_SCHEMA_VERSION,
+        "source_index_key": source_index_key,
+        "source_cell_id": source_cell_id,
+        "jurisdiction_id": jurisdiction_id,
+        "ahj_name": ahj_name,
+        "state": state,
+        "project_family": project_family,
+        "classification": classification,
+        "source_families": source_families,
+        "binary_families": binary_families,
+        "source_cell_sha256": source_cell_sha256,
+        "issue_codes": issue_codes,
+    }
+    return MigratedSeed(**base, seed_sha256=stable_sha256(to_primitive(base)))
+
+
+def build_fail_closed_factory_seed(
+    *,
+    jurisdiction_id: str,
+    ahj_name: str,
+    state: str,
+    project_family: str,
+    source_index_key: str,
+    issue_codes: Iterable[str] = ("factory_born_fail_closed",),
+    source_cell: Mapping[str, Any] | None = None,
+) -> MigratedSeed:
+    source = dict(source_cell or {})
+    return _make_seed(
+        source_index_key=_normalize_text(source_index_key),
+        source_cell_id=_normalize_text(source.get("cell_id")) or (
+            f"factory::{_normalize_text(jurisdiction_id).lower()}::{_slug(project_family) or 'unsupported'}"
+        ),
+        jurisdiction_id=_normalize_text(jurisdiction_id).lower(),
+        ahj_name=_normalize_text(ahj_name),
+        state=_normalize_text(state).upper(),
+        project_family=_slug(project_family) or "unsupported",
+        classification=SeedClassification.FAIL_CLOSED,
+        source_families=_source_families(source),
+        binary_families=(),
+        source_cell_sha256=stable_sha256(source),
+        issue_codes=tuple(sorted(set(issue_codes))),
+    )
+
+
+def classify_v24_seed(
+    source_index_key: str,
+    cell: Mapping[str, Any],
+    *,
+    identity_ambiguous: bool = False,
+) -> MigratedSeed:
+    source = dict(cell)
+    project_family = _slug(source.get("project_family")) or "unsupported"
+    source_families = _source_families(source)
+    common = {
+        "source_index_key": _normalize_text(source_index_key),
+        "source_cell_id": _normalize_text(source.get("cell_id")) or f"missing::{_normalize_text(source_index_key)}",
+        "jurisdiction_id": _normalize_text(source.get("jurisdiction_id")).lower(),
+        "ahj_name": _normalize_text(source.get("ahj")),
+        "state": _normalize_text(source.get("state")).upper(),
+        "project_family": project_family,
+        "source_families": source_families,
+        "source_cell_sha256": stable_sha256(source),
+    }
+    if identity_ambiguous:
+        return _make_seed(
+            **common,
+            classification=SeedClassification.JURISDICTION_HOLD,
+            binary_families=(),
+            issue_codes=("jurisdiction_identity_ambiguous",),
+        )
+    if project_family not in _PART3_PROJECT_FAMILIES:
+        return _make_seed(
+            **common,
+            classification=SeedClassification.UNSUPPORTED_SCOPE,
+            binary_families=(),
+            issue_codes=("project_family_not_in_closed_ontology",),
+        )
+    if source.get("status") == "FAIL_CLOSED" or source.get("serving_status") == "FAIL_CLOSED":
+        return _make_seed(
+            **common,
+            classification=SeedClassification.FAIL_CLOSED,
+            binary_families=(),
+            issue_codes=("legacy_seed_explicit_fail_closed",),
+        )
+    validation_ok, validation_issues = request_time_validation(source)
+    if not validation_ok or not _main_provenance_hash_bound(source):
+        issue_codes = set(validation_issues)
+        if not _main_provenance_hash_bound(source):
+            issue_codes.add("main_provenance_not_hash_bound")
+        return _make_seed(
+            **common,
+            classification=SeedClassification.FAIL_CLOSED,
+            binary_families=(),
+            issue_codes=tuple(sorted(issue_codes or {"legacy_seed_evidence_gate_failed"})),
+        )
+    coverage, _reason, _ok, coverage_issues = classify_cell_coverage(source)
+    classification = (
+        SeedClassification.EXACT_COMPLETE
+        if coverage is CoverageStatus.EXACT_COMPLETE
+        else SeedClassification.EXACT_PARTIAL
+        if coverage is CoverageStatus.EXACT_PARTIAL
+        else SeedClassification.FAIL_CLOSED
+    )
+    return _make_seed(
+        **common,
+        classification=classification,
+        binary_families=(
+            _binary_source_families(source)
+            if classification in {SeedClassification.EXACT_COMPLETE, SeedClassification.EXACT_PARTIAL}
+            else ()
+        ),
+        issue_codes=tuple(sorted(coverage_issues)),
+    )
+
+
+def safe_factory_migrate_seed(
+    source_index_key: str,
+    cell: Mapping[str, Any],
+    *,
+    identity_ambiguous: bool = False,
+) -> MigratedSeed:
+    try:
+        return classify_v24_seed(
+            source_index_key,
+            cell,
+            identity_ambiguous=identity_ambiguous,
+        )
+    except Exception:
+        return build_fail_closed_factory_seed(
+            jurisdiction_id=_normalize_text(cell.get("jurisdiction_id")),
+            ahj_name=_normalize_text(cell.get("ahj")),
+            state=_normalize_text(cell.get("state")),
+            project_family=_normalize_text(cell.get("project_family")),
+            source_index_key=source_index_key,
+            issue_codes=("factory_exception",),
+            source_cell=cell,
+        )
+
+
+def migrate_v24_seed_index(
+    *,
+    index: Mapping[str, Mapping[str, Any]] | None = None,
+) -> dict[str, MigratedSeed]:
+    source_index = index if index is not None else (load_v24_index() or {})
+    identities: dict[tuple[str, str], set[str]] = {}
+    for key in sorted(source_index):
+        cell = source_index[key]
+        identity_key = (_slug(cell.get("ahj")), _normalize_text(cell.get("state")).upper())
+        identities.setdefault(identity_key, set()).add(_normalize_text(cell.get("jurisdiction_id")).lower())
+    return {
+        key: safe_factory_migrate_seed(
+            key,
+            source_index[key],
+            identity_ambiguous=len(
+                identities.get(
+                    (_slug(source_index[key].get("ahj")), _normalize_text(source_index[key].get("state")).upper()),
+                    set(),
+                )
+            )
+            > 1,
+        )
+        for key in sorted(source_index)
+    }
+
+
+def reverify_migrated_seed(seed: MigratedSeed, source_cell: Mapping[str, Any]) -> SeedReverification:
+    issues: set[str] = set()
+    if seed.source_cell_sha256 != stable_sha256(source_cell):
+        issues.add("source_cell_hash_mismatch")
+    recomputed = safe_factory_migrate_seed(
+        seed.source_index_key,
+        source_cell,
+        identity_ambiguous=seed.classification is SeedClassification.JURISDICTION_HOLD,
+    )
+    if seed.seed_sha256 != recomputed.seed_sha256:
+        issues.add("seed_hash_mismatch")
+    return SeedReverification(
+        ok=not issues,
+        issue_codes=tuple(sorted(issues)),
+        expected_seed_sha256=seed.seed_sha256,
+        actual_seed_sha256=recomputed.seed_sha256,
+    )
+
+
+def _overlay_promotion_gate(seed: MigratedSeed, cell: Mapping[str, Any]) -> tuple[bool, tuple[str, ...]]:
+    issues: set[str] = set()
+    overlay = build_ahj_overlay(cell)
+    if overlay.jurisdiction_id != _normalize_text(cell.get("jurisdiction_id")).lower():
+        issues.add("overlay_jurisdiction_mismatch")
+    if not overlay.template_ids:
+        issues.add("missing_local_adoption_template")
+    if not overlay.provenance or not all(_publishable_provenance(item) for item in overlay.provenance):
+        issues.add("missing_local_adoption_evidence")
+    override_families = {family for family, _verdict in overlay.predicate_overrides}
+    missing_overrides = set(seed.binary_families) - override_families
+    if missing_overrides:
+        issues.add("missing_local_administrative_override")
+    route_families = {
+        route.family
+        for route in build_family_authority_routes(cell)
+        if (
+            route.authority.issuing_authority
+            or route.authority.application_authority
+        )
+        and (
+            route.application_route.apply_url
+            or route.application_route.office_name
+        )
+    }
+    if set(seed.binary_families) - route_families:
+        issues.add("missing_local_authority_evidence")
+    predicate = next(
+        (
+            item
+            for item in minimum_sourced_predicates().values()
+            if item.expected_value == seed.project_family
+        ),
+        None,
+    )
+    if predicate is None or evaluate_sourced_predicate(
+        predicate,
+        {"project_family": seed.project_family},
+    ) is not True:
+        issues.add("template_predicate_not_satisfied")
+    return not issues, tuple(sorted(issues))
+
+
+def promote_factory_seed(candidate: MigratedSeed, *, source_cell: Mapping[str, Any]) -> MigratedSeed:
+    """Promote only after source, adoption, administration, and authority gates."""
+    if not source_cell:
+        return candidate
+    migrated = safe_factory_migrate_seed(candidate.source_index_key, source_cell)
+    if migrated.classification not in {
+        SeedClassification.EXACT_COMPLETE,
+        SeedClassification.EXACT_PARTIAL,
+    }:
+        return candidate
+    promoted, _issues = _overlay_promotion_gate(migrated, source_cell)
+    return migrated if promoted else candidate
+
+
+def deterministic_seed_sample(
+    index: Mapping[str, Any],
+    *,
+    seed: str,
+    sample_size: int,
+) -> tuple[str, ...]:
+    if sample_size < 0:
+        raise ValueError("sample_size must be non-negative")
+    ranked = sorted(
+        index,
+        key=lambda key: (hashlib.sha256(f"{seed}\0{key}".encode("utf-8")).hexdigest(), key),
+    )
+    return tuple(ranked[: min(sample_size, len(ranked))])
+
+
+def audit_pre_activation_family_preservation(
+    index: Mapping[str, Any] | None = None,
+    *,
+    allowlisted_jurisdiction_ids: Iterable[str] | None = None,
+) -> dict[str, Any]:
+    """Prove exact-family preservation/routing before any jurisdiction activation."""
+
+    source_index = dict(index or load_v24_index() or {})
+    allowlist = {
+        _normalize_text(item).lower()
+        for item in (allowlisted_jurisdiction_ids or ())
+        if _normalize_text(item)
+    }
+    migrated = migrate_v24_seed_index(index=source_index)
+    violations: list[dict[str, Any]] = []
+    checked = 0
+    binary_family_count = 0
+    for key, cell in sorted(source_index.items()):
+        seed = migrated[key]
+        if allowlist and seed.jurisdiction_id not in allowlist:
+            continue
+        if seed.classification not in {
+            SeedClassification.EXACT_COMPLETE,
+            SeedClassification.EXACT_PARTIAL,
+        }:
+            continue
+        checked += 1
+        binary_family_count += len(seed.binary_families)
+        routes = {route.family for route in build_family_authority_routes(_mapping(cell))}
+        missing_from_closed_ontology = sorted(set(seed.binary_families) - _CORE_FAMILIES)
+        missing_from_preserved_seed = sorted(set(seed.binary_families) - set(seed.source_families))
+        missing_routes = sorted(set(seed.binary_families) - routes)
+        if missing_from_closed_ontology or missing_from_preserved_seed or missing_routes:
+            violations.append(
+                {
+                    "source_index_key": key,
+                    "jurisdiction_id": seed.jurisdiction_id,
+                    "missing_from_closed_ontology": missing_from_closed_ontology,
+                    "missing_from_preserved_seed": missing_from_preserved_seed,
+                    "missing_routes": missing_routes,
+                }
+            )
+    return {
+        "schema_version": "permitassist.rule-engine-part3-preactivation-family-audit.v1",
+        "checked_cells": checked,
+        "binary_family_occurrences": binary_family_count,
+        "violation_count": len(violations),
+        "violations": violations,
+        "passed": not violations,
+    }
+
+
+def classify_request_scope(job_type: str, job_category: str = "") -> SeedClassification:
+    work = normalize_work_atoms(job_type, job_category)
+    return (
+        SeedClassification.EXACT_PARTIAL
+        if work.valid
+        else SeedClassification.UNSUPPORTED_SCOPE
+    )
+
+
+def _representative_provenance(project_family: str) -> tuple[ProvenanceRecord, ...]:
+    index = load_v24_index() or {}
+    cell = index.get(_PART3_REPRESENTATIVE_KEYS[project_family], {})
+    records = _cell_publishable_provenance(cell)
+    if not records:
+        raise RuntimeError(f"no publishable representative provenance for {project_family}")
+    return records
+
+
+def minimum_sourced_predicates() -> dict[str, SourcedPredicate]:
+    node_by_project = {
+        "commercial_tenant_improvement": "commercial_tenant_improvement",
+        "residential_remodel": "residential_remodel",
+        "reroof": "roof_covering_replacement",
+    }
+    output: dict[str, SourcedPredicate] = {}
+    for project_family in ("commercial_tenant_improvement", "residential_remodel", "reroof"):
+        predicate_id = _PART3_PREDICATE_BY_PROJECT[project_family]
+        output[predicate_id] = SourcedPredicate(
+            predicate_id=predicate_id,
+            ontology_node=node_by_project[project_family],
+            family="building",
+            operator="equals",
+            fact_key="project_family",
+            expected_value=project_family,
+            provenance=_representative_provenance(project_family),
+            template_id=_PART3_TEMPLATE_BY_PROJECT[project_family],
+        )
+    return output
+
+
+def evaluate_sourced_predicate(predicate: SourcedPredicate, facts: Mapping[str, Any]) -> bool | None:
+    """Evaluate a closed sourced predicate without manufacturing truth.
+
+    Missing facts, unsupported operators, and unsourced predicates return
+    ``None``. Factory promotion may proceed only on an explicit ``True``.
+    """
+
+    if predicate.operator != "equals" or predicate.fact_key not in facts:
+        return None
+    if not predicate.provenance or not all(_publishable_provenance(item) for item in predicate.provenance):
+        return None
+    return _slug(facts.get(predicate.fact_key)) == _slug(predicate.expected_value)
+
+
+def minimum_code_adoption_templates() -> dict[str, CodeAdoptionTemplate]:
+    code_family_by_project = {
+        "commercial_tenant_improvement": "commercial_building_local_adoption",
+        "residential_remodel": "residential_building_local_adoption",
+        "reroof": "residential_roofing_local_adoption",
+    }
+    output: dict[str, CodeAdoptionTemplate] = {}
+    for project_family in ("commercial_tenant_improvement", "residential_remodel", "reroof"):
+        template_id = _PART3_TEMPLATE_BY_PROJECT[project_family]
+        output[template_id] = CodeAdoptionTemplate(
+            template_id=template_id,
+            code_family=code_family_by_project[project_family],
+            adoption_basis="reusable structure only; exact AHJ overlay and source evidence required",
+            predicate_ids=(_PART3_PREDICATE_BY_PROJECT[project_family],),
+            provenance=_representative_provenance(project_family),
+        )
+    return output
+
+
+def build_ahj_overlay(cell: Mapping[str, Any]) -> AHJOverlay:
+    project_family = _slug(cell.get("project_family"))
+    template_id = _PART3_TEMPLATE_BY_PROJECT.get(project_family)
+    overrides: list[tuple[str, str]] = []
+    for row in _list(_mapping(cell.get("tier1")).get("permits_required")):
+        if not isinstance(row, Mapping):
+            continue
+        family = normalize_exact_source_family(row.get("permit_kind"))
+        verdict = _slug(row.get("required_status") or row.get("decision")).upper()
+        if family:
+            overrides.append((family, verdict or "VERIFY"))
+    return AHJOverlay(
+        jurisdiction_id=_normalize_text(cell.get("jurisdiction_id")).lower(),
+        template_ids=(template_id,) if template_id else (),
+        predicate_overrides=tuple(sorted(set(overrides))),
+        provenance=_cell_publishable_provenance(cell),
+    )
+
+
+def _classification_for_resolution(
+    resolution: V24Resolution,
+    identity: JurisdictionIdentityResolution,
+) -> MigratedSeed:
+    cell = _mapping(resolution.cell)
+    if not cell:
+        classification = (
+            SeedClassification.JURISDICTION_HOLD
+            if identity.status is JurisdictionResolutionStatus.AMBIGUOUS
+            else SeedClassification.UNSUPPORTED_SCOPE
+        )
+        return _make_seed(
+            source_index_key=_normalize_text(resolution.key),
+            source_cell_id="",
+            jurisdiction_id="",
+            ahj_name=identity.candidates[0].ahj_name if identity.candidates else "",
+            state=identity.candidates[0].state if identity.candidates else "",
+            project_family="unsupported",
+            classification=classification,
+            source_families=(),
+            binary_families=(),
+            source_cell_sha256=stable_sha256({}),
+            issue_codes=(classification.value,),
+        )
+    return safe_factory_migrate_seed(
+        _normalize_text(resolution.key),
+        cell,
+        identity_ambiguous=identity.status is JurisdictionResolutionStatus.AMBIGUOUS,
+    )
+
+
+def _complete_part3_family_decisions(
+    decisions: Iterable[CoreFamilyDecision],
+    project_family: str,
+    classification: SeedClassification,
+) -> tuple[CoreFamilyDecision, ...]:
+    existing = {decision.family: decision for decision in decisions}
+    if classification is SeedClassification.EXACT_PARTIAL:
+        for family in sorted(FAMILY_CLOSURE_REQUIREMENTS.get(project_family, frozenset())):
+            existing.setdefault(
+                family,
+                CoreFamilyDecision(
+                    family=family,
+                    verdict=FamilyVerdict.VERIFY,
+                    trigger=f"{family} applicability is not closed by the exact seed",
+                    provenance=(),
+                    validation_issue_codes=("verified_partial_dimension_unclosed",),
+                ),
+            )
+    return tuple(existing[key] for key in sorted(existing))
