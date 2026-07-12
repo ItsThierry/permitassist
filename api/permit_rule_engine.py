@@ -1150,3 +1150,975 @@ def envelope_from_cell_for_census(cell: Mapping[str, Any], index_key: str) -> De
         state=_normalize_text(cell.get("state")),
         job_category=category,
     )
+
+
+# ─── Part 2: guarded core, closed ontology, and sealed customer projection ────
+#
+# These contracts are deliberately additive.  The Part 1 envelope and shadow
+# adapter above remain byte-for-byte stable when the independent core setting is
+# off.  Core activation requires both an explicit active mode and an exact
+# jurisdiction-id allowlist match.
+
+ENVELOPE_SCHEMA_VERSION = DECISION_ENVELOPE_VERSION
+CORE_ENVELOPE_SCHEMA_VERSION = "permitassist.decision-envelope.v2"
+CORE_PROJECTION_SCHEMA_VERSION = "permitassist.customer-decision-projection.v1"
+CORE_CACHE_SCHEMA_VERSION = "permitassist.rule-engine-cache.v1"
+CORE_SETTING = "PERMITASSIST_RULE_ENGINE_CORE"
+CORE_ALLOWLIST_SETTING = "PERMITASSIST_RULE_ENGINE_CORE_ALLOWLIST"
+
+DecisionVerdict = FamilyVerdict
+
+
+class JurisdictionResolutionStatus(str, Enum):
+    EXACT = "exact"
+    AMBIGUOUS = "ambiguous"
+    UNCOVERED = "uncovered"
+    INDEX_UNAVAILABLE = "index_unavailable"
+
+
+class WorkPolarity(str, Enum):
+    POSITIVE = "positive"
+    NEGATED = "negated"
+
+
+class PrecedenceStage(str, Enum):
+    VALIDATED_EXACT_COMPLETE = "validated_exact_complete"
+    VALIDATED_EXACT_PARTIAL = "validated_exact_partial"
+    EXACT_FAIL_CLOSED = "exact_fail_closed"
+    QUERY_OFFICIAL_EVIDENCE = "query_official_evidence"
+    INTERNAL_ABSTAIN = "internal_abstain"
+
+
+@dataclass(frozen=True)
+class JurisdictionCandidate:
+    jurisdiction_id: str
+    ahj_name: str
+    state: str
+    county: str | None
+    cell_ids: tuple[str, ...]
+
+
+@dataclass(frozen=True)
+class JurisdictionIdentityResolution:
+    status: JurisdictionResolutionStatus
+    candidates: tuple[JurisdictionCandidate, ...]
+    selected: JurisdictionCandidate | None
+    reason: str
+
+
+@dataclass(frozen=True)
+class WorkThreshold:
+    name: str
+    operator: str
+    value: int | float
+    unit: str
+
+
+@dataclass(frozen=True)
+class ClosedWorkAtom:
+    ontology_node: str
+    project_family: str
+    polarity: WorkPolarity
+    raw_match: str
+    thresholds: tuple[WorkThreshold, ...]
+
+
+@dataclass(frozen=True)
+class NormalizedWorkAtoms:
+    atoms: tuple[ClosedWorkAtom, ...]
+    positive_atoms: tuple[ClosedWorkAtom, ...]
+    known_facts: tuple[tuple[str, Any], ...]
+    issue_codes: tuple[str, ...]
+    valid: bool
+
+
+@dataclass(frozen=True)
+class FamilyAuthorityRoute:
+    family: str
+    authority: AuthorityRef
+    application_route: ApplicationRoute
+
+
+@dataclass(frozen=True)
+class CoreFamilyDecision:
+    family: str
+    verdict: FamilyVerdict
+    trigger: str
+    provenance: tuple[ProvenanceRecord, ...]
+    validation_issue_codes: tuple[str, ...]
+
+
+@dataclass(frozen=True)
+class SealedDecisionProjection:
+    schema_version: str
+    payload_json: str
+    payload_sha256: str
+
+
+@dataclass(frozen=True)
+class CoreDecisionEnvelope:
+    schema_version: str
+    request_fingerprint_sha256: str
+    source_cell_id: str | None
+    source_index_key: str | None
+    source_package_manifest_sha256: str | None
+    precedence_stage: PrecedenceStage
+    coverage_status: str
+    coverage_reason: str
+    jurisdiction: JurisdictionIdentityResolution
+    work_atoms: NormalizedWorkAtoms
+    main_decision: CoreFamilyDecision
+    family_decisions: tuple[CoreFamilyDecision, ...]
+    family_routes: tuple[FamilyAuthorityRoute, ...]
+    sealed_projection: SealedDecisionProjection
+    envelope_sha256: str
+
+
+_CORE_FAMILIES = frozenset(
+    {
+        "building",
+        "electrical",
+        "plumbing",
+        "mechanical",
+        "fire",
+        "health",
+        "liquor",
+        "wastewater",
+        "occupancy",
+        "zoning",
+    }
+)
+
+_CORE_FACT_KEYS = frozenset(
+    {
+        "occupancy_change",
+        "structural_change",
+        "electrical_scope",
+        "plumbing_scope",
+        "mechanical_scope",
+        "fire_life_safety_scope",
+        "food_service_scope",
+        "liquor_service_scope",
+        "wastewater_scope",
+        "zoning_trigger",
+        "area_sq_ft",
+        "valuation_usd",
+        "stories",
+        "system_capacity_kw",
+    }
+)
+
+# Order is part of the closed ontology contract.  Specific work atoms precede
+# broad project-family phrases so normalization never depends on dict order.
+_WORK_ONTOLOGY: tuple[tuple[str, str, tuple[str, ...]], ...] = (
+    ("roof_covering_replacement", "reroof", (r"\breroof\b", r"\bre-?roof\b", r"\broof replacement\b", r"\breplace (?:asphalt )?shingles?\b")),
+    ("structural_alteration", "residential_remodel", (r"\bstructural (?:alteration|change|framing)\b", r"\bload[- ]bearing\b")),
+    ("electrical_work", "residential_remodel", (r"\belectrical\b", r"\bpanel (?:replacement|upgrade|change)\b", r"\bwiring\b")),
+    ("plumbing_work", "residential_remodel", (r"\bplumbing\b", r"\brepipe\b", r"\bwater heater\b")),
+    ("mechanical_work", "residential_remodel", (r"\bmechanical\b", r"\bhvac\b", r"\bfurnace\b", r"\bair conditioner\b")),
+    ("fire_life_safety_work", "commercial_tenant_improvement", (r"\bfire (?:alarm|sprinkler|suppression|life safety)\b",)),
+    ("food_health_work", "commercial_tenant_improvement", (r"\bcommercial kitchen\b", r"\bfood service\b", r"\bhealth permit\b")),
+    ("liquor_service_work", "commercial_tenant_improvement", (r"\bliquor\b", r"\balcohol service\b")),
+    ("wastewater_work", "commercial_tenant_improvement", (r"\bwastewater\b", r"\bgrease interceptor\b")),
+    ("occupancy_change", "commercial_tenant_improvement", (r"\bchange of (?:use|occupancy)\b", r"\boccupancy change\b")),
+    ("zoning_review", "commercial_tenant_improvement", (r"\bzoning\b", r"\bplanning review\b")),
+    ("commercial_tenant_improvement", "commercial_tenant_improvement", (r"\bcommercial tenant improvement\b", r"\btenant improvement\b", r"\bcommercial build[- ]?out\b")),
+    ("residential_remodel", "residential_remodel", (r"\bresidential remodel\b", r"\bkitchen remodel\b", r"\bbath(?:room)? remodel\b")),
+)
+
+
+def get_rule_engine_core_mode() -> str:
+    value = str(os.environ.get(CORE_SETTING, "off") or "off").strip().lower()
+    return "active" if value == "active" else "off"
+
+
+def _core_allowlist() -> frozenset[str]:
+    return frozenset(
+        item.strip().lower()
+        for item in str(os.environ.get(CORE_ALLOWLIST_SETTING, "") or "").split(",")
+        if item.strip()
+    )
+
+
+def core_activation_allowed(jurisdiction_id: str) -> bool:
+    normalized = _normalize_text(jurisdiction_id).lower()
+    return bool(
+        normalized
+        and get_rule_engine_core_mode() == "active"
+        and normalized in _core_allowlist()
+    )
+
+
+def resolve_jurisdiction_identity(
+    city: str,
+    state: str,
+    *,
+    index: Mapping[str, Mapping[str, Any]] | None = None,
+) -> JurisdictionIdentityResolution:
+    state_key = _normalize_text(state).upper()
+    city_key = _slug(city)
+    source_index = index if index is not None else load_v24_index()
+    if source_index is None:
+        return JurisdictionIdentityResolution(
+            JurisdictionResolutionStatus.INDEX_UNAVAILABLE,
+            (),
+            None,
+            "v2.4 jurisdiction index unavailable",
+        )
+    grouped: dict[str, dict[str, Any]] = {}
+    for key in sorted(source_index):
+        cell = source_index.get(key)
+        if not isinstance(cell, Mapping):
+            continue
+        if _normalize_text(cell.get("state")).upper() != state_key or _slug(cell.get("ahj")) != city_key:
+            continue
+        jurisdiction_id = _normalize_text(cell.get("jurisdiction_id")).lower()
+        if not jurisdiction_id:
+            continue
+        row = grouped.setdefault(
+            jurisdiction_id,
+            {
+                "ahj_name": _normalize_text(cell.get("ahj")) or _normalize_text(city),
+                "state": _normalize_text(cell.get("state") or state).upper(),
+                "county": _normalize_text(cell.get("county")) or None,
+                "cell_ids": set(),
+            },
+        )
+        cell_id = _normalize_text(cell.get("cell_id"))
+        if cell_id:
+            row["cell_ids"].add(cell_id)
+    candidates = tuple(
+        JurisdictionCandidate(
+            jurisdiction_id=jurisdiction_id,
+            ahj_name=grouped[jurisdiction_id]["ahj_name"],
+            state=grouped[jurisdiction_id]["state"],
+            county=grouped[jurisdiction_id]["county"],
+            cell_ids=tuple(sorted(grouped[jurisdiction_id]["cell_ids"])),
+        )
+        for jurisdiction_id in sorted(grouped)
+    )
+    if len(candidates) == 1:
+        return JurisdictionIdentityResolution(
+            JurisdictionResolutionStatus.EXACT,
+            candidates,
+            candidates[0],
+            "one stable jurisdiction id matched the exact AHJ/state boundary",
+        )
+    if len(candidates) > 1:
+        return JurisdictionIdentityResolution(
+            JurisdictionResolutionStatus.AMBIGUOUS,
+            candidates,
+            None,
+            "multiple stable jurisdiction ids matched the AHJ/state boundary",
+        )
+    return JurisdictionIdentityResolution(
+        JurisdictionResolutionStatus.UNCOVERED,
+        (),
+        None,
+        "no stable jurisdiction id matched the exact AHJ/state boundary",
+    )
+
+
+def _match_is_negated(text: str, start: int) -> bool:
+    prefix = text[max(0, start - 32):start]
+    return bool(re.search(r"(?:\bno\b|\bwithout\b|\bnot\b|does not include)\s+(?:\w+\s+){0,3}$", prefix))
+
+
+def _scope_thresholds(text: str) -> tuple[WorkThreshold, ...]:
+    values: list[WorkThreshold] = []
+    number_pattern = r"([0-9][0-9,]*(?:\.[0-9]+)?)"
+    area_pattern = re.compile(
+        rf"(?:(under|less than|over|more than|at least|up to)\s+)?{number_pattern}\s*(?:sq\.?\s*ft\.?|square feet|square foot)\b"
+    )
+    operator_map = {
+        "under": "lt",
+        "less than": "lt",
+        "over": "gt",
+        "more than": "gt",
+        "at least": "gte",
+        "up to": "lte",
+    }
+    for match in area_pattern.finditer(text):
+        number = float(match.group(2).replace(",", ""))
+        values.append(
+            WorkThreshold(
+                "area_sq_ft",
+                operator_map.get(match.group(1) or "", "eq"),
+                int(number) if number.is_integer() else number,
+                "sq_ft",
+            )
+        )
+    for match in re.finditer(r"\$\s*([0-9][0-9,]*(?:\.[0-9]+)?)", text):
+        number = float(match.group(1).replace(",", ""))
+        values.append(WorkThreshold("valuation_usd", "eq", int(number) if number.is_integer() else number, "usd"))
+    return tuple(sorted(values, key=lambda item: (item.name, item.value)))
+
+
+def normalize_work_atoms(
+    job_type: str,
+    job_category: str = "",
+    *,
+    facts: Mapping[str, Any] | None = None,
+) -> NormalizedWorkAtoms:
+    text = _normalize_text(f"{job_type} {job_category}").lower()
+    thresholds = _scope_thresholds(text)
+    atoms: list[ClosedWorkAtom] = []
+    for node, project_family, patterns in _WORK_ONTOLOGY:
+        found: re.Match[str] | None = None
+        for pattern in patterns:
+            candidate = re.search(pattern, text)
+            if candidate is not None and (found is None or candidate.start() < found.start()):
+                found = candidate
+        if found is None:
+            continue
+        polarity = WorkPolarity.NEGATED if _match_is_negated(text, found.start()) else WorkPolarity.POSITIVE
+        fact_gate = {
+            "structural_alteration": "structural_change",
+            "electrical_work": "electrical_scope",
+            "plumbing_work": "plumbing_scope",
+            "mechanical_work": "mechanical_scope",
+            "fire_life_safety_work": "fire_life_safety_scope",
+            "food_health_work": "food_service_scope",
+            "liquor_service_work": "liquor_service_scope",
+            "wastewater_work": "wastewater_scope",
+            "occupancy_change": "occupancy_change",
+            "zoning_review": "zoning_trigger",
+        }.get(node)
+        if polarity is WorkPolarity.NEGATED and fact_gate and (facts or {}).get(fact_gate) is False:
+            # A supplied, closed-world false fact is the canonical representation;
+            # do not duplicate it as a negated atom.
+            continue
+        atoms.append(
+            ClosedWorkAtom(
+                ontology_node=node,
+                project_family=project_family,
+                polarity=polarity,
+                raw_match=found.group(0),
+                thresholds=thresholds,
+            )
+        )
+    atoms.sort(key=lambda atom: tuple(item[0] for item in _WORK_ONTOLOGY).index(atom.ontology_node))
+    declared_family_nodes = {
+        "commercial_tenant_improvement": "commercial_tenant_improvement",
+        "residential_remodel": "residential_remodel",
+        "roof_covering_replacement": "reroof",
+    }
+    declared_families = {
+        declared_family_nodes[atom.ontology_node]
+        for atom in atoms
+        if atom.polarity is WorkPolarity.POSITIVE and atom.ontology_node in declared_family_nodes
+    }
+    if len(declared_families) == 1:
+        declared_family = next(iter(declared_families))
+        atoms = [
+            ClosedWorkAtom(
+                ontology_node=atom.ontology_node,
+                project_family=declared_family,
+                polarity=atom.polarity,
+                raw_match=atom.raw_match,
+                thresholds=atom.thresholds,
+            )
+            for atom in atoms
+        ]
+    positive = tuple(atom for atom in atoms if atom.polarity is WorkPolarity.POSITIVE)
+    known_facts: list[tuple[str, Any]] = []
+    issues: set[str] = set()
+    if len(declared_families) > 1:
+        issues.add("ambiguous_project_family")
+    for key, value in sorted((facts or {}).items()):
+        normalized_key = _slug(key)
+        if normalized_key not in _CORE_FACT_KEYS:
+            issues.add("unknown_fact_key")
+            continue
+        if not isinstance(value, (bool, int, float, str)) or isinstance(value, str) and not _normalize_text(value):
+            issues.add("invalid_fact_value")
+            continue
+        known_facts.append((normalized_key, value))
+    if not atoms:
+        issues.add("unknown_work_atom")
+    if not positive:
+        issues.add("no_positive_work_atom")
+    return NormalizedWorkAtoms(
+        atoms=tuple(atoms),
+        positive_atoms=positive,
+        known_facts=tuple(known_facts),
+        issue_codes=tuple(sorted(issues)),
+        valid=not issues,
+    )
+
+
+def _provenance_records(value: Any) -> tuple[ProvenanceRecord, ...]:
+    values = value if isinstance(value, list) else [value]
+    return _dedupe_sorted_provenance(_provenance_from_dict(item) for item in values)
+
+
+def _publishable_provenance(record: ProvenanceRecord) -> bool:
+    return bool(
+        record.publishable
+        and record.source_url
+        and record.source_quote
+        and re.fullmatch(r"[0-9a-f]{64}", record.snapshot_hash or "")
+        and record.snapshot_path
+    )
+
+
+def normalize_family_decision(value: Mapping[str, Any]) -> CoreFamilyDecision:
+    family = normalize_family(value.get("family") or value.get("permit_kind") or value.get("trade"))
+    raw_verdict = _slug(value.get("verdict") or value.get("required_status") or value.get("value"))
+    verdict_map = {
+        "required": FamilyVerdict.REQUIRED,
+        "not_required": FamilyVerdict.NOT_REQUIRED,
+        "conditional": FamilyVerdict.CONDITIONAL,
+        "verify": FamilyVerdict.VERIFY,
+        "abstain": FamilyVerdict.ABSTAIN,
+    }
+    verdict = verdict_map.get(raw_verdict, FamilyVerdict.ABSTAIN)
+    provenance = _provenance_records(value.get("provenance"))
+    issues: set[str] = set()
+    if family not in _CORE_FAMILIES:
+        issues.add("unknown_family")
+        verdict = FamilyVerdict.ABSTAIN
+    publishable = tuple(record for record in provenance if _publishable_provenance(record))
+    if verdict in {FamilyVerdict.REQUIRED, FamilyVerdict.NOT_REQUIRED} and not publishable:
+        issues.add("binary_without_publishable_provenance")
+        verdict = FamilyVerdict.VERIFY
+    if verdict is FamilyVerdict.NOT_REQUIRED and publishable:
+        affirmative = any(
+            re.search(r"\b(?:not required|no permit|exempt(?:ion|ed)?|does not require|shall not require)\b", record.source_quote, re.I)
+            for record in publishable
+        )
+        if not affirmative:
+            issues.add("exemption_not_affirmatively_supported")
+            verdict = FamilyVerdict.VERIFY
+    return CoreFamilyDecision(
+        family=family or "unknown",
+        verdict=verdict,
+        trigger=_normalize_text(value.get("trigger")),
+        provenance=provenance,
+        validation_issue_codes=tuple(sorted(issues)),
+    )
+
+
+def _coerce_authority(row: Mapping[str, Any]) -> AuthorityRef | None:
+    family = normalize_family(row.get("permit_family") or row.get("trade"))
+    if family not in _CORE_FAMILIES:
+        return None
+    issuing_raw = row.get("issuing_authority")
+    applying_raw = row.get("application_authority")
+    issuing = _mapping(issuing_raw)
+    applying = _mapping(applying_raw)
+    issuing_name = _normalize_text(issuing.get("name") if issuing else issuing_raw)
+    applying_name = _normalize_text(applying.get("name") if applying else applying_raw)
+    return AuthorityRef(
+        family=family,
+        issuing_authority=issuing_name,
+        application_authority=applying_name,
+        authority_tier=_slug(issuing.get("tier")) if issuing else "unknown",
+        handled_by_local_ahj=(
+            bool(row.get("handled_by_local_ahj"))
+            if isinstance(row.get("handled_by_local_ahj"), bool)
+            else None
+        ),
+    )
+
+
+def _coerce_route(row: Mapping[str, Any]) -> ApplicationRoute:
+    return ApplicationRoute(
+        permit_name=_normalize_text(row.get("permit_name")),
+        office_name=_normalize_text(row.get("office_name")),
+        apply_url=_normalize_text(row.get("apply_url")),
+        channel=_slug(row.get("channel")) or "unknown",
+        provenance=_provenance_records(row.get("provenance")),
+    )
+
+
+def _route_matches_family(route: ApplicationRoute, family: str, authority: AuthorityRef) -> bool:
+    permit_slug = _slug(route.permit_name)
+    family_aliases = {family}
+    if family == "mechanical":
+        family_aliases |= {"hvac", "gas"}
+    return any(alias in permit_slug for alias in family_aliases) or (
+        bool(authority.application_authority)
+        and authority.application_authority.lower() == route.office_name.lower()
+    )
+
+
+def build_family_authority_routes(cell: Mapping[str, Any]) -> tuple[FamilyAuthorityRoute, ...]:
+    tier1 = _mapping(cell.get("tier1"))
+    authorities = tuple(
+        authority
+        for authority in (_coerce_authority(row) for row in _list(tier1.get("trade_authority")) if isinstance(row, Mapping))
+        if authority is not None
+    )
+    routes = tuple(_coerce_route(row) for row in _list(tier1.get("apply")) if isinstance(row, Mapping))
+    output: list[FamilyAuthorityRoute] = []
+    for authority in sorted(authorities, key=lambda item: item.family):
+        matches = sorted(
+            (route for route in routes if _route_matches_family(route, authority.family, authority)),
+            key=lambda item: (item.permit_name, item.office_name, item.apply_url),
+        )
+        route = matches[0] if matches else ApplicationRoute(
+            permit_name="",
+            office_name=authority.application_authority,
+            apply_url="",
+            channel="verify",
+            provenance=(),
+        )
+        output.append(FamilyAuthorityRoute(authority.family, authority, route))
+    return tuple(output)
+
+
+def select_precedence_stage(
+    resolution_status: V24ResolutionStatus,
+    coverage: str,
+    official_query_evidence_valid: bool,
+) -> PrecedenceStage:
+    normalized_coverage = _slug(coverage)
+    if resolution_status is V24ResolutionStatus.EXACT_CELL_PUBLISHABLE and normalized_coverage == "complete":
+        return PrecedenceStage.VALIDATED_EXACT_COMPLETE
+    if resolution_status is V24ResolutionStatus.EXACT_CELL_PUBLISHABLE and normalized_coverage == "partial":
+        return PrecedenceStage.VALIDATED_EXACT_PARTIAL
+    if resolution_status is V24ResolutionStatus.EXACT_CELL_FAIL_CLOSED or normalized_coverage == "fail_closed":
+        return PrecedenceStage.EXACT_FAIL_CLOSED
+    if official_query_evidence_valid:
+        return PrecedenceStage.QUERY_OFFICIAL_EVIDENCE
+    return PrecedenceStage.INTERNAL_ABSTAIN
+
+
+def _projection_sources(decisions: Iterable[CoreFamilyDecision]) -> list[dict[str, Any]]:
+    records = _dedupe_sorted_provenance(
+        record for decision in decisions for record in decision.provenance if _publishable_provenance(record)
+    )
+    return [
+        {
+            "url": record.source_url,
+            "source_url": record.source_url,
+            "title": "Official jurisdiction source",
+            "quote": record.source_quote,
+            "source_quote": record.source_quote,
+            "snapshot_hash": record.snapshot_hash,
+            "effective_date": record.effective_date,
+            "last_verified_at": record.last_verified_at,
+        }
+        for record in records
+    ]
+
+
+def _public_family_authority_route(route: FamilyAuthorityRoute) -> dict[str, Any]:
+    public_provenance = _projection_sources(
+        (
+            CoreFamilyDecision(
+                family=route.family,
+                verdict=FamilyVerdict.ABSTAIN,
+                trigger="",
+                provenance=route.application_route.provenance,
+                validation_issue_codes=(),
+            ),
+        )
+    )
+    return {
+        "family": route.family,
+        "authority": {
+            "family": route.authority.family,
+            "issuing_authority": route.authority.issuing_authority,
+            "application_authority": route.authority.application_authority,
+        },
+        "application_route": {
+            "permit_name": route.application_route.permit_name,
+            "office_name": route.application_route.office_name,
+            "apply_url": route.application_route.apply_url,
+            "channel": route.application_route.channel,
+            "provenance": public_provenance,
+        },
+    }
+
+
+def build_sealed_projection_payload(
+    *,
+    jurisdiction_id: str,
+    jurisdiction_name: str,
+    state: str,
+    project_family: str,
+    main_decision: CoreFamilyDecision,
+    family_decisions: tuple[CoreFamilyDecision, ...],
+    family_routes: tuple[FamilyAuthorityRoute, ...],
+    coverage_status: str,
+    coverage_reason: str,
+    source_cell_id: str | None,
+) -> dict[str, Any]:
+    main_binary = main_decision.verdict in {FamilyVerdict.REQUIRED, FamilyVerdict.NOT_REQUIRED}
+    permit_required = True if main_decision.verdict is FamilyVerdict.REQUIRED else False if main_decision.verdict is FamilyVerdict.NOT_REQUIRED else None
+    route_by_family = {route.family: route for route in family_routes}
+    main_route = route_by_family.get(main_decision.family)
+    if main_route is None and family_routes:
+        main_route = family_routes[0]
+    family_rows = [
+        {
+            "family": decision.family,
+            "verdict": decision.verdict.value,
+            "trigger": decision.trigger,
+            "authority": (
+                route_by_family[decision.family].authority.application_authority
+                if decision.family in route_by_family
+                else ""
+            ),
+            "apply_url": (
+                route_by_family[decision.family].application_route.apply_url
+                if decision.family in route_by_family
+                else ""
+            ),
+            "validation_issue_codes": list(decision.validation_issue_codes),
+        }
+        for decision in family_decisions
+    ]
+    permits_required = [
+        {
+            "permit_type": decision.family.replace("_", " ").title() + " Permit",
+            "permit_kind": decision.family,
+            "required": True if decision.verdict is FamilyVerdict.REQUIRED else False if decision.verdict is FamilyVerdict.NOT_REQUIRED else "maybe",
+            "required_status": decision.verdict.value,
+            "trigger": decision.trigger,
+            "applying_office": route_by_family[decision.family].authority.application_authority if decision.family in route_by_family else "",
+            "apply_url": route_by_family[decision.family].application_route.apply_url if decision.family in route_by_family else "",
+        }
+        for decision in family_decisions
+    ]
+    related = [
+        {
+            "permit_type": decision.family.replace("_", " ").title() + " Permit",
+            "permit_kind": decision.family,
+            "required": False if decision.verdict is FamilyVerdict.NOT_REQUIRED else "maybe",
+            "required_status": decision.verdict.value,
+            "trigger": decision.trigger,
+        }
+        for decision in family_decisions
+        if decision.verdict is not FamilyVerdict.REQUIRED
+    ]
+    sources = _projection_sources((main_decision, *family_decisions))
+    required_name = next(
+        (row["permit_type"] for row in permits_required if row.get("required") is True),
+        "",
+    )
+    permit_name = required_name or (
+        permits_required[0]["permit_type"]
+        if permits_required
+        else main_decision.family.replace("_", " ").title() + " Permit"
+    )
+    verdict_text = "YES" if permit_required is True else "NO" if permit_required is False else "VERIFY"
+    decision_text = main_decision.verdict.value if main_binary else "UNKNOWN"
+    next_step = (
+        f"Apply with {main_route.authority.application_authority}."
+        if main_route and main_route.authority.application_authority
+        else "Verify the listed family decisions with the official permit authority before filing."
+    )
+    return {
+        "projection_schema_version": CORE_PROJECTION_SCHEMA_VERSION,
+        "decision_source": "sealed_permit_rule_engine_envelope",
+        "source_cell_id": source_cell_id,
+        "jurisdiction_id": jurisdiction_id,
+        "jurisdiction_name": jurisdiction_name,
+        "city": jurisdiction_name,
+        "state": state,
+        "project_family": project_family,
+        "coverage_status": coverage_status,
+        "coverage_reason": coverage_reason,
+        "permit_decision": decision_text,
+        "permit_verdict": verdict_text,
+        "permit_required": permit_required,
+        "permit_kind": main_decision.family,
+        "permit_name": permit_name,
+        "permits_required": permits_required,
+        "companion_permits": related,
+        "related_permits": copy.deepcopy(related),
+        "family_decisions": family_rows,
+        "family_authority_routes": [_public_family_authority_route(route) for route in family_routes],
+        "applying_office": main_route.authority.application_authority if main_route else "",
+        "apply_url": main_route.application_route.apply_url if main_route else "",
+        "online_application_url": main_route.application_route.apply_url if main_route else "",
+        "sources": sources,
+        "claim_citations": copy.deepcopy(sources),
+        "customer_headline": f"Permit decision: {verdict_text}",
+        "customer_next_step": next_step,
+        "summary": coverage_reason,
+        "warnings": [
+            f"{row['family'].replace('_', ' ').title()}: {row['verdict']} — verify before filing."
+            for row in family_rows
+            if row["verdict"] in {"CONDITIONAL", "VERIFY", "ABSTAIN"}
+        ],
+    }
+
+
+def _identity_from_resolution(resolution: V24Resolution, city: str, state: str) -> JurisdictionIdentityResolution:
+    cell = resolution.cell if isinstance(resolution.cell, Mapping) else None
+    if cell and _normalize_text(cell.get("jurisdiction_id")):
+        candidate = JurisdictionCandidate(
+            jurisdiction_id=_normalize_text(cell.get("jurisdiction_id")).lower(),
+            ahj_name=_normalize_text(cell.get("ahj")) or _normalize_text(city),
+            state=_normalize_text(cell.get("state") or state).upper(),
+            county=_normalize_text(cell.get("county")) or None,
+            cell_ids=tuple(item for item in (_normalize_text(cell.get("cell_id")),) if item),
+        )
+        return JurisdictionIdentityResolution(
+            JurisdictionResolutionStatus.EXACT,
+            (candidate,),
+            candidate,
+            "exact resolved v2.4 cell carries one stable jurisdiction id",
+        )
+    return resolve_jurisdiction_identity(city, state)
+
+
+def _seal_projection(payload: Mapping[str, Any]) -> SealedDecisionProjection:
+    payload_json = canonical_json_bytes(payload).decode("utf-8")
+    return SealedDecisionProjection(
+        schema_version=CORE_PROJECTION_SCHEMA_VERSION,
+        payload_json=payload_json,
+        payload_sha256=hashlib.sha256(payload_json.encode("utf-8")).hexdigest(),
+    )
+
+
+def _core_envelope_hash_payload(envelope: Mapping[str, Any]) -> dict[str, Any]:
+    payload = copy.deepcopy(dict(envelope))
+    payload.pop("envelope_sha256", None)
+    return payload
+
+
+def build_core_decision_envelope(
+    resolution: V24Resolution,
+    *,
+    job_type: str,
+    city: str,
+    state: str,
+    job_category: str = "",
+    facts: Mapping[str, Any] | None = None,
+    official_query_evidence: Mapping[str, Any] | None = None,
+) -> CoreDecisionEnvelope:
+    if not isinstance(resolution, V24Resolution):
+        raise TypeError("resolution must be V24Resolution")
+    identity = _identity_from_resolution(resolution, city, state)
+    work = normalize_work_atoms(job_type, job_category, facts=facts)
+    cell = _mapping(resolution.cell)
+    legacy_envelope = build_decision_envelope(
+        resolution,
+        job_type=job_type,
+        city=city,
+        state=state,
+        job_category=job_category,
+    )
+    coverage_map = {
+        CoverageStatus.EXACT_COMPLETE: "complete",
+        CoverageStatus.EXACT_PARTIAL: "partial",
+        CoverageStatus.FAIL_CLOSED: "fail_closed",
+    }
+    coverage = coverage_map.get(legacy_envelope.coverage_status, "none")
+    query_decision = normalize_family_decision(official_query_evidence or {})
+    selected_jurisdiction_id = identity.selected.jurisdiction_id if identity.selected else ""
+    query_valid = bool(
+        official_query_evidence
+        and _normalize_text(official_query_evidence.get("jurisdiction_id")).lower() == selected_jurisdiction_id
+        and _slug(official_query_evidence.get("source_authority")) in {"official_ahj", "official_state", "official_county"}
+        and query_decision.verdict in {FamilyVerdict.REQUIRED, FamilyVerdict.NOT_REQUIRED}
+        and identity.status is JurisdictionResolutionStatus.EXACT
+        and work.valid
+    )
+    stage = select_precedence_stage(resolution.status, coverage, query_valid)
+    if not work.valid or identity.status is not JurisdictionResolutionStatus.EXACT:
+        stage = PrecedenceStage.INTERNAL_ABSTAIN
+
+    tier1 = _mapping(cell.get("tier1"))
+    decisions: list[CoreFamilyDecision] = []
+    for row in _list(tier1.get("permits_required")):
+        if isinstance(row, Mapping):
+            decisions.append(
+                normalize_family_decision(
+                    {
+                        "family": row.get("permit_kind"),
+                        "verdict": row.get("required_status"),
+                        "trigger": row.get("trigger"),
+                        "provenance": row.get("provenance"),
+                    }
+                )
+            )
+    decisions.sort(key=lambda item: (item.family, item.verdict.value, item.trigger))
+    main_row = _mapping(tier1.get("main_decision"))
+    primary_family = decisions[0].family if decisions else "building"
+    main = normalize_family_decision(
+        {
+            "family": primary_family,
+            "verdict": main_row.get("value"),
+            "trigger": _normalize_text(cell.get("scope")) or _normalize_text(cell.get("project_family")),
+            "provenance": main_row.get("provenance"),
+        }
+    )
+    if stage is PrecedenceStage.QUERY_OFFICIAL_EVIDENCE:
+        main = query_decision
+        decisions = [query_decision]
+    elif stage in {PrecedenceStage.EXACT_FAIL_CLOSED, PrecedenceStage.INTERNAL_ABSTAIN}:
+        main = CoreFamilyDecision(
+            family=primary_family,
+            verdict=FamilyVerdict.ABSTAIN,
+            trigger=legacy_envelope.coverage_reason,
+            provenance=(),
+            validation_issue_codes=("precedence_abstain",),
+        )
+        abstain_issue = (
+            "exact_cell_fail_closed"
+            if stage is PrecedenceStage.EXACT_FAIL_CLOSED
+            else "request_scope_not_executable"
+        )
+        decisions = [
+            CoreFamilyDecision(
+                family=decision.family,
+                verdict=FamilyVerdict.ABSTAIN,
+                trigger=decision.trigger,
+                provenance=decision.provenance,
+                validation_issue_codes=tuple(sorted(set(decision.validation_issue_codes) | {abstain_issue})),
+            )
+            for decision in decisions
+        ]
+    routes = build_family_authority_routes(cell) if cell else ()
+    selected = identity.selected
+    jurisdiction_id = selected.jurisdiction_id if selected else ""
+    jurisdiction_name = selected.ahj_name if selected else _normalize_text(city)
+    jurisdiction_state = selected.state if selected else _normalize_text(state).upper()
+    project_family = normalize_family(cell.get("project_family")) or (
+        work.positive_atoms[0].project_family if work.positive_atoms else "unsupported"
+    )
+    coverage_reason = legacy_envelope.coverage_reason
+    payload = build_sealed_projection_payload(
+        jurisdiction_id=jurisdiction_id,
+        jurisdiction_name=jurisdiction_name,
+        state=jurisdiction_state,
+        project_family=project_family,
+        main_decision=main,
+        family_decisions=tuple(decisions),
+        family_routes=routes,
+        coverage_status=stage.value,
+        coverage_reason=coverage_reason,
+        source_cell_id=legacy_envelope.source_cell_id,
+    )
+    sealed = _seal_projection(payload)
+    base = {
+        "schema_version": CORE_ENVELOPE_SCHEMA_VERSION,
+        "request_fingerprint_sha256": _request_fingerprint(job_type, city, state, job_category),
+        "source_cell_id": legacy_envelope.source_cell_id,
+        "source_index_key": legacy_envelope.source_index_key,
+        "source_package_manifest_sha256": legacy_envelope.source_package_manifest_sha256,
+        "precedence_stage": stage,
+        "coverage_status": coverage,
+        "coverage_reason": coverage_reason,
+        "jurisdiction": identity,
+        "work_atoms": work,
+        "main_decision": main,
+        "family_decisions": tuple(decisions),
+        "family_routes": routes,
+        "sealed_projection": sealed,
+    }
+    envelope_hash = stable_sha256(to_primitive(base))
+    return CoreDecisionEnvelope(**base, envelope_sha256=envelope_hash)
+
+
+def attach_core_decision_envelope(
+    result: Mapping[str, Any],
+    envelope: CoreDecisionEnvelope,
+) -> dict[str, Any]:
+    if not isinstance(envelope, CoreDecisionEnvelope):
+        raise TypeError("envelope must be CoreDecisionEnvelope")
+    output = copy.deepcopy(dict(result))
+    output["_permit_rule_engine_cache_schema_version"] = CORE_CACHE_SCHEMA_VERSION
+    output["_permit_rule_engine_core"] = to_primitive(envelope)
+    return output
+
+
+def _validated_core_payload(result: Mapping[str, Any]) -> tuple[dict[str, Any], dict[str, Any]] | None:
+    if result.get("_permit_rule_engine_cache_schema_version") != CORE_CACHE_SCHEMA_VERSION:
+        return None
+    envelope = result.get("_permit_rule_engine_core")
+    if not isinstance(envelope, Mapping) or envelope.get("schema_version") != CORE_ENVELOPE_SCHEMA_VERSION:
+        return None
+    expected_envelope_hash = _normalize_text(envelope.get("envelope_sha256"))
+    if not expected_envelope_hash or stable_sha256(_core_envelope_hash_payload(envelope)) != expected_envelope_hash:
+        return None
+    sealed = envelope.get("sealed_projection")
+    if not isinstance(sealed, Mapping) or sealed.get("schema_version") != CORE_PROJECTION_SCHEMA_VERSION:
+        return None
+    payload_json = sealed.get("payload_json")
+    expected_payload_hash = _normalize_text(sealed.get("payload_sha256"))
+    if not isinstance(payload_json, str) or hashlib.sha256(payload_json.encode("utf-8")).hexdigest() != expected_payload_hash:
+        return None
+    try:
+        payload = json.loads(payload_json)
+    except (TypeError, ValueError):
+        return None
+    if not isinstance(payload, dict) or payload.get("projection_schema_version") != CORE_PROJECTION_SCHEMA_VERSION:
+        return None
+    if canonical_json_bytes(payload).decode("utf-8") != payload_json:
+        return None
+    return dict(envelope), payload
+
+
+def validate_rule_engine_cache_payload(result: Mapping[str, Any], *, required_version: str) -> bool:
+    return bool(
+        required_version == CORE_CACHE_SCHEMA_VERSION
+        and isinstance(result, Mapping)
+        and _validated_core_payload(result) is not None
+    )
+
+
+def extract_sealed_public_projection(
+    result: Mapping[str, Any],
+    *,
+    city: str = "",
+    state: str = "",
+) -> dict[str, Any] | None:
+    if not isinstance(result, Mapping):
+        return None
+    validated = _validated_core_payload(result)
+    if validated is None:
+        return None
+    _envelope, payload = validated
+    jurisdiction_id = _normalize_text(payload.get("jurisdiction_id")).lower()
+    if not core_activation_allowed(jurisdiction_id):
+        return None
+    if city and _slug(payload.get("city")) != _slug(city):
+        return None
+    if state and _normalize_text(payload.get("state")).upper() != _normalize_text(state).upper():
+        return None
+    return copy.deepcopy(payload)
+
+
+def core_cache_schema_for_request(city: str, state: str) -> str | None:
+    """Return the active namespace only for one exact, allowlisted jurisdiction."""
+    if get_rule_engine_core_mode() != "active":
+        return None
+    identity = resolve_jurisdiction_identity(city, state)
+    if identity.status is not JurisdictionResolutionStatus.EXACT or identity.selected is None:
+        return None
+    return CORE_CACHE_SCHEMA_VERSION if core_activation_allowed(identity.selected.jurisdiction_id) else None
+
+
+def maybe_attach_core_decision_envelope(
+    result: dict[str, Any],
+    *,
+    job_type: str,
+    city: str,
+    state: str,
+    job_category: str = "",
+    facts: Mapping[str, Any] | None = None,
+) -> dict[str, Any]:
+    if get_rule_engine_core_mode() != "active":
+        return result
+    identity = resolve_jurisdiction_identity(city, state)
+    if identity.status is not JurisdictionResolutionStatus.EXACT or identity.selected is None:
+        return result
+    if not core_activation_allowed(identity.selected.jurisdiction_id):
+        return result
+    resolution = resolve_v24_cell(city, state, job_type, job_category, force=True)
+    envelope = build_core_decision_envelope(
+        resolution,
+        job_type=job_type,
+        city=city,
+        state=state,
+        job_category=job_category,
+        facts=facts,
+    )
+    return attach_core_decision_envelope(result, envelope)

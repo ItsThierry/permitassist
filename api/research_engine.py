@@ -87,13 +87,19 @@ except ImportError:  # server.py imports research_engine as a top-level module
 
 try:
     from .permit_rule_engine import (
+        core_cache_schema_for_request,
+        maybe_attach_core_decision_envelope,
         observe_permit_rule_engine_shadow,
         prepare_permit_rule_engine_shadow,
+        validate_rule_engine_cache_payload,
     )
 except ImportError:  # server.py imports research_engine as a top-level module
     from permit_rule_engine import (
+        core_cache_schema_for_request,
+        maybe_attach_core_decision_envelope,
         observe_permit_rule_engine_shadow,
         prepare_permit_rule_engine_shadow,
+        validate_rule_engine_cache_payload,
     )
 
 try:
@@ -3784,7 +3790,14 @@ def init_cache():
     conn.commit()
     conn.close()
 
-def cache_key(job_type: str, city: str, state: str, job_category: str | None = None) -> str:
+def cache_key(
+    job_type: str,
+    city: str,
+    state: str,
+    job_category: str | None = None,
+    *,
+    rule_engine_cache_schema_version: str | None = None,
+) -> str:
     # v5 (2026-07-11): model-scoped namespace prevents pre-Luna synthesis from
     # being served after the single-model cutover.
     # v4 (2026-06-26): universal filing-packet reconciler/schema bump so stale
@@ -3802,7 +3815,8 @@ def cache_key(job_type: str, city: str, state: str, job_category: str | None = N
     canonical_category = str(scope_contract.get("category") or "").lower().strip()
     if canonical_category not in ("residential", "commercial"):
         canonical_category = raw_category or "residential"
-    raw = f"{PERMITASSIST_AI_CACHE_NAMESPACE}|{FILING_PACKET_CACHE_SCHEMA_VERSION}|{job_type.lower().strip()}|{city.lower().strip()}|{state.upper().strip()}|{canonical_category}|{scope_bits}"
+    core_namespace = f"|{rule_engine_cache_schema_version}" if rule_engine_cache_schema_version else ""
+    raw = f"{PERMITASSIST_AI_CACHE_NAMESPACE}|{FILING_PACKET_CACHE_SCHEMA_VERSION}{core_namespace}|{job_type.lower().strip()}|{city.lower().strip()}|{state.upper().strip()}|{canonical_category}|{scope_bits}"
     return hashlib.md5(raw.encode()).hexdigest()
 
 def _smart_ttl(hits: int, confidence: str, fee_unverified: bool) -> int:
@@ -3906,7 +3920,13 @@ def _pick_primary_source_url(result: dict) -> str:
     return ""
 
 
-def get_cached(key: str, max_age_days: int = None, _refresh_callback=None):
+def get_cached(
+    key: str,
+    max_age_days: int | None = None,
+    _refresh_callback=None,
+    *,
+    required_rule_engine_cache_version: str | None = None,
+):
     """Smart cache read with tiered TTL, stale-while-revalidate, and
     optional ETag-based invalidation (added 2026-04-26).
 
@@ -3940,6 +3960,16 @@ def get_cached(key: str, max_age_days: int = None, _refresh_callback=None):
                 return None
             if result.get("_cache_schema_version") != FILING_PACKET_CACHE_SCHEMA_VERSION:
                 print(f"[cache] Ignoring pre-filing-packet schema cache row for key {key[:8]}…")
+                conn.execute("DELETE FROM permit_cache WHERE cache_key = ?", [key])
+                conn.commit()
+                conn.close()
+                _cache_stats["misses"] += 1
+                return None
+            if required_rule_engine_cache_version and not validate_rule_engine_cache_payload(
+                result,
+                required_version=required_rule_engine_cache_version,
+            ):
+                print(f"[cache] Ignoring stale rule-engine cache row for key {key[:8]}…")
                 conn.execute("DELETE FROM permit_cache WHERE cache_key = ?", [key])
                 conn.commit()
                 conn.close()
@@ -8987,7 +9017,14 @@ def research_permit(job_type: str, city: str, state: str, zip_code: str = "", us
         )
     except Exception:
         rule_engine_shadow_envelope = None
-    key = cache_key(job_type, city, state, job_category)
+    rule_engine_cache_version = core_cache_schema_for_request(city, state)
+    key = cache_key(
+        job_type,
+        city,
+        state,
+        job_category,
+        rule_engine_cache_schema_version=rule_engine_cache_version,
+    )
     v231_resolution = resolve_v231_cell(city, state, job_type, job_category)
     v24_resolution = resolve_v24_cell(city, state, job_type, job_category)
 
@@ -9003,7 +9040,16 @@ def research_permit(job_type: str, city: str, state: str, zip_code: str = "", us
             except Exception as e:
                 print(f"[cache] Background refresh failed (non-fatal): {e}")
 
-        cached = get_cached(key, _refresh_callback=_background_refresh)
+        if rule_engine_cache_version:
+            cached = get_cached(
+                key,
+                _refresh_callback=_background_refresh,
+                required_rule_engine_cache_version=rule_engine_cache_version,
+            )
+        else:
+            # Preserve the exact Part 1 call shape for flag-off parity and
+            # existing cache adapters/mocks.
+            cached = get_cached(key, _refresh_callback=_background_refresh)
         if cached:
             cached["_cached"] = True
             cached["_scope_contract"] = scope_contract
@@ -10063,6 +10109,13 @@ Return ONLY the JSON object."""
         except Exception:
             pass
     result.update(ensure_required_filing_rows(result, job_type, city, state))
+    result = maybe_attach_core_decision_envelope(
+        result,
+        job_type=job_type,
+        city=city,
+        state=state,
+        job_category=job_category,
+    )
 
     if not suppress_cache_write:
         save_cache(key, job_type, job_category, city, state, zip_code, result)

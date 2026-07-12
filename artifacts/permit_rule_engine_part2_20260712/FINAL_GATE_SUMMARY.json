@@ -1,0 +1,58 @@
+{
+  "schema_version": "permitassist.rule-engine-part2.final-gates.v1",
+  "sealed_part1": {
+    "tag": "permit-rule-engine-part1-20260712",
+    "commit": "1db644ee09e3a13e423462e5d8d8934d916dad71"
+  },
+  "part2_checkpoint_tag": "permit-rule-engine-part2-20260712",
+  "focused_tests": {
+    "passed": 32,
+    "failed": 0
+  },
+  "full_suite": {
+    "passed": 1109,
+    "skipped": 47,
+    "failed": 18,
+    "baseline_failures": 18,
+    "new_failure_node_ids": [],
+    "removed_failure_node_ids": [],
+    "exact_failure_set_match": true
+  },
+  "flag_off_byte_parity": {
+    "passed": true,
+    "base_payload_sha256": "422b974f02ad7689e031bf474d07bed833d63a4b5b58ef0fe261bed2e16d1e40",
+    "part2_payload_sha256": "422b974f02ad7689e031bf474d07bed833d63a4b5b58ef0fe261bed2e16d1e40"
+  },
+  "determinism": {
+    "byte_identical": true,
+    "runs": 2
+  },
+  "census": {
+    "cells": 2162,
+    "stable_candidate_violations": 0,
+    "source_free_binary_violations": 0,
+    "fail_closed_or_internal_abstain_binary_violations": 0,
+    "family_route_missing_violations": 0,
+    "public_projection_internal_metadata_violations": 0
+  },
+  "secret_contract_tests": {
+    "passed": 3,
+    "failed": 0
+  },
+  "added_line_secret_scan_hits": 0,
+  "compile_static_diff_checks": "passed",
+  "final_review": {
+    "model": "claude-opus-4-8",
+    "verdict": "READY",
+    "blockers": 0,
+    "web_search_requests": 0
+  },
+  "production_boundary": {
+    "activation_default": "off",
+    "pushes": 0,
+    "deployments": 0,
+    "production_mutations": 0,
+    "customer_data_mutations": 0,
+    "paid_live100_runs": 0
+  }
+}

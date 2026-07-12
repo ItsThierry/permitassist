@@ -1,0 +1,65 @@
+{
+  "schema_version": "permitassist.rule-engine-part2.pre-review-gates.v1",
+  "sealed_part1": {
+    "tag": "permit-rule-engine-part1-20260712",
+    "commit": "1db644ee09e3a13e423462e5d8d8934d916dad71"
+  },
+  "frozen_red_commit": "26bbc4aa131ff15ee9e4eb09f5a8aab2e1ac982b",
+  "gates": {
+    "frozen_hashes": "pass",
+    "diff_check": "pass",
+    "compile_static": "pass",
+    "focused_part2_part1": {
+      "status": "pass",
+      "passed": 29
+    },
+    "secret_default_contracts": {
+      "status": "pass",
+      "passed": 3
+    },
+    "replay_fixture_suites": {
+      "status": "pass",
+      "passed": 90
+    },
+    "flag_off_byte_parity": {
+      "status": "pass",
+      "base_sha256": "422b974f02ad7689e031bf474d07bed833d63a4b5b58ef0fe261bed2e16d1e40",
+      "part2_sha256": "422b974f02ad7689e031bf474d07bed833d63a4b5b58ef0fe261bed2e16d1e40"
+    },
+    "active_census": {
+      "status": "pass",
+      "cells": 2162,
+      "stable_candidate_violations": 0,
+      "source_free_binary_violations": 0,
+      "projection_integrity_violations": 0,
+      "family_route_missing_violations": 0,
+      "sealed_surface_projection_equal": true
+    },
+    "determinism": {
+      "status": "pass",
+      "byte_identical": true,
+      "file_count": 4
+    },
+    "secret_scan": {
+      "status": "pass",
+      "credential_pattern_hits": 0
+    },
+    "full_suite_exact_baseline": {
+      "status": "pass_with_locked_baseline_failures",
+      "passed": 1106,
+      "skipped": 47,
+      "failed": 18,
+      "new_failures": 0,
+      "resolved_failures": 0,
+      "exact_failure_set_match": true
+    }
+  },
+  "product_runtime_network_or_model_calls": 0,
+  "offline_evidence_network_or_model_calls": 0,
+  "read_only_delegate_audits": {
+    "dispatched": 3,
+    "result": "all_timed_out_without_findings"
+  },
+  "production_or_deployment_actions": 0,
+  "review_status": "pending_opus_4_8_exact_diff"
+}

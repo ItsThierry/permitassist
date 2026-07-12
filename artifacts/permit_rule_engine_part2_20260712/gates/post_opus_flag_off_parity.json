@@ -1,0 +1,7 @@
+{
+  "base_commit": "1db644ee09e3a13e423462e5d8d8934d916dad71",
+  "base_payload_sha256": "422b974f02ad7689e031bf474d07bed833d63a4b5b58ef0fe261bed2e16d1e40",
+  "byte_identical": true,
+  "part2_payload_sha256": "422b974f02ad7689e031bf474d07bed833d63a4b5b58ef0fe261bed2e16d1e40",
+  "schema_version": "permitassist.rule-engine-part2.post-opus-flag-off-parity.v1"
+}

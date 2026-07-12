@@ -1,0 +1,25 @@
+{
+  "actual_review_model": "claude-opus-4-8",
+  "blockers_remediated": [
+    "EXACT_FAIL_CLOSED now abstains every family decision and customer mirror row",
+    "customer family authority routes now redact snapshot_path, publishable, authority_tier, and handled_by_local_ahj"
+  ],
+  "new_regressions": [
+    "synthetic fail-closed binary-to-abstain regression",
+    "customer authority-route metadata allowlist regression",
+    "active research_permit cache-to-sealed-projection end-to-end regression"
+  ],
+  "post_patch_gates": {
+    "deterministic_evidence_byte_identical": true,
+    "evidence_cells": 2162,
+    "exact_baseline_failure_set_match": true,
+    "flag_off_byte_parity": true,
+    "focused": "32 passed",
+    "full_suite": "1109 passed, 47 skipped, 18 baseline failures",
+    "secret_contract_tests": "3 passed",
+    "secret_scan_hits": 0,
+    "static_checks": "passed"
+  },
+  "review_verdict": "NOT_READY",
+  "schema_version": "permitassist.rule-engine-part2.opus-remediation.v1"
+}

@@ -72,6 +72,10 @@ from evidence_pack_runtime import apply_evidence_pack_fail_closed, canonical_req
 from filing_packet_reconciler import ensure_required_filing_rows
 from residential_universal_gate import apply_residential_universal_gate
 from permit_model import build_permit_package, project_permit_package, validate_customer_view
+try:
+    from permit_rule_engine import extract_sealed_public_projection
+except ImportError:  # package import path in focused tests
+    from api.permit_rule_engine import extract_sealed_public_projection
 from openai import OpenAI as _OpenAI
 import requests as _requests
 from model_config import (
@@ -4242,6 +4246,12 @@ def _normalize_segment_scope_labels(result: dict, scope_contract: dict) -> dict:
 
 def build_customer_permit_view_model(result: dict, job_type: str = "", city: str = "", state: str = "", job_category: str | None = None, explicit_vertical: str | None = None) -> dict:
     """Allowlisted customer ViewModel used by API, share, report, and checklist surfaces."""
+    sealed_projection = extract_sealed_public_projection(result, city=city, state=state)
+    if sealed_projection is not None:
+        # Part 2 core activation seals the complete customer DTO.  Returning it
+        # before legacy repair/reconciliation prevents every later mirror from
+        # independently recomputing regulated truth.
+        return sealed_projection
     working = copy.deepcopy(result) if isinstance(result, dict) else {}
     original_required_rows_for_companion_contract = [
         copy.deepcopy(row)
@@ -5822,6 +5832,9 @@ def evidence_pack_allowed_for_request(path: str, headers, *, is_sample_demo: boo
 
 def finalize_permit_lookup_result(result: dict, job_type: str, city: str, state: str, *, is_cached: bool = False, explicit_vertical: str | None = None, evidence_allowed: bool | None = None, job_category: str | None = None) -> dict:
     """Shared final response safety pipeline for all permit lookup endpoints."""
+    sealed_projection = extract_sealed_public_projection(result, city=city, state=state)
+    if sealed_projection is not None:
+        return sealed_projection
     if not isinstance(result, dict):
         result = {}
     jurisdiction_check = resolve_customer_decision({"result": result, "job_type": job_type, "city": city, "state": state})
@@ -6019,6 +6032,14 @@ def save_beta_feedback(email: str, job_type: str, city: str, state: str, useful:
 
 def render_white_label_report_html(data: dict) -> str:
     result = copy.deepcopy(data.get("result") or {}) if isinstance(data, dict) else {}
+    if isinstance(data, dict):
+        sealed_projection = extract_sealed_public_projection(
+            result,
+            city=str(data.get("city") or ""),
+            state=str(data.get("state") or ""),
+        )
+        if sealed_projection is not None:
+            result = sealed_projection
     contractor = html.escape(str(data.get("contractor_name") or "Contractor"))
     client = html.escape(str(data.get("client_name") or "Client / Property"))
     job = html.escape(str(data.get("job_type") or result.get("job_summary") or "Permit research"))
@@ -7459,6 +7480,9 @@ def generate_checklist(result: dict, job_type: str = "", city: str = "", state: 
 
 def _sanitize_customer_result_for_request_scope(result: dict, job_type: str = "", city: str = "", state: str = "") -> dict:
     """Apply canonical public ViewModel plus request-scope firebreak."""
+    sealed_projection = extract_sealed_public_projection(result, city=city, state=state)
+    if sealed_projection is not None:
+        return sealed_projection
     public = build_customer_permit_view_model(result, job_type, city, state)
     # Saved report/share artifacts may carry already-customer-visible inspection
     # checklist strings. The customer ViewModel may regenerate permit-family
@@ -7536,6 +7560,31 @@ def _sanitize_checklist_customer_output(checklist: dict, job_type: str = "", cit
 
 
 def get_or_create_checklist(result: dict, job_type: str = "", city: str = "", state: str = "") -> dict:
+    sealed_projection = extract_sealed_public_projection(result, city=city, state=state)
+    if sealed_projection is not None:
+        # A core-active checklist is a deterministic renderer of the same sealed
+        # projection.  It never asks a model or a legacy mutator to manufacture
+        # permit truth after the envelope boundary.
+        core = result.get("_permit_rule_engine_core") if isinstance(result, dict) else {}
+        sealed = core.get("sealed_projection") if isinstance(core, dict) else {}
+        raw_family_rows = sealed_projection.get("family_decisions")
+        family_rows: list[dict] = raw_family_rows if isinstance(raw_family_rows, list) else []
+        items = [
+            {
+                "label": f"{str(row.get('family') or 'permit').replace('_', ' ').title()}: {str(row.get('verdict') or 'VERIFY')}",
+                "category": str(row.get("family") or "permit"),
+                "required": row.get("verdict") == "REQUIRED",
+            }
+            for row in family_rows
+            if isinstance(row, dict)
+        ]
+        return {
+            "title": f"Permit checklist — {city}, {state}",
+            "summary": str(sealed_projection.get("coverage_reason") or "Source-backed permit decision checklist"),
+            "items": items[:12],
+            "cached": False,
+            "decision_projection_sha256": str(sealed.get("payload_sha256") or "") if isinstance(sealed, dict) else "",
+        }
     # Checklist generation can enrich/mutate its input; keep the CustomerView DTO
     # boundary immutable so public lookup/share/report/checklist surfaces stay identical.
     result = copy.deepcopy(result) if isinstance(result, dict) else {}

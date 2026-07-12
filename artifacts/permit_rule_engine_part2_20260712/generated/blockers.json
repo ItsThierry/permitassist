@@ -1,0 +1,8 @@
+{
+  "fail_closed_or_internal_abstain_binary_violations": [],
+  "family_route_missing_violations": [],
+  "projection_integrity_violations": [],
+  "public_projection_internal_metadata_violations": [],
+  "source_free_binary_violations": [],
+  "stable_candidate_violations": []
+}

@@ -1,0 +1,2555 @@
+diff --git a/api/permit_rule_engine.py b/api/permit_rule_engine.py
+index 3c6036f..e79d22c 100644
+--- a/api/permit_rule_engine.py
++++ b/api/permit_rule_engine.py
+@@ -1150,3 +1150,975 @@ def envelope_from_cell_for_census(cell: Mapping[str, Any], index_key: str) -> De
+         state=_normalize_text(cell.get("state")),
+         job_category=category,
+     )
++
++
++# ─── Part 2: guarded core, closed ontology, and sealed customer projection ────
++#
++# These contracts are deliberately additive.  The Part 1 envelope and shadow
++# adapter above remain byte-for-byte stable when the independent core setting is
++# off.  Core activation requires both an explicit active mode and an exact
++# jurisdiction-id allowlist match.
++
++ENVELOPE_SCHEMA_VERSION = DECISION_ENVELOPE_VERSION
++CORE_ENVELOPE_SCHEMA_VERSION = "permitassist.decision-envelope.v2"
++CORE_PROJECTION_SCHEMA_VERSION = "permitassist.customer-decision-projection.v1"
++CORE_CACHE_SCHEMA_VERSION = "permitassist.rule-engine-cache.v1"
++CORE_SETTING = "PERMITASSIST_RULE_ENGINE_CORE"
++CORE_ALLOWLIST_SETTING = "PERMITASSIST_RULE_ENGINE_CORE_ALLOWLIST"
++
++DecisionVerdict = FamilyVerdict
++
++
++class JurisdictionResolutionStatus(str, Enum):
++    EXACT = "exact"
++    AMBIGUOUS = "ambiguous"
++    UNCOVERED = "uncovered"
++    INDEX_UNAVAILABLE = "index_unavailable"
++
++
++class WorkPolarity(str, Enum):
++    POSITIVE = "positive"
++    NEGATED = "negated"
++
++
++class PrecedenceStage(str, Enum):
++    VALIDATED_EXACT_COMPLETE = "validated_exact_complete"
++    VALIDATED_EXACT_PARTIAL = "validated_exact_partial"
++    EXACT_FAIL_CLOSED = "exact_fail_closed"
++    QUERY_OFFICIAL_EVIDENCE = "query_official_evidence"
++    INTERNAL_ABSTAIN = "internal_abstain"
++
++
++@dataclass(frozen=True)
++class JurisdictionCandidate:
++    jurisdiction_id: str
++    ahj_name: str
++    state: str
++    county: str | None
++    cell_ids: tuple[str, ...]
++
++
++@dataclass(frozen=True)
++class JurisdictionIdentityResolution:
++    status: JurisdictionResolutionStatus
++    candidates: tuple[JurisdictionCandidate, ...]
++    selected: JurisdictionCandidate | None
++    reason: str
++
++
++@dataclass(frozen=True)
++class WorkThreshold:
++    name: str
++    operator: str
++    value: int | float
++    unit: str
++
++
++@dataclass(frozen=True)
++class ClosedWorkAtom:
++    ontology_node: str
++    project_family: str
++    polarity: WorkPolarity
++    raw_match: str
++    thresholds: tuple[WorkThreshold, ...]
++
++
++@dataclass(frozen=True)
++class NormalizedWorkAtoms:
++    atoms: tuple[ClosedWorkAtom, ...]
++    positive_atoms: tuple[ClosedWorkAtom, ...]
++    known_facts: tuple[tuple[str, Any], ...]
++    issue_codes: tuple[str, ...]
++    valid: bool
++
++
++@dataclass(frozen=True)
++class FamilyAuthorityRoute:
++    family: str
++    authority: AuthorityRef
++    application_route: ApplicationRoute
++
++
++@dataclass(frozen=True)
++class CoreFamilyDecision:
++    family: str
++    verdict: FamilyVerdict
++    trigger: str
++    provenance: tuple[ProvenanceRecord, ...]
++    validation_issue_codes: tuple[str, ...]
++
++
++@dataclass(frozen=True)
++class SealedDecisionProjection:
++    schema_version: str
++    payload_json: str
++    payload_sha256: str
++
++
++@dataclass(frozen=True)
++class CoreDecisionEnvelope:
++    schema_version: str
++    request_fingerprint_sha256: str
++    source_cell_id: str | None
++    source_index_key: str | None
++    source_package_manifest_sha256: str | None
++    precedence_stage: PrecedenceStage
++    coverage_status: str
++    coverage_reason: str
++    jurisdiction: JurisdictionIdentityResolution
++    work_atoms: NormalizedWorkAtoms
++    main_decision: CoreFamilyDecision
++    family_decisions: tuple[CoreFamilyDecision, ...]
++    family_routes: tuple[FamilyAuthorityRoute, ...]
++    sealed_projection: SealedDecisionProjection
++    envelope_sha256: str
++
++
++_CORE_FAMILIES = frozenset(
++    {
++        "building",
++        "electrical",
++        "plumbing",
++        "mechanical",
++        "fire",
++        "health",
++        "liquor",
++        "wastewater",
++        "occupancy",
++        "zoning",
++    }
++)
++
++_CORE_FACT_KEYS = frozenset(
++    {
++        "occupancy_change",
++        "structural_change",
++        "electrical_scope",
++        "plumbing_scope",
++        "mechanical_scope",
++        "fire_life_safety_scope",
++        "food_service_scope",
++        "liquor_service_scope",
++        "wastewater_scope",
++        "zoning_trigger",
++        "area_sq_ft",
++        "valuation_usd",
++        "stories",
++        "system_capacity_kw",
++    }
++)
++
++# Order is part of the closed ontology contract.  Specific work atoms precede
++# broad project-family phrases so normalization never depends on dict order.
++_WORK_ONTOLOGY: tuple[tuple[str, str, tuple[str, ...]], ...] = (
++    ("roof_covering_replacement", "reroof", (r"\breroof\b", r"\bre-?roof\b", r"\broof replacement\b", r"\breplace (?:asphalt )?shingles?\b")),
++    ("structural_alteration", "residential_remodel", (r"\bstructural (?:alteration|change|framing)\b", r"\bload[- ]bearing\b")),
++    ("electrical_work", "residential_remodel", (r"\belectrical\b", r"\bpanel (?:replacement|upgrade|change)\b", r"\bwiring\b")),
++    ("plumbing_work", "residential_remodel", (r"\bplumbing\b", r"\brepipe\b", r"\bwater heater\b")),
++    ("mechanical_work", "residential_remodel", (r"\bmechanical\b", r"\bhvac\b", r"\bfurnace\b", r"\bair conditioner\b")),
++    ("fire_life_safety_work", "commercial_tenant_improvement", (r"\bfire (?:alarm|sprinkler|suppression|life safety)\b",)),
++    ("food_health_work", "commercial_tenant_improvement", (r"\bcommercial kitchen\b", r"\bfood service\b", r"\bhealth permit\b")),
++    ("liquor_service_work", "commercial_tenant_improvement", (r"\bliquor\b", r"\balcohol service\b")),
++    ("wastewater_work", "commercial_tenant_improvement", (r"\bwastewater\b", r"\bgrease interceptor\b")),
++    ("occupancy_change", "commercial_tenant_improvement", (r"\bchange of (?:use|occupancy)\b", r"\boccupancy change\b")),
++    ("zoning_review", "commercial_tenant_improvement", (r"\bzoning\b", r"\bplanning review\b")),
++    ("commercial_tenant_improvement", "commercial_tenant_improvement", (r"\bcommercial tenant improvement\b", r"\btenant improvement\b", r"\bcommercial build[- ]?out\b")),
++    ("residential_remodel", "residential_remodel", (r"\bresidential remodel\b", r"\bkitchen remodel\b", r"\bbath(?:room)? remodel\b")),
++)
++
++
++def get_rule_engine_core_mode() -> str:
++    value = str(os.environ.get(CORE_SETTING, "off") or "off").strip().lower()
++    return "active" if value == "active" else "off"
++
++
++def _core_allowlist() -> frozenset[str]:
++    return frozenset(
++        item.strip().lower()
++        for item in str(os.environ.get(CORE_ALLOWLIST_SETTING, "") or "").split(",")
++        if item.strip()
++    )
++
++
++def core_activation_allowed(jurisdiction_id: str) -> bool:
++    normalized = _normalize_text(jurisdiction_id).lower()
++    return bool(
++        normalized
++        and get_rule_engine_core_mode() == "active"
++        and normalized in _core_allowlist()
++    )
++
++
++def resolve_jurisdiction_identity(
++    city: str,
++    state: str,
++    *,
++    index: Mapping[str, Mapping[str, Any]] | None = None,
++) -> JurisdictionIdentityResolution:
++    state_key = _normalize_text(state).upper()
++    city_key = _slug(city)
++    source_index = index if index is not None else load_v24_index()
++    if source_index is None:
++        return JurisdictionIdentityResolution(
++            JurisdictionResolutionStatus.INDEX_UNAVAILABLE,
++            (),
++            None,
++            "v2.4 jurisdiction index unavailable",
++        )
++    grouped: dict[str, dict[str, Any]] = {}
++    for key in sorted(source_index):
++        cell = source_index.get(key)
++        if not isinstance(cell, Mapping):
++            continue
++        if _normalize_text(cell.get("state")).upper() != state_key or _slug(cell.get("ahj")) != city_key:
++            continue
++        jurisdiction_id = _normalize_text(cell.get("jurisdiction_id")).lower()
++        if not jurisdiction_id:
++            continue
++        row = grouped.setdefault(
++            jurisdiction_id,
++            {
++                "ahj_name": _normalize_text(cell.get("ahj")) or _normalize_text(city),
++                "state": _normalize_text(cell.get("state") or state).upper(),
++                "county": _normalize_text(cell.get("county")) or None,
++                "cell_ids": set(),
++            },
++        )
++        cell_id = _normalize_text(cell.get("cell_id"))
++        if cell_id:
++            row["cell_ids"].add(cell_id)
++    candidates = tuple(
++        JurisdictionCandidate(
++            jurisdiction_id=jurisdiction_id,
++            ahj_name=grouped[jurisdiction_id]["ahj_name"],
++            state=grouped[jurisdiction_id]["state"],
++            county=grouped[jurisdiction_id]["county"],
++            cell_ids=tuple(sorted(grouped[jurisdiction_id]["cell_ids"])),
++        )
++        for jurisdiction_id in sorted(grouped)
++    )
++    if len(candidates) == 1:
++        return JurisdictionIdentityResolution(
++            JurisdictionResolutionStatus.EXACT,
++            candidates,
++            candidates[0],
++            "one stable jurisdiction id matched the exact AHJ/state boundary",
++        )
++    if len(candidates) > 1:
++        return JurisdictionIdentityResolution(
++            JurisdictionResolutionStatus.AMBIGUOUS,
++            candidates,
++            None,
++            "multiple stable jurisdiction ids matched the AHJ/state boundary",
++        )
++    return JurisdictionIdentityResolution(
++        JurisdictionResolutionStatus.UNCOVERED,
++        (),
++        None,
++        "no stable jurisdiction id matched the exact AHJ/state boundary",
++    )
++
++
++def _match_is_negated(text: str, start: int) -> bool:
++    prefix = text[max(0, start - 32):start]
++    return bool(re.search(r"(?:\bno\b|\bwithout\b|\bnot\b|does not include)\s+(?:\w+\s+){0,3}$", prefix))
++
++
++def _scope_thresholds(text: str) -> tuple[WorkThreshold, ...]:
++    values: list[WorkThreshold] = []
++    number_pattern = r"([0-9][0-9,]*(?:\.[0-9]+)?)"
++    area_pattern = re.compile(
++        rf"(?:(under|less than|over|more than|at least|up to)\s+)?{number_pattern}\s*(?:sq\.?\s*ft\.?|square feet|square foot)\b"
++    )
++    operator_map = {
++        "under": "lt",
++        "less than": "lt",
++        "over": "gt",
++        "more than": "gt",
++        "at least": "gte",
++        "up to": "lte",
++    }
++    for match in area_pattern.finditer(text):
++        number = float(match.group(2).replace(",", ""))
++        values.append(
++            WorkThreshold(
++                "area_sq_ft",
++                operator_map.get(match.group(1) or "", "eq"),
++                int(number) if number.is_integer() else number,
++                "sq_ft",
++            )
++        )
++    for match in re.finditer(r"\$\s*([0-9][0-9,]*(?:\.[0-9]+)?)", text):
++        number = float(match.group(1).replace(",", ""))
++        values.append(WorkThreshold("valuation_usd", "eq", int(number) if number.is_integer() else number, "usd"))
++    return tuple(sorted(values, key=lambda item: (item.name, item.value)))
++
++
++def normalize_work_atoms(
++    job_type: str,
++    job_category: str = "",
++    *,
++    facts: Mapping[str, Any] | None = None,
++) -> NormalizedWorkAtoms:
++    text = _normalize_text(f"{job_type} {job_category}").lower()
++    thresholds = _scope_thresholds(text)
++    atoms: list[ClosedWorkAtom] = []
++    for node, project_family, patterns in _WORK_ONTOLOGY:
++        found: re.Match[str] | None = None
++        for pattern in patterns:
++            candidate = re.search(pattern, text)
++            if candidate is not None and (found is None or candidate.start() < found.start()):
++                found = candidate
++        if found is None:
++            continue
++        polarity = WorkPolarity.NEGATED if _match_is_negated(text, found.start()) else WorkPolarity.POSITIVE
++        fact_gate = {
++            "structural_alteration": "structural_change",
++            "electrical_work": "electrical_scope",
++            "plumbing_work": "plumbing_scope",
++            "mechanical_work": "mechanical_scope",
++            "fire_life_safety_work": "fire_life_safety_scope",
++            "food_health_work": "food_service_scope",
++            "liquor_service_work": "liquor_service_scope",
++            "wastewater_work": "wastewater_scope",
++            "occupancy_change": "occupancy_change",
++            "zoning_review": "zoning_trigger",
++        }.get(node)
++        if polarity is WorkPolarity.NEGATED and fact_gate and (facts or {}).get(fact_gate) is False:
++            # A supplied, closed-world false fact is the canonical representation;
++            # do not duplicate it as a negated atom.
++            continue
++        atoms.append(
++            ClosedWorkAtom(
++                ontology_node=node,
++                project_family=project_family,
++                polarity=polarity,
++                raw_match=found.group(0),
++                thresholds=thresholds,
++            )
++        )
++    atoms.sort(key=lambda atom: tuple(item[0] for item in _WORK_ONTOLOGY).index(atom.ontology_node))
++    declared_family_nodes = {
++        "commercial_tenant_improvement": "commercial_tenant_improvement",
++        "residential_remodel": "residential_remodel",
++        "roof_covering_replacement": "reroof",
++    }
++    declared_families = {
++        declared_family_nodes[atom.ontology_node]
++        for atom in atoms
++        if atom.polarity is WorkPolarity.POSITIVE and atom.ontology_node in declared_family_nodes
++    }
++    if len(declared_families) == 1:
++        declared_family = next(iter(declared_families))
++        atoms = [
++            ClosedWorkAtom(
++                ontology_node=atom.ontology_node,
++                project_family=declared_family,
++                polarity=atom.polarity,
++                raw_match=atom.raw_match,
++                thresholds=atom.thresholds,
++            )
++            for atom in atoms
++        ]
++    positive = tuple(atom for atom in atoms if atom.polarity is WorkPolarity.POSITIVE)
++    known_facts: list[tuple[str, Any]] = []
++    issues: set[str] = set()
++    if len(declared_families) > 1:
++        issues.add("ambiguous_project_family")
++    for key, value in sorted((facts or {}).items()):
++        normalized_key = _slug(key)
++        if normalized_key not in _CORE_FACT_KEYS:
++            issues.add("unknown_fact_key")
++            continue
++        if not isinstance(value, (bool, int, float, str)) or isinstance(value, str) and not _normalize_text(value):
++            issues.add("invalid_fact_value")
++            continue
++        known_facts.append((normalized_key, value))
++    if not atoms:
++        issues.add("unknown_work_atom")
++    if not positive:
++        issues.add("no_positive_work_atom")
++    return NormalizedWorkAtoms(
++        atoms=tuple(atoms),
++        positive_atoms=positive,
++        known_facts=tuple(known_facts),
++        issue_codes=tuple(sorted(issues)),
++        valid=not issues,
++    )
++
++
++def _provenance_records(value: Any) -> tuple[ProvenanceRecord, ...]:
++    values = value if isinstance(value, list) else [value]
++    return _dedupe_sorted_provenance(_provenance_from_dict(item) for item in values)
++
++
++def _publishable_provenance(record: ProvenanceRecord) -> bool:
++    return bool(
++        record.publishable
++        and record.source_url
++        and record.source_quote
++        and re.fullmatch(r"[0-9a-f]{64}", record.snapshot_hash or "")
++        and record.snapshot_path
++    )
++
++
++def normalize_family_decision(value: Mapping[str, Any]) -> CoreFamilyDecision:
++    family = normalize_family(value.get("family") or value.get("permit_kind") or value.get("trade"))
++    raw_verdict = _slug(value.get("verdict") or value.get("required_status") or value.get("value"))
++    verdict_map = {
++        "required": FamilyVerdict.REQUIRED,
++        "not_required": FamilyVerdict.NOT_REQUIRED,
++        "conditional": FamilyVerdict.CONDITIONAL,
++        "verify": FamilyVerdict.VERIFY,
++        "abstain": FamilyVerdict.ABSTAIN,
++    }
++    verdict = verdict_map.get(raw_verdict, FamilyVerdict.ABSTAIN)
++    provenance = _provenance_records(value.get("provenance"))
++    issues: set[str] = set()
++    if family not in _CORE_FAMILIES:
++        issues.add("unknown_family")
++        verdict = FamilyVerdict.ABSTAIN
++    publishable = tuple(record for record in provenance if _publishable_provenance(record))
++    if verdict in {FamilyVerdict.REQUIRED, FamilyVerdict.NOT_REQUIRED} and not publishable:
++        issues.add("binary_without_publishable_provenance")
++        verdict = FamilyVerdict.VERIFY
++    if verdict is FamilyVerdict.NOT_REQUIRED and publishable:
++        affirmative = any(
++            re.search(r"\b(?:not required|no permit|exempt(?:ion|ed)?|does not require|shall not require)\b", record.source_quote, re.I)
++            for record in publishable
++        )
++        if not affirmative:
++            issues.add("exemption_not_affirmatively_supported")
++            verdict = FamilyVerdict.VERIFY
++    return CoreFamilyDecision(
++        family=family or "unknown",
++        verdict=verdict,
++        trigger=_normalize_text(value.get("trigger")),
++        provenance=provenance,
++        validation_issue_codes=tuple(sorted(issues)),
++    )
++
++
++def _coerce_authority(row: Mapping[str, Any]) -> AuthorityRef | None:
++    family = normalize_family(row.get("permit_family") or row.get("trade"))
++    if family not in _CORE_FAMILIES:
++        return None
++    issuing_raw = row.get("issuing_authority")
++    applying_raw = row.get("application_authority")
++    issuing = _mapping(issuing_raw)
++    applying = _mapping(applying_raw)
++    issuing_name = _normalize_text(issuing.get("name") if issuing else issuing_raw)
++    applying_name = _normalize_text(applying.get("name") if applying else applying_raw)
++    return AuthorityRef(
++        family=family,
++        issuing_authority=issuing_name,
++        application_authority=applying_name,
++        authority_tier=_slug(issuing.get("tier")) if issuing else "unknown",
++        handled_by_local_ahj=(
++            bool(row.get("handled_by_local_ahj"))
++            if isinstance(row.get("handled_by_local_ahj"), bool)
++            else None
++        ),
++    )
++
++
++def _coerce_route(row: Mapping[str, Any]) -> ApplicationRoute:
++    return ApplicationRoute(
++        permit_name=_normalize_text(row.get("permit_name")),
++        office_name=_normalize_text(row.get("office_name")),
++        apply_url=_normalize_text(row.get("apply_url")),
++        channel=_slug(row.get("channel")) or "unknown",
++        provenance=_provenance_records(row.get("provenance")),
++    )
++
++
++def _route_matches_family(route: ApplicationRoute, family: str, authority: AuthorityRef) -> bool:
++    permit_slug = _slug(route.permit_name)
++    family_aliases = {family}
++    if family == "mechanical":
++        family_aliases |= {"hvac", "gas"}
++    return any(alias in permit_slug for alias in family_aliases) or (
++        bool(authority.application_authority)
++        and authority.application_authority.lower() == route.office_name.lower()
++    )
++
++
++def build_family_authority_routes(cell: Mapping[str, Any]) -> tuple[FamilyAuthorityRoute, ...]:
++    tier1 = _mapping(cell.get("tier1"))
++    authorities = tuple(
++        authority
++        for authority in (_coerce_authority(row) for row in _list(tier1.get("trade_authority")) if isinstance(row, Mapping))
++        if authority is not None
++    )
++    routes = tuple(_coerce_route(row) for row in _list(tier1.get("apply")) if isinstance(row, Mapping))
++    output: list[FamilyAuthorityRoute] = []
++    for authority in sorted(authorities, key=lambda item: item.family):
++        matches = sorted(
++            (route for route in routes if _route_matches_family(route, authority.family, authority)),
++            key=lambda item: (item.permit_name, item.office_name, item.apply_url),
++        )
++        route = matches[0] if matches else ApplicationRoute(
++            permit_name="",
++            office_name=authority.application_authority,
++            apply_url="",
++            channel="verify",
++            provenance=(),
++        )
++        output.append(FamilyAuthorityRoute(authority.family, authority, route))
++    return tuple(output)
++
++
++def select_precedence_stage(
++    resolution_status: V24ResolutionStatus,
++    coverage: str,
++    official_query_evidence_valid: bool,
++) -> PrecedenceStage:
++    normalized_coverage = _slug(coverage)
++    if resolution_status is V24ResolutionStatus.EXACT_CELL_PUBLISHABLE and normalized_coverage == "complete":
++        return PrecedenceStage.VALIDATED_EXACT_COMPLETE
++    if resolution_status is V24ResolutionStatus.EXACT_CELL_PUBLISHABLE and normalized_coverage == "partial":
++        return PrecedenceStage.VALIDATED_EXACT_PARTIAL
++    if resolution_status is V24ResolutionStatus.EXACT_CELL_FAIL_CLOSED or normalized_coverage == "fail_closed":
++        return PrecedenceStage.EXACT_FAIL_CLOSED
++    if official_query_evidence_valid:
++        return PrecedenceStage.QUERY_OFFICIAL_EVIDENCE
++    return PrecedenceStage.INTERNAL_ABSTAIN
++
++
++def _projection_sources(decisions: Iterable[CoreFamilyDecision]) -> list[dict[str, Any]]:
++    records = _dedupe_sorted_provenance(
++        record for decision in decisions for record in decision.provenance if _publishable_provenance(record)
++    )
++    return [
++        {
++            "url": record.source_url,
++            "source_url": record.source_url,
++            "title": "Official jurisdiction source",
++            "quote": record.source_quote,
++            "source_quote": record.source_quote,
++            "snapshot_hash": record.snapshot_hash,
++            "effective_date": record.effective_date,
++            "last_verified_at": record.last_verified_at,
++        }
++        for record in records
++    ]
++
++
++def _public_family_authority_route(route: FamilyAuthorityRoute) -> dict[str, Any]:
++    public_provenance = _projection_sources(
++        (
++            CoreFamilyDecision(
++                family=route.family,
++                verdict=FamilyVerdict.ABSTAIN,
++                trigger="",
++                provenance=route.application_route.provenance,
++                validation_issue_codes=(),
++            ),
++        )
++    )
++    return {
++        "family": route.family,
++        "authority": {
++            "family": route.authority.family,
++            "issuing_authority": route.authority.issuing_authority,
++            "application_authority": route.authority.application_authority,
++        },
++        "application_route": {
++            "permit_name": route.application_route.permit_name,
++            "office_name": route.application_route.office_name,
++            "apply_url": route.application_route.apply_url,
++            "channel": route.application_route.channel,
++            "provenance": public_provenance,
++        },
++    }
++
++
++def build_sealed_projection_payload(
++    *,
++    jurisdiction_id: str,
++    jurisdiction_name: str,
++    state: str,
++    project_family: str,
++    main_decision: CoreFamilyDecision,
++    family_decisions: tuple[CoreFamilyDecision, ...],
++    family_routes: tuple[FamilyAuthorityRoute, ...],
++    coverage_status: str,
++    coverage_reason: str,
++    source_cell_id: str | None,
++) -> dict[str, Any]:
++    main_binary = main_decision.verdict in {FamilyVerdict.REQUIRED, FamilyVerdict.NOT_REQUIRED}
++    permit_required = True if main_decision.verdict is FamilyVerdict.REQUIRED else False if main_decision.verdict is FamilyVerdict.NOT_REQUIRED else None
++    route_by_family = {route.family: route for route in family_routes}
++    main_route = route_by_family.get(main_decision.family)
++    if main_route is None and family_routes:
++        main_route = family_routes[0]
++    family_rows = [
++        {
++            "family": decision.family,
++            "verdict": decision.verdict.value,
++            "trigger": decision.trigger,
++            "authority": (
++                route_by_family[decision.family].authority.application_authority
++                if decision.family in route_by_family
++                else ""
++            ),
++            "apply_url": (
++                route_by_family[decision.family].application_route.apply_url
++                if decision.family in route_by_family
++                else ""
++            ),
++            "validation_issue_codes": list(decision.validation_issue_codes),
++        }
++        for decision in family_decisions
++    ]
++    permits_required = [
++        {
++            "permit_type": decision.family.replace("_", " ").title() + " Permit",
++            "permit_kind": decision.family,
++            "required": True if decision.verdict is FamilyVerdict.REQUIRED else False if decision.verdict is FamilyVerdict.NOT_REQUIRED else "maybe",
++            "required_status": decision.verdict.value,
++            "trigger": decision.trigger,
++            "applying_office": route_by_family[decision.family].authority.application_authority if decision.family in route_by_family else "",
++            "apply_url": route_by_family[decision.family].application_route.apply_url if decision.family in route_by_family else "",
++        }
++        for decision in family_decisions
++    ]
++    related = [
++        {
++            "permit_type": decision.family.replace("_", " ").title() + " Permit",
++            "permit_kind": decision.family,
++            "required": False if decision.verdict is FamilyVerdict.NOT_REQUIRED else "maybe",
++            "required_status": decision.verdict.value,
++            "trigger": decision.trigger,
++        }
++        for decision in family_decisions
++        if decision.verdict is not FamilyVerdict.REQUIRED
++    ]
++    sources = _projection_sources((main_decision, *family_decisions))
++    required_name = next(
++        (row["permit_type"] for row in permits_required if row.get("required") is True),
++        "",
++    )
++    permit_name = required_name or (
++        permits_required[0]["permit_type"]
++        if permits_required
++        else main_decision.family.replace("_", " ").title() + " Permit"
++    )
++    verdict_text = "YES" if permit_required is True else "NO" if permit_required is False else "VERIFY"
++    decision_text = main_decision.verdict.value if main_binary else "UNKNOWN"
++    next_step = (
++        f"Apply with {main_route.authority.application_authority}."
++        if main_route and main_route.authority.application_authority
++        else "Verify the listed family decisions with the official permit authority before filing."
++    )
++    return {
++        "projection_schema_version": CORE_PROJECTION_SCHEMA_VERSION,
++        "decision_source": "sealed_permit_rule_engine_envelope",
++        "source_cell_id": source_cell_id,
++        "jurisdiction_id": jurisdiction_id,
++        "jurisdiction_name": jurisdiction_name,
++        "city": jurisdiction_name,
++        "state": state,
++        "project_family": project_family,
++        "coverage_status": coverage_status,
++        "coverage_reason": coverage_reason,
++        "permit_decision": decision_text,
++        "permit_verdict": verdict_text,
++        "permit_required": permit_required,
++        "permit_kind": main_decision.family,
++        "permit_name": permit_name,
++        "permits_required": permits_required,
++        "companion_permits": related,
++        "related_permits": copy.deepcopy(related),
++        "family_decisions": family_rows,
++        "family_authority_routes": [_public_family_authority_route(route) for route in family_routes],
++        "applying_office": main_route.authority.application_authority if main_route else "",
++        "apply_url": main_route.application_route.apply_url if main_route else "",
++        "online_application_url": main_route.application_route.apply_url if main_route else "",
++        "sources": sources,
++        "claim_citations": copy.deepcopy(sources),
++        "customer_headline": f"Permit decision: {verdict_text}",
++        "customer_next_step": next_step,
++        "summary": coverage_reason,
++        "warnings": [
++            f"{row['family'].replace('_', ' ').title()}: {row['verdict']} — verify before filing."
++            for row in family_rows
++            if row["verdict"] in {"CONDITIONAL", "VERIFY", "ABSTAIN"}
++        ],
++    }
++
++
++def _identity_from_resolution(resolution: V24Resolution, city: str, state: str) -> JurisdictionIdentityResolution:
++    cell = resolution.cell if isinstance(resolution.cell, Mapping) else None
++    if cell and _normalize_text(cell.get("jurisdiction_id")):
++        candidate = JurisdictionCandidate(
++            jurisdiction_id=_normalize_text(cell.get("jurisdiction_id")).lower(),
++            ahj_name=_normalize_text(cell.get("ahj")) or _normalize_text(city),
++            state=_normalize_text(cell.get("state") or state).upper(),
++            county=_normalize_text(cell.get("county")) or None,
++            cell_ids=tuple(item for item in (_normalize_text(cell.get("cell_id")),) if item),
++        )
++        return JurisdictionIdentityResolution(
++            JurisdictionResolutionStatus.EXACT,
++            (candidate,),
++            candidate,
++            "exact resolved v2.4 cell carries one stable jurisdiction id",
++        )
++    return resolve_jurisdiction_identity(city, state)
++
++
++def _seal_projection(payload: Mapping[str, Any]) -> SealedDecisionProjection:
++    payload_json = canonical_json_bytes(payload).decode("utf-8")
++    return SealedDecisionProjection(
++        schema_version=CORE_PROJECTION_SCHEMA_VERSION,
++        payload_json=payload_json,
++        payload_sha256=hashlib.sha256(payload_json.encode("utf-8")).hexdigest(),
++    )
++
++
++def _core_envelope_hash_payload(envelope: Mapping[str, Any]) -> dict[str, Any]:
++    payload = copy.deepcopy(dict(envelope))
++    payload.pop("envelope_sha256", None)
++    return payload
++
++
++def build_core_decision_envelope(
++    resolution: V24Resolution,
++    *,
++    job_type: str,
++    city: str,
++    state: str,
++    job_category: str = "",
++    facts: Mapping[str, Any] | None = None,
++    official_query_evidence: Mapping[str, Any] | None = None,
++) -> CoreDecisionEnvelope:
++    if not isinstance(resolution, V24Resolution):
++        raise TypeError("resolution must be V24Resolution")
++    identity = _identity_from_resolution(resolution, city, state)
++    work = normalize_work_atoms(job_type, job_category, facts=facts)
++    cell = _mapping(resolution.cell)
++    legacy_envelope = build_decision_envelope(
++        resolution,
++        job_type=job_type,
++        city=city,
++        state=state,
++        job_category=job_category,
++    )
++    coverage_map = {
++        CoverageStatus.EXACT_COMPLETE: "complete",
++        CoverageStatus.EXACT_PARTIAL: "partial",
++        CoverageStatus.FAIL_CLOSED: "fail_closed",
++    }
++    coverage = coverage_map.get(legacy_envelope.coverage_status, "none")
++    query_decision = normalize_family_decision(official_query_evidence or {})
++    selected_jurisdiction_id = identity.selected.jurisdiction_id if identity.selected else ""
++    query_valid = bool(
++        official_query_evidence
++        and _normalize_text(official_query_evidence.get("jurisdiction_id")).lower() == selected_jurisdiction_id
++        and _slug(official_query_evidence.get("source_authority")) in {"official_ahj", "official_state", "official_county"}
++        and query_decision.verdict in {FamilyVerdict.REQUIRED, FamilyVerdict.NOT_REQUIRED}
++        and identity.status is JurisdictionResolutionStatus.EXACT
++        and work.valid
++    )
++    stage = select_precedence_stage(resolution.status, coverage, query_valid)
++    if not work.valid or identity.status is not JurisdictionResolutionStatus.EXACT:
++        stage = PrecedenceStage.INTERNAL_ABSTAIN
++
++    tier1 = _mapping(cell.get("tier1"))
++    decisions: list[CoreFamilyDecision] = []
++    for row in _list(tier1.get("permits_required")):
++        if isinstance(row, Mapping):
++            decisions.append(
++                normalize_family_decision(
++                    {
++                        "family": row.get("permit_kind"),
++                        "verdict": row.get("required_status"),
++                        "trigger": row.get("trigger"),
++                        "provenance": row.get("provenance"),
++                    }
++                )
++            )
++    decisions.sort(key=lambda item: (item.family, item.verdict.value, item.trigger))
++    main_row = _mapping(tier1.get("main_decision"))
++    primary_family = decisions[0].family if decisions else "building"
++    main = normalize_family_decision(
++        {
++            "family": primary_family,
++            "verdict": main_row.get("value"),
++            "trigger": _normalize_text(cell.get("scope")) or _normalize_text(cell.get("project_family")),
++            "provenance": main_row.get("provenance"),
++        }
++    )
++    if stage is PrecedenceStage.QUERY_OFFICIAL_EVIDENCE:
++        main = query_decision
++        decisions = [query_decision]
++    elif stage in {PrecedenceStage.EXACT_FAIL_CLOSED, PrecedenceStage.INTERNAL_ABSTAIN}:
++        main = CoreFamilyDecision(
++            family=primary_family,
++            verdict=FamilyVerdict.ABSTAIN,
++            trigger=legacy_envelope.coverage_reason,
++            provenance=(),
++            validation_issue_codes=("precedence_abstain",),
++        )
++        abstain_issue = (
++            "exact_cell_fail_closed"
++            if stage is PrecedenceStage.EXACT_FAIL_CLOSED
++            else "request_scope_not_executable"
++        )
++        decisions = [
++            CoreFamilyDecision(
++                family=decision.family,
++                verdict=FamilyVerdict.ABSTAIN,
++                trigger=decision.trigger,
++                provenance=decision.provenance,
++                validation_issue_codes=tuple(sorted(set(decision.validation_issue_codes) | {abstain_issue})),
++            )
++            for decision in decisions
++        ]
++    routes = build_family_authority_routes(cell) if cell else ()
++    selected = identity.selected
++    jurisdiction_id = selected.jurisdiction_id if selected else ""
++    jurisdiction_name = selected.ahj_name if selected else _normalize_text(city)
++    jurisdiction_state = selected.state if selected else _normalize_text(state).upper()
++    project_family = normalize_family(cell.get("project_family")) or (
++        work.positive_atoms[0].project_family if work.positive_atoms else "unsupported"
++    )
++    coverage_reason = legacy_envelope.coverage_reason
++    payload = build_sealed_projection_payload(
++        jurisdiction_id=jurisdiction_id,
++        jurisdiction_name=jurisdiction_name,
++        state=jurisdiction_state,
++        project_family=project_family,
++        main_decision=main,
++        family_decisions=tuple(decisions),
++        family_routes=routes,
++        coverage_status=stage.value,
++        coverage_reason=coverage_reason,
++        source_cell_id=legacy_envelope.source_cell_id,
++    )
++    sealed = _seal_projection(payload)
++    base = {
++        "schema_version": CORE_ENVELOPE_SCHEMA_VERSION,
++        "request_fingerprint_sha256": _request_fingerprint(job_type, city, state, job_category),
++        "source_cell_id": legacy_envelope.source_cell_id,
++        "source_index_key": legacy_envelope.source_index_key,
++        "source_package_manifest_sha256": legacy_envelope.source_package_manifest_sha256,
++        "precedence_stage": stage,
++        "coverage_status": coverage,
++        "coverage_reason": coverage_reason,
++        "jurisdiction": identity,
++        "work_atoms": work,
++        "main_decision": main,
++        "family_decisions": tuple(decisions),
++        "family_routes": routes,
++        "sealed_projection": sealed,
++    }
++    envelope_hash = stable_sha256(to_primitive(base))
++    return CoreDecisionEnvelope(**base, envelope_sha256=envelope_hash)
++
++
++def attach_core_decision_envelope(
++    result: Mapping[str, Any],
++    envelope: CoreDecisionEnvelope,
++) -> dict[str, Any]:
++    if not isinstance(envelope, CoreDecisionEnvelope):
++        raise TypeError("envelope must be CoreDecisionEnvelope")
++    output = copy.deepcopy(dict(result))
++    output["_permit_rule_engine_cache_schema_version"] = CORE_CACHE_SCHEMA_VERSION
++    output["_permit_rule_engine_core"] = to_primitive(envelope)
++    return output
++
++
++def _validated_core_payload(result: Mapping[str, Any]) -> tuple[dict[str, Any], dict[str, Any]] | None:
++    if result.get("_permit_rule_engine_cache_schema_version") != CORE_CACHE_SCHEMA_VERSION:
++        return None
++    envelope = result.get("_permit_rule_engine_core")
++    if not isinstance(envelope, Mapping) or envelope.get("schema_version") != CORE_ENVELOPE_SCHEMA_VERSION:
++        return None
++    expected_envelope_hash = _normalize_text(envelope.get("envelope_sha256"))
++    if not expected_envelope_hash or stable_sha256(_core_envelope_hash_payload(envelope)) != expected_envelope_hash:
++        return None
++    sealed = envelope.get("sealed_projection")
++    if not isinstance(sealed, Mapping) or sealed.get("schema_version") != CORE_PROJECTION_SCHEMA_VERSION:
++        return None
++    payload_json = sealed.get("payload_json")
++    expected_payload_hash = _normalize_text(sealed.get("payload_sha256"))
++    if not isinstance(payload_json, str) or hashlib.sha256(payload_json.encode("utf-8")).hexdigest() != expected_payload_hash:
++        return None
++    try:
++        payload = json.loads(payload_json)
++    except (TypeError, ValueError):
++        return None
++    if not isinstance(payload, dict) or payload.get("projection_schema_version") != CORE_PROJECTION_SCHEMA_VERSION:
++        return None
++    if canonical_json_bytes(payload).decode("utf-8") != payload_json:
++        return None
++    return dict(envelope), payload
++
++
++def validate_rule_engine_cache_payload(result: Mapping[str, Any], *, required_version: str) -> bool:
++    return bool(
++        required_version == CORE_CACHE_SCHEMA_VERSION
++        and isinstance(result, Mapping)
++        and _validated_core_payload(result) is not None
++    )
++
++
++def extract_sealed_public_projection(
++    result: Mapping[str, Any],
++    *,
++    city: str = "",
++    state: str = "",
++) -> dict[str, Any] | None:
++    if not isinstance(result, Mapping):
++        return None
++    validated = _validated_core_payload(result)
++    if validated is None:
++        return None
++    _envelope, payload = validated
++    jurisdiction_id = _normalize_text(payload.get("jurisdiction_id")).lower()
++    if not core_activation_allowed(jurisdiction_id):
++        return None
++    if city and _slug(payload.get("city")) != _slug(city):
++        return None
++    if state and _normalize_text(payload.get("state")).upper() != _normalize_text(state).upper():
++        return None
++    return copy.deepcopy(payload)
++
++
++def core_cache_schema_for_request(city: str, state: str) -> str | None:
++    """Return the active namespace only for one exact, allowlisted jurisdiction."""
++    if get_rule_engine_core_mode() != "active":
++        return None
++    identity = resolve_jurisdiction_identity(city, state)
++    if identity.status is not JurisdictionResolutionStatus.EXACT or identity.selected is None:
++        return None
++    return CORE_CACHE_SCHEMA_VERSION if core_activation_allowed(identity.selected.jurisdiction_id) else None
++
++
++def maybe_attach_core_decision_envelope(
++    result: dict[str, Any],
++    *,
++    job_type: str,
++    city: str,
++    state: str,
++    job_category: str = "",
++    facts: Mapping[str, Any] | None = None,
++) -> dict[str, Any]:
++    if get_rule_engine_core_mode() != "active":
++        return result
++    identity = resolve_jurisdiction_identity(city, state)
++    if identity.status is not JurisdictionResolutionStatus.EXACT or identity.selected is None:
++        return result
++    if not core_activation_allowed(identity.selected.jurisdiction_id):
++        return result
++    resolution = resolve_v24_cell(city, state, job_type, job_category, force=True)
++    envelope = build_core_decision_envelope(
++        resolution,
++        job_type=job_type,
++        city=city,
++        state=state,
++        job_category=job_category,
++        facts=facts,
++    )
++    return attach_core_decision_envelope(result, envelope)
+diff --git a/api/research_engine.py b/api/research_engine.py
+index 5c384f6..d3dd6ea 100644
+--- a/api/research_engine.py
++++ b/api/research_engine.py
+@@ -87,13 +87,19 @@ except ImportError:  # server.py imports research_engine as a top-level module
+ 
+ try:
+     from .permit_rule_engine import (
++        core_cache_schema_for_request,
++        maybe_attach_core_decision_envelope,
+         observe_permit_rule_engine_shadow,
+         prepare_permit_rule_engine_shadow,
++        validate_rule_engine_cache_payload,
+     )
+ except ImportError:  # server.py imports research_engine as a top-level module
+     from permit_rule_engine import (
++        core_cache_schema_for_request,
++        maybe_attach_core_decision_envelope,
+         observe_permit_rule_engine_shadow,
+         prepare_permit_rule_engine_shadow,
++        validate_rule_engine_cache_payload,
+     )
+ 
+ try:
+@@ -3784,7 +3790,14 @@ def init_cache():
+     conn.commit()
+     conn.close()
+ 
+-def cache_key(job_type: str, city: str, state: str, job_category: str | None = None) -> str:
++def cache_key(
++    job_type: str,
++    city: str,
++    state: str,
++    job_category: str | None = None,
++    *,
++    rule_engine_cache_schema_version: str | None = None,
++) -> str:
+     # v5 (2026-07-11): model-scoped namespace prevents pre-Luna synthesis from
+     # being served after the single-model cutover.
+     # v4 (2026-06-26): universal filing-packet reconciler/schema bump so stale
+@@ -3802,7 +3815,8 @@ def cache_key(job_type: str, city: str, state: str, job_category: str | None = N
+     canonical_category = str(scope_contract.get("category") or "").lower().strip()
+     if canonical_category not in ("residential", "commercial"):
+         canonical_category = raw_category or "residential"
+-    raw = f"{PERMITASSIST_AI_CACHE_NAMESPACE}|{FILING_PACKET_CACHE_SCHEMA_VERSION}|{job_type.lower().strip()}|{city.lower().strip()}|{state.upper().strip()}|{canonical_category}|{scope_bits}"
++    core_namespace = f"|{rule_engine_cache_schema_version}" if rule_engine_cache_schema_version else ""
++    raw = f"{PERMITASSIST_AI_CACHE_NAMESPACE}|{FILING_PACKET_CACHE_SCHEMA_VERSION}{core_namespace}|{job_type.lower().strip()}|{city.lower().strip()}|{state.upper().strip()}|{canonical_category}|{scope_bits}"
+     return hashlib.md5(raw.encode()).hexdigest()
+ 
+ def _smart_ttl(hits: int, confidence: str, fee_unverified: bool) -> int:
+@@ -3906,7 +3920,13 @@ def _pick_primary_source_url(result: dict) -> str:
+     return ""
+ 
+ 
+-def get_cached(key: str, max_age_days: int = None, _refresh_callback=None):
++def get_cached(
++    key: str,
++    max_age_days: int | None = None,
++    _refresh_callback=None,
++    *,
++    required_rule_engine_cache_version: str | None = None,
++):
+     """Smart cache read with tiered TTL, stale-while-revalidate, and
+     optional ETag-based invalidation (added 2026-04-26).
+ 
+@@ -3945,6 +3965,16 @@ def get_cached(key: str, max_age_days: int = None, _refresh_callback=None):
+                 conn.close()
+                 _cache_stats["misses"] += 1
+                 return None
++            if required_rule_engine_cache_version and not validate_rule_engine_cache_payload(
++                result,
++                required_version=required_rule_engine_cache_version,
++            ):
++                print(f"[cache] Ignoring stale rule-engine cache row for key {key[:8]}…")
++                conn.execute("DELETE FROM permit_cache WHERE cache_key = ?", [key])
++                conn.commit()
++                conn.close()
++                _cache_stats["misses"] += 1
++                return None
+             created = datetime.fromisoformat(row[1])
+             hits = row[2] or 0
+             row_dict = dict(zip(select_cols, row))
+@@ -8987,7 +9017,14 @@ def research_permit(job_type: str, city: str, state: str, zip_code: str = "", us
+         )
+     except Exception:
+         rule_engine_shadow_envelope = None
+-    key = cache_key(job_type, city, state, job_category)
++    rule_engine_cache_version = core_cache_schema_for_request(city, state)
++    key = cache_key(
++        job_type,
++        city,
++        state,
++        job_category,
++        rule_engine_cache_schema_version=rule_engine_cache_version,
++    )
+     v231_resolution = resolve_v231_cell(city, state, job_type, job_category)
+     v24_resolution = resolve_v24_cell(city, state, job_type, job_category)
+ 
+@@ -9003,7 +9040,16 @@ def research_permit(job_type: str, city: str, state: str, zip_code: str = "", us
+             except Exception as e:
+                 print(f"[cache] Background refresh failed (non-fatal): {e}")
+ 
+-        cached = get_cached(key, _refresh_callback=_background_refresh)
++        if rule_engine_cache_version:
++            cached = get_cached(
++                key,
++                _refresh_callback=_background_refresh,
++                required_rule_engine_cache_version=rule_engine_cache_version,
++            )
++        else:
++            # Preserve the exact Part 1 call shape for flag-off parity and
++            # existing cache adapters/mocks.
++            cached = get_cached(key, _refresh_callback=_background_refresh)
+         if cached:
+             cached["_cached"] = True
+             cached["_scope_contract"] = scope_contract
+@@ -10063,6 +10109,13 @@ Return ONLY the JSON object."""
+         except Exception:
+             pass
+     result.update(ensure_required_filing_rows(result, job_type, city, state))
++    result = maybe_attach_core_decision_envelope(
++        result,
++        job_type=job_type,
++        city=city,
++        state=state,
++        job_category=job_category,
++    )
+ 
+     if not suppress_cache_write:
+         save_cache(key, job_type, job_category, city, state, zip_code, result)
+diff --git a/api/server.py b/api/server.py
+index 1d8c43c..ba7d5a1 100644
+--- a/api/server.py
++++ b/api/server.py
+@@ -72,6 +72,10 @@ from evidence_pack_runtime import apply_evidence_pack_fail_closed, canonical_req
+ from filing_packet_reconciler import ensure_required_filing_rows
+ from residential_universal_gate import apply_residential_universal_gate
+ from permit_model import build_permit_package, project_permit_package, validate_customer_view
++try:
++    from permit_rule_engine import extract_sealed_public_projection
++except ImportError:  # package import path in focused tests
++    from api.permit_rule_engine import extract_sealed_public_projection
+ from openai import OpenAI as _OpenAI
+ import requests as _requests
+ from model_config import (
+@@ -4242,6 +4246,12 @@ def _normalize_segment_scope_labels(result: dict, scope_contract: dict) -> dict:
+ 
+ def build_customer_permit_view_model(result: dict, job_type: str = "", city: str = "", state: str = "", job_category: str | None = None, explicit_vertical: str | None = None) -> dict:
+     """Allowlisted customer ViewModel used by API, share, report, and checklist surfaces."""
++    sealed_projection = extract_sealed_public_projection(result, city=city, state=state)
++    if sealed_projection is not None:
++        # Part 2 core activation seals the complete customer DTO.  Returning it
++        # before legacy repair/reconciliation prevents every later mirror from
++        # independently recomputing regulated truth.
++        return sealed_projection
+     working = copy.deepcopy(result) if isinstance(result, dict) else {}
+     original_required_rows_for_companion_contract = [
+         copy.deepcopy(row)
+@@ -5822,6 +5832,9 @@ def evidence_pack_allowed_for_request(path: str, headers, *, is_sample_demo: boo
+ 
+ def finalize_permit_lookup_result(result: dict, job_type: str, city: str, state: str, *, is_cached: bool = False, explicit_vertical: str | None = None, evidence_allowed: bool | None = None, job_category: str | None = None) -> dict:
+     """Shared final response safety pipeline for all permit lookup endpoints."""
++    sealed_projection = extract_sealed_public_projection(result, city=city, state=state)
++    if sealed_projection is not None:
++        return sealed_projection
+     if not isinstance(result, dict):
+         result = {}
+     jurisdiction_check = resolve_customer_decision({"result": result, "job_type": job_type, "city": city, "state": state})
+@@ -6019,6 +6032,14 @@ def save_beta_feedback(email: str, job_type: str, city: str, state: str, useful:
+ 
+ def render_white_label_report_html(data: dict) -> str:
+     result = copy.deepcopy(data.get("result") or {}) if isinstance(data, dict) else {}
++    if isinstance(data, dict):
++        sealed_projection = extract_sealed_public_projection(
++            result,
++            city=str(data.get("city") or ""),
++            state=str(data.get("state") or ""),
++        )
++        if sealed_projection is not None:
++            result = sealed_projection
+     contractor = html.escape(str(data.get("contractor_name") or "Contractor"))
+     client = html.escape(str(data.get("client_name") or "Client / Property"))
+     job = html.escape(str(data.get("job_type") or result.get("job_summary") or "Permit research"))
+@@ -7459,6 +7480,9 @@ def generate_checklist(result: dict, job_type: str = "", city: str = "", state:
+ 
+ def _sanitize_customer_result_for_request_scope(result: dict, job_type: str = "", city: str = "", state: str = "") -> dict:
+     """Apply canonical public ViewModel plus request-scope firebreak."""
++    sealed_projection = extract_sealed_public_projection(result, city=city, state=state)
++    if sealed_projection is not None:
++        return sealed_projection
+     public = build_customer_permit_view_model(result, job_type, city, state)
+     # Saved report/share artifacts may carry already-customer-visible inspection
+     # checklist strings. The customer ViewModel may regenerate permit-family
+@@ -7536,6 +7560,31 @@ def _sanitize_checklist_customer_output(checklist: dict, job_type: str = "", cit
+ 
+ 
+ def get_or_create_checklist(result: dict, job_type: str = "", city: str = "", state: str = "") -> dict:
++    sealed_projection = extract_sealed_public_projection(result, city=city, state=state)
++    if sealed_projection is not None:
++        # A core-active checklist is a deterministic renderer of the same sealed
++        # projection.  It never asks a model or a legacy mutator to manufacture
++        # permit truth after the envelope boundary.
++        core = result.get("_permit_rule_engine_core") if isinstance(result, dict) else {}
++        sealed = core.get("sealed_projection") if isinstance(core, dict) else {}
++        raw_family_rows = sealed_projection.get("family_decisions")
++        family_rows: list[dict] = raw_family_rows if isinstance(raw_family_rows, list) else []
++        items = [
++            {
++                "label": f"{str(row.get('family') or 'permit').replace('_', ' ').title()}: {str(row.get('verdict') or 'VERIFY')}",
++                "category": str(row.get("family") or "permit"),
++                "required": row.get("verdict") == "REQUIRED",
++            }
++            for row in family_rows
++            if isinstance(row, dict)
++        ]
++        return {
++            "title": f"Permit checklist — {city}, {state}",
++            "summary": str(sealed_projection.get("coverage_reason") or "Source-backed permit decision checklist"),
++            "items": items[:12],
++            "cached": False,
++            "decision_projection_sha256": str(sealed.get("payload_sha256") or "") if isinstance(sealed, dict) else "",
++        }
+     # Checklist generation can enrich/mutate its input; keep the CustomerView DTO
+     # boundary immutable so public lookup/share/report/checklist surfaces stay identical.
+     result = copy.deepcopy(result) if isinstance(result, dict) else {}
+diff --git a/artifacts/permit_rule_engine_part2_20260712/red/focused_red.txt b/artifacts/permit_rule_engine_part2_20260712/red/focused_red.txt
+new file mode 100644
+index 0000000..21bcd98
+--- /dev/null
++++ b/artifacts/permit_rule_engine_part2_20260712/red/focused_red.txt
+@@ -0,0 +1,285 @@
++FFFFFFFFFFFFFF                                                           [100%]
++=================================== FAILURES ===================================
++__________ test_part2_versions_are_explicit_and_independent_of_part1 ___________
++
++    def test_part2_versions_are_explicit_and_independent_of_part1() -> None:
++>       assert pre.CORE_ENVELOPE_SCHEMA_VERSION == "permitassist.decision-envelope.v2"
++               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
++E       AttributeError: module 'api.permit_rule_engine' has no attribute 'CORE_ENVELOPE_SCHEMA_VERSION'
++
++tests/test_permit_rule_engine_part2.py:33: AttributeError
++___ test_core_activation_is_disabled_by_default_and_requires_exact_allowlist ___
++
++monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x792e597946d0>
++
++    def test_core_activation_is_disabled_by_default_and_requires_exact_allowlist(monkeypatch: pytest.MonkeyPatch) -> None:
++        monkeypatch.delenv("PERMITASSIST_RULE_ENGINE_CORE", raising=False)
++        monkeypatch.delenv("PERMITASSIST_RULE_ENGINE_CORE_ALLOWLIST", raising=False)
++>       assert pre.core_activation_allowed("us-az-buckeye") is False
++               ^^^^^^^^^^^^^^^^^^^^^^^^^^^
++E       AttributeError: module 'api.permit_rule_engine' has no attribute 'core_activation_allowed'
++
++tests/test_permit_rule_engine_part2.py:42: AttributeError
++_________ test_jurisdiction_identity_is_stable_deduplicated_and_sorted _________
++
++frozen_fixture = {'fixture_version': 'permitassist.rule-engine-part2-red.v1', 'fixture_kind': 'synthetic_contract_only', 'frozen_before... '2026-07-11T00:00:00Z', 'snapshot_hash': 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', ...}]}}}}
++
++    def test_jurisdiction_identity_is_stable_deduplicated_and_sorted(frozen_fixture: dict) -> None:
++        case = frozen_fixture["cases"]["exact_identity"]
++>       first = pre.resolve_jurisdiction_identity(case["city"], case["state"], index=case["index"])
++                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
++E       AttributeError: module 'api.permit_rule_engine' has no attribute 'resolve_jurisdiction_identity'
++
++tests/test_permit_rule_engine_part2.py:54: AttributeError
++__________ test_jurisdiction_identity_abstains_on_multiple_stable_ids __________
++
++frozen_fixture = {'fixture_version': 'permitassist.rule-engine-part2-red.v1', 'fixture_kind': 'synthetic_contract_only', 'frozen_before... '2026-07-11T00:00:00Z', 'snapshot_hash': 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', ...}]}}}}
++
++    def test_jurisdiction_identity_abstains_on_multiple_stable_ids(frozen_fixture: dict) -> None:
++        case = frozen_fixture["cases"]["ambiguous_identity"]
++>       resolved = pre.resolve_jurisdiction_identity(case["city"], case["state"], index=case["index"])
++                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
++E       AttributeError: module 'api.permit_rule_engine' has no attribute 'resolve_jurisdiction_identity'
++
++tests/test_permit_rule_engine_part2.py:69: AttributeError
++_______ test_closed_ontology_normalizes_atoms_and_rejects_unknown_scope ________
++
++    def test_closed_ontology_normalizes_atoms_and_rejects_unknown_scope() -> None:
++>       atoms = pre.normalize_work_atoms(
++                ^^^^^^^^^^^^^^^^^^^^^^^^
++            "Residential reroof: replace asphalt shingles; no structural framing changes; 2,400 sq ft",
++            "residential",
++            facts={"occupancy_change": False, "structural_change": False},
++        )
++E       AttributeError: module 'api.permit_rule_engine' has no attribute 'normalize_work_atoms'
++
++tests/test_permit_rule_engine_part2.py:80: AttributeError
++________________ test_negated_atoms_cannot_trigger_binary_scope ________________
++
++    def test_negated_atoms_cannot_trigger_binary_scope() -> None:
++>       normalized = pre.normalize_work_atoms(
++                     ^^^^^^^^^^^^^^^^^^^^^^^^
++            "No roof replacement and no structural alteration; inspection only",
++            "residential",
++        )
++E       AttributeError: module 'api.permit_rule_engine' has no attribute 'normalize_work_atoms'
++
++tests/test_permit_rule_engine_part2.py:98: AttributeError
++_______ test_per_family_authority_routes_do_not_collapse_to_first_route ________
++
++    def test_per_family_authority_routes_do_not_collapse_to_first_route() -> None:
++        cell = {
++            "tier1": {
++                "trade_authority": [
++                    {
++                        "permit_family": "building",
++                        "issuing_authority": "Exampleville Building Department",
++                        "application_authority": "Exampleville Permit Center",
++                        "application_channel": "online",
++                        "routing_note": "Select Building Permit.",
++                        "provenance": [{"source_url": "https://example.gov/building"}],
++                    },
++                    {
++                        "permit_family": "electrical",
++                        "issuing_authority": "State Electrical Board",
++                        "application_authority": "State Trade Portal",
++                        "application_channel": "online",
++                        "routing_note": "File separately with the state.",
++                        "provenance": [{"source_url": "https://example.gov/electrical"}],
++                    },
++                ],
++                "apply": [
++                    {
++                        "permit_name": "Building Permit",
++                        "office_name": "Exampleville Permit Center",
++                        "apply_url": "https://example.gov/building/apply",
++                        "channel": "online",
++                        "provenance": {"source_url": "https://example.gov/building/apply"},
++                    },
++                    {
++                        "permit_name": "Electrical Permit",
++                        "office_name": "State Trade Portal",
++                        "apply_url": "https://example.gov/electrical/apply",
++                        "channel": "online",
++                        "provenance": {"source_url": "https://example.gov/electrical/apply"},
++                    },
++                ],
++            }
++        }
++>       routes = pre.build_family_authority_routes(cell)
++                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
++E       AttributeError: module 'api.permit_rule_engine' has no attribute 'build_family_authority_routes'
++
++tests/test_permit_rule_engine_part2.py:147: AttributeError
++_________________ test_exact_precedence_funnel_order_is_closed _________________
++
++    def test_exact_precedence_funnel_order_is_closed() -> None:
++>       assert pre.select_precedence_stage(V24ResolutionStatus.EXACT_CELL_PUBLISHABLE, "complete", False) is pre.PrecedenceStage.VALIDATED_EXACT_COMPLETE
++               ^^^^^^^^^^^^^^^^^^^^^^^^^^^
++E       AttributeError: module 'api.permit_rule_engine' has no attribute 'select_precedence_stage'
++
++tests/test_permit_rule_engine_part2.py:155: AttributeError
++_ test_source_floor_demotes_source_free_binary_but_preserves_affirmative_exemption _
++
++frozen_fixture = {'fixture_version': 'permitassist.rule-engine-part2-red.v1', 'fixture_kind': 'synthetic_contract_only', 'frozen_before... '2026-07-11T00:00:00Z', 'snapshot_hash': 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', ...}]}}}}
++
++    def test_source_floor_demotes_source_free_binary_but_preserves_affirmative_exemption(frozen_fixture: dict) -> None:
++        source_floor = frozen_fixture["cases"]["source_floor"]
++>       source_free = pre.normalize_family_decision(source_floor["source_free_required"])
++                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
++E       AttributeError: module 'api.permit_rule_engine' has no attribute 'normalize_family_decision'
++
++tests/test_permit_rule_engine_part2.py:171: AttributeError
++_______ test_no_neuter_projection_preserves_all_lanes_and_weak_statuses ________
++
++frozen_fixture = {'fixture_version': 'permitassist.rule-engine-part2-red.v1', 'fixture_kind': 'synthetic_contract_only', 'frozen_before... '2026-07-11T00:00:00Z', 'snapshot_hash': 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', ...}]}}}}
++
++    def test_no_neuter_projection_preserves_all_lanes_and_weak_statuses(frozen_fixture: dict) -> None:
++        case = frozen_fixture["cases"]["no_neuter_ten_lane"]
++        decisions = []
++        for family in case["families"]:
++            verdict = "REQUIRED"
++            if family == "health":
++                verdict = "CONDITIONAL"
++            elif family == "liquor":
++                verdict = "VERIFY"
++            elif family == "wastewater":
++                verdict = "ABSTAIN"
++            decisions.append(
++>               pre.normalize_family_decision(
++                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
++                    {
++                        "family": family,
++                        "verdict": verdict,
++                        "trigger": f"{family} scope review",
++                        "provenance": [] if verdict not in {"REQUIRED", "NOT_REQUIRED"} else [{
++                            "source_url": f"https://example.gov/{family}",
++                            "source_quote": f"A {family} permit is required for this scope.",
++                            "snapshot_hash": "b" * 64,
++                            "snapshot_path": f"synthetic://{family}",
++                            "publishable": True,
++                        }],
++                    }
++                )
++            )
++E           AttributeError: module 'api.permit_rule_engine' has no attribute 'normalize_family_decision'
++
++tests/test_permit_rule_engine_part2.py:192: AttributeError
++____ test_envelope_projection_is_canonical_hash_sealed_and_tamper_rejected _____
++
++monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x792e5977dd90>
++
++    def test_envelope_projection_is_canonical_hash_sealed_and_tamper_rejected(monkeypatch: pytest.MonkeyPatch) -> None:
++        monkeypatch.setenv("PERMITASSIST_RULE_ENGINE_CORE", "active")
++        monkeypatch.setenv("PERMITASSIST_RULE_ENGINE_CORE_ALLOWLIST", "us-az-buckeye")
++>       envelope = _build_buckeye_envelope()
++                   ^^^^^^^^^^^^^^^^^^^^^^^^^
++
++tests/test_permit_rule_engine_part2.py:242:
++_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
++
++    def _build_buckeye_envelope() -> object:
++        resolution = resolve_v24_cell("Buckeye", "AZ", "residential reroof", "residential", force=True)
++        assert resolution.status is V24ResolutionStatus.EXACT_CELL_PUBLISHABLE
++>       return pre.build_core_decision_envelope(
++               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
++            resolution,
++            job_type="residential reroof",
++            city="Buckeye",
++            state="AZ",
++            job_category="residential",
++        )
++E       AttributeError: module 'api.permit_rule_engine' has no attribute 'build_core_decision_envelope'
++
++tests/test_permit_rule_engine_part2.py:230: AttributeError
++________ test_cache_version_rejects_legacy_stale_and_tampered_payloads _________
++
++monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x792e596eb650>
++
++    def test_cache_version_rejects_legacy_stale_and_tampered_payloads(monkeypatch: pytest.MonkeyPatch) -> None:
++        monkeypatch.setenv("PERMITASSIST_RULE_ENGINE_CORE", "active")
++        monkeypatch.setenv("PERMITASSIST_RULE_ENGINE_CORE_ALLOWLIST", "us-az-buckeye")
++>       envelope = _build_buckeye_envelope()
++                   ^^^^^^^^^^^^^^^^^^^^^^^^^
++
++tests/test_permit_rule_engine_part2.py:259:
++_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
++
++    def _build_buckeye_envelope() -> object:
++        resolution = resolve_v24_cell("Buckeye", "AZ", "residential reroof", "residential", force=True)
++        assert resolution.status is V24ResolutionStatus.EXACT_CELL_PUBLISHABLE
++>       return pre.build_core_decision_envelope(
++               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
++            resolution,
++            job_type="residential reroof",
++            city="Buckeye",
++            state="AZ",
++            job_category="residential",
++        )
++E       AttributeError: module 'api.permit_rule_engine' has no attribute 'build_core_decision_envelope'
++
++tests/test_permit_rule_engine_part2.py:230: AttributeError
++____________________ test_flag_off_attachment_is_exact_noop ____________________
++
++monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x792e59a5f110>
++
++    def test_flag_off_attachment_is_exact_noop(monkeypatch: pytest.MonkeyPatch) -> None:
++        monkeypatch.delenv("PERMITASSIST_RULE_ENGINE_CORE", raising=False)
++        monkeypatch.delenv("PERMITASSIST_RULE_ENGINE_CORE_ALLOWLIST", raising=False)
++        original = {"permit_decision": "REQUIRED", "nested": {"rows": [1, 2, 3]}}
++        before = json.dumps(original, ensure_ascii=False, separators=(",", ":"), sort_keys=False).encode("utf-8")
++>       after_obj = pre.maybe_attach_core_decision_envelope(
++                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
++            original,
++            job_type="residential reroof",
++            city="Buckeye",
++            state="AZ",
++            job_category="residential",
++        )
++E       AttributeError: module 'api.permit_rule_engine' has no attribute 'maybe_attach_core_decision_envelope'
++
++tests/test_permit_rule_engine_part2.py:277: AttributeError
++________ test_api_share_report_and_checklist_use_same_sealed_projection ________
++
++monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x792e5989a410>
++tmp_path = PosixPath('/tmp/pytest-of-boban/pytest-256/test_api_share_report_and_chec0')
++
++    def test_api_share_report_and_checklist_use_same_sealed_projection(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
++        monkeypatch.setenv("PERMITASSIST_RULE_ENGINE_CORE", "active")
++        monkeypatch.setenv("PERMITASSIST_RULE_ENGINE_CORE_ALLOWLIST", "us-az-buckeye")
++>       envelope = _build_buckeye_envelope()
++                   ^^^^^^^^^^^^^^^^^^^^^^^^^
++
++tests/test_permit_rule_engine_part2.py:292:
++_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
++
++    def _build_buckeye_envelope() -> object:
++        resolution = resolve_v24_cell("Buckeye", "AZ", "residential reroof", "residential", force=True)
++        assert resolution.status is V24ResolutionStatus.EXACT_CELL_PUBLISHABLE
++>       return pre.build_core_decision_envelope(
++               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
++            resolution,
++            job_type="residential reroof",
++            city="Buckeye",
++            state="AZ",
++            job_category="residential",
++        )
++E       AttributeError: module 'api.permit_rule_engine' has no attribute 'build_core_decision_envelope'
++
++tests/test_permit_rule_engine_part2.py:230: AttributeError
++=========================== short test summary info ============================
++FAILED tests/test_permit_rule_engine_part2.py::test_part2_versions_are_explicit_and_independent_of_part1
++FAILED tests/test_permit_rule_engine_part2.py::test_core_activation_is_disabled_by_default_and_requires_exact_allowlist
++FAILED tests/test_permit_rule_engine_part2.py::test_jurisdiction_identity_is_stable_deduplicated_and_sorted
++FAILED tests/test_permit_rule_engine_part2.py::test_jurisdiction_identity_abstains_on_multiple_stable_ids
++FAILED tests/test_permit_rule_engine_part2.py::test_closed_ontology_normalizes_atoms_and_rejects_unknown_scope
++FAILED tests/test_permit_rule_engine_part2.py::test_negated_atoms_cannot_trigger_binary_scope
++FAILED tests/test_permit_rule_engine_part2.py::test_per_family_authority_routes_do_not_collapse_to_first_route
++FAILED tests/test_permit_rule_engine_part2.py::test_exact_precedence_funnel_order_is_closed
++FAILED tests/test_permit_rule_engine_part2.py::test_source_floor_demotes_source_free_binary_but_preserves_affirmative_exemption
++FAILED tests/test_permit_rule_engine_part2.py::test_no_neuter_projection_preserves_all_lanes_and_weak_statuses
++FAILED tests/test_permit_rule_engine_part2.py::test_envelope_projection_is_canonical_hash_sealed_and_tamper_rejected
++FAILED tests/test_permit_rule_engine_part2.py::test_cache_version_rejects_legacy_stale_and_tampered_payloads
++FAILED tests/test_permit_rule_engine_part2.py::test_flag_off_attachment_is_exact_noop
++FAILED tests/test_permit_rule_engine_part2.py::test_api_share_report_and_checklist_use_same_sealed_projection
++14 failed in 0.42s
+diff --git a/scripts/generate_permit_rule_engine_part2_evidence.py b/scripts/generate_permit_rule_engine_part2_evidence.py
+new file mode 100644
+index 0000000..4fb5f63
+--- /dev/null
++++ b/scripts/generate_permit_rule_engine_part2_evidence.py
+@@ -0,0 +1,280 @@
++#!/usr/bin/env python3
++"""Generate deterministic, offline Permit Rule Engine Part 2 evidence."""
++from __future__ import annotations
++
++import hashlib
++import json
++import os
++from collections import Counter
++from dataclasses import asdict
++from pathlib import Path
++from typing import Any
++
++ROOT = Path(__file__).resolve().parents[1]
++OUT = ROOT / "artifacts" / "permit_rule_engine_part2_20260712" / "generated"
++
++from api import permit_rule_engine as pre
++from api import server
++from api.v24_decision_cells import V24Resolution, V24ResolutionStatus, load_v24_index
++
++
++def canonical(value: Any) -> str:
++    return json.dumps(value, sort_keys=True, separators=(",", ":"), ensure_ascii=False)
++
++
++def sha256_bytes(value: bytes) -> str:
++    return hashlib.sha256(value).hexdigest()
++
++
++def family_scope(project_family: str) -> tuple[str, str]:
++    if project_family == "commercial_tenant_improvement":
++        return "commercial tenant improvement", "commercial"
++    if project_family == "residential_remodel":
++        return "residential remodel", "residential"
++    return "residential reroof", "residential"
++
++
++def primitive(value: Any) -> Any:
++    return pre.to_primitive(value)
++
++
++def main() -> int:
++    for name in (pre.CORE_SETTING, pre.CORE_ALLOWLIST_SETTING):
++        os.environ.pop(name, None)
++    if pre.get_rule_engine_core_mode() != "off":
++        raise RuntimeError("core must be disabled by default")
++
++    index = load_v24_index() or {}
++    rows: list[dict[str, Any]] = []
++    stage_counts: Counter[str] = Counter()
++    coverage_counts: Counter[str] = Counter()
++    family_verdict_counts: Counter[str] = Counter()
++    stage_family_verdict_counts: Counter[str] = Counter()
++    identity_status_counts: Counter[str] = Counter()
++    seen_identities: set[tuple[str, str]] = set()
++    stable_candidate_violations: list[str] = []
++    source_free_binary_violations: list[str] = []
++    abstain_stage_binary_violations: list[str] = []
++    projection_integrity_violations: list[str] = []
++    family_route_missing_violations: list[str] = []
++    public_metadata_leak_violations: list[str] = []
++
++    reversed_index = dict(reversed(list(index.items())))
++    for cell_key in sorted(index):
++        cell = index[cell_key]
++        city = str(cell.get("ahj") or "")
++        state = str(cell.get("state") or "")
++        identity_key = (city.casefold(), state.upper())
++        if identity_key not in seen_identities:
++            seen_identities.add(identity_key)
++            identity = pre.resolve_jurisdiction_identity(city, state, index=index)
++            reversed_identity = pre.resolve_jurisdiction_identity(city, state, index=reversed_index)
++            identity_status_counts[identity.status.value] += 1
++            if primitive(identity) != primitive(reversed_identity):
++                stable_candidate_violations.append(f"{city}|{state}")
++
++        project_family = str(cell.get("project_family") or "")
++        job_type, job_category = family_scope(project_family)
++        resolution = V24Resolution(
++            V24ResolutionStatus.EXACT_CELL_PUBLISHABLE,
++            cell=cell,
++            key=cell_key,
++            reason="evidence-census",
++        )
++        envelope = pre.build_core_decision_envelope(
++            resolution,
++            job_type=job_type,
++            city=city,
++            state=state,
++            job_category=job_category,
++        )
++        stage_counts[envelope.precedence_stage.value] += 1
++        coverage_counts[envelope.coverage_status] += 1
++        sealed_payload = json.loads(envelope.sealed_projection.payload_json)
++        serialized_projection = json.dumps(sealed_payload, sort_keys=True)
++        forbidden_public_keys = {"snapshot_path", "publishable", "authority_tier", "handled_by_local_ahj"}
++        if any(f'"{key}"' in serialized_projection for key in forbidden_public_keys):
++            public_metadata_leak_violations.append(cell_key)
++        decisions = (envelope.main_decision,) + envelope.family_decisions
++        for decision in decisions:
++            family_verdict_counts[decision.verdict.value] += 1
++            stage_family_verdict_counts[f"{envelope.precedence_stage.value}|{decision.verdict.value}"] += 1
++            if decision.verdict in {pre.FamilyVerdict.REQUIRED, pre.FamilyVerdict.NOT_REQUIRED}:
++                if not any(pre._publishable_provenance(record) for record in decision.provenance):
++                    source_free_binary_violations.append(f"{cell_key}|{decision.family}")
++                if envelope.precedence_stage in {
++                    pre.PrecedenceStage.EXACT_FAIL_CLOSED,
++                    pre.PrecedenceStage.INTERNAL_ABSTAIN,
++                }:
++                    abstain_stage_binary_violations.append(
++                        f"{cell_key}|{decision.family}|{decision.verdict.value}"
++                    )
++        if not pre.validate_rule_engine_cache_payload(
++            pre.attach_core_decision_envelope({}, envelope),
++            required_version=pre.CORE_CACHE_SCHEMA_VERSION,
++        ):
++            projection_integrity_violations.append(cell_key)
++        routed_families = {route.family for route in envelope.family_routes}
++        authority_families = {
++            family
++            for row in cell.get("tier1", {}).get("trade_authority", [])
++            if isinstance(row, dict)
++            for family in [pre.normalize_family(row.get("permit_family") or row.get("trade"))]
++            if family in pre._CORE_FAMILIES
++        }
++        missing_routes = sorted(family for family in authority_families if family and family not in routed_families)
++        if missing_routes:
++            family_route_missing_violations.append(f"{cell_key}|{','.join(missing_routes)}")
++        rows.append(
++            {
++                "cell_key": cell_key,
++                "coverage_status": envelope.coverage_status,
++                "envelope_sha256": envelope.envelope_sha256,
++                "family_count": len(envelope.family_decisions),
++                "family_route_count": len(envelope.family_routes),
++                "jurisdiction_id": envelope.jurisdiction.selected.jurisdiction_id if envelope.jurisdiction.selected else "",
++                "precedence_stage": envelope.precedence_stage.value,
++                "projection_sha256": envelope.sealed_projection.payload_sha256,
++                "source_cell_id": envelope.source_cell_id,
++                "work_atoms_valid": envelope.work_atoms.valid,
++            }
++        )
++
++    fixture = json.loads((ROOT / "tests" / "fixtures" / "permit_rule_engine_part2_red_no_neuter.json").read_text(encoding="utf-8"))
++    no_neuter = fixture["cases"]["no_neuter_ten_lane"]
++    no_neuter_families = sorted(pre.normalize_family(family) for family in no_neuter["families"])
++    no_neuter_expected_family_count = len(no_neuter["families"])
++
++    fail_closed_stages = [
++        pre.select_precedence_stage(V24ResolutionStatus.EXACT_CELL_PUBLISHABLE, "complete", False).value,
++        pre.select_precedence_stage(V24ResolutionStatus.EXACT_CELL_PUBLISHABLE, "partial", False).value,
++        pre.select_precedence_stage(V24ResolutionStatus.EXACT_CELL_FAIL_CLOSED, "fail_closed", True).value,
++        pre.select_precedence_stage(V24ResolutionStatus.AHJ_NOT_COVERED, "none", True).value,
++        pre.select_precedence_stage(V24ResolutionStatus.AHJ_NOT_COVERED, "none", False).value,
++    ]
++
++    surface_equal = False
++    sample = rows[0] if rows else None
++    if sample:
++        sample_cell = index[sample["cell_key"]]
++        city = str(sample_cell.get("ahj") or "")
++        state = str(sample_cell.get("state") or "")
++        job_type, job_category = family_scope(str(sample_cell.get("project_family") or ""))
++        envelope = pre.build_core_decision_envelope(
++            V24Resolution(
++                V24ResolutionStatus.EXACT_CELL_PUBLISHABLE,
++                cell=sample_cell,
++                key=sample["cell_key"],
++                reason="surface-census",
++            ),
++            job_type=job_type,
++            city=city,
++            state=state,
++            job_category=job_category,
++        )
++        os.environ[pre.CORE_SETTING] = "active"
++        os.environ[pre.CORE_ALLOWLIST_SETTING] = (
++            envelope.jurisdiction.selected.jurisdiction_id if envelope.jurisdiction.selected else ""
++        )
++        wrapped = pre.attach_core_decision_envelope({"permit_name": "POISONED LEGACY"}, envelope)
++        extracted = pre.extract_sealed_public_projection(wrapped, city=city, state=state)
++        customer = server.build_customer_permit_view_model(wrapped, job_type, city, state)
++        finalized = server.finalize_permit_lookup_result(wrapped, job_type, city, state)
++        surface_equal = bool(extracted and customer == extracted and finalized == extracted and "POISONED LEGACY" not in canonical(customer))
++        os.environ.pop(pre.CORE_SETTING, None)
++        os.environ.pop(pre.CORE_ALLOWLIST_SETTING, None)
++
++    exact_fixture = fixture["cases"]["exact_identity"]
++    expected_jurisdiction_id = next(iter(exact_fixture["index"].values()))["jurisdiction_id"]
++    flag_default_disabled = pre.get_rule_engine_core_mode() == "off"
++    os.environ[pre.CORE_SETTING] = "active"
++    os.environ[pre.CORE_ALLOWLIST_SETTING] = expected_jurisdiction_id
++    allowlist_exact = pre.core_activation_allowed(expected_jurisdiction_id)
++    allowlist_rejects_other = not pre.core_activation_allowed("us-az-other")
++    os.environ.pop(pre.CORE_SETTING, None)
++    os.environ.pop(pre.CORE_ALLOWLIST_SETTING, None)
++
++    summary = {
++        "schema_version": "permitassist.rule-engine-part2.evidence.v1",
++        "source_tag": "permit-rule-engine-part1-20260712",
++        "source_commit": "1db644ee09e3a13e423462e5d8d8934d916dad71",
++        "adapter_version_unchanged": pre.ADAPTER_VERSION,
++        "part1_envelope_schema_version_unchanged": pre.DECISION_ENVELOPE_VERSION,
++        "core_envelope_schema_version": pre.CORE_ENVELOPE_SCHEMA_VERSION,
++        "core_projection_schema_version": pre.CORE_PROJECTION_SCHEMA_VERSION,
++        "core_cache_schema_version": pre.CORE_CACHE_SCHEMA_VERSION,
++        "cell_count": len(rows),
++        "identity_count": len(seen_identities),
++        "identity_status_counts": dict(sorted(identity_status_counts.items())),
++        "precedence_stage_counts": dict(sorted(stage_counts.items())),
++        "coverage_counts": dict(sorted(coverage_counts.items())),
++        "family_verdict_counts": dict(sorted(family_verdict_counts.items())),
++        "stage_family_verdict_counts": dict(sorted(stage_family_verdict_counts.items())),
++        "precedence_funnel_probe": fail_closed_stages,
++        "expected_precedence_funnel_probe": [
++            "validated_exact_complete",
++            "validated_exact_partial",
++            "exact_fail_closed",
++            "query_official_evidence",
++            "internal_abstain",
++        ],
++        "stable_candidate_violation_count": len(stable_candidate_violations),
++        "source_free_binary_violation_count": len(source_free_binary_violations),
++        "fail_closed_or_internal_abstain_binary_violation_count": len(abstain_stage_binary_violations),
++        "projection_integrity_violation_count": len(projection_integrity_violations),
++        "family_route_missing_violation_count": len(family_route_missing_violations),
++        "public_projection_internal_metadata_violation_count": len(public_metadata_leak_violations),
++        "sealed_surface_projection_equal": surface_equal,
++        "flag_default_disabled": flag_default_disabled,
++        "allowlist_exact": allowlist_exact,
++        "allowlist_rejects_other": allowlist_rejects_other,
++        "no_neuter_family_count": len(no_neuter_families),
++        "no_neuter_expected_family_count": no_neuter_expected_family_count,
++        "no_neuter_families": no_neuter_families,
++        "part1_checkpoint_manifest_present": (ROOT / "artifacts" / "permit_rule_engine_part1_20260711" / "CHECKPOINT_MANIFEST.json").is_file(),
++        "network_or_model_calls": 0,
++    }
++    blockers = {
++        "stable_candidate_violations": stable_candidate_violations,
++        "source_free_binary_violations": source_free_binary_violations,
++        "fail_closed_or_internal_abstain_binary_violations": abstain_stage_binary_violations,
++        "projection_integrity_violations": projection_integrity_violations,
++        "family_route_missing_violations": family_route_missing_violations,
++        "public_projection_internal_metadata_violations": public_metadata_leak_violations,
++    }
++    expected = summary["precedence_funnel_probe"] == summary["expected_precedence_funnel_probe"]
++    passed = all(
++        [
++            not stable_candidate_violations,
++            not source_free_binary_violations,
++            not abstain_stage_binary_violations,
++            not projection_integrity_violations,
++            not family_route_missing_violations,
++            not public_metadata_leak_violations,
++            surface_equal,
++            flag_default_disabled,
++            allowlist_exact,
++            allowlist_rejects_other,
++            len(no_neuter_families) == no_neuter_expected_family_count,
++            expected,
++        ]
++    )
++    summary["gate_passed"] = passed
++
++    OUT.mkdir(parents=True, exist_ok=True)
++    (OUT / "cells.jsonl").write_text("".join(canonical(row) + "\n" for row in rows), encoding="utf-8")
++    (OUT / "blockers.json").write_text(json.dumps(blockers, indent=2, sort_keys=True) + "\n", encoding="utf-8")
++    (OUT / "summary.json").write_text(json.dumps(summary, indent=2, sort_keys=True) + "\n", encoding="utf-8")
++    files = {}
++    for path in sorted(OUT.iterdir()):
++        if path.name == "manifest.json" or not path.is_file():
++            continue
++        files[path.name] = {"bytes": path.stat().st_size, "sha256": sha256_bytes(path.read_bytes())}
++    manifest = {"schema_version": "permitassist.rule-engine-part2.manifest.v1", "files": files}
++    (OUT / "manifest.json").write_text(json.dumps(manifest, indent=2, sort_keys=True) + "\n", encoding="utf-8")
++    print(canonical({"gate_passed": passed, "cell_count": len(rows), "manifest_files": len(files)}))
++    return 0 if passed else 1
++
++
++if __name__ == "__main__":
++    raise SystemExit(main())
+diff --git a/tests/fixtures/permit_rule_engine_part2_red_no_neuter.json b/tests/fixtures/permit_rule_engine_part2_red_no_neuter.json
+new file mode 100644
+index 0000000..b9f558a
+--- /dev/null
++++ b/tests/fixtures/permit_rule_engine_part2_red_no_neuter.json
+@@ -0,0 +1,103 @@
++{
++  "fixture_version": "permitassist.rule-engine-part2-red.v1",
++  "fixture_kind": "synthetic_contract_only",
++  "frozen_before_behavior_edits": true,
++  "cases": {
++    "exact_identity": {
++      "city": "Exampleville",
++      "state": "EX",
++      "index": {
++        "EX|exampleville|reroof": {
++          "cell_id": "cell-exampleville-reroof",
++          "jurisdiction_id": "us-ex-exampleville",
++          "ahj": "Exampleville",
++          "state": "EX",
++          "county": "Example County",
++          "project_family": "reroof"
++        },
++        "EX|exampleville|residential_remodel": {
++          "cell_id": "cell-exampleville-remodel",
++          "jurisdiction_id": "us-ex-exampleville",
++          "ahj": "Exampleville",
++          "state": "EX",
++          "county": "Example County",
++          "project_family": "residential_remodel"
++        }
++      }
++    },
++    "ambiguous_identity": {
++      "city": "Shared Place",
++      "state": "EX",
++      "index": {
++        "EX|shared_place|reroof": {
++          "cell_id": "cell-shared-city",
++          "jurisdiction_id": "us-ex-shared-city",
++          "ahj": "Shared Place",
++          "state": "EX",
++          "county": "North County",
++          "project_family": "reroof"
++        },
++        "EX|shared_place|residential_remodel": {
++          "cell_id": "cell-shared-county",
++          "jurisdiction_id": "us-ex-shared-county",
++          "ahj": "Shared Place",
++          "state": "EX",
++          "county": "South County",
++          "project_family": "residential_remodel"
++        }
++      }
++    },
++    "no_neuter_ten_lane": {
++      "project_family": "commercial_tenant_improvement",
++      "families": [
++        "building",
++        "electrical",
++        "plumbing",
++        "mechanical",
++        "fire",
++        "health",
++        "liquor",
++        "wastewater",
++        "occupancy",
++        "zoning"
++      ],
++      "weak_families": [
++        "health",
++        "liquor",
++        "wastewater"
++      ],
++      "expected_weak_verdicts": [
++        "CONDITIONAL",
++        "VERIFY",
++        "ABSTAIN"
++      ],
++      "forbidden_maps_url": "https://www.google.com/maps"
++    },
++    "source_floor": {
++      "source_free_required": {
++        "family": "building",
++        "verdict": "REQUIRED",
++        "trigger": "roof replacement",
++        "provenance": []
++      },
++      "source_backed_exemption": {
++        "family": "building",
++        "verdict": "NOT_REQUIRED",
++        "trigger": "ordinary repair exemption applies",
++        "provenance": [
++          {
++            "source_url": "https://example.gov/code/repair-exemption",
++            "source_quote": "A permit is not required for the listed ordinary repair when no structural member is altered.",
++            "retrieved_at": "2026-07-11T00:00:00Z",
++            "snapshot_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
++            "snapshot_path": "synthetic://ordinary-repair",
++            "effective_date": "2026-01-01",
++            "freshness_class": "current",
++            "last_verified_at": "2026-07-11T00:00:00Z",
++            "publishable": true
++          }
++        ]
++      }
++    }
++  }
++}
+diff --git a/tests/fixtures/permit_rule_engine_part2_red_no_neuter_manifest.json b/tests/fixtures/permit_rule_engine_part2_red_no_neuter_manifest.json
+new file mode 100644
+index 0000000..b676f61
+--- /dev/null
++++ b/tests/fixtures/permit_rule_engine_part2_red_no_neuter_manifest.json
+@@ -0,0 +1,8 @@
++{
++  "manifest_version": "permitassist.rule-engine-part2-red-manifest.v1",
++  "frozen_before_behavior_edits": true,
++  "files": {
++    "tests/fixtures/permit_rule_engine_part2_red_no_neuter.json": "6ed10204a54ae37469b79a9b969ad95769cdbe101d1b00c3cada59c157c5991a",
++    "tests/test_permit_rule_engine_part2.py": "ac2a9e938103fc0fe4c957b4a92579916427fe936926880683f096e1b556e220"
++  }
++}
+diff --git a/tests/test_permit_rule_engine_part2.py b/tests/test_permit_rule_engine_part2.py
+new file mode 100644
+index 0000000..9fefa3c
+--- /dev/null
++++ b/tests/test_permit_rule_engine_part2.py
+@@ -0,0 +1,323 @@
++from __future__ import annotations
++
++import copy
++import hashlib
++import json
++from pathlib import Path
++
++import pytest
++
++from api import permit_rule_engine as pre
++from api.v24_decision_cells import (
++    V24ResolutionStatus,
++    resolve_v24_cell,
++)
++
++
++FIXTURE_PATH = Path(__file__).parent / "fixtures" / "permit_rule_engine_part2_red_no_neuter.json"
++MANIFEST_PATH = Path(__file__).parent / "fixtures" / "permit_rule_engine_part2_red_no_neuter_manifest.json"
++
++
++@pytest.fixture(scope="module")
++def frozen_fixture() -> dict:
++    manifest = json.loads(MANIFEST_PATH.read_text(encoding="utf-8"))
++    root = Path(__file__).parents[1]
++    for relative_path, expected in manifest["files"].items():
++        actual = hashlib.sha256((root / relative_path).read_bytes()).hexdigest()
++        assert actual == expected
++    assert manifest["frozen_before_behavior_edits"] is True
++    return json.loads(FIXTURE_PATH.read_text(encoding="utf-8"))
++
++
++def test_part2_versions_are_explicit_and_independent_of_part1() -> None:
++    assert pre.CORE_ENVELOPE_SCHEMA_VERSION == "permitassist.decision-envelope.v2"
++    assert pre.CORE_PROJECTION_SCHEMA_VERSION == "permitassist.customer-decision-projection.v1"
++    assert pre.CORE_CACHE_SCHEMA_VERSION == "permitassist.rule-engine-cache.v1"
++    assert pre.ENVELOPE_SCHEMA_VERSION == "permitassist.decision-envelope.v1"
++
++
++def test_core_activation_is_disabled_by_default_and_requires_exact_allowlist(monkeypatch: pytest.MonkeyPatch) -> None:
++    monkeypatch.delenv("PERMITASSIST_RULE_ENGINE_CORE", raising=False)
++    monkeypatch.delenv("PERMITASSIST_RULE_ENGINE_CORE_ALLOWLIST", raising=False)
++    assert pre.core_activation_allowed("us-az-buckeye") is False
++
++    monkeypatch.setenv("PERMITASSIST_RULE_ENGINE_CORE", "active")
++    assert pre.core_activation_allowed("us-az-buckeye") is False
++    monkeypatch.setenv("PERMITASSIST_RULE_ENGINE_CORE_ALLOWLIST", "us-az-phoenix, us-az-buckeye ")
++    assert pre.core_activation_allowed("us-az-buckeye") is True
++    assert pre.core_activation_allowed("us-az-buck") is False
++    assert pre.core_activation_allowed("") is False
++
++
++def test_jurisdiction_identity_is_stable_deduplicated_and_sorted(frozen_fixture: dict) -> None:
++    case = frozen_fixture["cases"]["exact_identity"]
++    first = pre.resolve_jurisdiction_identity(case["city"], case["state"], index=case["index"])
++    second = pre.resolve_jurisdiction_identity(case["city"].upper(), case["state"].lower(), index=dict(reversed(list(case["index"].items()))))
++
++    assert first.status is pre.JurisdictionResolutionStatus.EXACT
++    assert first == second
++    assert len(first.candidates) == 1
++    assert first.candidates[0].jurisdiction_id == "us-ex-exampleville"
++    assert first.candidates[0].cell_ids == (
++        "cell-exampleville-remodel",
++        "cell-exampleville-reroof",
++    )
++
++
++def test_jurisdiction_identity_abstains_on_multiple_stable_ids(frozen_fixture: dict) -> None:
++    case = frozen_fixture["cases"]["ambiguous_identity"]
++    resolved = pre.resolve_jurisdiction_identity(case["city"], case["state"], index=case["index"])
++
++    assert resolved.status is pre.JurisdictionResolutionStatus.AMBIGUOUS
++    assert tuple(c.jurisdiction_id for c in resolved.candidates) == (
++        "us-ex-shared-city",
++        "us-ex-shared-county",
++    )
++    assert resolved.selected is None
++
++
++def test_closed_ontology_normalizes_atoms_and_rejects_unknown_scope() -> None:
++    atoms = pre.normalize_work_atoms(
++        "Residential reroof: replace asphalt shingles; no structural framing changes; 2,400 sq ft",
++        "residential",
++        facts={"occupancy_change": False, "structural_change": False},
++    )
++    assert atoms.valid is True
++    assert [atom.ontology_node for atom in atoms.atoms] == ["roof_covering_replacement"]
++    assert atoms.atoms[0].polarity is pre.WorkPolarity.POSITIVE
++    assert atoms.atoms[0].thresholds[0].name == "area_sq_ft"
++    assert atoms.atoms[0].thresholds[0].value == 2400
++
++    unknown = pre.normalize_work_atoms("Install a quantum flux widget", "other", facts={"made_up_fact": True})
++    assert unknown.valid is False
++    assert "unknown_work_atom" in unknown.issue_codes
++    assert "unknown_fact_key" in unknown.issue_codes
++
++
++def test_negated_atoms_cannot_trigger_binary_scope() -> None:
++    normalized = pre.normalize_work_atoms(
++        "No roof replacement and no structural alteration; inspection only",
++        "residential",
++    )
++    assert normalized.valid is False
++    assert normalized.positive_atoms == ()
++    assert all(atom.polarity is pre.WorkPolarity.NEGATED for atom in normalized.atoms)
++    assert "no_positive_work_atom" in normalized.issue_codes
++
++
++def test_per_family_authority_routes_do_not_collapse_to_first_route() -> None:
++    cell = {
++        "tier1": {
++            "trade_authority": [
++                {
++                    "permit_family": "building",
++                    "issuing_authority": "Exampleville Building Department",
++                    "application_authority": "Exampleville Permit Center",
++                    "application_channel": "online",
++                    "routing_note": "Select Building Permit.",
++                    "provenance": [{"source_url": "https://example.gov/building"}],
++                },
++                {
++                    "permit_family": "electrical",
++                    "issuing_authority": "State Electrical Board",
++                    "application_authority": "State Trade Portal",
++                    "application_channel": "online",
++                    "routing_note": "File separately with the state.",
++                    "provenance": [{"source_url": "https://example.gov/electrical"}],
++                },
++            ],
++            "apply": [
++                {
++                    "permit_name": "Building Permit",
++                    "office_name": "Exampleville Permit Center",
++                    "apply_url": "https://example.gov/building/apply",
++                    "channel": "online",
++                    "provenance": {"source_url": "https://example.gov/building/apply"},
++                },
++                {
++                    "permit_name": "Electrical Permit",
++                    "office_name": "State Trade Portal",
++                    "apply_url": "https://example.gov/electrical/apply",
++                    "channel": "online",
++                    "provenance": {"source_url": "https://example.gov/electrical/apply"},
++                },
++            ],
++        }
++    }
++    routes = pre.build_family_authority_routes(cell)
++    assert [route.family for route in routes] == ["building", "electrical"]
++    assert routes[0].application_route.office_name == "Exampleville Permit Center"
++    assert routes[1].application_route.office_name == "State Trade Portal"
++    assert routes[0].application_route.apply_url != routes[1].application_route.apply_url
++
++
++def test_exact_precedence_funnel_order_is_closed() -> None:
++    assert pre.select_precedence_stage(V24ResolutionStatus.EXACT_CELL_PUBLISHABLE, "complete", False) is pre.PrecedenceStage.VALIDATED_EXACT_COMPLETE
++    assert pre.select_precedence_stage(V24ResolutionStatus.EXACT_CELL_PUBLISHABLE, "partial", False) is pre.PrecedenceStage.VALIDATED_EXACT_PARTIAL
++    assert pre.select_precedence_stage(V24ResolutionStatus.EXACT_CELL_FAIL_CLOSED, "fail_closed", False) is pre.PrecedenceStage.EXACT_FAIL_CLOSED
++    assert pre.select_precedence_stage(V24ResolutionStatus.AHJ_NOT_COVERED, "none", True) is pre.PrecedenceStage.QUERY_OFFICIAL_EVIDENCE
++    assert pre.select_precedence_stage(V24ResolutionStatus.AHJ_NOT_COVERED, "none", False) is pre.PrecedenceStage.INTERNAL_ABSTAIN
++    assert tuple(stage.value for stage in pre.PrecedenceStage) == (
++        "validated_exact_complete",
++        "validated_exact_partial",
++        "exact_fail_closed",
++        "query_official_evidence",
++        "internal_abstain",
++    )
++
++
++def test_source_floor_demotes_source_free_binary_but_preserves_affirmative_exemption(frozen_fixture: dict) -> None:
++    source_floor = frozen_fixture["cases"]["source_floor"]
++    source_free = pre.normalize_family_decision(source_floor["source_free_required"])
++    exemption = pre.normalize_family_decision(source_floor["source_backed_exemption"])
++
++    assert source_free.verdict is pre.DecisionVerdict.VERIFY
++    assert "binary_without_publishable_provenance" in source_free.validation_issue_codes
++    assert exemption.verdict is pre.DecisionVerdict.NOT_REQUIRED
++    assert exemption.validation_issue_codes == ()
++
++
++def test_no_neuter_projection_preserves_all_lanes_and_weak_statuses(frozen_fixture: dict) -> None:
++    case = frozen_fixture["cases"]["no_neuter_ten_lane"]
++    decisions = []
++    for family in case["families"]:
++        verdict = "REQUIRED"
++        if family == "health":
++            verdict = "CONDITIONAL"
++        elif family == "liquor":
++            verdict = "VERIFY"
++        elif family == "wastewater":
++            verdict = "ABSTAIN"
++        decisions.append(
++            pre.normalize_family_decision(
++                {
++                    "family": family,
++                    "verdict": verdict,
++                    "trigger": f"{family} scope review",
++                    "provenance": [] if verdict not in {"REQUIRED", "NOT_REQUIRED"} else [{
++                        "source_url": f"https://example.gov/{family}",
++                        "source_quote": f"A {family} permit is required for this scope.",
++                        "snapshot_hash": "b" * 64,
++                        "snapshot_path": f"synthetic://{family}",
++                        "publishable": True,
++                    }],
++                }
++            )
++        )
++
++    payload = pre.build_sealed_projection_payload(
++        jurisdiction_id="us-ex-exampleville",
++        jurisdiction_name="Exampleville",
++        state="EX",
++        project_family=case["project_family"],
++        main_decision=decisions[0],
++        family_decisions=tuple(decisions),
++        family_routes=(),
++        coverage_status="partial",
++        coverage_reason="weak lanes remain visible for verification",
++        source_cell_id="synthetic-ten-lane",
++    )
++    rows = payload["family_decisions"]
++    assert [row["family"] for row in rows] == case["families"]
++    assert [row["verdict"] for row in rows if row["family"] in case["weak_families"]] == case["expected_weak_verdicts"]
++    assert len(rows) == 10
++    assert case["forbidden_maps_url"] not in json.dumps(payload, sort_keys=True)
++
++
++def _build_buckeye_envelope() -> object:
++    resolution = resolve_v24_cell("Buckeye", "AZ", "residential reroof", "residential", force=True)
++    assert resolution.status is V24ResolutionStatus.EXACT_CELL_PUBLISHABLE
++    return pre.build_core_decision_envelope(
++        resolution,
++        job_type="residential reroof",
++        city="Buckeye",
++        state="AZ",
++        job_category="residential",
++    )
++
++
++def test_envelope_projection_is_canonical_hash_sealed_and_tamper_rejected(monkeypatch: pytest.MonkeyPatch) -> None:
++    monkeypatch.setenv("PERMITASSIST_RULE_ENGINE_CORE", "active")
++    monkeypatch.setenv("PERMITASSIST_RULE_ENGINE_CORE_ALLOWLIST", "us-az-buckeye")
++    envelope = _build_buckeye_envelope()
++    wrapped = pre.attach_core_decision_envelope({"permit_decision": "NOT_REQUIRED", "poison": "legacy"}, envelope)
++    projected = pre.extract_sealed_public_projection(wrapped, city="Buckeye", state="AZ")
++
++    assert projected == json.loads(envelope.sealed_projection.payload_json)
++    assert envelope.sealed_projection.payload_sha256 == hashlib.sha256(envelope.sealed_projection.payload_json.encode("utf-8")).hexdigest()
++    projected["permit_name"] = "mutated copy"
++    assert json.loads(envelope.sealed_projection.payload_json)["permit_name"] != "mutated copy"
++
++    tampered = copy.deepcopy(wrapped)
++    tampered["_permit_rule_engine_core"]["sealed_projection"]["payload_json"] = "{}"
++    assert pre.extract_sealed_public_projection(tampered, city="Buckeye", state="AZ") is None
++
++
++def test_cache_version_rejects_legacy_stale_and_tampered_payloads(monkeypatch: pytest.MonkeyPatch) -> None:
++    monkeypatch.setenv("PERMITASSIST_RULE_ENGINE_CORE", "active")
++    monkeypatch.setenv("PERMITASSIST_RULE_ENGINE_CORE_ALLOWLIST", "us-az-buckeye")
++    envelope = _build_buckeye_envelope()
++    wrapped = pre.attach_core_decision_envelope({}, envelope)
++
++    assert pre.validate_rule_engine_cache_payload(wrapped, required_version=pre.CORE_CACHE_SCHEMA_VERSION) is True
++    assert pre.validate_rule_engine_cache_payload({}, required_version=pre.CORE_CACHE_SCHEMA_VERSION) is False
++    stale = copy.deepcopy(wrapped)
++    stale["_permit_rule_engine_cache_schema_version"] = "permitassist.rule-engine-cache.stale"
++    assert pre.validate_rule_engine_cache_payload(stale, required_version=pre.CORE_CACHE_SCHEMA_VERSION) is False
++    corrupted = copy.deepcopy(wrapped)
++    corrupted["_permit_rule_engine_core"]["envelope_sha256"] = "0" * 64
++    assert pre.validate_rule_engine_cache_payload(corrupted, required_version=pre.CORE_CACHE_SCHEMA_VERSION) is False
++
++
++def test_flag_off_attachment_is_exact_noop(monkeypatch: pytest.MonkeyPatch) -> None:
++    monkeypatch.delenv("PERMITASSIST_RULE_ENGINE_CORE", raising=False)
++    monkeypatch.delenv("PERMITASSIST_RULE_ENGINE_CORE_ALLOWLIST", raising=False)
++    original = {"permit_decision": "REQUIRED", "nested": {"rows": [1, 2, 3]}}
++    before = json.dumps(original, ensure_ascii=False, separators=(",", ":"), sort_keys=False).encode("utf-8")
++    after_obj = pre.maybe_attach_core_decision_envelope(
++        original,
++        job_type="residential reroof",
++        city="Buckeye",
++        state="AZ",
++        job_category="residential",
++    )
++    after = json.dumps(after_obj, ensure_ascii=False, separators=(",", ":"), sort_keys=False).encode("utf-8")
++    assert after_obj is original
++    assert after == before
++
++
++def test_api_share_report_and_checklist_use_same_sealed_projection(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
++    monkeypatch.setenv("PERMITASSIST_RULE_ENGINE_CORE", "active")
++    monkeypatch.setenv("PERMITASSIST_RULE_ENGINE_CORE_ALLOWLIST", "us-az-buckeye")
++    envelope = _build_buckeye_envelope()
++    wrapped = pre.attach_core_decision_envelope(
++        {
++            "permit_decision": "NOT_REQUIRED",
++            "permit_name": "POISON LEGACY PERMIT",
++            "applying_office": "POISON LEGACY OFFICE",
++            "inspections": ["POISON LEGACY INSPECTION"],
++        },
++        envelope,
++    )
++    sealed = json.loads(envelope.sealed_projection.payload_json)
++
++    from api import server
++
++    monkeypatch.setattr(server, "CACHE_DB", str(tmp_path / "cache.db"))
++    api_view = server.build_customer_permit_view_model(wrapped, "residential reroof", "Buckeye", "AZ", "residential")
++    share_view = server._sanitize_customer_result_for_request_scope(wrapped, "residential reroof", "Buckeye", "AZ")
++    report_html = server.render_white_label_report_html({
++        "result": wrapped,
++        "job_type": "residential reroof",
++        "city": "Buckeye",
++        "state": "AZ",
++    })
++    checklist = server.get_or_create_checklist(wrapped, "residential reroof", "Buckeye", "AZ")
++
++    assert api_view == sealed
++    assert share_view == sealed
++    assert sealed["permit_name"] in report_html
++    assert "POISON LEGACY PERMIT" not in report_html
++    assert "POISON LEGACY OFFICE" not in report_html
++    assert "POISON LEGACY INSPECTION" not in json.dumps(checklist, sort_keys=True)
++    assert checklist["decision_projection_sha256"] == envelope.sealed_projection.payload_sha256
+diff --git a/tests/test_permit_rule_engine_part2_integration.py b/tests/test_permit_rule_engine_part2_integration.py
+new file mode 100644
+index 0000000..617056d
+--- /dev/null
++++ b/tests/test_permit_rule_engine_part2_integration.py
+@@ -0,0 +1,315 @@
++from __future__ import annotations
++
++import copy
++import json
++import sqlite3
++
++from api import permit_rule_engine as pre
++from api import research_engine
++from api.v24_decision_cells import V24Resolution, V24ResolutionStatus, resolve_v24_cell
++
++
++def _active_buckeye_result(monkeypatch):
++    monkeypatch.setenv(pre.CORE_SETTING, "active")
++    resolution = resolve_v24_cell(
++        "Buckeye",
++        "AZ",
++        "residential reroof",
++        "residential",
++        force=True,
++    )
++    assert resolution.cell is not None
++    jurisdiction_id = str(resolution.cell["jurisdiction_id"])
++    monkeypatch.setenv(pre.CORE_ALLOWLIST_SETTING, jurisdiction_id)
++    envelope = pre.build_core_decision_envelope(
++        resolution,
++        job_type="residential reroof",
++        city="Buckeye",
++        state="AZ",
++        job_category="residential",
++    )
++    return pre.attach_core_decision_envelope({"legacy": "ignored"}, envelope)
++
++
++def test_active_cache_namespace_is_versioned_but_flag_off_key_is_unchanged(monkeypatch) -> None:
++    monkeypatch.delenv(pre.CORE_SETTING, raising=False)
++    monkeypatch.delenv(pre.CORE_ALLOWLIST_SETTING, raising=False)
++    baseline = research_engine.cache_key("residential reroof", "Buckeye", "AZ", "residential")
++    assert pre.core_cache_schema_for_request("Buckeye", "AZ") is None
++    assert research_engine.cache_key(
++        "residential reroof",
++        "Buckeye",
++        "AZ",
++        "residential",
++        rule_engine_cache_schema_version=None,
++    ) == baseline
++
++    active = _active_buckeye_result(monkeypatch)
++    del active
++    required = pre.core_cache_schema_for_request("Buckeye", "AZ")
++    assert required == pre.CORE_CACHE_SCHEMA_VERSION
++    active_key = research_engine.cache_key(
++        "residential reroof",
++        "Buckeye",
++        "AZ",
++        "residential",
++        rule_engine_cache_schema_version=required,
++    )
++    assert active_key != baseline
++
++
++def test_active_cache_read_rejects_stale_and_tampered_rows(monkeypatch, tmp_path) -> None:
++    monkeypatch.setattr(research_engine, "CACHE_DB", str(tmp_path / "permit-cache.db"))
++    monkeypatch.setattr(research_engine, "_capture_validators", lambda *_args, **_kwargs: ("", ""))
++    research_engine.init_cache()
++    key = "rule-engine-part2-stale"
++    stale = {"_cache_schema_version": research_engine.FILING_PACKET_CACHE_SCHEMA_VERSION}
++    conn = sqlite3.connect(research_engine.CACHE_DB)
++    conn.execute(
++        "INSERT INTO permit_cache (cache_key, job_type, job_category, city, state, zip_code, result_json, created_at, hits) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0)",
++        (key, "residential reroof", "residential", "Buckeye", "AZ", "", json.dumps(stale), "2099-01-01T00:00:00"),
++    )
++    conn.commit()
++    conn.close()
++
++    assert research_engine.get_cached(
++        key,
++        required_rule_engine_cache_version=pre.CORE_CACHE_SCHEMA_VERSION,
++    ) is None
++    conn = sqlite3.connect(research_engine.CACHE_DB)
++    assert conn.execute("SELECT COUNT(*) FROM permit_cache WHERE cache_key = ?", [key]).fetchone()[0] == 0
++    conn.close()
++
++    valid = _active_buckeye_result(monkeypatch)
++    valid["_cache_schema_version"] = research_engine.FILING_PACKET_CACHE_SCHEMA_VERSION
++    research_engine.save_cache(
++        key,
++        "residential reroof",
++        "residential",
++        "Buckeye",
++        "AZ",
++        "",
++        valid,
++    )
++    loaded = research_engine.get_cached(
++        key,
++        required_rule_engine_cache_version=pre.CORE_CACHE_SCHEMA_VERSION,
++    )
++    assert loaded is not None
++    assert pre.validate_rule_engine_cache_payload(loaded, required_version=pre.CORE_CACHE_SCHEMA_VERSION)
++
++    tampered = copy.deepcopy(valid)
++    tampered["_permit_rule_engine_core"]["sealed_projection"]["payload_json"] = "{}"
++    assert not pre.validate_rule_engine_cache_payload(tampered, required_version=pre.CORE_CACHE_SCHEMA_VERSION)
++
++
++def test_core_off_attachment_is_same_object_and_same_bytes(monkeypatch) -> None:
++    monkeypatch.delenv(pre.CORE_SETTING, raising=False)
++    monkeypatch.delenv(pre.CORE_ALLOWLIST_SETTING, raising=False)
++    payload = {"permit_decision": "required", "permit_required": True, "rows": [{"b": 2, "a": 1}]}
++    before = pre.response_json_bytes(payload)
++    returned = pre.maybe_attach_core_decision_envelope(
++        payload,
++        job_type="residential reroof",
++        city="Buckeye",
++        state="AZ",
++        job_category="residential",
++    )
++    assert returned is payload
++    assert pre.response_json_bytes(returned) == before
++
++
++def test_exact_fail_closed_abstains_every_family_and_customer_mirror() -> None:
++    provenance = [{
++        "source_url": "https://example.gov/building",
++        "source_quote": "A building permit is required.",
++        "snapshot_hash": "a" * 64,
++        "snapshot_path": "synthetic://fail-closed",
++        "publishable": True,
++    }]
++    cell = {
++        "status": "FAIL_CLOSED",
++        "cell_id": "synthetic-fail-closed",
++        "jurisdiction_id": "us-ex-exampleville",
++        "ahj": "Exampleville",
++        "state": "EX",
++        "project_family": "residential_remodel",
++        "scope": "residential remodel",
++        "tier1": {
++            "main_decision": {"value": "REQUIRED", "provenance": provenance},
++            "permits_required": [
++                {
++                    "permit_kind": "building",
++                    "required_status": "REQUIRED",
++                    "trigger": "residential remodel",
++                    "provenance": provenance,
++                },
++                {
++                    "permit_kind": "electrical",
++                    "required_status": "NOT_REQUIRED",
++                    "trigger": "no electrical work",
++                    "provenance": provenance,
++                },
++            ],
++        },
++    }
++    envelope = pre.build_core_decision_envelope(
++        V24Resolution(
++            V24ResolutionStatus.EXACT_CELL_FAIL_CLOSED,
++            cell=cell,
++            key="EX|exampleville|residential_remodel",
++            reason="synthetic fail-closed regression",
++        ),
++        job_type="residential remodel",
++        city="Exampleville",
++        state="EX",
++        job_category="residential",
++    )
++    projection = json.loads(envelope.sealed_projection.payload_json)
++
++    assert envelope.precedence_stage is pre.PrecedenceStage.EXACT_FAIL_CLOSED
++    assert envelope.main_decision.verdict is pre.FamilyVerdict.ABSTAIN
++    assert envelope.family_decisions
++    assert all(decision.verdict is pre.FamilyVerdict.ABSTAIN for decision in envelope.family_decisions)
++    assert all("exact_cell_fail_closed" in decision.validation_issue_codes for decision in envelope.family_decisions)
++    assert projection["permit_required"] is None
++    assert all(row["required_status"] == "ABSTAIN" for row in projection["permits_required"])
++    assert all(row["required"] == "maybe" for row in projection["permits_required"])
++
++
++def test_customer_authority_routes_redact_internal_provenance_metadata() -> None:
++    decision = pre.normalize_family_decision(
++        {
++            "family": "building",
++            "verdict": "REQUIRED",
++            "trigger": "building work",
++            "provenance": [{
++                "source_url": "https://example.gov/building",
++                "source_quote": "A building permit is required.",
++                "snapshot_hash": "b" * 64,
++                "snapshot_path": "internal/snapshot.json",
++                "publishable": True,
++                "authority_tier": "TIER1_COMPLETE",
++                "handled_by_local_ahj": True,
++            }],
++        }
++    )
++    routes = pre.build_family_authority_routes(
++        {
++            "tier1": {
++                "trade_authority": [{
++                    "permit_family": "building",
++                    "issuing_authority": "Exampleville Building Department",
++                    "application_authority": "Exampleville Permit Center",
++                    "authority_tier": "TIER1_COMPLETE",
++                    "handled_by_local_ahj": True,
++                }],
++                "apply": [{
++                    "permit_name": "Building Permit",
++                    "office_name": "Exampleville Permit Center",
++                    "apply_url": "https://example.gov/building/apply",
++                    "channel": "online",
++                    "provenance": {
++                        "source_url": "https://example.gov/building/apply",
++                        "source_quote": "Apply online.",
++                        "snapshot_hash": "c" * 64,
++                        "snapshot_path": "internal/apply.json",
++                        "publishable": True,
++                    },
++                }],
++            },
++        }
++    )
++    payload = pre.build_sealed_projection_payload(
++        jurisdiction_id="us-ex-exampleville",
++        jurisdiction_name="Exampleville",
++        state="EX",
++        project_family="residential_remodel",
++        main_decision=decision,
++        family_decisions=(decision,),
++        family_routes=routes,
++        coverage_status="validated_exact_complete",
++        coverage_reason="complete",
++        source_cell_id="synthetic-complete",
++    )
++    serialized = json.dumps(payload["family_authority_routes"], sort_keys=True)
++
++    assert "https://example.gov/building/apply" in serialized
++    for forbidden in ("snapshot_path", "publishable", "authority_tier", "handled_by_local_ahj"):
++        assert forbidden not in serialized
++
++
++def test_active_research_permit_cache_path_serves_validated_sealed_projection(monkeypatch, tmp_path) -> None:
++    monkeypatch.setattr(research_engine, "CACHE_DB", str(tmp_path / "active-research-cache.db"))
++    monkeypatch.setattr(research_engine, "_capture_validators", lambda *_args, **_kwargs: ("", ""))
++    monkeypatch.setattr(research_engine, "prepare_permit_rule_engine_shadow", lambda *_args, **_kwargs: None)
++    for name in (
++        "apply_scope_aware_permit_classification",
++        "apply_office_ti_rulebook",
++        "apply_medical_clinic_ti_rulebook",
++        "enforce_ti_min_permits_floor",
++        "enforce_commercial_primary_permit_guardrail",
++        "repair_residential_home_office_commercial_leak",
++        "validate_and_sanitize_permit_result",
++        "scrub_hidden_trigger_internal_metadata",
++        "apply_state_expert_pack",
++        "hedge_companion_permits",
++        "enrich_result_with_serper_sources",
++        "apply_source_locality_hard_block",
++        "apply_fee_verify_caveat",
++        "apply_rulebook_depth",
++        "sanitize_non_food_office_breakroom_text",
++        "reconcile_v231_result",
++        "reconcile_authoritative_result",
++    ):
++        monkeypatch.setattr(research_engine, name, lambda *_args, **_kwargs: None)
++    monkeypatch.setattr(research_engine, "ensure_required_filing_rows", lambda *_args, **_kwargs: {})
++
++    wrapped = _active_buckeye_result(monkeypatch)
++    wrapped.update(
++        {
++            "_cache_schema_version": research_engine.FILING_PACKET_CACHE_SCHEMA_VERSION,
++            "missing_fields": [],
++            "needs_review": False,
++            "confidence_reason": "sealed cache fixture",
++            "sources": [],
++            "companion_permits": [],
++            "checklist": [],
++            "rejection_patterns": [],
++            "permit_ready_score": 100,
++            "fee_calculator": {},
++        }
++    )
++    research_engine.init_cache()
++    cache_version = pre.core_cache_schema_for_request("Buckeye", "AZ")
++    key = research_engine.cache_key(
++        "residential reroof",
++        "Buckeye",
++        "AZ",
++        "residential",
++        rule_engine_cache_schema_version=cache_version,
++    )
++    research_engine.save_cache(
++        key,
++        "residential reroof",
++        "residential",
++        "Buckeye",
++        "AZ",
++        "",
++        wrapped,
++    )
++
++    served = research_engine.research_permit(
++        "residential reroof",
++        "Buckeye",
++        "AZ",
++        use_cache=True,
++        job_category="residential",
++    )
++    projection = pre.extract_sealed_public_projection(served, city="Buckeye", state="AZ")
++
++    assert served["_cached"] is True
++    assert pre.validate_rule_engine_cache_payload(served, required_version=pre.CORE_CACHE_SCHEMA_VERSION)
++    assert projection is not None
++    assert projection["decision_source"] == "sealed_permit_rule_engine_envelope"
++    assert "legacy" not in json.dumps(projection, sort_keys=True)

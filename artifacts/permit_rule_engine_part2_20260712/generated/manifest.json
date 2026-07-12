@@ -1,0 +1,17 @@
+{
+  "files": {
+    "blockers.json": {
+      "bytes": 276,
+      "sha256": "dc466a5f37dc0999d3831581d14b441efaae195a533814ca4cff5d27a776524e"
+    },
+    "cells.jsonl": {
+      "bytes": 1071195,
+      "sha256": "673c8d1a2e706b567a99959e05f51a7b6dc5d27fa963a128eb572901d60ce6dd"
+    },
+    "summary.json": {
+      "bytes": 2518,
+      "sha256": "d5aa6869b6c49ba36463ebf03cf98dd1fd1b1a787c807b27d9cd0e36d12fd388"
+    }
+  },
+  "schema_version": "permitassist.rule-engine-part2.manifest.v1"
+}

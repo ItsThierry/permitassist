@@ -1,0 +1,192 @@
+{
+  "branch": "work/permit-rule-engine-part2-20260712",
+  "checkpoint_tag": "permit-rule-engine-part2-20260712",
+  "files": {
+    "api/permit_rule_engine.py": {
+      "bytes": 82051,
+      "sha256": "ed72ef386cb682b8a2c5278b4e0497660bf12e1f78314d26ffad6929c29e76b3"
+    },
+    "api/research_engine.py": {
+      "bytes": 532169,
+      "sha256": "55da7a336e8ee3b4ffa53724d4accfaafc73b5293f6d4405ca4dd85d1a190b20"
+    },
+    "api/server.py": {
+      "bytes": 597916,
+      "sha256": "ba4be65df9582afab7ef9d212039689f25e8392f1a7badf53d03dddcb68130d9"
+    },
+    "artifacts/permit_rule_engine_4_session_plan_20260711/LOCKED_FOUR_SESSION_PLAN.md": {
+      "bytes": 15849,
+      "sha256": "954dc7c34e7976122bbbef557ab31f0849ebd2facd65a18fce54cff31e521d47"
+    },
+    "artifacts/permit_rule_engine_part2_20260712/FINAL_GATE_SUMMARY.json": {
+      "bytes": 1591,
+      "sha256": "131a1230a86114d6788dabb9ab9c0b4ddcea5651ee92b205fb06d2b7a7be6221"
+    },
+    "artifacts/permit_rule_engine_part2_20260712/PART2_CLOSEOUT.md": {
+      "bytes": 4284,
+      "sha256": "2ddd9dd8edab180402af033280907b265b099ac59ee7ee306c7499489bc6026c"
+    },
+    "artifacts/permit_rule_engine_part2_20260712/PART3_HANDOFF.md": {
+      "bytes": 7588,
+      "sha256": "585d4ca6d98b4164027d18661b9cc9c53637b12edf860b78c20785161c6fc0a2"
+    },
+    "artifacts/permit_rule_engine_part2_20260712/PRE_REVIEW_GATE_SUMMARY.json": {
+      "bytes": 1884,
+      "sha256": "e0a9fa4bef654c9919c876f2120265c67668e7db8af75795ecda1bf60a7c61ba"
+    },
+    "artifacts/permit_rule_engine_part2_20260712/gates/flag_off_probe.py": {
+      "bytes": 2425,
+      "sha256": "c950dea1dcf9f3a615ebfce923bde62dd4be569ed56d4b42bce60d70cb5dd0a8"
+    },
+    "artifacts/permit_rule_engine_part2_20260712/gates/input_topology.json": {
+      "bytes": 989,
+      "sha256": "d18ae10490789a168b8dcd9f4bbc91f2dbe5d4760447728153e50d813d48b54a"
+    },
+    "artifacts/permit_rule_engine_part2_20260712/gates/post_opus_baseline_comparison.json": {
+      "bytes": 2473,
+      "sha256": "7150b823bb67a7d3372d2142e91af4817d74963c9c4d7de0bb313aa1ebd183ec"
+    },
+    "artifacts/permit_rule_engine_part2_20260712/gates/post_opus_determinism.json": {
+      "bytes": 786,
+      "sha256": "974e7d079e60cce258485a381024d508b13cc63b42c3782d21987a9137a812ab"
+    },
+    "artifacts/permit_rule_engine_part2_20260712/gates/post_opus_exact_diff.patch": {
+      "bytes": 116153,
+      "sha256": "f173fef7d182308e54ba8af04783d1659e14b3b2197a83eb988a21f293e1ba77"
+    },
+    "artifacts/permit_rule_engine_part2_20260712/gates/post_opus_flag_off_parity.json": {
+      "bytes": 360,
+      "sha256": "8b5bcc447e09e20dec79e0f00d682dc0e21645e4e89aa8226e54341f656f4a4e"
+    },
+    "artifacts/permit_rule_engine_part2_20260712/gates/post_opus_focused_tests.txt": {
+      "bytes": 99,
+      "sha256": "21eae1d7f61262b9eb087eee4df625f78dc02f6de6918f8d578593362c6d42de"
+    },
+    "artifacts/permit_rule_engine_part2_20260712/gates/post_opus_full_suite.txt": {
+      "bytes": 39834,
+      "sha256": "edcf92b264b78a55bde0e18d09fc842f44cc638d6e584b0cffa16c3a92a7aeec"
+    },
+    "artifacts/permit_rule_engine_part2_20260712/gates/post_opus_full_suite_status.txt": {
+      "bytes": 14,
+      "sha256": "25d0f7d25acb9996e3d5a451dde5907c6b896419eac5fbd433d5a9afb98847b3"
+    },
+    "artifacts/permit_rule_engine_part2_20260712/gates/post_opus_secret_contract_tests.txt": {
+      "bytes": 98,
+      "sha256": "39f5f6616d65db68bdfbf61a02bbc0d7711720c2db682cd178f17921f1eddf11"
+    },
+    "artifacts/permit_rule_engine_part2_20260712/gates/post_opus_secret_scan.json": {
+      "bytes": 422,
+      "sha256": "891c6fd38bab7cf0a0e275af18420803db4250387581e192b38f06cf8ed38b99"
+    },
+    "artifacts/permit_rule_engine_part2_20260712/gates/post_opus_static_checks.txt": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "artifacts/permit_rule_engine_part2_20260712/generated/blockers.json": {
+      "bytes": 276,
+      "sha256": "dc466a5f37dc0999d3831581d14b441efaae195a533814ca4cff5d27a776524e"
+    },
+    "artifacts/permit_rule_engine_part2_20260712/generated/cells.jsonl": {
+      "bytes": 1071195,
+      "sha256": "673c8d1a2e706b567a99959e05f51a7b6dc5d27fa963a128eb572901d60ce6dd"
+    },
+    "artifacts/permit_rule_engine_part2_20260712/generated/manifest.json": {
+      "bytes": 487,
+      "sha256": "1fcfc2f3841506de9e6903dddb3cfbba1eca88c0d958a9fbe530a590806d071f"
+    },
+    "artifacts/permit_rule_engine_part2_20260712/generated/summary.json": {
+      "bytes": 2518,
+      "sha256": "d5aa6869b6c49ba36463ebf03cf98dd1fd1b1a787c807b27d9cd0e36d12fd388"
+    },
+    "artifacts/permit_rule_engine_part2_20260712/red/focused_red.txt": {
+      "bytes": 16210,
+      "sha256": "a31572074bbaff15224caa77f6234bd0d0b1a43565a3ba7d1e0bf4f0ebac5e85"
+    },
+    "artifacts/permit_rule_engine_part2_20260712/review/REMEDIATION_SUMMARY.json": {
+      "bytes": 996,
+      "sha256": "c9c72999a8c5daf7898092ceed09babf1027e76267fcb497e229a2308c5f594b"
+    },
+    "artifacts/permit_rule_engine_part2_20260712/review/final/opus_4_8_final_exact_diff_prompt.txt": {
+      "bytes": 153101,
+      "sha256": "bd658ff235b5d4e63fe13872cf15885f02d254ae040bc4d34ee146a5e47ff319"
+    },
+    "artifacts/permit_rule_engine_part2_20260712/review/final/opus_4_8_final_identity.json": {
+      "bytes": 169,
+      "sha256": "6c2978ad8ad3bb0af6a62082a439777eae7a10a064e5a18a3be04f0e4b3c3095"
+    },
+    "artifacts/permit_rule_engine_part2_20260712/review/final/opus_4_8_final_raw.json": {
+      "bytes": 9535,
+      "sha256": "f522f9627bb107da324e5def04dab2ec8374726ed55a97b97e7dcfe8e332b4e9"
+    },
+    "artifacts/permit_rule_engine_part2_20260712/review/final/opus_4_8_final_review.md": {
+      "bytes": 8269,
+      "sha256": "dc15b6d80473bf3ba3fbcafc2a300eff1e153e869289d95f3c0a87ad947b8439"
+    },
+    "artifacts/permit_rule_engine_part2_20260712/review/final/prompt_manifest.json": {
+      "bytes": 193,
+      "sha256": "7a705d0f4689be9c952665eac911afd755540bf0a30fe009aebcf834b63e7ba1"
+    },
+    "artifacts/permit_rule_engine_part2_20260712/review/opus_4_8_identity.json": {
+      "bytes": 147,
+      "sha256": "71ae3019e7163bf51b75c331d415d4f25b609467155f1ba5b2f13f6e5b5dcf1d"
+    },
+    "artifacts/permit_rule_engine_part2_20260712/review/opus_4_8_raw.json": {
+      "bytes": 8048,
+      "sha256": "2c07c405e8e3e56a9b5981b5b85264615d6d703baeb2ef88ce6ba6780a27ce94"
+    },
+    "artifacts/permit_rule_engine_part2_20260712/review/opus_4_8_review.md": {
+      "bytes": 6773,
+      "sha256": "e0f0fd4a3b6351812ff2f6c425f02a9ca1a8d8b71a8b968a00b99d648bf8a738"
+    },
+    "artifacts/permit_rule_engine_part2_20260712/review/prompt_manifest.json": {
+      "bytes": 193,
+      "sha256": "2a3a472a25ab3da8d107fcd2cea8ac667167287d5a122937ac13f06251234876"
+    },
+    "scripts/generate_permit_rule_engine_part2_evidence.py": {
+      "bytes": 14066,
+      "sha256": "3a099b77bbdf7f05c11ebf324385b62966ef451560c138d3cb22c0923a869732"
+    },
+    "tests/fixtures/permit_rule_engine_part2_red_no_neuter.json": {
+      "bytes": 3102,
+      "sha256": "6ed10204a54ae37469b79a9b969ad95769cdbe101d1b00c3cada59c157c5991a"
+    },
+    "tests/fixtures/permit_rule_engine_part2_red_no_neuter_manifest.json": {
+      "bytes": 380,
+      "sha256": "7939f1a9e25675c8f5f0fbf48a3cc2b71ca7632b594d589010939291e2b144e5"
+    },
+    "tests/test_permit_rule_engine_part2.py": {
+      "bytes": 15405,
+      "sha256": "ac2a9e938103fc0fe4c957b4a92579916427fe936926880683f096e1b556e220"
+    },
+    "tests/test_permit_rule_engine_part2_integration.py": {
+      "bytes": 12285,
+      "sha256": "1dd1770b83f596c4c6f262ace9e99ae5c7916db1f72c62619a52533ac057a0e5"
+    }
+  },
+  "frozen_red_commit": "26bbc4aa131ff15ee9e4eb09f5a8aab2e1ac982b",
+  "gates": {
+    "baseline_failures": 18,
+    "cell_count": 2162,
+    "determinism_byte_identical": true,
+    "exact_failure_set_match": true,
+    "final_opus_blockers": 0,
+    "final_opus_model": "claude-opus-4-8",
+    "final_opus_verdict": "READY",
+    "flag_off_byte_parity": true,
+    "focused_passed": 32,
+    "full_suite_passed": 1109,
+    "full_suite_skipped": 47,
+    "new_failures": 0,
+    "secret_scan_hits": 0
+  },
+  "manifest_self_hash_excluded": true,
+  "production_boundary": {
+    "activation": "disabled_by_default",
+    "deployments": 0,
+    "production_mutations": 0,
+    "pushes": 0
+  },
+  "schema_version": "permitassist.rule-engine-part2-checkpoint-manifest.v1",
+  "sealed_part1_commit": "1db644ee09e3a13e423462e5d8d8934d916dad71",
+  "sealed_part1_tag": "permit-rule-engine-part1-20260712"
+}

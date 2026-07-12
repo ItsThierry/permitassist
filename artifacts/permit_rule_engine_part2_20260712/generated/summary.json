@@ -1,0 +1,81 @@
+{
+  "adapter_version_unchanged": "permitassist.rule-engine-shadow-adapter.v1",
+  "allowlist_exact": true,
+  "allowlist_rejects_other": true,
+  "cell_count": 2162,
+  "core_cache_schema_version": "permitassist.rule-engine-cache.v1",
+  "core_envelope_schema_version": "permitassist.decision-envelope.v2",
+  "core_projection_schema_version": "permitassist.customer-decision-projection.v1",
+  "coverage_counts": {
+    "complete": 36,
+    "fail_closed": 34,
+    "partial": 2092
+  },
+  "expected_precedence_funnel_probe": [
+    "validated_exact_complete",
+    "validated_exact_partial",
+    "exact_fail_closed",
+    "query_official_evidence",
+    "internal_abstain"
+  ],
+  "fail_closed_or_internal_abstain_binary_violation_count": 0,
+  "family_route_missing_violation_count": 0,
+  "family_verdict_counts": {
+    "ABSTAIN": 48,
+    "CONDITIONAL": 51,
+    "REQUIRED": 4681
+  },
+  "flag_default_disabled": true,
+  "gate_passed": true,
+  "identity_count": 2157,
+  "identity_status_counts": {
+    "ambiguous": 5,
+    "exact": 2152
+  },
+  "network_or_model_calls": 0,
+  "no_neuter_expected_family_count": 10,
+  "no_neuter_families": [
+    "building",
+    "electrical",
+    "fire",
+    "health",
+    "liquor",
+    "mechanical",
+    "occupancy",
+    "plumbing",
+    "wastewater",
+    "zoning"
+  ],
+  "no_neuter_family_count": 10,
+  "part1_checkpoint_manifest_present": true,
+  "part1_envelope_schema_version_unchanged": "permitassist.decision-envelope.v1",
+  "precedence_funnel_probe": [
+    "validated_exact_complete",
+    "validated_exact_partial",
+    "exact_fail_closed",
+    "query_official_evidence",
+    "internal_abstain"
+  ],
+  "precedence_stage_counts": {
+    "exact_fail_closed": 34,
+    "validated_exact_complete": 36,
+    "validated_exact_partial": 2092
+  },
+  "projection_integrity_violation_count": 0,
+  "public_projection_internal_metadata_violation_count": 0,
+  "schema_version": "permitassist.rule-engine-part2.evidence.v1",
+  "sealed_surface_projection_equal": true,
+  "source_commit": "1db644ee09e3a13e423462e5d8d8934d916dad71",
+  "source_free_binary_violation_count": 0,
+  "source_tag": "permit-rule-engine-part1-20260712",
+  "stable_candidate_violation_count": 0,
+  "stage_family_verdict_counts": {
+    "exact_fail_closed|ABSTAIN": 34,
+    "validated_exact_complete|ABSTAIN": 6,
+    "validated_exact_complete|CONDITIONAL": 42,
+    "validated_exact_complete|REQUIRED": 72,
+    "validated_exact_partial|ABSTAIN": 8,
+    "validated_exact_partial|CONDITIONAL": 9,
+    "validated_exact_partial|REQUIRED": 4609
+  }
+}

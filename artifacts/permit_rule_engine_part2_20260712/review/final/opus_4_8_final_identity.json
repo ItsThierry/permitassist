@@ -1,0 +1,10 @@
+{
+  "actual_models": [
+    "claude-opus-4-8"
+  ],
+  "is_error": false,
+  "num_turns": 1,
+  "requested_model": "opus",
+  "verdict": "READY",
+  "web_search_requests": 0
+}

@@ -1,0 +1,25 @@
+{
+  "schema_version": "permitassist.rule-engine-part2.input-topology.v1",
+  "sealed_source_checkout": "/home/boban/projects/permitassist",
+  "sealed_source_commit": "1db644ee09e3a13e423462e5d8d8934d916dad71",
+  "isolated_worktree": "/home/boban/projects/permitassist-rule-engine-part2-20260712",
+  "fixture_transfer_mode": "copied_directories",
+  "copied_ignored_fixture_directories": [
+    "artifacts/live_customer_100_50_50_20260629T120408Z",
+    "artifacts/live_customer_100_50_50_20260629T210943Z",
+    "artifacts/live_customer_100_real_customer_50_50_20260629T160333Z"
+  ],
+  "invalid_attempt": {
+    "artifact": "gates/full_suite.txt",
+    "disposition": "excluded_setup_defect",
+    "reason": "ignored historical replay inputs were absent from the isolated worktree"
+  },
+  "valid_attempt": {
+    "artifact": "gates/full_suite_with_replay_fixtures.txt",
+    "collected": 1171,
+    "passed": 1106,
+    "skipped": 47,
+    "failed": 18,
+    "exact_part1_failure_set_match": true
+  }
+}
