@@ -12,6 +12,7 @@ import re
 import sqlite3
 import sys
 import tempfile
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
@@ -29,6 +30,7 @@ from api import server  # noqa: E402
 from api.v24_decision_cells import V24ResolutionStatus, resolve_v24_cell  # noqa: E402
 
 SCHEMA_VERSION = "permitassist.rule-engine-part4-evidence.v1"
+EVIDENCE_UTC_NOW = datetime(2026, 7, 12, 12, 0, 0, tzinfo=timezone.utc)
 POISON_BINARY = "POISON_LEGACY_BINARY"
 POISON_MARKER = "POISON_INTERNAL_SECRET"
 CANARIES = (
@@ -127,9 +129,14 @@ def generate(output_dir: Path, source_commit: str) -> dict[str, Any]:
     output_dir.mkdir(parents=True, exist_ok=True)
     original_core = os.environ.get(pre.CORE_SETTING)
     original_allowlist = os.environ.get(pre.CORE_ALLOWLIST_SETTING)
+    original_utc_now = server.utc_now
     valid_rows: list[dict[str, Any]] = []
     tamper_rows: list[dict[str, Any]] = []
     try:
+        # Renderer fallbacks stamp citation dates with server.utc_now(). Freeze
+        # the evidence clock so artifact hashes remain reproducible across UTC
+        # date boundaries without changing production rendering behavior.
+        server.utc_now = lambda: EVIDENCE_UTC_NOW
         os.environ.pop(pre.CORE_SETTING, None)
         os.environ.pop(pre.CORE_ALLOWLIST_SETTING, None)
         legacy = {"permit_decision": "REQUIRED", "nested": {"order": [3, 2, 1]}}
@@ -362,6 +369,7 @@ def generate(output_dir: Path, source_commit: str) -> dict[str, Any]:
         summary = {
             "schema_version": SCHEMA_VERSION,
             "source_commit": source_commit,
+            "evidence_clock_utc": EVIDENCE_UTC_NOW.isoformat().replace("+00:00", "Z"),
             "valid_canary_count": len(valid_rows),
             "tamper_case_count": len(tamper_rows),
             "w4_family_count": next(row["family_count"] for row in valid_rows if row["job_type"] == "commercial tenant improvement"),
@@ -400,6 +408,7 @@ def generate(output_dir: Path, source_commit: str) -> dict[str, Any]:
         write_json(output_dir / "manifest.json", manifest)
         return summary
     finally:
+        server.utc_now = original_utc_now
         if original_core is None:
             os.environ.pop(pre.CORE_SETTING, None)
         else:

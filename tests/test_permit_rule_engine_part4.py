@@ -4,10 +4,13 @@ import copy
 import hashlib
 import json
 import os
+from datetime import datetime, timezone
 from pathlib import Path
 
 import pytest
 from bs4 import BeautifulSoup
+
+from scripts import generate_permit_rule_engine_part4_evidence as p4e
 
 os.environ.setdefault("PERMITASSIST_NO_BACKGROUND_WORKERS", "1")
 os.environ.setdefault("FREE_LOOKUP_DB", "/tmp/permitassist-part4-free-lookups.db")
@@ -351,3 +354,27 @@ def test_part4_tampered_shared_storage_is_rejected(
         conn.execute("UPDATE shared_results SET result_json=? WHERE slug=?", [json.dumps(stored), slug])
         conn.commit()
     assert server.get_share(slug) is None
+
+
+def test_part4_evidence_is_byte_stable_across_utc_date_boundaries(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    run_before = tmp_path / "before-midnight"
+    run_after = tmp_path / "after-midnight"
+    monkeypatch.setattr(
+        p4e.server,
+        "utc_now",
+        lambda: datetime(2026, 7, 12, 23, 59, 59, tzinfo=timezone.utc),
+    )
+    p4e.generate(run_before, "test-source-commit")
+    monkeypatch.setattr(
+        p4e.server,
+        "utc_now",
+        lambda: datetime(2026, 7, 13, 0, 0, 1, tzinfo=timezone.utc),
+    )
+    p4e.generate(run_after, "test-source-commit")
+
+    before = {path.name: path.read_bytes() for path in sorted(run_before.iterdir())}
+    after = {path.name: path.read_bytes() for path in sorted(run_after.iterdir())}
+    assert before == after
