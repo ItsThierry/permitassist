@@ -16,7 +16,7 @@ os.environ.setdefault("PERMITASSIST_NO_BACKGROUND_WORKERS", "1")
 os.environ.setdefault("FREE_LOOKUP_DB", "/tmp/permitassist-part4-free-lookups.db")
 
 from api import permit_rule_engine as pre
-from api.v24_decision_cells import V24ResolutionStatus, load_v24_index, resolve_v24_cell
+from api.v24_decision_cells import V24Resolution, V24ResolutionStatus, load_v24_index, resolve_v24_cell
 
 
 FIXTURE_PATH = Path(__file__).parent / "fixtures" / "permit_rule_engine_part4_contract.json"
@@ -225,6 +225,276 @@ def test_part4_factory_exception_and_unsupported_scope_remain_fail_closed(
     assert seed.binary_families == ()
     assert seed.issue_codes == ("factory_exception",)
     assert pre.classify_request_scope("unmapped quantum containment scope") is pre.SeedClassification.UNSUPPORTED_SCOPE
+
+
+def test_part4_unsupported_scope_survives_second_customer_projection_without_legacy_fallback(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from api import server
+
+    monkeypatch.setenv(pre.CORE_SETTING, "active")
+    monkeypatch.setenv(pre.CORE_ALLOWLIST_SETTING, "us-az-buckeye")
+    resolution = resolve_v24_cell(
+        "Buckeye", "AZ", "interior painting only", "residential", force=True
+    )
+    assert resolution.status is V24ResolutionStatus.AMBIGUOUS_ABSTAIN
+    legacy = {
+        "permit_decision": "REQUIRED",
+        "permit_required": True,
+        "permit_verdict": "YES",
+        "permit_name": POISON_BINARY,
+        "summary": POISON_MARKER,
+    }
+
+    wrapped = pre.maybe_attach_core_decision_envelope(
+        legacy,
+        job_type="interior painting only",
+        city="Buckeye",
+        state="AZ",
+        job_category="residential",
+    )
+    first_projection = server.finalize_permit_lookup_result(
+        wrapped,
+        job_type="interior painting only",
+        city="Buckeye",
+        state="AZ",
+        job_category="residential",
+    )
+    cached_projection = server.finalize_permit_lookup_result(
+        wrapped,
+        job_type="interior painting only",
+        city="Buckeye",
+        state="AZ",
+        job_category="residential",
+        is_cached=True,
+    )
+    second_projection = server.build_customer_permit_view_model(
+        first_projection,
+        "interior painting only",
+        "Buckeye",
+        "AZ",
+        "residential",
+    )
+
+    assert first_projection["permit_decision"] == "UNKNOWN"
+    assert cached_projection == first_projection
+    assert second_projection["permit_decision"] == "UNKNOWN"
+    assert second_projection["permit_required"] is None
+    assert second_projection["permit_verdict"] == "VERIFY"
+    assert [row["family"] for row in second_projection["family_decisions"]] == sorted(pre._CORE_FAMILIES)
+    assert {row["verdict"] for row in second_projection["family_decisions"]} == {"ABSTAIN"}
+    assert len(second_projection["verification_tasks"]) == len(pre._CORE_FAMILIES)
+    _assert_no_poison(second_projection)
+
+    unsupported_envelope = pre.build_core_decision_envelope(
+        V24Resolution(
+            V24ResolutionStatus.AHJ_COVERED_PROJECT_NOT_COVERED,
+            key="AZ|buckeye|unsupported",
+            reason="AHJ covered but exact project family is unsupported",
+        ),
+        job_type="unmapped quantum containment scope",
+        city="Buckeye",
+        state="AZ",
+        job_category="residential",
+    )
+    unsupported_projection = server.finalize_permit_lookup_result(
+        pre.attach_core_decision_envelope(copy.deepcopy(legacy), unsupported_envelope),
+        "unmapped quantum containment scope",
+        "Buckeye",
+        "AZ",
+        job_category="residential",
+    )
+    assert unsupported_projection["permit_decision"] == "UNKNOWN"
+    assert [row["family"] for row in unsupported_projection["family_decisions"]] == sorted(pre._CORE_FAMILIES)
+    assert {row["verdict"] for row in unsupported_projection["family_decisions"]} == {"ABSTAIN"}
+    _assert_no_poison(unsupported_projection)
+
+
+@pytest.mark.parametrize(
+    "snippet",
+    ["", "The city adopted the 2024 building code for construction activity."],
+)
+def test_part4_customer_not_required_source_floor_demotes_unbound_official_urls(snippet: str) -> None:
+    from api import server
+
+    raw = {
+        "permit_decision": "NOT_REQUIRED",
+        "permit_required": False,
+        "permit_verdict": "NO",
+        "permit_name": "No permit required",
+        "permit_type": "No permit required",
+        "permit_kind": "Not Required",
+        "summary": "No permit required for the described scope.",
+        "sources": [
+            {
+                "url": "https://code.mecknc.gov/permitting",
+                "title": "Official Charlotte source",
+                "snippet": snippet,
+            }
+        ],
+        "source_urls": ["https://code.mecknc.gov/permitting"],
+        "claim_citations": [],
+    }
+    views = []
+    for is_cached in (False, True):
+        finalized = server.finalize_permit_lookup_result(
+            copy.deepcopy(raw),
+            "Replace kitchen faucet and garbage disposal only; no wall relocation, no new circuits, and no structural work",
+            "Charlotte",
+            "NC",
+            is_cached=is_cached,
+            job_category="residential",
+        )
+        views.append(server.build_customer_permit_view_model(
+            finalized,
+            "Replace kitchen faucet and garbage disposal only; no wall relocation, no new circuits, and no structural work",
+            "Charlotte",
+            "NC",
+            "residential",
+        ))
+    assert views[0] == views[1]
+    prefinalized_legacy_cache = copy.deepcopy(raw)
+    prefinalized_legacy_cache["customer_result_summary"] = {"decision": "NOT_REQUIRED"}
+    prefinalized_legacy_cache["customer_first_screen_summary"] = {"headline": "No permit required"}
+    cache_hit_view = server.build_customer_permit_view_model(
+        prefinalized_legacy_cache,
+        "Replace kitchen faucet and garbage disposal only; no wall relocation, no new circuits, and no structural work",
+        "Charlotte",
+        "NC",
+        "residential",
+    )
+    assert cache_hit_view["permit_decision"] == "UNKNOWN"
+    assert cache_hit_view["permit_required"] is None
+    view = views[0]
+
+    assert view["permit_decision"] == "UNKNOWN"
+    assert view["permit_required"] is None
+    assert view["permit_verdict"] == "VERIFY"
+    assert view.get("claim_citations") in (None, [])
+    assert view["permits_required"]
+    assert all(row.get("required") not in {True, False} for row in view["permits_required"])
+    assert all(str(row.get("status") or row.get("required_status") or "").upper() == "VERIFY" for row in view["permits_required"])
+    assert view["source_urls"] == ["https://code.mecknc.gov/permitting"]
+    assert view["apply_path"]["channel"] == "contact_ahj"
+    serialized = json.dumps(view, sort_keys=True).lower()
+    for stale_claim in (
+        "no permit required",
+        "no permit submission needed",
+        "no permit fee expected",
+        "no permit inspection",
+    ):
+        assert stale_claim not in serialized
+
+
+def test_part4_customer_not_required_source_floor_preserves_claim_linked_official_decision() -> None:
+    from api import server
+
+    decision = "NOT_REQUIRED"
+    required = False
+    verdict = "NO"
+    quote = "No permit is required for an in-kind fixture replacement with no piping changes."
+    url = "https://www.buckeyeaz.gov/business/development-services/permit-center"
+    raw = {
+        "permit_decision": decision,
+        "permit_required": required,
+        "permit_verdict": verdict,
+        "not_required_reason": quote,
+        "claim_citations": [{
+            "id": "C1",
+            "field": "permit_decision",
+            "claim": "Permit requirement decision",
+            "value": decision,
+            "source_url": url,
+            "source_title": "City of Buckeye Permit Center",
+            "quoted_snippet": quote,
+            "checked_at": "2026-07-13",
+            "confidence": "high",
+        }],
+        "sources": [{"url": url, "title": "City of Buckeye Permit Center", "snippet": quote}],
+        "source_urls": [url],
+    }
+
+    gated = server.enforce_unbound_not_required_source_floor(
+        raw,
+        "residential reroof",
+        "Buckeye",
+        "AZ",
+    )
+    assert gated["permit_decision"] == decision
+    assert gated["permit_required"] is required
+    assert gated["permit_verdict"] == verdict
+
+    first_public = server.build_customer_permit_view_model(
+        raw,
+        "in-kind fixture replacement with no piping changes",
+        "Buckeye",
+        "AZ",
+        "residential",
+    )
+    second_public = server.build_customer_permit_view_model(
+        first_public,
+        "in-kind fixture replacement with no piping changes",
+        "Buckeye",
+        "AZ",
+        "residential",
+    )
+    assert first_public["permit_decision"] == "NOT_REQUIRED"
+    assert first_public["permit_required"] is False
+    assert second_public["permit_decision"] == "NOT_REQUIRED"
+    assert second_public["permit_required"] is False
+
+
+def test_part4_authoritative_not_required_cell_remains_idempotent_after_public_cache_projection() -> None:
+    from api import server
+
+    url = "https://www.buckeyeaz.gov/business/development-services/permit-center"
+    raw = {
+        "permit_decision": "REQUIRED",
+        "permit_required": True,
+        "permit_verdict": "YES",
+        "permit_name": POISON_BINARY,
+        "_decision_cell_primary_lock": {
+            "source": "permitassist_v231_decision_cell",
+            "exact_match": True,
+            "permit_decision": "NOT_REQUIRED",
+            "customer_action": "No permit is required for this exact in-kind maintenance scope.",
+            "source_urls": [url],
+            "sources": [{"url": url, "title": "City of Buckeye Permit Center"}],
+        },
+    }
+    first = server.build_customer_permit_view_model(
+        raw,
+        "in-kind fixture maintenance with no piping or wiring changes",
+        "Buckeye",
+        "AZ",
+        "residential",
+    )
+    second = server.build_customer_permit_view_model(
+        first,
+        "in-kind fixture maintenance with no piping or wiring changes",
+        "Buckeye",
+        "AZ",
+        "residential",
+    )
+
+    third = server.build_customer_permit_view_model(
+        second,
+        "in-kind fixture maintenance with no piping or wiring changes",
+        "Buckeye",
+        "AZ",
+        "residential",
+    )
+
+    assert first["permit_decision"] == "NOT_REQUIRED"
+    assert first["permit_required"] is False
+    assert first["data_source"] == "Official permit authority decision rule"
+    assert first["source_urls"] == [url]
+    assert second["permit_decision"] == "NOT_REQUIRED"
+    assert second["permit_required"] is False
+    assert second["data_source"] == "Official permit authority decision rule"
+    assert third["permit_decision"] == "NOT_REQUIRED"
+    assert third["permit_required"] is False
+    assert third["data_source"] == "Official permit authority decision rule"
 
 
 def test_part4_ambiguous_jurisdiction_never_activates(monkeypatch: pytest.MonkeyPatch) -> None:

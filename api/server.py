@@ -1406,6 +1406,9 @@ def _free_text_url_source_dicts(result: dict, city: str, state: str, existing_ur
     return out
 
 
+_AUTHORITATIVE_NOT_REQUIRED_PUBLIC_SOURCE = "Official permit authority decision rule"
+
+
 def _source_evidence_floor_satisfied(result: dict) -> bool:
     """Return True only for an already-finalized public customer ViewModel."""
     if not isinstance(result, dict):
@@ -4258,6 +4261,15 @@ def build_customer_permit_view_model(result: dict, job_type: str = "", city: str
         # return a separate family-visible abstention DTO; neither path may fall
         # through to legacy binary fields.
         return core_projection
+    if (
+        _source_evidence_floor_satisfied(result)
+        and str((result or {}).get("permit_decision") or "").upper().strip() == "NOT_REQUIRED"
+        and _not_required_public_evidence_is_persisted(result, city, state)
+    ):
+        # A claim-bound or authoritative public NOT_REQUIRED result is already at
+        # the customer boundary. Preserve it byte-semantically on cache/share
+        # re-entry instead of routing it back through legacy decision heuristics.
+        return sanitize_customer_visible_result(copy.deepcopy(result), strip_internal_keys=True)
     working = copy.deepcopy(result) if isinstance(result, dict) else {}
     original_required_rows_for_companion_contract = [
         copy.deepcopy(row)
@@ -4545,8 +4557,20 @@ def build_customer_permit_view_model(result: dict, job_type: str = "", city: str
         source_backed_not_required_passthrough = (
             isinstance(final_public, dict)
             and str(final_public.get("permit_decision") or "").upper().strip() == "NOT_REQUIRED"
-            and bool(final_public.get("source_urls") or final_public.get("sources"))
-            and re.search(r"\b(?:no permit|not required|exempt)\b", " ".join(str(final_public.get(k) or "") for k in ("not_required_reason", "exemption_reason", "reason")), re.I)
+            and (
+                _not_required_claim_citation_is_source_backed(final_public, city, state)
+                or (
+                    bool(final_public.get("source_urls") or final_public.get("sources"))
+                    and re.search(
+                        r"\b(?:no permit|not required|exempt)\b",
+                        " ".join(
+                            str(final_public.get(k) or "")
+                            for k in ("not_required_reason", "exemption_reason", "reason")
+                        ),
+                        re.I,
+                    )
+                )
+            )
         )
         if not source_backed_not_required_passthrough:
             final_public = _pa20_apply_scope_signal_family_floor(final_public if isinstance(final_public, dict) else {}, job_type, city, state)
@@ -4633,6 +4657,21 @@ def build_customer_permit_view_model(result: dict, job_type: str = "", city: str
                     final_public["not_required_reason"] = cell_lock.get("customer_action")
                 if cell_lock.get("source_urls"):
                     final_public["source_urls"] = list(cell_lock.get("source_urls") or [])
+                final_public["data_source"] = _AUTHORITATIVE_NOT_REQUIRED_PUBLIC_SOURCE
+            final_public = enforce_unbound_not_required_source_floor(
+                final_public,
+                job_type,
+                city,
+                state,
+                cell_lock=cell_lock,
+                enforce_unbound_input=(
+                    has_binary_live_answer
+                    and (
+                        not source_floor_satisfied
+                        or not _not_required_public_evidence_is_persisted(final_public, city, state)
+                    )
+                ),
+            )
         return final_public if isinstance(final_public, dict) else {}
     return {}
 
@@ -5689,6 +5728,15 @@ def build_claim_citations(result: dict, city: str | None = None, state: str | No
 
     fields = [
         ("permit_type", _primary_permit_text(result), "Likely primary permit type"),
+        (
+            "permit_decision",
+            (
+                str(result.get("permit_decision") or "").upper().strip()
+                if str(result.get("permit_decision") or "").upper().strip() in {"REQUIRED", "NOT_REQUIRED"}
+                else None
+            ),
+            "Permit requirement decision",
+        ),
         ("apply_url", result.get("apply_url"), "Where to start the application"),
         ("fee_range", result.get("fee_range"), "Estimated fee range"),
         ("approval_timeline", result.get("approval_timeline"), "Estimated approval timeline"),
@@ -5720,6 +5768,187 @@ def build_claim_citations(result: dict, city: str | None = None, state: str | No
         if warning not in result["quality_warnings"]:
             result["quality_warnings"].append(warning)
     return citations
+
+
+def _not_required_claim_citation_is_source_backed(result: dict, city: str, state: str) -> bool:
+    """Require claim-linked official evidence for a customer NOT_REQUIRED decision."""
+    raw_citations = result.get("claim_citations")
+    citations = raw_citations if isinstance(raw_citations, list) else []
+    for citation in citations:
+        if not isinstance(citation, dict):
+            continue
+        if str(citation.get("field") or "").strip().lower() != "permit_decision":
+            continue
+        citation_value = str(citation.get("value") or "").upper().strip()
+        if citation_value not in {"NOT_REQUIRED", "NO"}:
+            continue
+        source_url = _safe_customer_source_url(citation.get("source_url") or "")
+        quote = str(citation.get("quoted_snippet") or "").strip()
+        confidence = str(citation.get("confidence") or "").strip().lower()
+        if not source_url or not quote or confidence == "needs_verification":
+            continue
+        normalized_quote = re.sub(r"\s+", " ", quote).lower()
+        not_required_evidence = any(
+            re.search(pattern, normalized_quote)
+            for pattern in (
+                r"\bno\s+permits?\s+(?:is|are)\s+required\b",
+                r"\bpermits?\s+(?:is|are)\s+not\s+required\b",
+                r"\b(?:does|do)\s+not\s+require\b.{0,80}\bpermits?\b",
+                r"\bwithout\s+(?:obtaining\s+)?(?:a\s+)?permits?\b",
+                r"\bpermit[- ]exempt(?:ion|ed)?\b",
+                r"\bexempt(?:ion|ed)?\b.{0,80}\bpermits?\b",
+            )
+        )
+        if not not_required_evidence:
+            continue
+        authority = classify_source_authority(source_url, city, state, result=result)
+        if authority.get("local_decision_evidence") and authority.get("display_allowed"):
+            return True
+    return False
+
+
+def _not_required_public_evidence_is_persisted(result: dict, city: str, state: str) -> bool:
+    """Recognize decision evidence that survives public cache/share serialization."""
+    if _not_required_claim_citation_is_source_backed(result, city, state):
+        return True
+    if str(result.get("data_source") or "").strip() != _AUTHORITATIVE_NOT_REQUIRED_PUBLIC_SOURCE:
+        return False
+    raw_urls = result.get("source_urls")
+    urls = raw_urls if isinstance(raw_urls, list) else []
+    return any(_safe_customer_source_url(url) for url in urls)
+
+
+def enforce_unbound_not_required_source_floor(
+    result: dict,
+    job_type: str,
+    city: str,
+    state: str,
+    *,
+    cell_lock: dict | None = None,
+    enforce_unbound_input: bool = True,
+) -> dict:
+    """Demote an unbound upstream NOT_REQUIRED answer lacking decision evidence.
+
+    Sealed Part-4 projections return before the legacy customer builder, exact
+    authoritative decision cells retain their immutable lock, and deterministic
+    scope-boundary resolutions are left unchanged. A bare official URL remains
+    a useful contact path but cannot prove a model-produced NOT_REQUIRED claim.
+    """
+    if not isinstance(result, dict):
+        return {}
+    if not enforce_unbound_input:
+        return result
+    decision = str(result.get("permit_decision") or "").upper().strip()
+    required = result.get("permit_required")
+    verdict = str(result.get("permit_verdict") or "").upper().strip()
+    is_unbound_not_required = required is False or decision == "NOT_REQUIRED" or verdict in {"NO", "NOT_REQUIRED"}
+    if not is_unbound_not_required:
+        return result
+    if isinstance(cell_lock, dict) and str(cell_lock.get("permit_decision") or "").upper().strip() in {
+        "REQUIRED", "NOT_REQUIRED",
+    } and bool(cell_lock.get("source_urls")):
+        return result
+    if _not_required_claim_citation_is_source_backed(result, city, state):
+        return result
+
+    out = _pa20_apply_scope_signal_family_floor(copy.deepcopy(result), job_type, city, state)
+    # Remove collateral copy that was generated from the rejected NOT_REQUIRED
+    # premise before rebuilding the neutral verification contract.
+    for key in (
+        "approval_timeline",
+        "timeline",
+        "fee_estimate",
+        "fee_range",
+        "inspection_booking",
+        "documents_needed",
+        "what_to_bring",
+        "checklist",
+        "requirements",
+        "pro_tips",
+        "common_mistakes",
+        "permits_required_logic",
+        "required_permit_summary",
+        "not_required_reason",
+    ):
+        out.pop(key, None)
+    office = out.get("applying_office") or out.get("building_dept_name") or f"{city} permit office".strip()
+    out["apply_path"] = {
+        "state": "HONEST_FALLBACK",
+        "channel": "contact_ahj",
+        "support_level": "verification required",
+        "office_name": office or "the official permit office",
+        "platform": None,
+        "login_required": None,
+        "steps": [
+            "Contact the official permit office using the listed source path.",
+            "Describe the exact project scope and ask whether a permit is required.",
+            "Confirm the filing category only if the authority says a permit applies.",
+        ],
+        "verification_note": "Permit applicability needs claim-linked official confirmation before filing guidance is reliable.",
+    }
+    rows = []
+    for row in out.get("permits_required") or []:
+        if not isinstance(row, dict):
+            continue
+        safe_row = copy.deepcopy(row)
+        safe_row["required"] = None
+        safe_row["required_status"] = "VERIFY"
+        safe_row["decision"] = "VERIFY"
+        safe_row["status"] = "VERIFY"
+        safe_row["rationale"] = "Permit applicability requires a claim-linked official source before PermitAssist can publish a yes/no answer."
+        rows.append(safe_row)
+    if not rows:
+        rows = [{
+            "permit_type": "Permit applicability",
+            "permit_kind": "building",
+            "filing_family": "building",
+            "required": None,
+            "required_status": "VERIFY",
+            "decision": "VERIFY",
+            "status": "VERIFY",
+            "trigger_condition": "Verify the exact described scope with the official permit authority.",
+            "rationale": "No claim-linked official evidence supports a binary permit answer.",
+        }]
+    raw_source_support = out.get("source_support")
+    source_support = dict(raw_source_support) if isinstance(raw_source_support, dict) else {}
+    source_support.update({
+        "has_source_backed_evidence": False,
+        "decision_mutation_allowed": True,
+        "degraded_sources": True,
+    })
+    out.update({
+        "permit_decision": "UNKNOWN",
+        "permit_required": None,
+        "permit_verdict": "VERIFY",
+        "permit_name": "Verify with the permit office",
+        "permit_type": "Verify with the permit office",
+        "permit_kind": "Verify",
+        "permits_required": rows,
+        "required_permit_names": [],
+        "required_permit_families": [],
+        "required_permit_segments": [],
+        "customer_headline": "Verify the permit requirement with the official permit office.",
+        "customer_next_step": "Contact the official permit office before relying on a required/not-required answer; the available sources are not claim-linked to this decision.",
+        "summary": "PermitAssist lacks claim-linked official evidence for a binary permit requirement for this exact scope.",
+        "job_summary": "Permit requirement needs official verification before work or filing.",
+        "confidence": "needs office confirmation",
+        "confidence_reason": "The binary decision did not have a claim-linked official citation.",
+        "claim_citations": [],
+        "source_support": source_support,
+    })
+    raw_warnings = out.get("warnings")
+    warnings = [
+        item
+        for item in (raw_warnings if isinstance(raw_warnings, list) else [])
+        if "decision remains resolved" not in str(item).lower()
+    ]
+    warning = "The unverified NOT_REQUIRED answer was demoted to VERIFY because no claim-linked official decision evidence was available."
+    if warning not in warnings:
+        warnings.append(warning)
+    out["warnings"] = warnings
+    out["customer_result_summary"] = _build_customer_result_summary(out, out, city, state)
+    out["customer_first_screen_summary"] = _build_customer_first_screen_summary(out["customer_result_summary"])
+    return sanitize_customer_visible_result(out, strip_internal_keys=True)
 
 
 def build_apply_path(result: dict, job_type: str, city: str, state: str) -> dict:

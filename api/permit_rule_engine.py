@@ -3185,4 +3185,32 @@ def _complete_part3_family_decisions(
                     validation_issue_codes=("verified_partial_dimension_unclosed",),
                 ),
             )
+    elif classification in {
+        SeedClassification.FAIL_CLOSED,
+        SeedClassification.JURISDICTION_HOLD,
+        SeedClassification.UNSUPPORTED_SCOPE,
+    }:
+        # A fail-closed seed must still preserve the complete customer-visible
+        # family boundary. An empty family list is not a safe abstention: the
+        # public projection validator rejects it, after which a later customer
+        # ViewModel pass can fall through to an unrelated legacy binary answer.
+        # Unsupported scopes do not have a narrower closed family ontology, so
+        # keep every core family visible as an explicit abstention instead of
+        # silently removing dimensions.
+        issue_code = (
+            "exact_cell_fail_closed"
+            if classification is SeedClassification.FAIL_CLOSED
+            else classification.value
+        )
+        for family in sorted(FAMILY_CLOSURE_REQUIREMENTS.get(project_family, _CORE_FAMILIES)):
+            existing.setdefault(
+                family,
+                CoreFamilyDecision(
+                    family=family,
+                    verdict=FamilyVerdict.ABSTAIN,
+                    trigger=f"{family} applicability requires official verification",
+                    provenance=(),
+                    validation_issue_codes=(issue_code,),
+                ),
+            )
     return tuple(existing[key] for key in sorted(existing))
