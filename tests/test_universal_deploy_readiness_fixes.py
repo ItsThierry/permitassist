@@ -731,9 +731,56 @@ def test_unbound_not_required_reason_does_not_bypass_claim_evidence_floor(tmp_pa
         "AZ",
     )
 
-    assert out["permit_decision"] == "NOT_REQUIRED"
+    assert out["permit_decision"] == "UNKNOWN"
+    assert out["permit_required"] is None
+    assert out["permit_verdict"] == "VERIFY"
+    assert out["data_source"] == "Claim evidence floor"
+    assert "no permit required" not in json.dumps(out, sort_keys=True).lower()
+    # A later authoritative scope reconciler may still supersede the abstention.
     assert public["permit_decision"] == "REQUIRED"
     assert public["permit_required"] is True
     assert public["permit_verdict"] == "YES"
     assert any(row.get("required") is True for row in public.get("permits_required") or [])
     assert "no permit required" not in json.dumps(public, sort_keys=True).lower()
+
+
+def test_evidence_preview_direct_finalizer_demotes_unbound_not_required(tmp_path, monkeypatch):
+    server = _import_server(tmp_path, monkeypatch)
+    result = {
+        "permit_decision": "NOT_REQUIRED",
+        "permit_required": False,
+        "permit_verdict": "NO",
+        "not_required_reason": "No permit is required for this exact maintenance scope.",
+        "job_summary": "No permit is required for this like-for-like replacement.",
+        "permits_required": [],
+        "claim_citations": [],
+        "sources": [
+            {
+                "url": "https://code.mecknc.gov/permitting",
+                "title": "Mecklenburg County Code Enforcement",
+                "snippet": "Official permit information and contact path.",
+            }
+        ],
+        "_evidence_pack": {"enabled": True, "contract_status": "invalid_path"},
+        "_retrieval_diagnostics": {"provider": "internal"},
+    }
+
+    out = server.finalize_permit_lookup_result(
+        result,
+        "replace kitchen faucet and garbage disposal only; no electrical work",
+        "Charlotte",
+        "NC",
+        evidence_allowed=True,
+        job_category="residential",
+    )
+
+    assert out["permit_decision"] == "UNKNOWN"
+    assert out["permit_required"] is None
+    assert out["permit_verdict"] == "VERIFY"
+    assert out["data_source"] == "Claim evidence floor"
+    assert not out.get("claim_citations")
+    assert out["permits_required"]
+    assert all(row.get("required") is None for row in out["permits_required"])
+    serialized = json.dumps(out, sort_keys=True).lower()
+    assert "no permit required" not in serialized
+    assert not any(str(key).startswith("_") for key in out)

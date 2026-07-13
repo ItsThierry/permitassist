@@ -4273,13 +4273,27 @@ def build_customer_permit_view_model(result: dict, job_type: str = "", city: str
         # re-entry instead of routing it back through legacy decision heuristics.
         return copy.deepcopy(result)
     if (
-        _source_evidence_floor_satisfied(result)
-        and str((result or {}).get("permit_decision") or "").upper().strip() == "UNKNOWN"
-        and str((result or {}).get("data_source") or "").strip() == _UNBOUND_NOT_REQUIRED_PUBLIC_SOURCE
+        isinstance(result, dict)
+        and str(result.get("permit_decision") or "").upper().strip() == "UNKNOWN"
+        and str(result.get("data_source") or "").strip() == _UNBOUND_NOT_REQUIRED_PUBLIC_SOURCE
+        and isinstance(result.get("customer_result_summary"), dict)
+        and isinstance(result.get("customer_first_screen_summary"), dict)
+        and not any(str(key).startswith("_") for key in result)
     ):
         # Preserve a previous evidence-floor abstention on cache/share re-entry;
-        # deterministic scope heuristics must not silently re-promote it.
-        return copy.deepcopy(result)
+        # deterministic scope heuristics must not silently re-promote it. The
+        # explicit boundary marker and sealed public summaries are sufficient even
+        # when source filtering removes every visible URL or an empty citations
+        # list, as happens on the direct evidence-preview response path. A stronger
+        # REQUIRED scope reconciliation may still supersede this abstention.
+        stronger_resolution = resolve_customer_decision({
+            "result": copy.deepcopy(result),
+            "job_type": job_type,
+            "city": city,
+            "state": state,
+        })
+        if not _is_required_permit_decision(stronger_resolution):
+            return sanitize_customer_visible_result(copy.deepcopy(result), strip_internal_keys=True)
     working = copy.deepcopy(result) if isinstance(result, dict) else {}
     original_required_rows_for_companion_contract = [
         copy.deepcopy(row)
@@ -6267,6 +6281,23 @@ def finalize_permit_lookup_result(result: dict, job_type: str, city: str, state:
     ):
         result["data_source"] = _DETERMINISTIC_NOT_REQUIRED_PUBLIC_SOURCE
     result = sanitize_customer_visible_result(result, strip_internal_keys=False)
+    # Some controlled evidence-pack modes return this finalized object directly
+    # from `/api/permit` instead of routing it through the customer ViewModel.
+    # Enforce the NOT_REQUIRED claim floor here as well so that no public endpoint
+    # can emit a binary NO (or its collateral copy) without claim-linked official
+    # evidence. Authoritative reconciler/cell results still supersede the original
+    # unbound input through the same lock/evidence exceptions as the ViewModel.
+    result = enforce_unbound_not_required_source_floor(
+        result,
+        job_type,
+        city,
+        state,
+        cell_lock=_get_decision_cell_primary_lock(result),
+        enforce_unbound_input=(
+            input_was_not_required
+            and not _not_required_public_evidence_is_persisted(result, city, state)
+        ),
+    )
     return result
 
 
