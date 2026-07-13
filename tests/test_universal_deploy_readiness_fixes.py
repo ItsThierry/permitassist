@@ -706,7 +706,7 @@ def test_locked_primary_generic_skip_does_not_drop_specific_trade_permits():
     assert "Permit" not in names
 
 
-def test_finalize_preserves_not_required_before_and_after_reconciler(tmp_path, monkeypatch):
+def test_unbound_not_required_reason_does_not_bypass_claim_evidence_floor(tmp_path, monkeypatch):
     server = _import_server(tmp_path, monkeypatch)
     result = {
         "permit_decision": "NOT_REQUIRED",
@@ -732,5 +732,8 @@ def test_finalize_preserves_not_required_before_and_after_reconciler(tmp_path, m
     )
 
     assert out["permit_decision"] == "NOT_REQUIRED"
-    assert public["permit_decision"] == "NOT_REQUIRED"
-    assert public.get("permits_required") in ([], None)
+    assert public["permit_decision"] == "REQUIRED"
+    assert public["permit_required"] is True
+    assert public["permit_verdict"] == "YES"
+    assert any(row.get("required") is True for row in public.get("permits_required") or [])
+    assert "no permit required" not in json.dumps(public, sort_keys=True).lower()
