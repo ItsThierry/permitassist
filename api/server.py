@@ -5839,6 +5839,50 @@ def _not_required_claim_citation_is_source_backed(result: dict, city: str, state
     return False
 
 
+def bind_positive_exemption_decision_citation(result: dict, city: str, state: str) -> dict:
+    """Promote authoritative exemption evidence into the public decision citation.
+
+    Positive exemption evidence is an internal, claim-linked source shape used by
+    the deterministic decision contract. Convert it without inventing content so
+    valid authoritative NOT_REQUIRED decisions survive the final public evidence
+    floor, while generic URLs or non-semantic quotes still fail closed.
+    """
+    if not isinstance(result, dict) or _not_required_claim_citation_is_source_backed(result, city, state):
+        return result if isinstance(result, dict) else {}
+    decision = str(result.get("permit_decision") or "").upper().strip()
+    verdict = str(result.get("permit_verdict") or "").upper().strip()
+    if not (decision == "NOT_REQUIRED" or result.get("permit_required") is False or verdict in {"NO", "NOT_REQUIRED"}):
+        return result
+    raw_evidence = result.get("positive_exemption_evidence")
+    evidence_items = raw_evidence if isinstance(raw_evidence, list) else []
+    existing = result.get("claim_citations")
+    citations = [copy.deepcopy(item) for item in existing] if isinstance(existing, list) else []
+    for idx, item in enumerate(evidence_items, 1):
+        if not isinstance(item, dict):
+            continue
+        source_url = _safe_customer_source_url(item.get("source_url") or item.get("url") or "")
+        quote = str(item.get("quoted_snippet") or item.get("quote") or item.get("snippet") or "").strip()
+        if not source_url or not quote:
+            continue
+        candidate = {
+            "id": f"NR{idx}",
+            "field": "permit_decision",
+            "claim": "Permit requirement decision",
+            "value": "NOT_REQUIRED",
+            "source_url": source_url,
+            "source_title": str(item.get("source_title") or item.get("title") or "Official permit authority"),
+            "quoted_snippet": quote,
+            "checked_at": str(item.get("checked_at") or utc_now().date().isoformat()),
+            "confidence": str(item.get("confidence") or "high"),
+        }
+        trial = copy.deepcopy(result)
+        trial["claim_citations"] = citations + [candidate]
+        if _not_required_claim_citation_is_source_backed(trial, city, state):
+            result["claim_citations"] = citations + [candidate]
+            return result
+    return result
+
+
 def _not_required_public_evidence_is_persisted(result: dict, city: str, state: str) -> bool:
     """Recognize decision evidence that survives public cache/share serialization."""
     if _not_required_claim_citation_is_source_backed(result, city, state):
@@ -6280,6 +6324,7 @@ def finalize_permit_lookup_result(result: dict, job_type: str, city: str, state:
         and str(result.get("permit_decision") or "").upper().strip() == "NOT_REQUIRED"
     ):
         result["data_source"] = _DETERMINISTIC_NOT_REQUIRED_PUBLIC_SOURCE
+    result = bind_positive_exemption_decision_citation(result, city, state)
     result = sanitize_customer_visible_result(result, strip_internal_keys=False)
     # Some controlled evidence-pack modes return this finalized object directly
     # from `/api/permit` instead of routing it through the customer ViewModel.
