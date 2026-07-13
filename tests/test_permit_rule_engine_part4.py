@@ -324,6 +324,7 @@ def test_part4_customer_not_required_source_floor_demotes_unbound_official_urls(
         "permit_name": "No permit required",
         "permit_type": "No permit required",
         "permit_kind": "Not Required",
+        "not_required_reason": "No permit is required for this exact maintenance scope.",
         "summary": "No permit required for the described scope.",
         "sources": [
             {

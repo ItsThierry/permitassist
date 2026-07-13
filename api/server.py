@@ -4412,6 +4412,7 @@ def build_customer_permit_view_model(result: dict, job_type: str = "", city: str
             and (cleaned.get("permit_required") is False or str(cleaned.get("permit_verdict") or "").upper().strip() in {"NO", "NOT_REQUIRED"})
             and bool(cleaned.get("source_urls") or cleaned.get("sources"))
             and re.search(r"\b(?:no permit|not required|exempt)\b", " ".join(str(cleaned.get(k) or "") for k in ("not_required_reason", "exemption_reason", "reason")), re.I)
+            and _not_required_claim_citation_is_source_backed(cleaned, city, state)
         )
         cleaned_noncommercial = str(scope_contract.get("category") or "").lower() != "commercial" and not str(scope_contract.get("family") or "").lower().startswith("commercial")
         if source_backed_not_required_cleaned and cleaned_noncommercial and str((result if isinstance(result, dict) else {}).get("permit_decision") or "").upper().strip() != "REQUIRED":
