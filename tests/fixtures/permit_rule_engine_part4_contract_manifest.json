@@ -4,7 +4,7 @@
   "contract_correction": "Public report embedding retains the pre-existing default-deny claim_citations exclusion; the stored sealed DTO remains exact.",
   "base_checkpoint_sha": "44bbaf887be8a994e3d61c4845dc7eb5a351deef",
   "sha256": {
-    "tests/test_permit_rule_engine_part4.py": "e2f5666d8eaa03cc6661159f362d983102da9801ef433967ec1746b036fec663",
+    "tests/test_permit_rule_engine_part4.py": "f06e6c48b25fef5bb03ba6593e744b75ca919c2162543ae4ab511ee950b6b841",
     "tests/fixtures/permit_rule_engine_part4_contract.json": "428abb68e1eba8657544b8bb46271da10eff681cfd6bcf8a0949a817145799e3"
   }
 }

@@ -248,8 +248,14 @@ def assert_row_coherence(public: dict[str, Any], case_id: str) -> None:
 
 
 def assert_basic_public_invariants(case: dict[str, Any], public: dict[str, Any]) -> None:
-    assert public.get("permit_decision") in {"REQUIRED", "NOT_REQUIRED"}, {"case": case["case_id"], "decision": public.get("permit_decision")}
-    assert public.get("permit_required") in {True, False}, {"case": case["case_id"], "permit_required": public.get("permit_required")}
+    decision = str(public.get("permit_decision") or "").upper()
+    assert decision in {"REQUIRED", "NOT_REQUIRED", "UNKNOWN"}, {"case": case["case_id"], "decision": decision}
+    if decision == "UNKNOWN":
+        assert public.get("permit_required") is None, {"case": case["case_id"], "permit_required": public.get("permit_required")}
+        assert str(public.get("permit_verdict") or "").upper() in {"VERIFY", "CONTACT_AHJ"}
+        assert not required_rows(public)
+    else:
+        assert public.get("permit_required") in {True, False}, {"case": case["case_id"], "permit_required": public.get("permit_required")}
     assert_no_required_no_permit_contradiction(case, public)
     assert_row_coherence(public, case["case_id"])
     assert_no_collapsed_package(public, case["case_id"])

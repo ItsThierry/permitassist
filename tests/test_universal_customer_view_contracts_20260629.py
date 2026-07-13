@@ -43,11 +43,24 @@ def test_phase0_no_neuter_a_anchors_keep_decision_and_packet_depth(anchor):
     # No-neuter anchors are a packet-richness guard.  They must not be forced to
     # satisfy the new no-collapse architecture before product code exists; the
     # contract tests above carry that RED invariant separately.
-    assert public.get("permit_decision") in {"REQUIRED", "NOT_REQUIRED"}
-    assert public.get("permit_required") in {True, False}
+    expected = next(
+        (
+            contract.get("expected_decision")
+            for contract in load_contracts()
+            if contract.get("root_id") == anchor["root_id"] and contract.get("case_id") == anchor["case_id"]
+        ),
+        None,
+    )
+    if expected == "UNKNOWN":
+        assert public.get("permit_decision") == "UNKNOWN"
+        assert public.get("permit_required") is None
+        assert not required_rows(public)
+    else:
+        assert public.get("permit_decision") in {"REQUIRED", "NOT_REQUIRED"}
+        assert public.get("permit_required") in {True, False}
     grade = final_grades(anchor["root_id"])[anchor["case_id"]]
     assert grade == "A", {"anchor": anchor, "grade": grade}
-    assert public.get("permit_decision") in {"REQUIRED", "NOT_REQUIRED"}
+    assert public.get("permit_decision") == expected if expected else public.get("permit_decision") in {"REQUIRED", "NOT_REQUIRED"}
     min_visible_rows = int(anchor.get("min_visible_rows", 0))
     assert len(visible_rows(public)) >= min_visible_rows, {"anchor": anchor, "visible_rows": visible_rows(public)}
     assert_no_collapsed_package(public, anchor["case_id"])

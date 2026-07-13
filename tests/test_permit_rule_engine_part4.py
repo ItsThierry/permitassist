@@ -365,6 +365,14 @@ def test_part4_customer_not_required_source_floor_demotes_unbound_official_urls(
     )
     assert cache_hit_view["permit_decision"] == "UNKNOWN"
     assert cache_hit_view["permit_required"] is None
+    cache_hit_view_again = server.build_customer_permit_view_model(
+        cache_hit_view,
+        "Replace kitchen faucet and garbage disposal only; no wall relocation, no new circuits, and no structural work",
+        "Charlotte",
+        "NC",
+        "residential",
+    )
+    assert cache_hit_view_again == cache_hit_view
     view = views[0]
 
     assert view["permit_decision"] == "UNKNOWN"

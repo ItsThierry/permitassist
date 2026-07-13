@@ -175,6 +175,10 @@ def assert_mirrors_consistent(public: dict[str, Any]) -> None:
         if apply_path:
             assert apply_path.get("state") == "NOT_APPLICABLE"
             assert apply_path.get("channel") in {"no_permit_required", "no_building_permit_required"}
+    elif decision == "UNKNOWN":
+        assert public.get("permit_required") is None
+        assert not required_rows(public)
+        assert str(public.get("permit_verdict") or "").upper() == "VERIFY"
 
 
 def assert_contract_satisfied(contract: dict[str, Any], public: dict[str, Any]) -> None:

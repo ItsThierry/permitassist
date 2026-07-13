@@ -1407,6 +1407,8 @@ def _free_text_url_source_dicts(result: dict, city: str, state: str, existing_ur
 
 
 _AUTHORITATIVE_NOT_REQUIRED_PUBLIC_SOURCE = "Official permit authority decision rule"
+_DETERMINISTIC_NOT_REQUIRED_PUBLIC_SOURCE = "Deterministic scope boundary rule"
+_UNBOUND_NOT_REQUIRED_PUBLIC_SOURCE = "Claim evidence floor"
 
 
 def _source_evidence_floor_satisfied(result: dict) -> bool:
@@ -4269,7 +4271,15 @@ def build_customer_permit_view_model(result: dict, job_type: str = "", city: str
         # A claim-bound or authoritative public NOT_REQUIRED result is already at
         # the customer boundary. Preserve it byte-semantically on cache/share
         # re-entry instead of routing it back through legacy decision heuristics.
-        return sanitize_customer_visible_result(copy.deepcopy(result), strip_internal_keys=True)
+        return copy.deepcopy(result)
+    if (
+        _source_evidence_floor_satisfied(result)
+        and str((result or {}).get("permit_decision") or "").upper().strip() == "UNKNOWN"
+        and str((result or {}).get("data_source") or "").strip() == _UNBOUND_NOT_REQUIRED_PUBLIC_SOURCE
+    ):
+        # Preserve a previous evidence-floor abstention on cache/share re-entry;
+        # deterministic scope heuristics must not silently re-promote it.
+        return copy.deepcopy(result)
     working = copy.deepcopy(result) if isinstance(result, dict) else {}
     original_required_rows_for_companion_contract = [
         copy.deepcopy(row)
@@ -4290,6 +4300,11 @@ def build_customer_permit_view_model(result: dict, job_type: str = "", city: str
     decision_text = str(working.get("permit_decision") or "").upper().strip()
     verdict_text = str(working.get("permit_verdict") or "").upper().strip()
     has_binary_live_answer = working.get("permit_required") in {True, False} or decision_text in {"REQUIRED", "NOT_REQUIRED"} or verdict_text in {"YES", "NO", "REQUIRED", "NOT_REQUIRED"}
+    original_input_not_required = (
+        working.get("permit_required") is False
+        or decision_text == "NOT_REQUIRED"
+        or verdict_text in {"NO", "NOT_REQUIRED"}
+    )
     fail_closed_active = (
         verdict_text == "CONTACT_AHJ"
         or (str(working.get("confidence") or "").lower() == "fail_closed" and not has_binary_live_answer)
@@ -4638,6 +4653,11 @@ def build_customer_permit_view_model(result: dict, job_type: str = "", city: str
                 final_public["permit_verdict"] = "YES"
                 final_public["permits_required"] = copy.deepcopy(original_required_rows_for_companion_contract)
             final_public = finalize_customer_public_projection(final_public, job_type, city, state, scope_contract)
+            if (
+                not original_input_not_required
+                and str(final_public.get("permit_decision") or "").upper().strip() == "NOT_REQUIRED"
+            ):
+                final_public["data_source"] = _DETERMINISTIC_NOT_REQUIRED_PUBLIC_SOURCE
             if restore_original_required_projection and str(final_public.get("permit_decision") or "").upper().strip() == "NOT_REQUIRED":
                 canonical_original = finalize_customer_public_projection(copy.deepcopy(result) if isinstance(result, dict) else {}, job_type, city, state, scope_contract)
                 if str(canonical_original.get("permit_decision") or "").upper().strip() == "REQUIRED":
@@ -4665,11 +4685,8 @@ def build_customer_permit_view_model(result: dict, job_type: str = "", city: str
                 state,
                 cell_lock=cell_lock,
                 enforce_unbound_input=(
-                    has_binary_live_answer
-                    and (
-                        not source_floor_satisfied
-                        or not _not_required_public_evidence_is_persisted(final_public, city, state)
-                    )
+                    original_input_not_required
+                    and not _not_required_public_evidence_is_persisted(final_public, city, state)
                 ),
             )
         return final_public if isinstance(final_public, dict) else {}
@@ -5811,7 +5828,10 @@ def _not_required_public_evidence_is_persisted(result: dict, city: str, state: s
     """Recognize decision evidence that survives public cache/share serialization."""
     if _not_required_claim_citation_is_source_backed(result, city, state):
         return True
-    if str(result.get("data_source") or "").strip() != _AUTHORITATIVE_NOT_REQUIRED_PUBLIC_SOURCE:
+    data_source = str(result.get("data_source") or "").strip()
+    if data_source == _DETERMINISTIC_NOT_REQUIRED_PUBLIC_SOURCE:
+        return True
+    if data_source != _AUTHORITATIVE_NOT_REQUIRED_PUBLIC_SOURCE:
         return False
     raw_urls = result.get("source_urls")
     urls = raw_urls if isinstance(raw_urls, list) else []
@@ -5933,6 +5953,7 @@ def enforce_unbound_not_required_source_floor(
         "job_summary": "Permit requirement needs official verification before work or filing.",
         "confidence": "needs office confirmation",
         "confidence_reason": "The binary decision did not have a claim-linked official citation.",
+        "data_source": _UNBOUND_NOT_REQUIRED_PUBLIC_SOURCE,
         "claim_citations": [],
         "source_support": source_support,
     })
@@ -6078,6 +6099,11 @@ def finalize_permit_lookup_result(result: dict, job_type: str, city: str, state:
         return core_projection
     if not isinstance(result, dict):
         result = {}
+    input_was_not_required = (
+        result.get("permit_required") is False
+        or str(result.get("permit_decision") or "").upper().strip() == "NOT_REQUIRED"
+        or str(result.get("permit_verdict") or "").upper().strip() in {"NO", "NOT_REQUIRED"}
+    )
     jurisdiction_check = resolve_customer_decision({"result": result, "job_type": job_type, "city": city, "state": state})
     if is_input_rejection(jurisdiction_check):
         return sanitize_customer_visible_result(jurisdiction_check, strip_internal_keys=False)
@@ -6234,6 +6260,11 @@ def finalize_permit_lookup_result(result: dict, job_type: str, city: str, state:
     result = apply_residential_universal_gate(result, job_type, city, state, scope_contract=scope_contract)
     if result.get("_residential_universal_gate") or isinstance(result.get("permit_decision_contract"), dict) or result.get("positive_exemption_evidence"):
         result = apply_permit_decision_contract(result, job_type, city, state, scope_contract)
+    if (
+        not input_was_not_required
+        and str(result.get("permit_decision") or "").upper().strip() == "NOT_REQUIRED"
+    ):
+        result["data_source"] = _DETERMINISTIC_NOT_REQUIRED_PUBLIC_SOURCE
     result = sanitize_customer_visible_result(result, strip_internal_keys=False)
     return result
 
