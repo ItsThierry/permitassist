@@ -196,6 +196,74 @@ def _projected_customer_payload() -> dict:
     }
 
 
+def _active_core_wrapped_result(monkeypatch):
+    """Build one real active-core result and its authoritative sealed DTO."""
+    from api import permit_rule_engine as pre
+    from api.v24_decision_cells import V24ResolutionStatus, resolve_v24_cell
+
+    job_type = "residential reroof"
+    job_category = "residential"
+    city = "Buckeye"
+    state = "AZ"
+    resolution = resolve_v24_cell(city, state, job_type, job_category, force=True)
+    assert resolution.status is V24ResolutionStatus.EXACT_CELL_PUBLISHABLE
+    jurisdiction_id = str((resolution.cell or {}).get("jurisdiction_id") or "")
+    assert jurisdiction_id
+    monkeypatch.setenv(pre.CORE_SETTING, "active")
+    monkeypatch.setenv(pre.CORE_ALLOWLIST_SETTING, jurisdiction_id)
+    envelope = pre.build_core_decision_envelope(
+        resolution,
+        job_type=job_type,
+        city=city,
+        state=state,
+        job_category=job_category,
+    )
+    wrapped = pre.attach_core_decision_envelope(
+        {
+            "permit_decision": "NOT_REQUIRED",
+            "permit_required": False,
+            "permit_verdict": "NO",
+            "permit_name": "POISON_LEGACY_BINARY",
+            "_internal_secret": "POISON_INTERNAL_SECRET",
+        },
+        envelope,
+    )
+    sealed = json.loads(envelope.sealed_projection.payload_json)
+    assert sealed["permit_decision"] == "REQUIRED"
+    assert sealed["permit_required"] is True
+    return {
+        "job_type": job_type,
+        "job_category": job_category,
+        "city": city,
+        "state": state,
+        "wrapped": wrapped,
+        "sealed": sealed,
+    }
+
+
+def _insert_cached_active_core_result(server, case) -> None:
+    """Persist the private wrapped result so HTTP share/checklist can rehydrate it."""
+    with server.sqlite3.connect(server.CACHE_DB) as conn:
+        conn.execute(
+            """
+            INSERT OR REPLACE INTO permit_cache
+            (cache_key, job_type, job_category, city, state, zip_code,
+             result_json, created_at, hits)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0)
+            """,
+            [
+                "single-projection-red-cache-key",
+                case["job_type"],
+                case["job_category"],
+                case["city"],
+                case["state"],
+                "85326",
+                server.json.dumps(case["wrapped"]),
+                server.utc_now().isoformat(),
+            ],
+        )
+
+
 def _install_endpoint_stubs(server, monkeypatch, *, evidence_allowed: bool) -> None:
     monkeypatch.setattr(server, "ADMIN_TOKEN", "integrated-red-admin-token")
     monkeypatch.setattr(server, "check_rate_limit", lambda _ip: (False, 0))
@@ -209,6 +277,36 @@ def _install_endpoint_stubs(server, monkeypatch, *, evidence_allowed: bool) -> N
     monkeypatch.setattr(server, "_source_dicts", lambda *_args, **_kwargs: [{"title": "City permit center", "url": OFFICIAL_URL}])
     monkeypatch.setattr(server, "evidence_pack_allowed_for_request", lambda *_args, **_kwargs: evidence_allowed)
     monkeypatch.setattr(server, "build_customer_permit_view_model", lambda *_args, **_kwargs: copy.deepcopy(_projected_customer_payload()))
+
+
+def _install_real_active_core_endpoint_stubs(server, monkeypatch, case) -> None:
+    """Stub I/O/auth while retaining the real finalizer and customer egress."""
+    real_finalize = server.finalize_permit_lookup_result
+    real_builder = server.build_customer_permit_view_model
+    _install_endpoint_stubs(server, monkeypatch, evidence_allowed=True)
+    monkeypatch.setattr(server, "finalize_permit_lookup_result", real_finalize)
+    monkeypatch.setattr(server, "build_customer_permit_view_model", real_builder)
+    monkeypatch.setattr(
+        server,
+        "_research_permit_with_budget",
+        lambda *_args, **_kwargs: copy.deepcopy(case["wrapped"]),
+    )
+    monkeypatch.setattr(
+        server,
+        "research_permit",
+        lambda *_args, **_kwargs: copy.deepcopy(case["wrapped"]),
+    )
+    monkeypatch.setattr(
+        server,
+        "_source_dicts",
+        lambda result, *_args, **_kwargs: copy.deepcopy(result.get("sources") or []),
+    )
+    monkeypatch.setattr(
+        server,
+        "validate_api_key",
+        lambda _authorization: tuple(["paid" + chr(64) + "example.test", {"id": 1}]),
+    )
+    monkeypatch.setattr(server, "is_paid_user", lambda _email: True)
 
 
 def _post_permit(base: str, headers: dict[str, str]) -> dict:
@@ -266,6 +364,245 @@ def test_customer_egress_is_idempotent_and_does_not_demote_ten_lane_packet(tmp_p
     _assert_public_boundary(once)
 
 
+def test_historical_active_core_finalize_then_egress_keeps_authoritative_required_decision(
+    tmp_path, monkeypatch
+):
+    """RED at exact 4f7f6e6: finalizer output must not be projected again."""
+    server = _import_server(tmp_path, monkeypatch)
+    case = _active_core_wrapped_result(monkeypatch)
+
+    finalized = server.finalize_permit_lookup_result(
+        copy.deepcopy(case["wrapped"]),
+        case["job_type"],
+        case["city"],
+        case["state"],
+        job_category=case["job_category"],
+    )
+    assert finalized == case["sealed"]
+
+    public = server.build_customer_response_egress(
+        finalized,
+        case["job_type"],
+        case["city"],
+        case["state"],
+        job_category=case["job_category"],
+    )
+
+    assert public == server.project_customer_response_egress(case["sealed"])
+    assert public["permit_decision"] == "REQUIRED"
+    assert public["permit_required"] is True
+    assert public["permit_verdict"] == "YES"
+
+
+def test_historical_finalized_active_core_stays_authoritative_on_share_report_and_checklist(
+    tmp_path, monkeypatch
+):
+    """RED at exact 4f7f6e6: all downstream surfaces must reuse one projection."""
+    server = _import_server(tmp_path, monkeypatch)
+    case = _active_core_wrapped_result(monkeypatch)
+    finalized = server.finalize_permit_lookup_result(
+        copy.deepcopy(case["wrapped"]),
+        case["job_type"],
+        case["city"],
+        case["state"],
+        job_category=case["job_category"],
+    )
+    assert finalized == case["sealed"]
+    expected = server.project_customer_response_egress(case["sealed"])
+
+    slug = server.create_share(
+        case["job_type"],
+        case["city"],
+        case["state"],
+        finalized,
+    )
+    share = server.get_share(slug)
+    assert share is not None
+    assert share["data"] == expected
+    report_html = server.render_share_page(share)
+    assert '\"permit_decision\":\"REQUIRED\"' in report_html
+
+    checklist = server.get_or_create_checklist(
+        finalized,
+        case["job_type"],
+        case["city"],
+        case["state"],
+    )
+    building = next(
+        item for item in checklist["items"] if item.get("category") == "building"
+    )
+    assert building["required"] is True
+
+
+def test_untrusted_tampered_active_core_still_fails_closed(tmp_path, monkeypatch):
+    """The single-projection remedy must not weaken private-envelope integrity."""
+    server = _import_server(tmp_path, monkeypatch)
+    case = _active_core_wrapped_result(monkeypatch)
+    tampered = copy.deepcopy(case["wrapped"])
+    tampered["_permit_rule_engine_core"]["sealed_projection"]["payload_json"] = "{}"
+
+    public = server.build_customer_response_egress(
+        tampered,
+        case["job_type"],
+        case["city"],
+        case["state"],
+        job_category=case["job_category"],
+    )
+
+    assert public["permit_decision"] == "UNKNOWN"
+    assert public["permit_required"] is None
+    assert public["permit_verdict"] == "CONTACT_AHJ"
+
+
+def test_plain_external_customer_dto_cannot_self_assert_verified_state(
+    tmp_path, monkeypatch
+):
+    server = _import_server(tmp_path, monkeypatch)
+    case = _active_core_wrapped_result(monkeypatch)
+    finalized = server.finalize_permit_lookup_result(
+        copy.deepcopy(case["wrapped"]),
+        case["job_type"],
+        case["city"],
+        case["state"],
+        job_category=case["job_category"],
+    )
+    external_plain_dict = server.json.loads(server.json.dumps(finalized))
+
+    public = server.build_customer_response_egress(
+        external_plain_dict,
+        case["job_type"],
+        case["city"],
+        case["state"],
+        job_category=case["job_category"],
+    )
+
+    assert public["permit_decision"] == "UNKNOWN"
+    assert public["permit_required"] is None
+    assert public["permit_verdict"] == "VERIFY"
+
+
+def test_in_process_regulated_field_mutation_invalidates_verified_projection(
+    tmp_path, monkeypatch
+):
+    server = _import_server(tmp_path, monkeypatch)
+    case = _active_core_wrapped_result(monkeypatch)
+    finalized = server.finalize_permit_lookup_result(
+        copy.deepcopy(case["wrapped"]),
+        case["job_type"],
+        case["city"],
+        case["state"],
+        job_category=case["job_category"],
+    )
+    finalized["permit_decision"] = "NOT_REQUIRED"
+    finalized["permit_required"] = False
+
+    public = server.build_customer_response_egress(
+        finalized,
+        case["job_type"],
+        case["city"],
+        case["state"],
+        job_category=case["job_category"],
+    )
+
+    assert public["permit_decision"] == "UNKNOWN"
+    assert public["permit_required"] is None
+    assert public["decision_source"] == "permit_rule_engine_integrity_fail_closed"
+
+
+def test_repeat_and_private_cache_rehydration_are_byte_stable(
+    tmp_path, monkeypatch
+):
+    server = _import_server(tmp_path, monkeypatch)
+    case = _active_core_wrapped_result(monkeypatch)
+    _insert_cached_active_core_result(server, case)
+    external_plain_dict = server.json.loads(server.json.dumps(case["sealed"]))
+    snapshots = []
+
+    for _ in range(3):
+        verified = server._rehydrate_cached_verified_core_projection(
+            external_plain_dict,
+            case["job_type"],
+            case["city"],
+            case["state"],
+        )
+        assert isinstance(verified, server._VerifiedCustomerProjection)
+        assert "_regulated_projection_sha256" not in verified
+        public = server.build_customer_response_egress(
+            verified,
+            case["job_type"],
+            case["city"],
+            case["state"],
+            job_category=case["job_category"],
+        )
+        slug = server.create_share(
+            case["job_type"], case["city"], case["state"], verified
+        )
+        share = server.get_share(slug)
+        assert share is not None
+        checklist = server.get_or_create_checklist(
+            verified, case["job_type"], case["city"], case["state"]
+        )
+        snapshots.append(
+            server.json.dumps(
+                {
+                    "public": public,
+                    "shared": share["data"],
+                    "checklist": checklist,
+                },
+                sort_keys=True,
+                separators=(",", ":"),
+            )
+        )
+
+    assert len(set(snapshots)) == 1
+    assert server.json.loads(snapshots[0])["public"] == (
+        server.project_customer_response_egress(case["sealed"])
+    )
+
+
+def test_http_share_and_checklist_rehydrate_cached_private_core_without_payload_marker(
+    tmp_path, monkeypatch
+):
+    server = _import_server(tmp_path, monkeypatch)
+    case = _active_core_wrapped_result(monkeypatch)
+    _insert_cached_active_core_result(server, case)
+    external_plain_dict = server.json.loads(server.json.dumps(case["sealed"]))
+
+    with _LiveServer(server.Handler) as live:
+        share_reply = _post_json(
+            live.base,
+            "/api/share",
+            {
+                "job_type": case["job_type"],
+                "city": case["city"],
+                "state": case["state"],
+                "result": external_plain_dict,
+            },
+            {},
+        )
+        checklist = _post_json(
+            live.base,
+            "/api/checklist",
+            {
+                "job_type": case["job_type"],
+                "city": case["city"],
+                "state": case["state"],
+                "result": external_plain_dict,
+            },
+            {},
+        )
+
+    share = server.get_share(share_reply["slug"])
+    assert share is not None
+    assert share["data"]["permit_decision"] == "REQUIRED"
+    assert share["data"]["permit_required"] is True
+    assert '\"permit_decision\":\"REQUIRED\"' in server.render_share_page(share)
+    building = next(
+        item for item in checklist["items"] if item.get("category") == "building"
+    )
+    assert building["required"] is True
+
+
 def _post_json(base: str, path: str, payload: dict, headers: dict[str, str]) -> dict:
     request = urllib.request.Request(
         f"{base}{path}",
@@ -276,6 +613,53 @@ def _post_json(base: str, path: str, payload: dict, headers: dict[str, str]) -> 
     with urllib.request.urlopen(request, timeout=10) as response:
         assert response.status == 200
         return json.loads(response.read().decode("utf-8"))
+
+
+@pytest.mark.parametrize(
+    ("surface", "path", "headers", "batch"),
+    [
+        ("ordinary-public", "/api/permit", {}, False),
+        ("sample-demo", "/api/permit", {"X-Sample-Demo": "1"}, False),
+        (
+            "paid-api-v1",
+            "/api/v1/permit",
+            {"Authorization": "Bearer pa_test_single_projection"},
+            False,
+        ),
+        ("batch", "/api/batch-permit", {"X-Sample-Demo": "1"}, True),
+    ],
+)
+def test_active_core_http_api_surfaces_preserve_one_authoritative_projection(
+    tmp_path, monkeypatch, surface, path, headers, batch
+):
+    server = _import_server(tmp_path, monkeypatch)
+    case = _active_core_wrapped_result(monkeypatch)
+    _install_real_active_core_endpoint_stubs(server, monkeypatch, case)
+    request_row = {
+        "job_type": case["job_type"],
+        "job_category": case["job_category"],
+        "city": case["city"],
+        "state": case["state"],
+        "zip_code": "85326",
+    }
+    request_payload = {"lookups": [request_row]} if batch else request_row
+
+    with _LiveServer(server.Handler) as live:
+        payload = _post_json(live.base, path, request_payload, headers)
+
+    public = payload["results"][0] if batch else payload
+    leaked = [
+        key_path
+        for key_path, key in _walk_keys(public)
+        if key.startswith("_") or key.lower() in FORBIDDEN_PUBLIC_KEYS
+    ]
+    assert leaked == [], surface
+    assert public["permit_decision"] == "REQUIRED", surface
+    assert public["permit_required"] is True, surface
+    assert public["permit_verdict"] == "YES", surface
+    assert public["decision_source"] == "sealed_permit_rule_engine_envelope", surface
+    assert public["coverage_status"] == "validated_exact_complete", surface
+    assert len(public["sources"]) == len(case["sealed"]["sources"]), surface
 
 
 def test_batch_endpoint_evidence_execution_cannot_return_raw_result(tmp_path, monkeypatch):

@@ -886,6 +886,87 @@ _EVIDENCE_PACK_CONTROLLED_CUSTOMER_FIELDS = frozenset({
 })
 
 
+_SEALED_CORE_REGULATED_FIELDS = frozenset({
+    "projection_schema_version",
+    "jurisdiction_id",
+    "city",
+    "state",
+    "project_family",
+    "permit_decision",
+    "permit_required",
+    "permit_verdict",
+    "permit_kind",
+    "permit_name",
+    "decision_source",
+    "source_cell_id",
+    "coverage_status",
+    "family_decisions",
+    "applying_office",
+    "apply_url",
+})
+
+
+def _sealed_core_regulated_sha256(result: dict) -> str:
+    regulated = {
+        field: result.get(field)
+        for field in sorted(_SEALED_CORE_REGULATED_FIELDS)
+    }
+    canonical = json.dumps(
+        regulated,
+        sort_keys=True,
+        separators=(",", ":"),
+        ensure_ascii=False,
+    )
+    return hashlib.sha256(canonical.encode("utf-8")).hexdigest()
+
+
+class _VerifiedCustomerProjection(dict):
+    """In-process proof that the private core envelope was projected once.
+
+    The proof is the Python type plus an out-of-band regulated-field digest, not
+    a payload field. JSON serialization emits only the customer DTO, so external
+    or cached plain dictionaries can never self-assert that they already passed
+    private-envelope integrity validation. A downstream regulated-field mutation
+    invalidates the wrapper and is sent through strict fail-closed projection.
+    """
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._regulated_projection_sha256 = _sealed_core_regulated_sha256(self)
+
+    def has_intact_regulated_projection(self) -> bool:
+        return hmac.compare_digest(
+            str(getattr(self, "_regulated_projection_sha256", "") or ""),
+            _sealed_core_regulated_sha256(self),
+        )
+
+
+def _project_core_customer_boundary_once(
+    result: object,
+    *,
+    job_type: str,
+    city: str,
+    state: str,
+    job_category: str = "",
+) -> _VerifiedCustomerProjection | None:
+    """Strictly project raw core state once, or reuse an in-process projection."""
+    if (
+        isinstance(result, _VerifiedCustomerProjection)
+        and result.has_intact_regulated_projection()
+    ):
+        return copy.deepcopy(result)
+    core_projection = project_core_customer_boundary(
+        result if isinstance(result, dict) else {},
+        job_type=job_type,
+        city=city,
+        state=state,
+        job_category=job_category,
+    )
+    if core_projection is None:
+        return None
+    return _VerifiedCustomerProjection(copy.deepcopy(core_projection))
+
+
 def build_customer_response_egress(
     result: dict,
     job_type: str,
@@ -4387,7 +4468,7 @@ def _normalize_segment_scope_labels(result: dict, scope_contract: dict) -> dict:
 
 def build_customer_permit_view_model(result: dict, job_type: str = "", city: str = "", state: str = "", job_category: str | None = None, explicit_vertical: str | None = None) -> dict:
     """Allowlisted customer ViewModel used by API, share, report, and checklist surfaces."""
-    core_projection = project_core_customer_boundary(
+    core_projection = _project_core_customer_boundary_once(
         result,
         job_type=job_type,
         city=city,
@@ -6299,7 +6380,7 @@ def evidence_pack_allowed_for_request(path: str, headers, *, is_sample_demo: boo
 
 def finalize_permit_lookup_result(result: dict, job_type: str, city: str, state: str, *, is_cached: bool = False, explicit_vertical: str | None = None, evidence_allowed: bool | None = None, job_category: str | None = None) -> dict:
     """Shared final response safety pipeline for all permit lookup endpoints."""
-    core_projection = project_core_customer_boundary(
+    core_projection = _project_core_customer_boundary_once(
         result,
         job_type=job_type,
         city=city,
@@ -6534,7 +6615,7 @@ def save_beta_feedback(email: str, job_type: str, city: str, state: str, useful:
 def render_white_label_report_html(data: dict) -> str:
     result = copy.deepcopy(data.get("result") or {}) if isinstance(data, dict) else {}
     if isinstance(data, dict):
-        core_projection = project_core_customer_boundary(
+        core_projection = _project_core_customer_boundary_once(
             result,
             job_type=str(data.get("job_type") or ""),
             city=str(data.get("city") or ""),
@@ -7829,6 +7910,70 @@ def _unseal_shared_public_result(stored: object) -> dict | None:
     return payload if canonical == payload_json else None
 
 
+_CORE_REHYDRATION_MATCH_FIELDS = tuple(sorted(_SEALED_CORE_REGULATED_FIELDS))
+
+
+def _rehydrate_cached_verified_core_projection(
+    submitted_result: object,
+    job_type: str,
+    city: str,
+    state: str,
+) -> _VerifiedCustomerProjection | None:
+    """Recover verified private state for a serialized API DTO.
+
+    Share/checklist requests cross an HTTP boundary, so the in-process projection
+    type is intentionally lost. A plain customer dictionary is never trusted as
+    proof. Instead, locate the matching private cache row, validate its sealed
+    envelope through the strict core projector, and compare authoritative public
+    fields before restoring the internal wrapper type.
+    """
+    submitted = submitted_result if isinstance(submitted_result, dict) else {}
+    if not submitted or not all(
+        field in submitted for field in _CORE_REHYDRATION_MATCH_FIELDS
+    ):
+        return None
+    try:
+        with sqlite3.connect(CACHE_DB) as conn:
+            rows = conn.execute(
+                """
+                SELECT result_json, COALESCE(job_category, '')
+                FROM permit_cache
+                WHERE lower(trim(job_type)) = lower(trim(?))
+                  AND lower(trim(city)) = lower(trim(?))
+                  AND upper(trim(state)) = upper(trim(?))
+                ORDER BY created_at DESC
+                LIMIT 12
+                """,
+                [job_type, city, state],
+            ).fetchall()
+    except Exception as exc:
+        print(f"[core-projection] Cached rehydration unavailable: {exc}")
+        return None
+
+    for raw_json, job_category in rows:
+        try:
+            candidate = json.loads(raw_json)
+        except (TypeError, ValueError):
+            continue
+        verified = _project_core_customer_boundary_once(
+            candidate,
+            job_type=job_type,
+            city=city,
+            state=state,
+            job_category=str(job_category or ""),
+        )
+        if not isinstance(verified, _VerifiedCustomerProjection):
+            continue
+        if str(verified.get("decision_source") or "") != "sealed_permit_rule_engine_envelope":
+            continue
+        if all(
+            submitted.get(field) == verified.get(field)
+            for field in _CORE_REHYDRATION_MATCH_FIELDS
+        ):
+            return verified
+    return None
+
+
 def create_share(job_type: str, city: str, state: str, result: dict) -> str:
     """Store a hash-sealed public result and return a short expiring slug."""
     slug = secrets.token_urlsafe(8)  # e.g. 'aB3xY7qR'
@@ -8054,7 +8199,7 @@ def generate_checklist(result: dict, job_type: str = "", city: str = "", state: 
 
 def _sanitize_customer_result_for_request_scope(result: dict, job_type: str = "", city: str = "", state: str = "") -> dict:
     """Apply canonical public ViewModel plus request-scope firebreak."""
-    core_projection = project_core_customer_boundary(
+    core_projection = _project_core_customer_boundary_once(
         result,
         job_type=job_type,
         city=city,
@@ -8139,7 +8284,7 @@ def _sanitize_checklist_customer_output(checklist: dict, job_type: str = "", cit
 
 
 def get_or_create_checklist(result: dict, job_type: str = "", city: str = "", state: str = "") -> dict:
-    core_projection = project_core_customer_boundary(
+    core_projection = _project_core_customer_boundary_once(
         result,
         job_type=job_type,
         city=city,
@@ -11106,7 +11251,15 @@ class Handler(BaseHTTPRequestHandler):
                 if not job_type or not city or not state or not result:
                     self.send_json(400, {"error": "job_type, city, state, result required"})
                     return
-                slug = create_share(job_type, city, state, result)
+                verified_result = _rehydrate_cached_verified_core_projection(
+                    result, job_type, city, state
+                )
+                slug = create_share(
+                    job_type,
+                    city,
+                    state,
+                    verified_result if verified_result is not None else result,
+                )
                 share_url = f"{APP_BASE_URL}/report/{slug}"
                 self.send_json(200, {"url": share_url, "slug": slug, "expires_days": SHARE_TTL_DAYS})
             except Exception as e:
@@ -11125,7 +11278,17 @@ class Handler(BaseHTTPRequestHandler):
                 if not result:
                     self.send_json(400, {"error": "result is required"})
                     return
-                public_result = build_customer_response_egress(
+                verified_result = _rehydrate_cached_verified_core_projection(
+                    result, job_type, city, state
+                )
+                core_result = verified_result or _project_core_customer_boundary_once(
+                    result,
+                    job_type=job_type,
+                    city=city,
+                    state=state,
+                    job_category=job_category,
+                )
+                checklist_input = core_result or build_customer_response_egress(
                     result,
                     job_type,
                     city,
@@ -11137,7 +11300,7 @@ class Handler(BaseHTTPRequestHandler):
                     200,
                     project_customer_response_egress(
                         get_or_create_checklist(
-                            project_customer_response_egress(public_result),
+                            checklist_input,
                             job_type,
                             city,
                             state,

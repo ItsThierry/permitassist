@@ -75,8 +75,12 @@ test('report fallback preserves one-to-one permit rows instead of rematching the
   assert.match(reportHtml, /const permitRow = canonicalFamilyRows\.length[\s\S]*\? \(permitRows\.find[\s\S]*: row;/);
 });
 
-test('every customer server surface uses the one core boundary projector', () => {
-  assert.ok((serverPy.match(/project_core_customer_boundary\(/g) || []).length >= 5);
+test('every customer server surface uses the one strict single-projection boundary', () => {
+  assert.equal((serverPy.match(/project_core_customer_boundary\(/g) || []).length, 1);
+  assert.ok((serverPy.match(/_project_core_customer_boundary_once\(/g) || []).length >= 7);
+  assert.match(serverPy, /class _VerifiedCustomerProjection\(dict\)/);
+  assert.match(serverPy, /has_intact_regulated_projection/);
+  assert.match(serverPy, /_rehydrate_cached_verified_core_projection/);
 });
 
 test('shared public results use the v2 hash-sealed schema', () => {
