@@ -47,6 +47,7 @@ ADAPTER_VERSION = "permitassist.rule-engine-shadow-adapter.v1"
 DIVERGENCE_TAXONOMY_VERSION = "permitassist.divergence-taxonomy.v1"
 SHADOW_SETTING = "PERMITASSIST_RULE_ENGINE_SHADOW"
 SHADOW_LOG_SETTING = "PERMITASSIST_RULE_ENGINE_SHADOW_LOG"
+OFFICIAL_QUERY_EVIDENCE_SETTING = "PERMITASSIST_RULE_ENGINE_OFFICIAL_QUERY_EVIDENCE"
 
 # A generic scope can only be exact-complete when the cell closes every family
 # that the scope can activate. Commercial TI uses the locked ten-lane W4 filing
@@ -121,6 +122,85 @@ class FamilyVerdict(str, Enum):
     ABSTAIN = "ABSTAIN"
 
 
+class ExemptionPolarity(str, Enum):
+    """Semantic polarity of an official exemption/permit statement."""
+
+    POSITIVE_EXEMPTION = "POSITIVE_EXEMPTION"
+    POSITIVE_REQUIREMENT = "POSITIVE_REQUIREMENT"
+    AMBIGUOUS = "AMBIGUOUS"
+
+
+class RouteReachability(str, Enum):
+    REACHABLE = "REACHABLE"
+    UNREACHABLE = "UNREACHABLE"
+    UNKNOWN = "UNKNOWN"
+
+
+_REQUIREMENT_POLARITY_PATTERNS = (
+    re.compile(r"\bnot\s+(?:permit[- ]?)?exempt\b", re.I),
+    re.compile(r"\bnot\s+exempt\s+from\s+(?:a\s+)?permits?\b", re.I),
+    re.compile(r"(?<!no )\bpermits?\s+(?:is|are)\s+required\b", re.I),
+    re.compile(r"\b(?:must|shall)\s+(?:first\s+)?(?:obtain|secure|have)\s+(?:a\s+)?permits?\b", re.I),
+    re.compile(r"\bpermits?\s+(?:must|shall)\s+be\s+(?:obtained|secured)\b", re.I),
+    re.compile(r"(?<!not )\brequires?\s+(?:a\s+)?permits?\b", re.I),
+)
+_EXEMPTION_POLARITY_PATTERNS = (
+    re.compile(r"\bno\s+permits?\s+(?:is|are)\s+required\b", re.I),
+    re.compile(r"\bpermits?\s+(?:is|are)\s+not\s+required\b", re.I),
+    re.compile(r"\b(?:does|do|shall)\s+not\s+require\b.{0,80}\bpermits?\b", re.I),
+    re.compile(r"\bwithout\s+(?:first\s+)?(?:obtaining|securing|having)\s+(?:a\s+)?permits?\b", re.I),
+    re.compile(r"\bpermit[- ]?exempt\b", re.I),
+    re.compile(r"\bexempt\s+from\s+(?:the\s+)?permit(?:ting)?\s+requirements?\b", re.I),
+)
+_AMBIGUOUS_POLARITY_PATTERNS = (
+    re.compile(r"\b(?:may|might|could)\s+(?:be\s+)?exempt\b", re.I),
+    re.compile(r"\bexemptions?\s+(?:may|might|could)\s+apply\b", re.I),
+    re.compile(r"\bverify\b.*\bexempt", re.I),
+)
+
+
+def classify_exemption_polarity(text: object) -> ExemptionPolarity:
+    """Return a conservative, deterministic exemption/requirement polarity."""
+
+    normalized = re.sub(r"\s+", " ", str(text or "")).strip()
+    if not normalized:
+        return ExemptionPolarity.AMBIGUOUS
+    # Requirement/negated-exemption wording must win before any exemption token.
+    if any(pattern.search(normalized) for pattern in _REQUIREMENT_POLARITY_PATTERNS):
+        return ExemptionPolarity.POSITIVE_REQUIREMENT
+    if any(pattern.search(normalized) for pattern in _AMBIGUOUS_POLARITY_PATTERNS):
+        return ExemptionPolarity.AMBIGUOUS
+    if any(pattern.search(normalized) for pattern in _EXEMPTION_POLARITY_PATTERNS):
+        return ExemptionPolarity.POSITIVE_EXEMPTION
+    return ExemptionPolarity.AMBIGUOUS
+
+
+_ANTI_BOT_MARKERS = (
+    "access denied",
+    "verify you are human",
+    "checking your browser",
+    "captcha",
+    "cloudflare ray id",
+    "automated access",
+    "bot detection",
+)
+
+
+def classify_route_reachability(*, http_status: int | None, body_sample: object = "") -> RouteReachability:
+    """Classify route checks without mislabeling anti-bot pages reachable."""
+
+    body = str(body_sample or "").lower()
+    if any(marker in body for marker in _ANTI_BOT_MARKERS):
+        return RouteReachability.UNKNOWN
+    if http_status is None or http_status in {401, 403, 407, 429}:
+        return RouteReachability.UNKNOWN
+    if 200 <= http_status < 400:
+        return RouteReachability.REACHABLE
+    if http_status in {404, 410}:
+        return RouteReachability.UNREACHABLE
+    return RouteReachability.UNKNOWN
+
+
 class DivergenceCode(str, Enum):
     # Locked Part 1 taxonomy.  These names are stable external evidence keys.
     AHJ_BOUNDARY_MISMATCH = "AHJ_BOUNDARY_MISMATCH"
@@ -162,6 +242,24 @@ class ProvenanceRecord:
 
 
 @dataclass(frozen=True)
+class OfficialQueryEvidence:
+    """Hash-bound official-query evidence; execution remains off by default."""
+
+    query: str
+    jurisdiction_id: str
+    source_url: str
+    source_quote: str
+    snapshot_hash: str
+    checked_at: str
+    publishable: bool
+    family: str = "building"
+    verdict: FamilyVerdict = FamilyVerdict.ABSTAIN
+    source_authority: str = "official_ahj"
+    snapshot_path: str = ""
+    effective_date: str | None = None
+
+
+@dataclass(frozen=True)
 class AuthorityRef:
     family: str
     issuing_authority: str
@@ -177,6 +275,37 @@ class ApplicationRoute:
     apply_url: str
     channel: str
     provenance: tuple[ProvenanceRecord, ...]
+    validation_issue_codes: tuple[str, ...] = ()
+
+
+def official_query_evidence_guard(evidence: object) -> dict[str, object]:
+    """Report whether the dormant query-evidence precedence path may run."""
+
+    enabled = os.environ.get(OFFICIAL_QUERY_EVIDENCE_SETTING, "").strip().lower() == "active"
+    valid = bool(
+        isinstance(evidence, OfficialQueryEvidence)
+        and evidence.query.strip()
+        and evidence.jurisdiction_id.strip()
+        and evidence.source_url.startswith(("https://", "http://"))
+        and evidence.source_quote.strip()
+        and re.fullmatch(r"[0-9a-fA-F]{64}", evidence.snapshot_hash or "")
+        and evidence.snapshot_hash.lower() != "0" * 64
+        and evidence.checked_at.strip()
+        and evidence.publishable is True
+        and _slug(evidence.source_authority) in {"official_ahj", "official_state", "official_county"}
+    )
+    if not enabled:
+        reason = "feature_disabled"
+    elif valid:
+        reason = "valid_hash_bound_official_query_evidence"
+    else:
+        reason = "invalid_or_unbound_evidence"
+    return {
+        "enabled": enabled,
+        "valid": valid,
+        "exercised": True,
+        "reason": reason,
+    }
 
 
 @dataclass(frozen=True)
@@ -1627,12 +1756,11 @@ def normalize_family_decision(value: Mapping[str, Any]) -> CoreFamilyDecision:
         issues.add("binary_without_publishable_provenance")
         verdict = FamilyVerdict.VERIFY
     if verdict is FamilyVerdict.NOT_REQUIRED and publishable:
-        affirmative = any(
-            re.search(r"\b(?:not required|no permit|exempt(?:ion|ed)?|does not require|shall not require)\b", record.source_quote, re.I)
-            for record in publishable
-        )
-        if not affirmative:
-            issues.add("exemption_not_affirmatively_supported")
+        polarities = tuple(classify_exemption_polarity(record.source_quote) for record in publishable)
+        has_positive_exemption = ExemptionPolarity.POSITIVE_EXEMPTION in polarities
+        has_contradictory_requirement = ExemptionPolarity.POSITIVE_REQUIREMENT in polarities
+        if not has_positive_exemption or has_contradictory_requirement:
+            issues.add("exemption_polarity_not_positively_supported")
             verdict = FamilyVerdict.VERIFY
     return CoreFamilyDecision(
         family=family or "unknown",
@@ -1687,8 +1815,20 @@ def _route_matches_family(route: ApplicationRoute, family: str, authority: Autho
     )
 
 
+def _route_scope_mismatch(route: ApplicationRoute, project_family: str) -> bool:
+    """Fail closed when route provenance is visibly bound to another scope."""
+
+    if not project_family.startswith("commercial"):
+        return False
+    provenance_text = " ".join(
+        f"{record.source_url} {record.source_quote}" for record in route.provenance
+    ).lower()
+    return bool(re.search(r"(?:/|\b)residential(?:/|\b)", provenance_text))
+
+
 def build_family_authority_routes(cell: Mapping[str, Any]) -> tuple[FamilyAuthorityRoute, ...]:
     tier1 = _mapping(cell.get("tier1"))
+    project_family = _slug(cell.get("project_family"))
     authorities = tuple(
         authority
         for authority in (_coerce_authority(row) for row in _list(tier1.get("trade_authority")) if isinstance(row, Mapping))
@@ -1708,6 +1848,17 @@ def build_family_authority_routes(cell: Mapping[str, Any]) -> tuple[FamilyAuthor
             channel="verify",
             provenance=(),
         )
+        if _route_scope_mismatch(route, project_family):
+            # Keep the official destination actionable, but do not let a
+            # residential evidence record prove a commercial route dimension.
+            route = ApplicationRoute(
+                permit_name=route.permit_name,
+                office_name=route.office_name,
+                apply_url=route.apply_url,
+                channel="verify",
+                provenance=(),
+                validation_issue_codes=("route_provenance_scope_mismatch",),
+            )
         output.append(FamilyAuthorityRoute(authority.family, authority, route))
     return tuple(output)
 
@@ -1773,6 +1924,7 @@ def _public_family_authority_route(route: FamilyAuthorityRoute) -> dict[str, Any
             "apply_url": route.application_route.apply_url,
             "channel": route.application_route.channel,
             "provenance": public_provenance,
+            "validation_issue_codes": list(route.application_route.validation_issue_codes),
         },
     }
 
@@ -2015,7 +2167,7 @@ def build_core_decision_envelope(
     state: str,
     job_category: str = "",
     facts: Mapping[str, Any] | None = None,
-    official_query_evidence: Mapping[str, Any] | None = None,
+    official_query_evidence: OfficialQueryEvidence | None = None,
 ) -> CoreDecisionEnvelope:
     if not isinstance(resolution, V24Resolution):
         raise TypeError("resolution must be V24Resolution")
@@ -2036,12 +2188,42 @@ def build_core_decision_envelope(
         CoverageStatus.FAIL_CLOSED: "fail_closed",
     }
     coverage = coverage_map.get(legacy_envelope.coverage_status, "none")
-    query_decision = normalize_family_decision(official_query_evidence or {})
+    query_guard = official_query_evidence_guard(official_query_evidence)
+    query_decision = CoreFamilyDecision(
+        family="building",
+        verdict=FamilyVerdict.ABSTAIN,
+        trigger="",
+        provenance=(),
+        validation_issue_codes=("official_query_evidence_disabled_or_invalid",),
+    )
+    if isinstance(official_query_evidence, OfficialQueryEvidence):
+        query_decision = normalize_family_decision(
+            {
+                "family": official_query_evidence.family,
+                "verdict": official_query_evidence.verdict.value,
+                "trigger": official_query_evidence.query,
+                "provenance": [
+                    {
+                        "source_url": official_query_evidence.source_url,
+                        "source_quote": official_query_evidence.source_quote,
+                        "retrieved_at": official_query_evidence.checked_at,
+                        "snapshot_hash": official_query_evidence.snapshot_hash,
+                        "snapshot_path": official_query_evidence.snapshot_path
+                        or f"official-query://{official_query_evidence.snapshot_hash}",
+                        "effective_date": official_query_evidence.effective_date,
+                        "freshness_class": "fresh",
+                        "last_verified_at": official_query_evidence.checked_at,
+                        "publishable": official_query_evidence.publishable,
+                    }
+                ],
+            }
+        )
     selected_jurisdiction_id = identity.selected.jurisdiction_id if identity.selected else ""
     query_valid = bool(
-        official_query_evidence
-        and _normalize_text(official_query_evidence.get("jurisdiction_id")).lower() == selected_jurisdiction_id
-        and _slug(official_query_evidence.get("source_authority")) in {"official_ahj", "official_state", "official_county"}
+        query_guard["enabled"]
+        and query_guard["valid"]
+        and isinstance(official_query_evidence, OfficialQueryEvidence)
+        and official_query_evidence.jurisdiction_id.strip().lower() == selected_jurisdiction_id
         and query_decision.verdict in {FamilyVerdict.REQUIRED, FamilyVerdict.NOT_REQUIRED}
         and identity.status is JurisdictionResolutionStatus.EXACT
         and work.valid
@@ -2273,56 +2455,6 @@ _CORE_PUBLIC_PROJECTION_FIELDS = frozenset(
 )
 
 
-def _validated_public_core_projection(
-    result: Mapping[str, Any],
-    *,
-    city: str,
-    state: str,
-) -> dict[str, Any] | None:
-    """Validate a previously unsealed public DTO without re-resolving truth."""
-    if result.get("projection_schema_version") != CORE_PROJECTION_SCHEMA_VERSION:
-        return None
-    if city and _slug(result.get("city")) != _slug(city):
-        return None
-    if state and _normalize_text(result.get("state")).upper() != _normalize_text(state).upper():
-        return None
-    decision = _normalize_text(result.get("permit_decision")).upper()
-    required = result.get("permit_required")
-    if decision not in {"REQUIRED", "NOT_REQUIRED", "UNKNOWN"}:
-        return None
-    if decision == "REQUIRED" and required is not True:
-        return None
-    if decision == "NOT_REQUIRED" and required is not False:
-        return None
-    if decision == "UNKNOWN" and required is not None:
-        return None
-    project_family = _slug(result.get("project_family")) or "unsupported"
-    rows = result.get("family_decisions")
-    if not isinstance(rows, list) or not rows:
-        return None
-    families: set[str] = set()
-    allowed_verdicts = {item.value for item in FamilyVerdict}
-    for row in rows:
-        if not isinstance(row, Mapping):
-            return None
-        family = normalize_exact_source_family(row.get("family"))
-        if family not in _CORE_FAMILIES:
-            return None
-        if _normalize_text(row.get("verdict")).upper() not in allowed_verdicts:
-            return None
-        families.add(family)
-    required_families = FAMILY_CLOSURE_REQUIREMENTS.get(project_family, frozenset())
-    if required_families and not required_families.issubset(families):
-        return None
-    return copy.deepcopy(
-        {
-            key: result[key]
-            for key in result
-            if key in _CORE_PUBLIC_PROJECTION_FIELDS
-        }
-    )
-
-
 def project_core_customer_boundary(
     result: Mapping[str, Any],
     *,
@@ -2333,33 +2465,19 @@ def project_core_customer_boundary(
 ) -> dict[str, Any] | None:
     """Return the one core customer DTO, failing closed on integrity errors.
 
-    A valid active envelope returns its byte-sealed public projection. If an
-    active, allowlisted request carries core cache/envelope markers but the
-    envelope, projection hash, schema, or request location cannot be validated,
-    legacy fields are untrusted and must never become a fallback binary answer.
+    A valid envelope returns its byte-sealed public projection. For an active,
+    allowlisted request, every unsealed or invalid payload fails closed; a
+    shape-valid public DTO is never accepted as proof of server authenticity.
     The integrity fallback keeps every applicable permit-family lane visible as
     ABSTAIN with a concrete office-verification task.
 
-    Flag-off, unallowlisted, and marker-free legacy traffic returns ``None`` so
-    the pre-core path remains byte-for-byte unchanged.
+    Flag-off and unallowlisted legacy traffic returns ``None`` so the pre-core
+    path remains unchanged.
     """
     sealed = extract_sealed_public_projection(result, city=city, state=state)
     if sealed is not None:
         return sealed
-    if isinstance(result, Mapping):
-        public_projection = _validated_public_core_projection(result, city=city, state=state)
-        if public_projection is not None:
-            return public_projection
-    if not isinstance(result, Mapping):
-        return None
-    has_core_markers = any(
-        key in result
-        for key in (
-            "_permit_rule_engine_core",
-            "_permit_rule_engine_cache_schema_version",
-        )
-    )
-    if not has_core_markers or get_rule_engine_core_mode() != "active":
+    if not isinstance(result, Mapping) or get_rule_engine_core_mode() != "active":
         return None
     identity = resolve_jurisdiction_identity(city, state)
     if identity.status is not JurisdictionResolutionStatus.EXACT or identity.selected is None:
@@ -2378,6 +2496,13 @@ def project_core_customer_boundary(
     )
     families = tuple(
         sorted(FAMILY_CLOSURE_REQUIREMENTS.get(project_family, _CORE_FAMILIES))
+    )
+    has_unverified_core_artifact = any(
+        key in result
+        for key in (
+            "_permit_rule_engine_core",
+            "_permit_rule_engine_cache_schema_version",
+        )
     )
     issue_code = "decision_integrity_validation_failed"
     office = f"{identity.selected.ahj_name} permit office"
@@ -2436,7 +2561,9 @@ def project_core_customer_boundary(
         "project_family": project_family,
         "permit_required": None,
         "permit_decision": "UNKNOWN",
-        "permit_verdict": "CONTACT_AHJ",
+        "permit_verdict": (
+            "CONTACT_AHJ" if has_unverified_core_artifact else "VERIFY"
+        ),
         "permit_name": None,
         "permit_kind": "Verification Required",
         "customer_headline": "Verify permit requirements with the permit office.",
@@ -2497,6 +2624,46 @@ def maybe_attach_core_decision_envelope(
         facts=facts,
     )
     return attach_core_decision_envelope(result, envelope)
+
+
+def build_active_core_first_result(
+    *,
+    job_type: str,
+    city: str,
+    state: str,
+    job_category: str = "",
+    facts: Mapping[str, Any] | None = None,
+) -> dict[str, Any] | None:
+    """Return a deterministic exact-complete core result before legacy research.
+
+    Partial, unsupported, ambiguous, uncovered, unallowlisted, and flag-off
+    requests return ``None`` and continue through the existing research path.
+    """
+
+    if get_rule_engine_core_mode() != "active":
+        return None
+    identity = resolve_jurisdiction_identity(city, state)
+    if (
+        identity.status is not JurisdictionResolutionStatus.EXACT
+        or identity.selected is None
+        or not core_activation_allowed(identity.selected.jurisdiction_id)
+    ):
+        return None
+    resolution = resolve_v24_cell(city, state, job_type, job_category, force=True)
+    envelope = build_core_decision_envelope(
+        resolution,
+        job_type=job_type,
+        city=city,
+        state=state,
+        job_category=job_category,
+        facts=facts,
+    )
+    if envelope.precedence_stage is not PrecedenceStage.VALIDATED_EXACT_COMPLETE:
+        return None
+    result = attach_core_decision_envelope({}, envelope)
+    if extract_sealed_public_projection(result, city=city, state=state) is None:
+        return None
+    return result
 
 
 # ─── Part 3: immutable seed migration and evidence-gated factory ─────────────

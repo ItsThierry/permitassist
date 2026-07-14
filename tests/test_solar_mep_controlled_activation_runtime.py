@@ -2,6 +2,7 @@ import copy
 import hashlib
 import json
 import sys
+from datetime import datetime, timezone
 from pathlib import Path
 from importlib import util
 
@@ -12,8 +13,18 @@ _HELPER_SPEC = util.spec_from_file_location(
 _debug_helper = util.module_from_spec(_HELPER_SPEC)
 _HELPER_SPEC.loader.exec_module(_debug_helper)
 _LiveServer = _debug_helper._LiveServer
-_import_server = _debug_helper._import_server
+_import_server_raw = _debug_helper._import_server
 _post_json = _debug_helper._post_json
+
+_TEST_NOW = datetime(2026, 5, 8, 12, 0, 0, tzinfo=timezone.utc)
+
+
+def _import_server(tmp_path, monkeypatch):
+    server = _import_server_raw(tmp_path, monkeypatch)
+    runtime = sys.modules.get("evidence_pack_runtime")
+    assert runtime is not None
+    monkeypatch.setattr(runtime, "utc_now", lambda: _TEST_NOW)
+    return server
 
 _STEP7C_SPEC = util.spec_from_file_location(
     "step7c_helpers_solar_mep_activation",

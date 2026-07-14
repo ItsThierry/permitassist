@@ -335,6 +335,12 @@ def _parse_utc(value: Any) -> datetime | None:
     return parsed.astimezone(timezone.utc)
 
 
+def utc_now() -> datetime:
+    """Injectable UTC clock for hermetic evidence-expiry tests."""
+
+    return datetime.now(timezone.utc)
+
+
 def _record_is_fresh(record: dict[str, Any], now: datetime | None = None) -> bool:
     """Return whether a record is still usable for fail-closed runtime fields.
 
@@ -342,7 +348,7 @@ def _record_is_fresh(record: dict[str, Any], now: datetime | None = None) -> boo
     means the evidence is due for ops review, but it must not zero out a
     checked-in pack that is still before its explicit stale date.
     """
-    now = now or datetime.now(timezone.utc)
+    now = now or utc_now()
     cutoffs: list[datetime] = []
     raw = record.get("stale_after_utc")
     if str(raw or "").strip():

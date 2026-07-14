@@ -166,7 +166,11 @@ def test_r9_private_cache_telemetry_records_hit_without_customer_leak(
     key = research_engine.cache_key(
         "residential reroof", "Buckeye", "AZ", "residential"
     )
-    payload = {"permit_decision": "REQUIRED", "permit_required": True}
+    payload = {
+        "permit_decision": "REQUIRED",
+        "permit_required": True,
+        "_cache_schema_version": research_engine.FILING_PACKET_CACHE_SCHEMA_VERSION,
+    }
     research_engine.save_cache(
         key,
         "residential reroof",

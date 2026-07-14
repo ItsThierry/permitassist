@@ -73,9 +73,19 @@ from filing_packet_reconciler import ensure_required_filing_rows
 from residential_universal_gate import apply_residential_universal_gate
 from permit_model import build_permit_package, project_permit_package, validate_customer_view
 try:
-    from permit_rule_engine import project_core_customer_boundary
+    from permit_rule_engine import (
+        ExemptionPolarity,
+        build_active_core_first_result,
+        classify_exemption_polarity,
+        project_core_customer_boundary,
+    )
 except ImportError:  # package import path in focused tests
-    from api.permit_rule_engine import project_core_customer_boundary
+    from api.permit_rule_engine import (
+        ExemptionPolarity,
+        build_active_core_first_result,
+        classify_exemption_polarity,
+        project_core_customer_boundary,
+    )
 from openai import OpenAI as _OpenAI
 import requests as _requests
 from model_config import (
@@ -4026,6 +4036,21 @@ def _build_degraded_lookup_fallback(job_type: str, city: str, state: str, *, rea
 
 
 def _research_permit_with_budget(job_type: str, city: str, state: str, zip_code: str = "", **kwargs) -> dict:
+    # Exact-complete allowlisted core cells are deterministic and already carry
+    # a sealed customer projection. Resolve them before any search/model thread.
+    try:
+        core_first = build_active_core_first_result(
+            job_type=job_type,
+            city=city,
+            state=state,
+            job_category=str(kwargs.get("job_category") or ""),
+        )
+    except Exception as exc:
+        print(f"[permit][core-first-fallback] {type(exc).__name__}: {exc}")
+        core_first = None
+    if core_first is not None:
+        return core_first
+
     executor = ThreadPoolExecutor(max_workers=1, thread_name_prefix="permit_lookup_budget")
     future = executor.submit(research_permit, job_type, city, state, zip_code, **kwargs)
     try:
@@ -5819,19 +5844,7 @@ def _not_required_claim_citation_is_source_backed(result: dict, city: str, state
         confidence = str(citation.get("confidence") or "").strip().lower()
         if not source_url or not quote or confidence == "needs_verification":
             continue
-        normalized_quote = re.sub(r"\s+", " ", quote).lower()
-        not_required_evidence = any(
-            re.search(pattern, normalized_quote)
-            for pattern in (
-                r"\bno\s+permits?\s+(?:is|are)\s+required\b",
-                r"\bpermits?\s+(?:is|are)\s+not\s+required\b",
-                r"\b(?:does|do)\s+not\s+require\b.{0,80}\bpermits?\b",
-                r"\bwithout\s+(?:obtaining\s+)?(?:a\s+)?permits?\b",
-                r"\bpermit[- ]exempt(?:ion|ed)?\b",
-                r"\bexempt(?:ion|ed)?\b.{0,80}\bpermits?\b",
-            )
-        )
-        if not not_required_evidence:
+        if classify_exemption_polarity(quote) is not ExemptionPolarity.POSITIVE_EXEMPTION:
             continue
         authority = classify_source_authority(source_url, city, state, result=result)
         if authority.get("local_decision_evidence") and authority.get("display_allowed"):
@@ -7737,6 +7750,16 @@ def get_share(slug: str) -> dict | None:
             "job_type": job_type,
             "city": city,
             "state": state,
+            # Internal continuity proof for render_share_page. The marker is
+            # reverified against the canonical payload and removed before the
+            # customer report is embedded. Shape-valid public DTOs without a
+            # verified stored-payload hash still fail closed.
+            "_verified_shared_payload_sha256": (
+                str(stored.get("payload_sha256") or "")
+                if isinstance(stored, dict)
+                and stored.get("schema_version") == SHARED_RESULT_SCHEMA_VERSION
+                else ""
+            ),
         }
     except Exception as e:
         print(f"[share] Read error: {e}")
@@ -8185,12 +8208,26 @@ def render_share_page(share: dict) -> str:
     safe_share = dict(share or {})
     raw_share_data = safe_share.get("data")
     original_data = raw_share_data if isinstance(raw_share_data, dict) else {}
-    safe_data = _sanitize_customer_result_for_request_scope(
+    verified_shared_hash = str(safe_share.pop("_verified_shared_payload_sha256", "") or "")
+    canonical_shared_payload = json.dumps(
         original_data,
-        safe_share.get("job_type", ""),
-        safe_share.get("city", ""),
-        safe_share.get("state", ""),
+        sort_keys=True,
+        separators=(",", ":"),
+        ensure_ascii=False,
     )
+    if (
+        re.fullmatch(r"[0-9a-f]{64}", verified_shared_hash)
+        and hashlib.sha256(canonical_shared_payload.encode("utf-8")).hexdigest()
+        == verified_shared_hash
+    ):
+        safe_data = copy.deepcopy(original_data)
+    else:
+        safe_data = _sanitize_customer_result_for_request_scope(
+            original_data,
+            safe_share.get("job_type", ""),
+            safe_share.get("city", ""),
+            safe_share.get("state", ""),
+        )
     if not any(original_data.get(k) for k in ("sources", "source_urls", "apply_url", "apply_path", "applying_office")):
         def _drop_ahj_fields(value):
             if isinstance(value, dict):

@@ -14,11 +14,14 @@ import re
 import sqlite3
 import hashlib
 import io
+import threading
+import uuid
+from collections import deque
 from concurrent.futures import ThreadPoolExecutor, as_completed, TimeoutError as FuturesTimeout
 from copy import deepcopy
 from urllib.parse import urljoin, urlparse
 import requests
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from bs4 import BeautifulSoup
 from openai import OpenAI
 import pdfplumber
@@ -139,6 +142,51 @@ def _get_openai_client() -> OpenAI:
 
 # ─── Cache stats (in-memory, resets on restart) ───────────────────────────────
 _cache_stats = {"hits": 0, "misses": 0}
+_private_cache_events: deque[dict] = deque(maxlen=512)
+_private_cache_events_lock = threading.Lock()
+
+
+def classify_private_cache_decision(*, use_cache: bool, suppress_cache_write: bool) -> tuple[str, str]:
+    """Classify intentional cache suppression separately from misses."""
+
+    if not use_cache and suppress_cache_write:
+        return "suppressed", "suppressed_preview"
+    if not use_cache:
+        return "bypass", "caller_disabled_cache"
+    return "miss", "cache_lookup_required"
+
+
+def _record_private_cache_telemetry(
+    *,
+    key: str,
+    cache_decision: str,
+    reason: str,
+    cache_schema: str | None = None,
+    request_id: str | None = None,
+) -> None:
+    event = {
+        "request_id": request_id or uuid.uuid4().hex,
+        "cache_key_hash": hashlib.sha256(str(key).encode("utf-8")).hexdigest(),
+        "cache_schema": str(cache_schema or "legacy"),
+        "cache_decision": cache_decision,
+        "reason": reason,
+        "recorded_at": datetime.now(timezone.utc).isoformat(timespec="milliseconds"),
+    }
+    with _private_cache_events_lock:
+        _private_cache_events.append(event)
+
+
+def reset_private_cache_telemetry() -> None:
+    with _private_cache_events_lock:
+        _private_cache_events.clear()
+
+
+def private_cache_telemetry_snapshot() -> list[dict]:
+    """Return private operational events; callers must never serialize them."""
+
+    with _private_cache_events_lock:
+        return deepcopy(list(_private_cache_events))
+
 
 def get_cache_hit_rate() -> dict:
     h, m = _cache_stats["hits"], _cache_stats["misses"]
@@ -3938,6 +3986,8 @@ def get_cached(
     source has changed → treat as cache miss + clear the row. Else update
     last_checked_at. Network/HTTP errors fall back to TTL (status quo).
     """
+    miss_reason = "not_found"
+    telemetry_schema = required_rule_engine_cache_version or FILING_PACKET_CACHE_SCHEMA_VERSION
     try:
         conn = sqlite3.connect(CACHE_DB)
         # Read all the columns we care about
@@ -3957,6 +4007,12 @@ def get_cached(
                 conn.commit()
                 conn.close()
                 _cache_stats["misses"] += 1
+                _record_private_cache_telemetry(
+                    key=key,
+                    cache_decision="miss",
+                    reason="legacy_unknown_state",
+                    cache_schema=telemetry_schema,
+                )
                 return None
             if result.get("_cache_schema_version") != FILING_PACKET_CACHE_SCHEMA_VERSION:
                 print(f"[cache] Ignoring pre-filing-packet schema cache row for key {key[:8]}…")
@@ -3964,6 +4020,12 @@ def get_cached(
                 conn.commit()
                 conn.close()
                 _cache_stats["misses"] += 1
+                _record_private_cache_telemetry(
+                    key=key,
+                    cache_decision="miss",
+                    reason="stale_filing_packet_schema",
+                    cache_schema=telemetry_schema,
+                )
                 return None
             if required_rule_engine_cache_version and not validate_rule_engine_cache_payload(
                 result,
@@ -3974,6 +4036,12 @@ def get_cached(
                 conn.commit()
                 conn.close()
                 _cache_stats["misses"] += 1
+                _record_private_cache_telemetry(
+                    key=key,
+                    cache_decision="miss",
+                    reason="invalid_rule_engine_schema_or_seal",
+                    cache_schema=telemetry_schema,
+                )
                 return None
             created = datetime.fromisoformat(row[1])
             hits = row[2] or 0
@@ -3998,6 +4066,12 @@ def get_cached(
                         conn.close()
                         _cache_stats["misses"] += 1
                         _cache_stats["etag_invalidations"] = _cache_stats.get("etag_invalidations", 0) + 1
+                        _record_private_cache_telemetry(
+                            key=key,
+                            cache_decision="miss",
+                            reason="source_validator_changed",
+                            cache_schema=telemetry_schema,
+                        )
                         return None
                     elif status == "same":
                         # Confirmed unchanged — bump last_checked_at so we don't re-check next read
@@ -4015,11 +4089,24 @@ def get_cached(
                     print(f"[cache] Stale-while-revalidate triggered for key {key[:8]}… (age={age.days}d, ttl={ttl}d)")
                     import threading
                     threading.Thread(target=_refresh_callback, args=(key,), daemon=True).start()
+                _record_private_cache_telemetry(
+                    key=key,
+                    cache_decision="hit",
+                    reason="fresh_valid_payload",
+                    cache_schema=telemetry_schema,
+                )
                 return result
         conn.close()
     except Exception as e:
+        miss_reason = f"read_error:{type(e).__name__}"
         print(f"[cache] Read error (non-fatal): {e}")
     _cache_stats["misses"] += 1
+    _record_private_cache_telemetry(
+        key=key,
+        cache_decision="miss",
+        reason=miss_reason,
+        cache_schema=telemetry_schema,
+    )
     return None
 
 def save_cache(key: str, job_type: str, job_category: str, city: str, state: str, zip_code: str, result: dict):
@@ -9025,6 +9112,17 @@ def research_permit(job_type: str, city: str, state: str, zip_code: str = "", us
         job_category,
         rule_engine_cache_schema_version=rule_engine_cache_version,
     )
+    if not use_cache:
+        cache_decision, cache_reason = classify_private_cache_decision(
+            use_cache=use_cache,
+            suppress_cache_write=suppress_cache_write,
+        )
+        _record_private_cache_telemetry(
+            key=key,
+            cache_decision=cache_decision,
+            reason=cache_reason,
+            cache_schema=rule_engine_cache_version or FILING_PACKET_CACHE_SCHEMA_VERSION,
+        )
     v231_resolution = resolve_v231_cell(city, state, job_type, job_category)
     v24_resolution = resolve_v24_cell(city, state, job_type, job_category)
 

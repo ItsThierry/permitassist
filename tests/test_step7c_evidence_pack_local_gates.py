@@ -15,8 +15,18 @@ _HELPER_SPEC = util.spec_from_file_location(
 _debug_helper = util.module_from_spec(_HELPER_SPEC)
 _HELPER_SPEC.loader.exec_module(_debug_helper)
 _LiveServer = _debug_helper._LiveServer
-_import_server = _debug_helper._import_server
+_import_server_raw = _debug_helper._import_server
 _post_json = _debug_helper._post_json
+
+_TEST_NOW = datetime(2026, 5, 8, 12, 0, 0, tzinfo=timezone.utc)
+
+
+def _import_server(tmp_path, monkeypatch):
+    server = _import_server_raw(tmp_path, monkeypatch)
+    runtime = sys.modules.get("evidence_pack_runtime")
+    assert runtime is not None
+    monkeypatch.setattr(runtime, "utc_now", lambda: _TEST_NOW)
+    return server
 
 
 def _post_json_response(url, body, headers=None):
@@ -924,7 +934,7 @@ def test_enabled_pack_fails_closed_when_freshness_cutoff_missing(tmp_path, monke
 def test_enabled_pack_fails_closed_when_cutoff_equals_now_boundary(tmp_path, monkeypatch):
     pack_path = _write_pack(tmp_path / "pack.json")
     data = json.loads(pack_path.read_text(encoding="utf-8"))
-    now = datetime.now(timezone.utc).replace(microsecond=0)
+    now = _TEST_NOW.replace(microsecond=0)
     data["records"][0]["field_evidence"][0]["stale_after_utc"] = now.isoformat().replace("+00:00", "Z")
     pack_path.write_text(json.dumps(data, indent=2), encoding="utf-8")
     _enable_pack(monkeypatch, pack_path)
@@ -939,7 +949,7 @@ def test_enabled_pack_fails_closed_when_cutoff_equals_now_boundary(tmp_path, mon
 def test_enabled_pack_rechecks_freshness_after_cached_pack_cutoff_passes(tmp_path, monkeypatch):
     pack_path = _write_pack(tmp_path / "pack.json")
     data = json.loads(pack_path.read_text(encoding="utf-8"))
-    cutoff = (datetime.now(timezone.utc) + timedelta(seconds=1)).isoformat().replace("+00:00", "Z")
+    cutoff = (_TEST_NOW + timedelta(seconds=1)).isoformat().replace("+00:00", "Z")
     data["records"][0]["stale_after_utc"] = cutoff
     pack_path.write_text(json.dumps(data, indent=2), encoding="utf-8")
     _enable_pack(monkeypatch, pack_path)
@@ -948,7 +958,8 @@ def test_enabled_pack_rechecks_freshness_after_cached_pack_cutoff_passes(tmp_pat
     first = server.finalize_permit_lookup_result(_base_engine_result(), "office tenant improvement", "Denver", "CO")
     assert "companion_reviews_triggers" in first["_evidence_pack"]["matched_fields"]
 
-    time.sleep(1.2)
+    runtime = sys.modules["evidence_pack_runtime"]
+    monkeypatch.setattr(runtime, "utc_now", lambda: _TEST_NOW + timedelta(seconds=2))
     second = server.finalize_permit_lookup_result(_base_engine_result(), "office tenant improvement", "Denver", "CO")
     assert second["_evidence_pack"]["matched_fields"] == ["approval_timeline"]
     assert second["companion_reviews_triggers"] is None
