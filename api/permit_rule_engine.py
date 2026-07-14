@@ -2551,7 +2551,7 @@ def project_core_customer_boundary(
         "The saved permit decision could not be validated. Contact the permit "
         "office before quoting, filing, or starting work."
     )
-    return {
+    projection = {
         "projection_schema_version": CORE_PROJECTION_SCHEMA_VERSION,
         "decision_source": "permit_rule_engine_integrity_fail_closed",
         "jurisdiction_id": identity.selected.jurisdiction_id,
@@ -2561,9 +2561,7 @@ def project_core_customer_boundary(
         "project_family": project_family,
         "permit_required": None,
         "permit_decision": "UNKNOWN",
-        "permit_verdict": (
-            "CONTACT_AHJ" if has_unverified_core_artifact else "VERIFY"
-        ),
+        "permit_verdict": "CONTACT_AHJ",
         "permit_name": None,
         "permit_kind": "Verification Required",
         "customer_headline": "Verify permit requirements with the permit office.",
@@ -2586,6 +2584,9 @@ def project_core_customer_boundary(
         "claim_citations": [],
         "warnings": [summary],
     }
+    if not has_unverified_core_artifact:
+        projection["permit_verdict"] = "VERIFY"
+    return projection
 
 
 def core_cache_schema_for_request(city: str, state: str) -> str | None:
