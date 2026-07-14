@@ -7712,6 +7712,13 @@ def create_share(job_type: str, city: str, state: str, result: dict) -> str:
         print(f"[share] DB error: {e}")
     return slug
 
+
+class _VerifiedSharePayload(dict):
+    """Hash-verified in-process share payload without a public marker key."""
+
+    _verified_payload_sha256: str = ""
+
+
 def get_share(slug: str) -> dict | None:
     """Retrieve a shared result, rejecting expired or hash-invalid v2 rows."""
     try:
@@ -7745,22 +7752,22 @@ def get_share(slug: str) -> dict | None:
         conn.execute("UPDATE shared_results SET views=views+1 WHERE slug=?", [slug])
         conn.commit()
         conn.close()
-        return {
-            "data": data,
-            "job_type": job_type,
-            "city": city,
-            "state": state,
-            # Internal continuity proof for render_share_page. The marker is
-            # reverified against the canonical payload and removed before the
-            # customer report is embedded. Shape-valid public DTOs without a
-            # verified stored-payload hash still fail closed.
-            "_verified_shared_payload_sha256": (
-                str(stored.get("payload_sha256") or "")
-                if isinstance(stored, dict)
-                and stored.get("schema_version") == SHARED_RESULT_SCHEMA_VERSION
-                else ""
-            ),
-        }
+        share_payload = _VerifiedSharePayload(
+            {
+                "data": data,
+                "job_type": job_type,
+                "city": city,
+                "state": state,
+            }
+        )
+        if (
+            isinstance(stored, dict)
+            and stored.get("schema_version") == SHARED_RESULT_SCHEMA_VERSION
+        ):
+            share_payload._verified_payload_sha256 = str(
+                stored.get("payload_sha256") or ""
+            )
+        return share_payload
     except Exception as e:
         print(f"[share] Read error: {e}")
         return None
@@ -8208,7 +8215,9 @@ def render_share_page(share: dict) -> str:
     safe_share = dict(share or {})
     raw_share_data = safe_share.get("data")
     original_data = raw_share_data if isinstance(raw_share_data, dict) else {}
-    verified_shared_hash = str(safe_share.pop("_verified_shared_payload_sha256", "") or "")
+    verified_shared_hash = str(
+        getattr(share, "_verified_payload_sha256", "") or ""
+    )
     canonical_shared_payload = json.dumps(
         original_data,
         sort_keys=True,
