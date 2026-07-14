@@ -4399,6 +4399,34 @@ def build_customer_permit_view_model(result: dict, job_type: str = "", city: str
         # return a separate family-visible abstention DTO; neither path may fall
         # through to legacy binary fields.
         return core_projection
+    public_reentry = project_customer_response_egress(result if isinstance(result, dict) else {})
+    decision_reentry = str(public_reentry.get("permit_decision") or "").upper().strip()
+    reentry_lint_codes = {
+        str(hit.get("code") or "")
+        for hit in lint_customer_visible_result(public_reentry, city, state)
+        if isinstance(hit, dict)
+    }
+    if (
+        isinstance(result, dict)
+        and public_reentry == result
+        and decision_reentry == "REQUIRED"
+        and public_reentry.get("permit_required") is True
+        and "internal_process_copy" not in reentry_lint_codes
+        and isinstance(public_reentry.get("customer_result_summary"), dict)
+        and isinstance(public_reentry.get("customer_first_screen_summary"), dict)
+        and isinstance(public_reentry.get("permits_required"), list)
+        and isinstance(public_reentry.get("permits_required_logic"), list)
+        and isinstance(public_reentry.get("required_permit_names"), list)
+        and isinstance(public_reentry.get("required_permit_families"), list)
+    ):
+        # Public API responses can re-enter through cache/share/report surfaces.
+        # They have already passed every semantic resolver and customer summary
+        # builder; rerunning those heuristics can normalize or drop conditional
+        # permit rows. Preserve the complete public DTO byte-semantically only
+        # when the deep default-deny projection is unchanged and all generated
+        # public contract mirrors are present. Raw/core-wrapped results continue
+        # through their authoritative seal verification or full build below.
+        return copy.deepcopy(public_reentry)
     if (
         _source_evidence_floor_satisfied(result)
         and str((result or {}).get("permit_decision") or "").upper().strip() == "NOT_REQUIRED"

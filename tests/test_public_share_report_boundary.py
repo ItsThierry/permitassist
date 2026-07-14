@@ -315,3 +315,62 @@ def test_actual_share_report_http_path_uses_public_safe_payload(
     assert len(soup.find_all("script")) == 2
     assert not soup.find_all("img")
     assert not soup.find_all("svg")
+
+
+def test_verified_share_round_trip_preserves_live_shaped_public_permit_rows(tmp_path, monkeypatch):
+    server = _import_server(tmp_path, monkeypatch)
+    raw = _base_result(
+        "Roofing",
+        source_url="https://www.buckeyeaz.gov/business/development-services/permit-center",
+    )
+    result = server.build_customer_response_egress(
+        raw,
+        "replace the existing residential asphalt shingle roof",
+        "Buckeye",
+        "AZ",
+    )
+    result["permits_required"] = [
+        {
+            "ahj_name": "Buckeye permit office",
+            "ahj_type": "planning_department",
+            "application_authority_name": "Buckeye permit office",
+            "apply_url_status": "needs_verification",
+            "approval_type": "Historic Preservation Review",
+            "decision": "CONDITIONAL_REQUIRED",
+            "filing_family": "historic_review",
+            "kind": "Roofing",
+            "notes": "Confirm the exact portal category with the listed permit office before filing.",
+            "permit_type": "Historic Preservation Review",
+            "provenance": "universal_filing_packet_reconciler",
+            "required": True,
+            "row_category": "conditional_review",
+            "source_status": "source_needed",
+            "trigger_signal_ids": ["historic_or_planning_overlay"],
+        },
+        {
+            "kind": "Roofing",
+            "permit_type": "Roofing / Building Permit",
+            "required": True,
+        },
+    ]
+    expected = server.project_customer_response_egress(result)
+
+    slug = server.create_share(
+        "replace the existing residential asphalt shingle roof",
+        "Buckeye",
+        "AZ",
+        result,
+    )
+    share = server.get_share(slug)
+    html = server.render_share_page(share)
+    embedded = _extract_report_payload(html)
+
+    _assert_public_payload_has_no_internal_keys(share)
+    _assert_public_payload_has_no_internal_keys(embedded)
+    expected_embedded = server.to_public_share_payload({"data": expected}, {})["share"]["data"]
+    assert share["data"] == expected
+    assert embedded["share"]["data"] == expected_embedded
+    assert len(embedded["share"]["data"]["permits_required"]) == 2
+    assert {
+        row["permit_type"] for row in embedded["share"]["data"]["permits_required"]
+    } == {"Historic Preservation Review", "Roofing / Building Permit"}

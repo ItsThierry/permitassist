@@ -70,6 +70,11 @@ test('report renders every canonical family decision as a visible matrix row', (
   assert.match(reportHtml, /decision-row/);
 });
 
+test('report fallback preserves one-to-one permit rows instead of rematching the first row', () => {
+  assert.match(reportHtml, /row\.family \|\| row\.filing_family \|\| row\.permit_kind/);
+  assert.match(reportHtml, /const permitRow = canonicalFamilyRows\.length[\s\S]*\? \(permitRows\.find[\s\S]*: row;/);
+});
+
 test('every customer server surface uses the one core boundary projector', () => {
   assert.ok((serverPy.match(/project_core_customer_boundary\(/g) || []).length >= 5);
 });

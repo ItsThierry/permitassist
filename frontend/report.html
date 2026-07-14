@@ -100,7 +100,7 @@
     const whereToApply = textValue(applyContactLabel || applyPathLabel, 'Contact local building department');
     const permitRows = safeArray(d.permits_required).filter(row => row && typeof row === 'object');
     const verificationTasks = safeArray(d.verification_tasks).filter(row => row && typeof row === 'object');
-    const familyKey = (row) => textValue(row && (row.family || row.permit_kind || row.kind)).trim().toLowerCase();
+    const familyKey = (row) => textValue(row && (row.family || row.filing_family || row.permit_kind || row.kind || row.permit_type)).trim().toLowerCase();
     const familyTitle = (family) => textValue(family)
       .replace(/[_-]+/g, ' ')
       .replace(/\b\w/g, char => char.toUpperCase());
@@ -123,7 +123,9 @@
     const canonicalFamilyRows = safeArray(d.family_decisions).filter(row => row && typeof row === 'object');
     const decisionRows = (canonicalFamilyRows.length ? canonicalFamilyRows : permitRows).map((row) => {
       const family = familyKey(row);
-      const permitRow = permitRows.find(candidate => familyKey(candidate) === family) || {};
+      const permitRow = canonicalFamilyRows.length
+        ? (permitRows.find(candidate => familyKey(candidate) === family) || {})
+        : row;
       const task = verificationTasks.find(candidate => familyKey(candidate) === family) || {};
       const status = decisionStatus(row.verdict || row.required_status || row.decision || permitRow.required_status || permitRow.decision || permitRow.required);
       const trigger = status.className === 'verify'
