@@ -361,8 +361,9 @@ def test_solar_mep_preview_header_route_gating_works(tmp_path, monkeypatch):
     assert status == batch_status == 200
     assert calls[0]["use_cache"] is False
     assert calls[0]["suppress_cache_write"] is True
-    assert preview_body["_evidence_pack"]["mode"] == "solar_mep_controlled_preview"
-    assert "permit_type" in preview_body["_evidence_pack"]["matched_fields"]
+    assert "_evidence_pack" not in preview_body
+    assert "claim_citations" not in preview_body
+    assert "solar" in str(preview_body.get("permit_type") or "").lower()
     assert "_evidence_pack" not in json.dumps(batch_body)
 
 

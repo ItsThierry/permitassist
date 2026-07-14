@@ -827,6 +827,117 @@ _INTERNAL_CUSTOMER_FIELD_NAMES = frozenset({
     "source_metadata", "decision_cell", "cell_id", "resolver", "customerdecisiondto",
 })
 
+# Final public egress denylist. This is intentionally separate from the internal
+# customer ViewModel builder: internal computation and tests may retain evidence
+# diagnostics, but no public API/share/report/checklist surface may serialize
+# them. Access, preview, cache, and feature flags must never alter this boundary.
+_CUSTOMER_EGRESS_FORBIDDEN_FIELD_NAMES = frozenset({
+    *_INTERNAL_CUSTOMER_FIELD_NAMES,
+    "claim_citations",
+    "confidence_modifier",
+    "complexity_modifier",
+    "jurisdiction_multiplier",
+    "model",
+    "provider",
+    "debug",
+    "retrieval_metadata",
+    "evidence_metadata",
+})
+
+
+def project_customer_response_egress(value: dict) -> dict:
+    """Apply the one universal, idempotent customer serialization boundary.
+
+    Upstream resolvers keep their complete internal result so evidence floors,
+    cache policy, and Decision Cell integrity remain enforceable. This final
+    projection removes only customer-ineligible metadata at every nesting depth;
+    it does not rewrite decisions, permit families, filing routes, or source
+    cards. Safe official sources remain available through ``sources`` and
+    ``source_urls`` after unprojected citation provenance is removed.
+    """
+
+    def project(item):
+        if isinstance(item, dict):
+            public = {}
+            for raw_key, child in item.items():
+                key = str(raw_key)
+                key_lc = key.lower()
+                if key_lc.startswith("_") or key_lc in _CUSTOMER_EGRESS_FORBIDDEN_FIELD_NAMES:
+                    continue
+                public[raw_key] = project(child)
+            return public
+        if isinstance(item, list):
+            return [project(child) for child in item]
+        if isinstance(item, tuple):
+            return [project(child) for child in item]
+        return copy.deepcopy(item)
+
+    projected = project(value if isinstance(value, dict) else {})
+    return projected if isinstance(projected, dict) else {}
+
+
+_EVIDENCE_PACK_CONTROLLED_CUSTOMER_FIELDS = frozenset({
+    "permit_type",
+    "apply_url",
+    "fee_range",
+    "approval_timeline",
+    "inspections",
+    "companion_reviews_triggers",
+})
+
+
+def build_customer_response_egress(
+    result: dict,
+    job_type: str,
+    city: str,
+    state: str,
+    *,
+    job_category: str = "",
+    explicit_vertical: str = "",
+) -> dict:
+    """Build a public ViewModel without undoing evidence-pack fail-closed policy."""
+    internal = result if isinstance(result, dict) else {}
+    public = build_customer_permit_view_model(
+        internal,
+        job_type,
+        city,
+        state,
+        job_category=job_category,
+        explicit_vertical=explicit_vertical,
+    )
+    evidence_meta = internal.get("_evidence_pack")
+    if isinstance(evidence_meta, dict) and evidence_meta.get("enabled") is True:
+        governed_fields = {
+            str(field)
+            for field in (
+                list(evidence_meta.get("matched_fields") or [])
+                + list(evidence_meta.get("failed_closed_fields") or [])
+            )
+            if str(field) in _EVIDENCE_PACK_CONTROLLED_CUSTOMER_FIELDS
+        }
+        # The internal finalizer has already applied matched evidence and
+        # fail-closed suppression. Copy only those governed customer fields
+        # back over legacy ViewModel fallbacks so serialization cannot silently
+        # reintroduce stale URLs, fees, permits, or timelines.
+        for field in governed_fields:
+            if field in internal:
+                public[field] = copy.deepcopy(internal[field])
+        if "permit_type" in governed_fields and "permits_required" in internal:
+            public["permits_required"] = copy.deepcopy(internal["permits_required"])
+        if "apply_url" in governed_fields:
+            for field in ("online_application_url", "portal_url", "inspection_booking"):
+                if field in internal:
+                    public[field] = copy.deepcopy(internal[field])
+            if "apply_path" in internal:
+                public["apply_path"] = copy.deepcopy(internal["apply_path"])
+            elif internal.get("apply_url") in (None, ""):
+                public["apply_path"] = {
+                    "support_level": "not available",
+                    "url": None,
+                    "instructions": "Verify the application route with the issuing authority.",
+                }
+    return project_customer_response_egress(public)
+
 
 _PUBLIC_KEEP_EMPTY_FIELDS = frozenset({
     "apply_url", "apply_phone", "online_application_url", "source_urls", "sources", "claim_citations",
@@ -7657,6 +7768,7 @@ SHARED_RESULT_SCHEMA_VERSION = "permitassist.shared-result.v2"
 
 
 def _seal_shared_public_result(result: dict) -> dict:
+    result = project_customer_response_egress(result)
     payload_json = json.dumps(
         result if isinstance(result, dict) else {},
         sort_keys=True,
@@ -7696,7 +7808,7 @@ def create_share(job_type: str, city: str, state: str, result: dict) -> str:
     exp  = now + timedelta(days=SHARE_TTL_DAYS)
     # Store only the public customer ViewModel. The wrapper detects storage
     # corruption without retaining the internal core envelope or debug fields.
-    clean = build_customer_permit_view_model(result, job_type, city, state)
+    clean = build_customer_response_egress(result, job_type, city, state)
     stored = _seal_shared_public_result(clean)
     try:
         conn = sqlite3.connect(CACHE_DB)
@@ -7748,7 +7860,13 @@ def get_share(slug: str) -> dict | None:
             # Backward-compatible migration path for pre-v2 public rows. Old
             # content passes the current customer boundary once, then remains
             # default-deny at report embedding.
-            data = build_customer_permit_view_model(stored if isinstance(stored, dict) else {}, job_type, city, state)
+            data = build_customer_response_egress(
+                stored if isinstance(stored, dict) else {},
+                job_type,
+                city,
+                state,
+            )
+        data = project_customer_response_egress(data if isinstance(data, dict) else {})
         conn.execute("UPDATE shared_results SET views=views+1 WHERE slug=?", [slug])
         conn.commit()
         conn.close()
@@ -8237,6 +8355,9 @@ def render_share_page(share: dict) -> str:
             safe_share.get("city", ""),
             safe_share.get("state", ""),
         )
+    safe_data = project_customer_response_egress(
+        safe_data if isinstance(safe_data, dict) else {}
+    )
     if not any(original_data.get(k) for k in ("sources", "source_urls", "apply_url", "apply_path", "applying_office")):
         def _drop_ahj_fields(value):
             if isinstance(value, dict):
@@ -8262,7 +8383,9 @@ def render_share_page(share: dict) -> str:
             safe_share.get("state", ""),
         )
     )
-    payload = to_public_share_payload(safe_share, checklist)
+    payload = project_customer_response_egress(
+        to_public_share_payload(safe_share, checklist)
+    )
     return template.replace("__REPORT_DATA__", html_safe_json_dumps(payload))
 
 
@@ -10583,7 +10706,14 @@ class Handler(BaseHTTPRequestHandler):
                 if is_input_rejection(early_rejection):
                     self.send_json(
                         200,
-                        build_customer_permit_view_model(early_rejection, job_type, city, state, job_category=job_category, explicit_vertical=explicit_vertical),
+                        build_customer_response_egress(
+                            early_rejection,
+                            job_type,
+                            city,
+                            state,
+                            job_category=job_category,
+                            explicit_vertical=explicit_vertical,
+                        ),
                         extra_headers=response_headers,
                     )
                     return
@@ -10686,10 +10816,18 @@ class Handler(BaseHTTPRequestHandler):
                         "free_limit_remaining": result.get("remaining_lookups"),
                     }, user_email or "")
 
-                    # No Telegram on lookups — only notify on paying customers
-                    # Evidence-pack preview endpoints intentionally expose pack diagnostics for gated QA/API parity.
-                    # Normal customer lookups send only sanitized, customer-visible fields.
-                    customer_result = result if evidence_allowed else build_customer_permit_view_model(result, job_type, city, state, job_category=job_category, explicit_vertical=explicit_vertical)
+                    # No Telegram on lookups — only notify on paying customers.
+                    # Evidence/preview/cache/access flags may change internal
+                    # execution, but every request class uses the same final
+                    # customer ViewModel and egress projection.
+                    customer_result = build_customer_response_egress(
+                        result,
+                        job_type,
+                        city,
+                        state,
+                        job_category=job_category,
+                        explicit_vertical=explicit_vertical,
+                    )
 
                     self.send_json(200, customer_result, extra_headers=response_headers)
                 finally:
@@ -10729,12 +10867,16 @@ class Handler(BaseHTTPRequestHandler):
                         result = research_permit(job_type, city, state, zip_code, job_category=job_category, job_value=job_value, use_cache=not evidence_allowed, suppress_cache_write=evidence_allowed)
                         if evidence_allowed:
                             result = finalize_permit_lookup_result(result, job_type, city, state, is_cached=result.get("_cached", False), explicit_vertical=explicit_vertical, evidence_allowed=evidence_allowed, job_category=job_category)
-                            response = dict(result)
-                            response.update({"job_type": job_type, "city": city, "state": state, "error": None})
-                            return response
 # Contract sentinel for legacy stability test and batch customer ViewModel boundary:
                         # build_customer_permit_view_model(result, job_type, city, state)
-                        response = build_customer_permit_view_model(result, job_type, city, state, job_category=job_category, explicit_vertical=explicit_vertical)
+                        response = build_customer_response_egress(
+                            result,
+                            job_type,
+                            city,
+                            state,
+                            job_category=job_category,
+                            explicit_vertical=explicit_vertical,
+                        )
                         response.update({"job_type": job_type, "city": city, "state": state, "error": None})
                         return response
                     except Exception as e:
@@ -10955,8 +11097,25 @@ class Handler(BaseHTTPRequestHandler):
                 if not result:
                     self.send_json(400, {"error": "result is required"})
                     return
-                public_result = build_customer_permit_view_model(result, job_type, city, state, job_category=job_category, explicit_vertical=explicit_vertical)
-                self.send_json(200, get_or_create_checklist(public_result, job_type, city, state))
+                public_result = build_customer_response_egress(
+                    result,
+                    job_type,
+                    city,
+                    state,
+                    job_category=job_category,
+                    explicit_vertical=explicit_vertical,
+                )
+                self.send_json(
+                    200,
+                    project_customer_response_egress(
+                        get_or_create_checklist(
+                            project_customer_response_egress(public_result),
+                            job_type,
+                            city,
+                            state,
+                        )
+                    ),
+                )
             except Exception as e:
                 print(f"[checklist] Error: {e}")
                 self.send_json(500, {"error": str(e)})
@@ -11069,7 +11228,7 @@ class Handler(BaseHTTPRequestHandler):
                     evidence_allowed=evidence_allowed,
                     job_category=job_category,
                 )
-                api_result = result if evidence_allowed else build_customer_permit_view_model(
+                api_result = build_customer_response_egress(
                     result,
                     job_type,
                     city,

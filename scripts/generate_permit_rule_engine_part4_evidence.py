@@ -221,7 +221,7 @@ def generate(output_dir: Path, source_commit: str) -> dict[str, Any]:
                     "projected_equals_sealed": projected == sealed,
                     "api_equals_sealed": api_view == sealed,
                     "finalized_equals_sealed": finalized == sealed,
-                    "stored_share_equals_sealed": share.get("data") == sealed,
+                    "stored_share_equals_default_deny_projection": share.get("data") == expected_embedded,
                     "embedded_share_equals_default_deny_projection": embedded == expected_embedded,
                     "checklist_families_equal_projection": checklist_families == families,
                     "report_contains_every_permit_lane": all(label in report_html for label in permit_labels),

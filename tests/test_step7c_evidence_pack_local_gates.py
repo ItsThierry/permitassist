@@ -307,8 +307,8 @@ def test_step7u_preview_http_matrix_surfaces_contractor_fields_and_keeps_scope_g
                 {"X-Session-Token": token, "X-Sample-Demo": "1"},
             )
             assert status == 200
-            assert body["_evidence_pack"]["enabled"] is True
-            assert body["_evidence_pack"]["cache_bypassed"] is True
+            assert "_evidence_pack" not in body
+            assert "claim_citations" not in body
             assert body["apply_url"] == "https://aca-prod.accela.com/DALLASTX/Default.aspx"
             assert body["permit_type"] == "Commercial Building Permit"
             assert body["permit_required"] is True
@@ -369,7 +369,8 @@ def test_step7u_office_negations_do_not_surface_restaurant_companions_in_http_pr
         )
 
     assert status == 200
-    assert body["_evidence_pack"]["request_vertical"] == "office_ti"
+    assert "_evidence_pack" not in body
+    assert "claim_citations" not in body
     assert body["permit_type"] == "Commercial Building Permit"
     permit_text = " | ".join(p.get("permit_type", "") for p in body.get("permits_required", [])).lower()
     companion_text = " | ".join(c.get("permit_type", "") for c in body.get("companion_permits", [])).lower()
@@ -617,7 +618,8 @@ def test_permit_endpoint_bypasses_cache_when_local_pack_enabled(tmp_path, monkey
     assert status == 200
     assert calls and calls[0]["use_cache"] is False
     assert calls[0]["suppress_cache_write"] is True
-    assert body["_evidence_pack"]["cache_bypassed"] is True
+    assert "_evidence_pack" not in body
+    assert "claim_citations" not in body
     assert body["apply_url"] is None
 
 
@@ -647,10 +649,9 @@ def test_permit_endpoint_preserves_empty_evidence_pack_citations_when_pack_fails
 
     assert status == 200
     assert calls and calls[0]["use_cache"] is False
-    assert body["_evidence_pack"]["enabled"] is True
-    assert body["_evidence_pack"]["contract_status"] == "invalid_version"
-    assert body["_evidence_pack"]["matched_fields"] == []
-    assert body["claim_citations"] == []
+    assert "_evidence_pack" not in body
+    assert "claim_citations" not in body
+    assert body["apply_url"] is None
 
 
 def test_preview_only_permit_without_sample_header_stays_normal_no_cache_bypass(tmp_path, monkeypatch):
@@ -704,10 +705,8 @@ def test_preview_only_permit_sample_demo_header_allows_evidence_pack(tmp_path, m
     assert status == 200
     assert calls and calls[0]["use_cache"] is False
     assert calls[0]["suppress_cache_write"] is True
-    assert body["_evidence_pack"]["enabled"] is True
-    assert body["_evidence_pack"]["cache_bypassed"] is True
-    assert body["_evidence_pack"]["matched_fields"] == ["approval_timeline", "companion_reviews_triggers"]
-    assert "apply_url" in body["_evidence_pack"]["failed_closed_fields"]
+    assert "_evidence_pack" not in body
+    assert "claim_citations" not in body
     assert body["apply_url"] is None
 
 
@@ -780,9 +779,8 @@ def test_enabled_local_pack_endpoint_parity_for_permit_batch_and_v1(tmp_path, mo
         assert body["fee_range"] is None
         assert body["approval_timeline"].startswith("Denver building-permit review")
         assert body["companion_reviews_triggers"].startswith("Office TI may require")
-        assert [c["field"] for c in body["claim_citations"]] == ["companion_reviews_triggers", "approval_timeline"]
-        assert body["_evidence_pack"]["matched_fields"] == ["approval_timeline", "companion_reviews_triggers"]
-        assert "apply_url" in body["_evidence_pack"]["failed_closed_fields"]
+        assert "claim_citations" not in body
+        assert "_evidence_pack" not in body
         assert body["apply_path"]["support_level"] == "not available"
     assert all(call.get("use_cache") is False for call in calls)
     assert all(call.get("suppress_cache_write") is True for call in calls)
@@ -1228,9 +1226,10 @@ def test_permit_endpoint_whitelists_client_supplied_vertical(tmp_path, monkeypat
 
     assert status == batch_status == v1_status == 200
     for response in (body, batch_body["results"][0], v1_body):
-        assert response["_evidence_pack"]["request_vertical"] != "ahj_level"
-        assert response["_evidence_pack"]["request_vertical"] == "office_ti"
-        assert response["_evidence_pack"]["matched_fields"] == ["approval_timeline", "companion_reviews_triggers"]
+        assert "_evidence_pack" not in response
+        assert "claim_citations" not in response
+        assert response["approval_timeline"].startswith("Denver building-permit review")
+        assert response["companion_reviews_triggers"].startswith("Office TI may require")
 
 def test_step7c_apply_path_support_label_uses_apply_url_field_confidence(tmp_path, monkeypatch):
     pack_path = _write_pack(tmp_path / "pack.json")
@@ -1733,4 +1732,6 @@ def test_step7p_preview_indexing_guards_for_robots_sitemap_and_json(tmp_path, mo
     assert "<urlset" in sitemap_body
     assert "<url>" not in sitemap_body
     assert status == 200
-    assert body["results"][0]["_evidence_pack"]["cache_bypassed"] is True
+    assert "_evidence_pack" not in body["results"][0]
+    assert "claim_citations" not in body["results"][0]
+    assert body["results"][0]["apply_url"] is None

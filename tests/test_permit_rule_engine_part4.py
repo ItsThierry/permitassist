@@ -395,8 +395,16 @@ def test_part4_customer_not_required_source_floor_demotes_unbound_official_urls(
         assert stale_claim not in serialized
 
 
-def test_part4_customer_not_required_source_floor_preserves_claim_linked_official_decision() -> None:
+def test_part4_customer_not_required_source_floor_preserves_claim_linked_official_decision(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     from api import server
+    from api.research_engine import classify_source_authority as real_classify_source_authority
+
+    # Several legacy suites intentionally install a top-level research_engine
+    # stub. Pin this gate to the production authority classifier so the frozen
+    # contract is order-independent rather than accepting a test-only stub.
+    monkeypatch.setattr(server, "classify_source_authority", real_classify_source_authority)
 
     decision = "NOT_REQUIRED"
     required = False
@@ -590,7 +598,12 @@ def test_part4_share_storage_hash_seals_and_preserves_exact_projection(
     slug = server.create_share("residential reroof", "Buckeye", "AZ", wrapped)
     share = server.get_share(slug)
     assert share is not None
-    assert share["data"] == sealed
+    expected_embedded = {
+        key: value
+        for key, value in sealed.items()
+        if key not in _fixture()["report_embed_forbidden_fields"]
+    }
+    assert share["data"] == expected_embedded
     html = server.render_share_page(share)
     assert POISON_BINARY not in html
     assert POISON_MARKER not in html
@@ -598,11 +611,6 @@ def test_part4_share_storage_hash_seals_and_preserves_exact_projection(
     payload_node = soup.find("script", {"id": "report-data"})
     assert payload_node is not None
     payload = json.loads(payload_node.string or "{}")
-    expected_embedded = {
-        key: value
-        for key, value in sealed.items()
-        if key not in _fixture()["report_embed_forbidden_fields"]
-    }
     assert payload["share"]["data"] == expected_embedded
     assert not set(_fixture()["report_embed_forbidden_fields"]) & set(payload["share"]["data"])
 
