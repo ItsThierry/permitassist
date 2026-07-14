@@ -30,6 +30,7 @@ CONFIRMED_DEFECTS = {
 }
 
 FALSE_POSITIVE_A = {"R01", "R05", "R09", "R10", "R13", "R14", "R19", "R23", "R28", "R29", "R41"}
+UNBOUND_NOT_REQUIRED_NEGATIVES = {"R01", "R05", "R09", "R13", "R14", "R41", "C02"}
 NO_REGRESSION_GOLDENS = {
     "R02": {"building", "electrical", "plumbing", "mechanical"},  # ADU
     "R03": {"building", "electrical"},  # solar + battery
@@ -103,9 +104,18 @@ def test_live80_grader_false_positives_remain_clean_customer_boundary(case_id):
     families = _required_families(public)
     expected = set(case.get("expected_families") or [])
     if case.get("expected_decision") == "NOT_REQUIRED":
-        assert public.get("permit_decision") == "NOT_REQUIRED"
-        assert families == set()
-        assert public.get("permits_required") == []
+        if case_id in UNBOUND_NOT_REQUIRED_NEGATIVES:
+            # Generic official URLs are contact paths, not exact exemption
+            # evidence. R9 must fail these legacy binary negatives closed.
+            assert public.get("permit_decision") == "UNKNOWN"
+            assert public.get("permit_required") is None
+            assert public.get("permit_verdict") == "VERIFY"
+            assert not families
+            assert all(_row_status(row) == "VERIFY" for row in public.get("permits_required") or [])
+        else:
+            assert public.get("permit_decision") == "NOT_REQUIRED"
+            assert families == set()
+            assert public.get("permits_required") == []
     elif expected:
         assert public.get("permit_decision") == "REQUIRED"
         assert families, {"case": case_id, "permit_name": public.get("permit_name")}
@@ -118,8 +128,15 @@ def test_live80_no_regression_goldens_preserve_value(case_id, expected):
     public = _public(rec)
     families = _required_families(public)
     if not expected:
-        assert public.get("permit_decision") == "NOT_REQUIRED"
-        assert families == set()
+        if case_id in UNBOUND_NOT_REQUIRED_NEGATIVES:
+            assert public.get("permit_decision") == "UNKNOWN"
+            assert public.get("permit_required") is None
+            assert public.get("permit_verdict") == "VERIFY"
+            assert not families
+            assert all(_row_status(row) == "VERIFY" for row in public.get("permits_required") or [])
+        else:
+            assert public.get("permit_decision") == "NOT_REQUIRED"
+            assert families == set()
     else:
         assert expected.issubset(families), {"case": case_id, "families": sorted(families), "permit_name": public.get("permit_name")}
 

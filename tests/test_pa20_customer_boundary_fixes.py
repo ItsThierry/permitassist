@@ -148,19 +148,24 @@ def test_fee_renderer_suppresses_malformed_fee_strings_and_ev_label_is_precise()
     assert "panel upgrade" not in json.dumps(ev_public).lower()
 
 
-def test_small_detached_shed_keeps_no_permit_answer_with_zoning_verify_only():
+def test_small_detached_shed_unbound_negative_fails_closed_with_zoning_verify_only():
     public = _pa20_public("PA20-005")
-    assert public["permit_decision"] == "NOT_REQUIRED"
-    assert public.get("permits_required") == []
+    assert public["permit_decision"] == "UNKNOWN"
+    assert public.get("permit_required") is None
+    assert public.get("permit_verdict") == "VERIFY"
+    assert all((row.get("status") or row.get("decision")) == "VERIFY" for row in public.get("permits_required") or [])
     assert "zoning" not in public["customer_headline"].lower()
     assert "setback" in json.dumps(public.get("related_permits") or []).lower()
 
 
-def test_not_required_drywall_does_not_surface_negated_trade_or_structural_templates():
+def test_unbound_negative_drywall_fails_closed_without_negated_trade_or_structural_templates():
     public = _pa20_public("PA20-016")
     text = json.dumps(public).lower()
-    assert public["permit_decision"] == "NOT_REQUIRED"
-    assert public.get("permits_required") == []
+    assert public["permit_decision"] == "UNKNOWN"
+    assert public.get("permit_required") is None
+    assert public.get("permit_verdict") == "VERIFY"
+    assert all((row.get("status") or row.get("decision")) == "VERIFY" for row in public.get("permits_required") or [])
+    assert "no permit required" not in text
     assert "structural" not in text
     assert "electrical permit" not in text
     assert "plumbing permit" not in text
