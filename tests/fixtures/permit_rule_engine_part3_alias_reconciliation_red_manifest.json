@@ -1,0 +1,15 @@
+{
+  "manifest_version": "permitassist.rule-engine-part3-alias-reconciliation-red-manifest.v1",
+  "frozen_before_evidence_harness_edit": true,
+  "baseline_red_checkpoint": "118116a61a1f6aed9c5c55cbbbe0ea8aa403deb9",
+  "discovery_context": "The Wisconsin separator-alias repair correctly promotes ten customer projections while Part 3 migration seeds remain raw and auditable; the historical generator incorrectly treated those bounded positive reconciliations as generic seed-classification mismatches and reused a now-repaired false ambiguity as its ambiguity counterfactual.",
+  "files": {
+    "tests/test_permit_rule_engine_part3_alias_reconciliation.py": "11cb36577ad0d3993193638af55cb2bdef107c49d28e0467050ffc7a7cdf9379"
+  },
+  "invariants": [
+    "Exactly ten frozen Wisconsin alias-cell projections may reconcile from raw jurisdiction_hold seeds to source-backed exact customer projections.",
+    "Every other seed/projection transition remains forbidden.",
+    "A synthetic token-distinct jurisdiction pair must remain ambiguous and fail closed.",
+    "The raw immutable migration seeds and their classification contract are unchanged."
+  ]
+}
