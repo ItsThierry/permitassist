@@ -1,0 +1,10 @@
+{
+  "manifest_version": "permitassist.rule-engine-part2-route-scope-red-manifest.v1",
+  "frozen_before_route_scope_behavior_edit": true,
+  "baseline_commit": "3dc8a78512ab782378ab61b97b76c25f5a1faa02",
+  "discovery_context": "The initial jurisdiction-id canonicalization exposed source-backed Green Bay route provenance being erased because a quote explicitly covered both residential and commercial projects.",
+  "files": {
+    "tests/test_permit_rule_engine_part2_route_scope.py": "3c276afaf7c91bc62fb83485c6e3f1576e14a8f5d52b26b1fc630b68a46b3280"
+  },
+  "invariant": "Residential-only evidence remains fail-closed for commercial scope; mixed official evidence that explicitly covers commercial work is not misclassified as residential-only."
+}
