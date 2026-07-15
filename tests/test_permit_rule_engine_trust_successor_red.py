@@ -928,3 +928,197 @@ def test_private_proof_cannot_survive_json_round_trip(server):
         job_category="commercial",
     )
     _assert_fail_closed(public, require_w4=True)
+
+
+def test_outbound_webhook_uses_server_owned_egress_and_leaks_no_internal_state(
+    server, monkeypatch
+):
+    case = _core_case(monkeypatch)
+    delivered = server.threading.Event()
+    posts = []
+    job_type = "commercial tenant improvement"
+    city = "Matanuska-Susitna Borough"
+    state = "AK"
+    expected = server.build_customer_response_egress(
+        server._mark_server_owned_result(copy.deepcopy(case["wrapped"])),
+        job_type,
+        city,
+        state,
+    )
+    observed = []
+    real_egress = server.build_customer_response_egress
+
+    def traced_egress(value, *args, **kwargs):
+        observed.append(value)
+        return real_egress(value, *args, **kwargs)
+
+    monkeypatch.setattr(server, "build_customer_response_egress", traced_egress)
+
+    monkeypatch.setattr(
+        server,
+        "research_permit",
+        lambda *args, **kwargs: copy.deepcopy(case["wrapped"]),
+    )
+    monkeypatch.setattr(
+        server, "validate_webhook_callback_url", lambda value: str(value)
+    )
+
+    def fake_post(url, **kwargs):
+        posts.append((url, kwargs))
+        delivered.set()
+        return object()
+
+    monkeypatch.setattr(server.requests, "post", fake_post)
+    integration = {
+        "integration_key": "wh_test_only_successor_contract",
+        "name": "Contract webhook",
+        "callback_url": "https://customer.example.test/hook",
+        "field_mapping": {},
+    }
+    server.run_webhook_lookup_async(
+        integration,
+        {
+            "job_type": job_type,
+            "city": city,
+            "state": state,
+        },
+    )
+    assert delivered.wait(5), "webhook worker did not deliver"
+    body = json.loads(posts[0][1]["data"])
+    assert len(observed) == 1
+    assert observed[0].has_intact_server_owned_payload()
+    assert body["result"] == expected
+    _assert_recursive_no_leak(body)
+
+
+def test_city_watch_projects_each_server_owned_current_request(server, monkeypatch):
+    responses = [
+        {
+            "permit_decision": "REQUIRED",
+            "permit_required": True,
+            "permits_required": [
+                {"permit_type": "Old Permit", "required": True}
+            ],
+            "fee_range": "$100",
+            "apply_url": "https://city.example.test/old",
+            "debug_trace": "PRIVATE_OLD_TRACE",
+        },
+        {
+            "permit_decision": "REQUIRED",
+            "permit_required": True,
+            "permits_required": [
+                {"permit_type": "New Permit", "required": True}
+            ],
+            "fee_range": "$200",
+            "apply_url": "https://city.example.test/new",
+            "debug_trace": "PRIVATE_NEW_TRACE",
+        },
+    ]
+    observed = []
+    sent = []
+    real_egress = server.build_customer_response_egress
+
+    def traced_egress(value, *args, **kwargs):
+        observed.append(value)
+        return real_egress(value, *args, **kwargs)
+
+    monkeypatch.setattr(server, "build_customer_response_egress", traced_egress)
+    monkeypatch.setattr(
+        server, "research_permit", lambda *args, **kwargs: responses.pop(0)
+    )
+    monkeypatch.setattr(
+        server,
+        "resend_send",
+        lambda *args, **kwargs: sent.append((args, kwargs)) or True,
+    )
+    server.create_city_watch(
+        "watch@example.test", "Austin", "TX", "restaurant tenant improvement"
+    )
+    changed = server.check_city_changes(
+        "watch@example.test", "Austin", "TX", "restaurant tenant improvement"
+    )
+    assert len(observed) == 2
+    assert all(isinstance(value, server._ServerOwnedLegacyResult) for value in observed)
+    assert changed["digest"]["required_permits"] == ["New Permit"]
+    assert changed["digest"]["fee_range"] == "$200"
+    serialized = _canonical({"changed": changed, "sent": sent})
+    assert "PRIVATE_OLD_TRACE" not in serialized
+    assert "PRIVATE_NEW_TRACE" not in serialized
+    _assert_recursive_no_leak({"changed": changed, "sent": sent})
+
+
+def test_direct_renderers_default_deny_plain_result_dictionaries(server, monkeypatch):
+    raw = {
+        "permit_decision": "REQUIRED",
+        "permit_required": True,
+        "permit_verdict": "YES",
+        "customer_headline": "UNTRUSTED BINARY AUTHORITY",
+        "permits_required": [
+            {"permit_type": "Untrusted Building Permit", "required": True}
+        ],
+        "_permit_rule_engine_core": {"private": "PRIVATE_RENDERER_ENVELOPE"},
+    }
+    html = server.render_white_label_report_html(
+        {
+            "result": raw,
+            "job_type": "commercial tenant improvement",
+            "city": "Austin",
+            "state": "TX",
+        }
+    )
+    sent = []
+    monkeypatch.setattr(
+        server,
+        "resend_send",
+        lambda *args, **kwargs: sent.append((args, kwargs)) or True,
+    )
+    assert server.send_email_report(
+        "customer@example.test",
+        "commercial tenant improvement",
+        "Austin",
+        "TX",
+        raw,
+    )
+    serialized = _canonical({"html": html, "email": sent})
+    assert "UNTRUSTED BINARY AUTHORITY" not in serialized
+    assert "PRIVATE_RENDERER_ENVELOPE" not in serialized
+    assert "[YES]" not in serialized
+    assert ">YES<" not in serialized
+    _assert_recursive_no_leak({"html": html, "email": sent})
+
+
+def test_https_forwarded_scheme_forces_secure_cookie_even_with_loopback_host(server):
+    handle = "vp_" + "A" * 43
+    secure = server._projection_handoff_response_headers(
+        handle,
+        {"Host": "localhost:8080", "X-Forwarded-Proto": "https"},
+    )["Set-Cookie"]
+    assert "HttpOnly" in secure
+    assert "SameSite=Strict" in secure
+    assert "Secure" in secure
+
+    loopback_http = server._projection_handoff_response_headers(
+        handle,
+        {"Host": "127.0.0.1:8000"},
+    )["Set-Cookie"]
+    assert "Secure" not in loopback_http
+
+
+def test_hmac_tampered_snapshot_row_is_deleted_immediately(server):
+    customer = _w4_public("REQUIRED")
+    handle = _issue_snapshot(server, customer)
+    handle_sha256 = hashlib.sha256(handle.encode("utf-8")).hexdigest()
+    with sqlite3.connect(server.CACHE_DB) as conn:
+        conn.execute(
+            "UPDATE verified_projection_handoffs SET row_hmac_sha256=? "
+            "WHERE handle_sha256=?",
+            ["0" * 64, handle_sha256],
+        )
+    assert _consume_snapshot(server, handle, customer) is None
+    with sqlite3.connect(server.CACHE_DB) as conn:
+        remaining = conn.execute(
+            "SELECT COUNT(*) FROM verified_projection_handoffs "
+            "WHERE handle_sha256=?",
+            [handle_sha256],
+        ).fetchone()[0]
+    assert remaining == 0

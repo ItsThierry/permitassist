@@ -1171,6 +1171,7 @@ def build_customer_response_egress(
     *,
     job_category: str = "",
     explicit_vertical: str = "",
+    preserve_server_owned_shape: bool = False,
 ) -> dict:
     """Return exact trusted results; fail closed for every ordinary mapping."""
     if (
@@ -1182,6 +1183,10 @@ def build_customer_response_egress(
         isinstance(result, _ServerOwnedLegacyResult)
         and result.has_intact_server_owned_payload()
     ):
+        if preserve_server_owned_shape:
+            # Event/digest sinks can retain the exact current-request result
+            # shape while still passing through the recursive public projector.
+            return project_customer_response_egress(copy.deepcopy(result))
         return _build_trusted_customer_response_egress(
             result,
             job_type,
@@ -6749,7 +6754,7 @@ def finalize_permit_lookup_result(result: dict, job_type: str, city: str, state:
             and not _not_required_public_evidence_is_persisted(result, city, state)
         ),
     )
-    return result
+    return _mark_server_owned_result(result)
 
 
 def record_beta_event(event: str, payload: dict | None = None, email: str = "") -> None:
@@ -6786,24 +6791,54 @@ def save_beta_feedback(email: str, job_type: str, city: str, state: str, useful:
 
 
 def render_white_label_report_html(data: dict) -> str:
-    result = copy.deepcopy(data.get("result") or {}) if isinstance(data, dict) else {}
-    if isinstance(data, dict):
-        core_projection = _project_core_customer_boundary_once(
-            result,
-            job_type=str(data.get("job_type") or ""),
-            city=str(data.get("city") or ""),
-            state=str(data.get("state") or ""),
-            job_category=str(data.get("job_category") or ""),
-        )
-        if core_projection is not None:
-            result = core_projection
+    data = data if isinstance(data, dict) else {}
+    job_type = str(data.get("job_type") or "")
+    city = str(data.get("city") or "")
+    state = str(data.get("state") or "")
+    job_category = str(data.get("job_category") or "")
+    result = copy.deepcopy(data.get("result") or {})
+    direct_evidence_meta = (
+        copy.deepcopy(result.get("_evidence_pack"))
+        if isinstance(result, dict)
+        and isinstance(result.get("_evidence_pack"), dict)
+        else {}
+    )
+    core_projection = _project_core_customer_boundary_once(
+        result,
+        job_type=job_type,
+        city=city,
+        state=state,
+        job_category=job_category,
+    )
+    if core_projection is not None:
+        result = core_projection
+    result = build_customer_response_egress(
+        result,
+        job_type,
+        city,
+        state,
+        job_category=job_category,
+    )
     contractor = html.escape(str(data.get("contractor_name") or "Contractor"))
     client = html.escape(str(data.get("client_name") or "Client / Property"))
     job = html.escape(str(data.get("job_type") or result.get("job_summary") or "Permit research"))
     location = html.escape(", ".join(x for x in [str(data.get("city") or ""), str(data.get("state") or "")] if x))
     citations = result.get("claim_citations") or build_claim_citations(result, data.get("city"), data.get("state"))
     decision_contract = result.get("permit_decision_contract") if isinstance(result.get("permit_decision_contract"), dict) else {}
-    decision_headline = str(result.get("customer_headline") or decision_contract.get("customer_headline") or "Permit required: Building Permit.")
+    has_binary_authority = (
+        str(result.get("permit_decision") or "").upper()
+        in {"REQUIRED", "NOT_REQUIRED"}
+        and isinstance(result.get("permit_required"), bool)
+    )
+    decision_headline = str(
+        (
+            result.get("customer_headline")
+            or decision_contract.get("customer_headline")
+            or "Permit required: Building Permit."
+        )
+        if has_binary_authority
+        else "Verify the permit requirement with the issuing authority."
+    )
     decision_kind = str(result.get("permit_kind") or decision_contract.get("permit_kind") or "Other")
     customer_next_step = str(result.get("customer_next_step") or decision_contract.get("customer_next_step") or "Confirm requirements with the building department before filing.")
     apply_note = str(
@@ -6834,7 +6869,7 @@ def render_white_label_report_html(data: dict) -> str:
         for c in citations
     ) or "<li>No source footnotes attached in this report artifact.</li>"
     warnings_list = list(result.get("quality_warnings") or [])
-    evidence_meta = result.get("_evidence_pack") or {}
+    evidence_meta = result.get("_evidence_pack") or direct_evidence_meta or {}
     evidence_failed = [str(field) for field in (evidence_meta.get("failed_closed_fields") or []) if field]
     evidence_matched = [str(field) for field in (evidence_meta.get("matched_fields") or []) if field]
     if evidence_meta.get("enabled") and evidence_failed:
@@ -8209,8 +8244,17 @@ def _projection_handoff_response_headers(
     else:
         host = raw_host.split(":", 1)[0]
     is_loopback = host in {"localhost", "127.0.0.1", "::1"}
+    forwarded_proto = str(
+        (request_headers or {}).get("X-Forwarded-Proto", "") or ""
+    ).split(",", 1)[0].strip().lower()
+    forwarded = str((request_headers or {}).get("Forwarded", "") or "")
+    effective_https = forwarded_proto == "https" or bool(
+        re.search(r"(?:^|[;,]\s*)proto=https(?:[;,]|$)", forwarded, flags=re.I)
+    )
     cookie_flags = "Path=/; HttpOnly; SameSite=Strict"
-    if not is_loopback:
+    # Only explicit loopback plain HTTP may omit Secure. Forwarded HTTPS must
+    # retain Secure even when the reverse proxy presents a loopback Host.
+    if not is_loopback or effective_https:
         cookie_flags += "; Secure"
     return {
         VERIFIED_PROJECTION_HANDLE_HEADER: handle,
@@ -8382,6 +8426,14 @@ def consume_customer_snapshot_handoff(
         }
         expected_hmac = _customer_snapshot_row_hmac(row)
         if not hmac.compare_digest(row["row_hmac_sha256"], expected_hmac):
+            # Cryptographically invalid state is never a reusable snapshot.
+            # Delete only the exact corrupt row we authenticated in this
+            # transaction; identity/owner/DTO mismatches remain non-destructive.
+            conn.execute(
+                "DELETE FROM verified_projection_handoffs "
+                "WHERE handle_sha256=? AND row_hmac_sha256=?",
+                [handle_sha256, row["row_hmac_sha256"]],
+            )
             conn.commit()
             return None
         if parse_timestamp(row["expires_at"]) <= now:
@@ -9387,6 +9439,12 @@ def run_webhook_lookup_async(integration: dict, payload: dict):
             if not (job_type and city and state):
                 raise ValueError("Webhook requires job_type, city, and state")
             result = research_permit(job_type, city, state, zip_code)
+            result = build_customer_response_egress(
+                _mark_server_owned_result(result),
+                job_type,
+                city,
+                state,
+            )
             body = {
                 "ok": True,
                 "job_type": job_type,
@@ -9415,6 +9473,13 @@ def run_webhook_lookup_async(integration: dict, payload: dict):
 
 def send_email_report(to_email: str, job: str, city: str, state: str, data: dict) -> bool:
     """Send a beautiful HTML permit research report via Resend."""
+    data = build_customer_response_egress(
+        data if isinstance(data, dict) else {},
+        job,
+        city,
+        state,
+    )
+
     def esc(s):
         s = str(s or "")
         # Guard against double-escape: preserve already-escaped entities, then escape bare &
@@ -9837,7 +9902,15 @@ def create_city_watch(email: str, city: str, state: str, job_type: str) -> dict:
     normalized_city = city.strip()
     normalized_state = state.strip().upper()
     normalized_job = job_type.strip()
-    result = research_permit(normalized_job, normalized_city, normalized_state)
+    result = build_customer_response_egress(
+        _mark_server_owned_result(
+            research_permit(normalized_job, normalized_city, normalized_state)
+        ),
+        normalized_job,
+        normalized_city,
+        normalized_state,
+        preserve_server_owned_shape=True,
+    )
     initial_hash = _city_watch_payload_hash(result)
     conn = sqlite3.connect(CACHE_DB)
     conn.execute(
@@ -9895,7 +9968,15 @@ def check_city_changes(email: str, city: str, state: str, job_type: str) -> dict
         conn.close()
         return {"watched": False, "changed": False}
     watch_id, last_hash = row
-    result = research_permit(normalized_job, normalized_city, normalized_state)
+    result = build_customer_response_egress(
+        _mark_server_owned_result(
+            research_permit(normalized_job, normalized_city, normalized_state)
+        ),
+        normalized_job,
+        normalized_city,
+        normalized_state,
+        preserve_server_owned_shape=True,
+    )
     current_hash = _city_watch_payload_hash(result)
     changed = bool(last_hash and last_hash != current_hash)
     digest = {
@@ -11770,7 +11851,7 @@ class Handler(BaseHTTPRequestHandler):
                     job_category=str(data.get("job_category") or ""),
                 )
                 data = {**data, "result": safe_result}
-                html_doc = _redact_sensitive_text(render_white_label_report_html(redact_public_output(data)))
+                html_doc = _redact_sensitive_text(render_white_label_report_html(data))
                 self.send_response(200)
                 self.send_header("Content-Type", "text/html; charset=utf-8")
                 self.send_header("Cache-Control", "no-store")
