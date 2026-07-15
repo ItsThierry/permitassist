@@ -1,0 +1,18 @@
+{
+  "manifest_version": "permitassist.rule-engine-part2-wi-commercial-ti-route-red-manifest.v1",
+  "frozen_before_behavior_edits": true,
+  "baseline_commit": "54f46f343665b9b45fc1fb7b23b98e5714cb487f",
+  "baseline_tree": "bb009fbe0f3d2f8ae59811bdc44d8d6cb3621cac",
+  "files": {
+    "tests/fixtures/permit_rule_engine_part2_wi_commercial_ti_route_red.json": "3a798fa1b12d7a4dd42c6ac69ef9ea03f13d65379b13ac5c60c0d4ebdad60b9b",
+    "tests/test_permit_rule_engine_part2_wi_routes.py": "01e2419a8dbafed0360d8471a398a974e8fbd19fcfe3fde719f5cb292d4977b7"
+  },
+  "baseline_red_evidence": {
+    "run_a_blockers_sha256": "be3306c073d4b080c74b4369e18b0ac639f3fd2e29f6a205d28720131bdc578f",
+    "run_b_blockers_sha256": "be3306c073d4b080c74b4369e18b0ac639f3fd2e29f6a205d28720131bdc578f",
+    "generator_exit_code": 1,
+    "family_route_missing_violation_count": 10,
+    "all_other_blocker_categories": 0,
+    "run_a_run_b_byte_identical": true
+  }
+}

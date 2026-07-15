@@ -1,0 +1,163 @@
+{
+  "baseline_commit": "54f46f343665b9b45fc1fb7b23b98e5714cb487f",
+  "baseline_generator_blockers_sha256": "be3306c073d4b080c74b4369e18b0ac639f3fd2e29f6a205d28720131bdc578f",
+  "canonicalization_contract": {
+    "forbidden_shortcut": "No AHJ-name allowlist, no WI-only production branch, no cell-data mutation, no coverage/verdict demotion, no route omission.",
+    "rule": "Equivalent jurisdiction-id separator spellings (underscore/space versus hyphen) within the same exact AHJ/state boundary canonicalize to one lowercase hyphenated identifier; semantically distinct identifiers remain ambiguous."
+  },
+  "cases": [
+    {
+      "ahj": "Eau Claire",
+      "cell_key": "WI|eau_claire|commercial_tenant_improvement",
+      "expected_canonical_jurisdiction_id": "us-wi-eau-claire",
+      "expected_families": [
+        "building"
+      ],
+      "expected_source_cell_sha256": "ae11847f009c29f93b23f234f897a3ba41399558d073d4e79ba09bf3b2301d48",
+      "official_source_urls": [
+        "https://www.eauclairewi.gov/government/our-divisions/inspections/applications"
+      ],
+      "state": "WI"
+    },
+    {
+      "ahj": "Fond Du Lac",
+      "cell_key": "WI|fond_du_lac|commercial_tenant_improvement",
+      "expected_canonical_jurisdiction_id": "us-wi-fond-du-lac",
+      "expected_families": [
+        "building"
+      ],
+      "expected_source_cell_sha256": "7a68c162a0425efd0f6ed9c921dc337e77b485fefd6bed6853224aa16ec4ff67",
+      "official_source_urls": [
+        "https://www.fdl.wi.gov/inspection-services/permits-fees/"
+      ],
+      "state": "WI"
+    },
+    {
+      "ahj": "Green Bay",
+      "cell_key": "WI|green_bay|commercial_tenant_improvement",
+      "expected_canonical_jurisdiction_id": "us-wi-green-bay",
+      "expected_families": [
+        "building"
+      ],
+      "expected_source_cell_sha256": "9ea4635189179e464bc31f51d2db727b28575fe1fbff178dd2cb44fa3aff2247",
+      "official_source_urls": [
+        "https://www.greenbaywi.gov/315/Permitting-Process",
+        "https://www.greenbaywi.gov/321/Commercial-Permits"
+      ],
+      "state": "WI"
+    },
+    {
+      "ahj": "La Crosse",
+      "cell_key": "WI|la_crosse|commercial_tenant_improvement",
+      "expected_canonical_jurisdiction_id": "us-wi-la-crosse",
+      "expected_families": [
+        "building"
+      ],
+      "expected_source_cell_sha256": "609d9341554d5aacf419630e003e0f26cb0c68de68053fa90c0049a831f0f395",
+      "official_source_urls": [
+        "https://www.cityoflacrosse.org/City-Services/Permits-Licenses/Construction-Related-Permits"
+      ],
+      "state": "WI"
+    },
+    {
+      "ahj": "Eau Claire",
+      "cell_key": "WI|us_wi_eau_claire|commercial_tenant_improvement",
+      "expected_canonical_jurisdiction_id": "us-wi-eau-claire",
+      "expected_families": [
+        "building"
+      ],
+      "expected_source_cell_sha256": "8009a110897530dcae46d2cc51695e72a7b4eca4a0edfe6e205bffaed877c7ee",
+      "official_source_urls": [
+        "https://www.eauclairewi.gov/government/our-divisions/inspections/when-is-a-permit-required"
+      ],
+      "state": "WI"
+    },
+    {
+      "ahj": "Fond Du Lac",
+      "cell_key": "WI|us_wi_fond_du_lac|commercial_tenant_improvement",
+      "expected_canonical_jurisdiction_id": "us-wi-fond-du-lac",
+      "expected_families": [
+        "building"
+      ],
+      "expected_source_cell_sha256": "b0459ea86bdc7908c443e764e55e3fd45ee886fb283f5d3fa39b0e020a9b9a57",
+      "official_source_urls": [
+        "https://www.fdl.wi.gov/inspection-services/inspections/building-inspections/"
+      ],
+      "state": "WI"
+    },
+    {
+      "ahj": "Green Bay",
+      "cell_key": "WI|us_wi_green_bay|commercial_tenant_improvement",
+      "expected_canonical_jurisdiction_id": "us-wi-green-bay",
+      "expected_families": [
+        "building"
+      ],
+      "expected_source_cell_sha256": "7ab87fb823757167aa81161583d948c57ba12e297ad633b22c301a10c74e626d",
+      "official_source_urls": [
+        "https://www.greenbaywi.gov/312/Building-Permits-Inspections"
+      ],
+      "state": "WI"
+    },
+    {
+      "ahj": "La Crosse",
+      "cell_key": "WI|us_wi_la_crosse|commercial_tenant_improvement",
+      "expected_canonical_jurisdiction_id": "us-wi-la-crosse",
+      "expected_families": [
+        "building"
+      ],
+      "expected_source_cell_sha256": "069fb001442045725109f90419b2d0270bec3582f5403d30ff953249be102802",
+      "official_source_urls": [
+        "https://www.cityoflacrosse.org/City-Services/Permits-Licenses/Construction-Related-Permits"
+      ],
+      "state": "WI"
+    },
+    {
+      "ahj": "West Allis",
+      "cell_key": "WI|us_wi_west_allis|commercial_tenant_improvement",
+      "expected_canonical_jurisdiction_id": "us-wi-west-allis",
+      "expected_families": [
+        "building",
+        "electrical",
+        "occupancy",
+        "plumbing"
+      ],
+      "expected_source_cell_sha256": "7e8e6415f2097cdb319bde00b0a63b9e1a45934221a4cb8f7ada1130aae98382",
+      "official_source_urls": [
+        "https://www.westalliswi.gov/o/cwa/page/do-i-need-a-permit",
+        "https://www.westalliswi.gov/o/cwa/page/electrical-permits",
+        "https://www.westalliswi.gov/o/cwa/page/occupancy-permits",
+        "https://www.westalliswi.gov/o/cwa/page/plumbing-permits",
+        "https://www.westalliswi.gov/page/building-permits"
+      ],
+      "state": "WI"
+    },
+    {
+      "ahj": "West Allis",
+      "cell_key": "WI|west_allis|commercial_tenant_improvement",
+      "expected_canonical_jurisdiction_id": "us-wi-west-allis",
+      "expected_families": [
+        "building"
+      ],
+      "expected_source_cell_sha256": "23fdcfe129abfc83b0f1266313080ce04ab170d13b153c1031a273a457a99c0c",
+      "official_source_urls": [
+        "https://www.westalliswi.gov/page/building-permits"
+      ],
+      "state": "WI"
+    }
+  ],
+  "expected_blocker_rows": [
+    "WI|eau_claire|commercial_tenant_improvement|building",
+    "WI|fond_du_lac|commercial_tenant_improvement|building",
+    "WI|green_bay|commercial_tenant_improvement|building",
+    "WI|la_crosse|commercial_tenant_improvement|building",
+    "WI|us_wi_eau_claire|commercial_tenant_improvement|building",
+    "WI|us_wi_fond_du_lac|commercial_tenant_improvement|building",
+    "WI|us_wi_green_bay|commercial_tenant_improvement|building",
+    "WI|us_wi_la_crosse|commercial_tenant_improvement|building",
+    "WI|us_wi_west_allis|commercial_tenant_improvement|building,electrical,occupancy,plumbing",
+    "WI|west_allis|commercial_tenant_improvement|building"
+  ],
+  "fixture_kind": "immutable_v24_source_backed_contract",
+  "fixture_version": "permitassist.rule-engine-part2-wi-commercial-ti-route-red.v1",
+  "frozen_before_behavior_edits": true
+}
