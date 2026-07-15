@@ -204,7 +204,7 @@ def generate(output_dir: Path, source_commit: str) -> dict[str, Any]:
                 share_html = server.render_share_page(share)
                 report_payload = extract_report_payload(share_html)
                 embedded = report_payload["share"]["data"]
-                expected_embedded = {key: value for key, value in sealed.items() if key != "claim_citations"}
+                expected_embedded = server.project_customer_response_egress(sealed)
                 families = [str(row.get("family") or "") for row in sealed.get("family_decisions", [])]
                 checklist_families = [str(item.get("category") or "") for item in checklist.get("items", [])]
                 permit_labels = [str(row.get("permit_type") or "") for row in sealed.get("permits_required", [])]

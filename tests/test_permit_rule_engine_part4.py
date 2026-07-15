@@ -598,11 +598,7 @@ def test_part4_share_storage_hash_seals_and_preserves_exact_projection(
     slug = server.create_share("residential reroof", "Buckeye", "AZ", wrapped)
     share = server.get_share(slug)
     assert share is not None
-    expected_embedded = {
-        key: value
-        for key, value in sealed.items()
-        if key not in _fixture()["report_embed_forbidden_fields"]
-    }
+    expected_embedded = server.project_customer_response_egress(sealed)
     assert share["data"] == expected_embedded
     html = server.render_share_page(share)
     assert POISON_BINARY not in html

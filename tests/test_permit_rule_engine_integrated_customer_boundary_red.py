@@ -36,6 +36,23 @@ FORBIDDEN_PUBLIC_KEYS = {
     "debug",
     "retrieval_metadata",
     "evidence_metadata",
+    "decision_projection_sha256",
+    "projection_sha256",
+    "projection_digest",
+    "regulated_projection_sha256",
+    "payload_sha256",
+    "sealed_projection",
+    "verification_metadata",
+    "verified_projection",
+    "already_projected",
+    "trusted_state",
+    "is_verified",
+    "verified",
+    "snapshot_hash",
+    "projection_hash",
+    "packet_hash",
+    "citation_hash",
+    "request_fingerprint_sha256",
     "source_metadata",
     "decision_cell",
     "cell_id",
@@ -60,7 +77,9 @@ def _assert_public_boundary(payload: dict) -> None:
     leaked = [
         path
         for path, key in _walk_keys(payload)
-        if key.startswith("_") or key.lower() in FORBIDDEN_PUBLIC_KEYS
+        if key.startswith("_")
+        or key.lower() in FORBIDDEN_PUBLIC_KEYS
+        or key.lower().endswith(("_sha256", "_hash", "_digest", "_fingerprint"))
     ]
     assert leaked == []
 
@@ -192,7 +211,13 @@ def _projected_customer_payload() -> dict:
         "permit_decision_contract": {"decision": "REQUIRED"},
         "quality_warnings": ["internal"],
         "_projection_debug": {"provider": "internal"},
-        "nested": {"retrieval_metadata": {"query": "internal"}},
+        "nested": {
+            "retrieval_metadata": {"query": "internal"},
+            "snapshot_hash": "a" * 64,
+            "deeper": {"projection_digest": "b" * 64},
+        },
+        "packet_hash": "c" * 64,
+        "request_fingerprint_sha256": "d" * 64,
     }
 
 
@@ -509,17 +534,35 @@ def test_in_process_regulated_field_mutation_invalidates_verified_projection(
     assert public["decision_source"] == "permit_rule_engine_integrity_fail_closed"
 
 
-def test_repeat_and_private_cache_rehydration_are_byte_stable(
+def test_repeat_and_server_side_handoff_revalidation_are_byte_stable(
     tmp_path, monkeypatch
 ):
     server = _import_server(tmp_path, monkeypatch)
     case = _active_core_wrapped_result(monkeypatch)
-    _insert_cached_active_core_result(server, case)
-    external_plain_dict = server.json.loads(server.json.dumps(case["sealed"]))
+    customer_projection = server.build_customer_response_egress(
+        case["wrapped"],
+        case["job_type"],
+        case["city"],
+        case["state"],
+        job_category=case["job_category"],
+    )
+    redacted_customer = server.redact_public_output(customer_projection)
+    assert isinstance(redacted_customer, dict)
+    external_plain_dict = server.json.loads(server.json.dumps(redacted_customer))
+    handle = server.create_verified_projection_handoff(
+        case["wrapped"],
+        external_plain_dict,
+        case["job_type"],
+        case["city"],
+        case["state"],
+        job_category=case["job_category"],
+    )
+    assert handle.startswith("vp_")
     snapshots = []
 
     for _ in range(3):
-        verified = server._rehydrate_cached_verified_core_projection(
+        verified = server.consume_verified_projection_handoff(
+            handle,
             external_plain_dict,
             case["job_type"],
             case["city"],
@@ -554,13 +597,222 @@ def test_repeat_and_private_cache_rehydration_are_byte_stable(
             )
         )
 
+    with server.sqlite3.connect(server.CACHE_DB) as conn:
+        assert conn.execute("SELECT COUNT(*) FROM permit_cache").fetchone()[0] == 0
+        assert conn.execute(
+            "SELECT use_count FROM verified_projection_handoffs"
+        ).fetchone()[0] == 3
     assert len(set(snapshots)) == 1
-    assert server.json.loads(snapshots[0])["public"] == (
+    expected_wire_projection = server.redact_public_output(
         server.project_customer_response_egress(case["sealed"])
     )
+    assert server.json.loads(snapshots[0])["public"] == expected_wire_projection
 
 
-def test_http_share_and_checklist_rehydrate_cached_private_core_without_payload_marker(
+def test_handoff_rejects_tamper_expiry_substitution_owner_mismatch_and_stale_core(
+    tmp_path, monkeypatch
+):
+    server = _import_server(tmp_path, monkeypatch)
+    case = _active_core_wrapped_result(monkeypatch)
+    customer = server.build_customer_response_egress(
+        case["wrapped"],
+        case["job_type"],
+        case["city"],
+        case["state"],
+        job_category=case["job_category"],
+    )
+    redacted_customer = server.redact_public_output(customer)
+    assert isinstance(redacted_customer, dict)
+    customer = server.json.loads(server.json.dumps(redacted_customer))
+
+    def issue(*, owner_scope=""):
+        handle = server.create_verified_projection_handoff(
+            case["wrapped"],
+            customer,
+            case["job_type"],
+            case["city"],
+            case["state"],
+            job_category=case["job_category"],
+            owner_scope=owner_scope,
+        )
+        assert handle.startswith("vp_")
+        return handle
+
+    handle = issue()
+    tampered_customer = server.copy.deepcopy(customer)
+    tampered_customer["permit_name"] = "SUBSTITUTED CUSTOMER VALUE"
+    assert server.consume_verified_projection_handoff(
+        handle,
+        tampered_customer,
+        case["job_type"],
+        case["city"],
+        case["state"],
+    ) is None
+    assert server.consume_verified_projection_handoff(
+        handle,
+        customer,
+        case["job_type"],
+        "Phoenix",
+        case["state"],
+    ) is None
+    assert server.consume_verified_projection_handoff(
+        "vp_" + "A" * 43,
+        customer,
+        case["job_type"],
+        case["city"],
+        case["state"],
+    ) is None
+
+    owner_a = server._projection_owner_scope("owner-a@example.com")
+    owner_b = server._projection_owner_scope("owner-b@example.com")
+    owner_handle = issue(owner_scope=owner_a)
+    assert server.consume_verified_projection_handoff(
+        owner_handle,
+        customer,
+        case["job_type"],
+        case["city"],
+        case["state"],
+        owner_scope=owner_b,
+    ) is None
+    assert isinstance(
+        server.consume_verified_projection_handoff(
+            owner_handle,
+            customer,
+            case["job_type"],
+            case["city"],
+            case["state"],
+            owner_scope=owner_a,
+        ),
+        server._VerifiedCustomerProjection,
+    )
+
+    tampered_row_handle = issue()
+    tampered_row_sha = server.hashlib.sha256(
+        tampered_row_handle.encode("utf-8")
+    ).hexdigest()
+    with server.sqlite3.connect(server.CACHE_DB) as conn:
+        conn.execute(
+            "UPDATE verified_projection_handoffs SET private_envelope_json='{}' "
+            "WHERE handle_sha256=?",
+            [tampered_row_sha],
+        )
+    assert server.consume_verified_projection_handoff(
+        tampered_row_handle,
+        customer,
+        case["job_type"],
+        case["city"],
+        case["state"],
+    ) is None
+
+    def reseal_row(handle, **updates):
+        handle_sha = server.hashlib.sha256(handle.encode("utf-8")).hexdigest()
+        with server.sqlite3.connect(server.CACHE_DB) as conn:
+            raw = conn.execute(
+                """
+                SELECT private_envelope_json, customer_projection_json,
+                       request_identity_json, job_category, owner_scope, created_at,
+                       expires_at, max_uses
+                FROM verified_projection_handoffs WHERE handle_sha256=?
+                """,
+                [handle_sha],
+            ).fetchone()
+            row = {
+                "handle_sha256": handle_sha,
+                "private_envelope_json": raw[0],
+                "customer_projection_json": raw[1],
+                "request_identity_json": raw[2],
+                "job_category": raw[3],
+                "owner_scope": raw[4],
+                "created_at": raw[5],
+                "expires_at": raw[6],
+                "max_uses": raw[7],
+            }
+            row.update(updates)
+            row_hmac = server._projection_handoff_row_hmac(row)
+            conn.execute(
+                """
+                UPDATE verified_projection_handoffs
+                SET private_envelope_json=?, customer_projection_json=?,
+                    request_identity_json=?, job_category=?, owner_scope=?,
+                    created_at=?, expires_at=?, max_uses=?, row_hmac_sha256=?
+                WHERE handle_sha256=?
+                """,
+                [
+                    row["private_envelope_json"],
+                    row["customer_projection_json"],
+                    row["request_identity_json"],
+                    row["job_category"],
+                    row["owner_scope"],
+                    row["created_at"],
+                    row["expires_at"],
+                    row["max_uses"],
+                    row_hmac,
+                    handle_sha,
+                ],
+            )
+
+    corrupted_private_handle = issue()
+    corrupted_private = server.copy.deepcopy(case["wrapped"])
+    corrupted_private["_permit_rule_engine_core"]["sealed_projection"][
+        "payload_json"
+    ] = "{}"
+    reseal_row(
+        corrupted_private_handle,
+        private_envelope_json=server._canonical_projection_json(corrupted_private),
+    )
+    assert server.consume_verified_projection_handoff(
+        corrupted_private_handle,
+        customer,
+        case["job_type"],
+        case["city"],
+        case["state"],
+    ) is None
+
+    expired_handle = issue()
+    reseal_row(
+        expired_handle,
+        expires_at=(server.utc_now() - server.timedelta(seconds=1)).isoformat(),
+    )
+    assert server.consume_verified_projection_handoff(
+        expired_handle,
+        customer,
+        case["job_type"],
+        case["city"],
+        case["state"],
+    ) is None
+
+    bounded_handle = issue()
+    reseal_row(bounded_handle, max_uses=1)
+    assert isinstance(
+        server.consume_verified_projection_handoff(
+            bounded_handle,
+            customer,
+            case["job_type"],
+            case["city"],
+            case["state"],
+        ),
+        server._VerifiedCustomerProjection,
+    )
+    assert server.consume_verified_projection_handoff(
+        bounded_handle,
+        customer,
+        case["job_type"],
+        case["city"],
+        case["state"],
+    ) is None
+
+    stale_handle = issue()
+    monkeypatch.setenv("PERMITASSIST_RULE_ENGINE_CORE", "off")
+    assert server.consume_verified_projection_handoff(
+        stale_handle,
+        customer,
+        case["job_type"],
+        case["city"],
+        case["state"],
+    ) is None
+
+
+def test_http_share_and_checklist_without_handoff_fail_closed_even_with_cache_row(
     tmp_path, monkeypatch
 ):
     server = _import_server(tmp_path, monkeypatch)
@@ -594,16 +846,108 @@ def test_http_share_and_checklist_rehydrate_cached_private_core_without_payload_
 
     share = server.get_share(share_reply["slug"])
     assert share is not None
-    assert share["data"]["permit_decision"] == "REQUIRED"
-    assert share["data"]["permit_required"] is True
-    assert '\"permit_decision\":\"REQUIRED\"' in server.render_share_page(share)
+    assert share["data"]["permit_decision"] == "UNKNOWN"
+    assert share["data"]["permit_required"] is None
+    assert '\"permit_decision\":\"UNKNOWN\"' in server.render_share_page(share)
+    assert not any(item.get("required") is True for item in checklist["items"])
+    assert "decision_projection_sha256" not in json.dumps(checklist, sort_keys=True)
+
+
+def test_evidence_no_cache_api_share_report_and_checklist_keep_authoritative_projection(
+    tmp_path, monkeypatch
+):
+    """No-write evidence lookups require an opaque server-side continuity handoff."""
+    server = _import_server(tmp_path, monkeypatch)
+    case = _active_core_wrapped_result(monkeypatch)
+    _install_real_active_core_endpoint_stubs(server, monkeypatch, case)
+    request_row = {
+        "job_type": case["job_type"],
+        "job_category": case["job_category"],
+        "city": case["city"],
+        "state": case["state"],
+        "zip_code": "85326",
+    }
+
+    with _LiveServer(server.Handler) as live:
+        api_payload, api_headers = _post_json_with_response_headers(
+            live.base,
+            "/api/permit",
+            request_row,
+            {"X-Sample-Demo": "1"},
+        )
+        projection_handle = api_headers.get(
+            "X-PermitAssist-Projection-Handle", ""
+        )
+        continuity_headers = (
+            {"X-PermitAssist-Projection-Handle": projection_handle}
+            if projection_handle
+            else {}
+        )
+        share_reply = _post_json(
+            live.base,
+            "/api/share",
+            {**request_row, "result": api_payload},
+            continuity_headers,
+        )
+        checklist = _post_json(
+            live.base,
+            "/api/checklist",
+            {**request_row, "result": api_payload},
+            continuity_headers,
+        )
+        report_projection = server.consume_verified_projection_handoff(
+            projection_handle,
+            api_payload,
+            case["job_type"],
+            case["city"],
+            case["state"],
+        )
+        assert report_projection is not None
+
+    with server.sqlite3.connect(server.CACHE_DB) as conn:
+        assert conn.execute("SELECT COUNT(*) FROM permit_cache").fetchone()[0] == 0
+
+    share = server.get_share(share_reply["slug"])
+    assert share is not None
+    assert api_payload["permit_decision"] == "REQUIRED"
+    assert api_payload["permit_required"] is True
+    # Exact rejected SHA 2bde136 fails here: no cache row means the plain DTO is
+    # reprojected and the authoritative binary decision is demoted.
+    assert share["data"]["permit_decision"] == api_payload["permit_decision"]
+    assert share["data"]["permit_required"] is api_payload["permit_required"]
+    report_html = server.render_share_page(share)
+    assert '\"permit_decision\":\"REQUIRED\"' in report_html
+    white_label_html = server.render_white_label_report_html(
+        {**request_row, "result": report_projection}
+    )
+    assert "Permit decision" in white_label_html
+    assert str(report_projection["permit_kind"]) in white_label_html
+    assert projection_handle not in white_label_html
     building = next(
         item for item in checklist["items"] if item.get("category") == "building"
     )
     assert building["required"] is True
 
+    assert projection_handle.startswith("vp_")
+    cookie = api_headers.get("Set-Cookie", "")
+    assert f"pa_vph={projection_handle}" in cookie
+    assert "HttpOnly" in cookie and "SameSite=Strict" in cookie
+    assert "Secure" not in cookie
+    production_cookie = server._projection_handoff_response_headers(
+        projection_handle, {"Host": "permitassist.io"}
+    )["Set-Cookie"]
+    assert "HttpOnly" in production_cookie and "Secure" in production_cookie
+    assert projection_handle not in json.dumps(api_payload, sort_keys=True)
+    assert projection_handle not in report_html
+    assert "decision_projection_sha256" not in json.dumps(
+        {"api": api_payload, "share": share, "checklist": checklist},
+        sort_keys=True,
+    )
 
-def _post_json(base: str, path: str, payload: dict, headers: dict[str, str]) -> dict:
+
+def _post_json_with_response_headers(
+    base: str, path: str, payload: dict, headers: dict[str, str]
+) -> tuple[dict, dict[str, str]]:
     request = urllib.request.Request(
         f"{base}{path}",
         data=json.dumps(payload).encode("utf-8"),
@@ -612,7 +956,17 @@ def _post_json(base: str, path: str, payload: dict, headers: dict[str, str]) -> 
     )
     with urllib.request.urlopen(request, timeout=10) as response:
         assert response.status == 200
-        return json.loads(response.read().decode("utf-8"))
+        return (
+            json.loads(response.read().decode("utf-8")),
+            dict(response.headers.items()),
+        )
+
+
+def _post_json(base: str, path: str, payload: dict, headers: dict[str, str]) -> dict:
+    response_payload, _response_headers = _post_json_with_response_headers(
+        base, path, payload, headers
+    )
+    return response_payload
 
 
 @pytest.mark.parametrize(
@@ -645,13 +999,29 @@ def test_active_core_http_api_surfaces_preserve_one_authoritative_projection(
     request_payload = {"lookups": [request_row]} if batch else request_row
 
     with _LiveServer(server.Handler) as live:
-        payload = _post_json(live.base, path, request_payload, headers)
+        payload, response_headers = _post_json_with_response_headers(
+            live.base, path, request_payload, headers
+        )
 
     public = payload["results"][0] if batch else payload
+    if batch:
+        projection_handles = json.loads(
+            response_headers[server.VERIFIED_PROJECTION_HANDLES_HEADER]
+        )
+        assert len(projection_handles) == 1
+        projection_handle = projection_handles[0]
+    else:
+        projection_handle = response_headers[
+            server.VERIFIED_PROJECTION_HANDLE_HEADER
+        ]
+    assert projection_handle.startswith("vp_"), surface
+    assert projection_handle not in json.dumps(payload, sort_keys=True), surface
     leaked = [
         key_path
         for key_path, key in _walk_keys(public)
-        if key.startswith("_") or key.lower() in FORBIDDEN_PUBLIC_KEYS
+        if key.startswith("_")
+        or key.lower() in FORBIDDEN_PUBLIC_KEYS
+        or key.lower().endswith(("_sha256", "_hash", "_digest", "_fingerprint"))
     ]
     assert leaked == [], surface
     assert public["permit_decision"] == "REQUIRED", surface

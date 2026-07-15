@@ -320,4 +320,4 @@ def test_api_share_report_and_checklist_use_same_sealed_projection(monkeypatch: 
     assert "POISON LEGACY PERMIT" not in report_html
     assert "POISON LEGACY OFFICE" not in report_html
     assert "POISON LEGACY INSPECTION" not in json.dumps(checklist, sort_keys=True)
-    assert checklist["decision_projection_sha256"] == envelope.sealed_projection.payload_sha256
+    assert "decision_projection_sha256" not in checklist

@@ -141,6 +141,20 @@ PERMIT_LOOKUP_SEMAPHORE = threading.BoundedSemaphore(PERMIT_LOOKUP_CONCURRENCY_L
 EMAILS_CSV     = os.path.join(DATA_DIR, "captured_emails.csv")
 CACHE_DB       = os.path.join(DATA_DIR, "cache.db")
 SHARE_TTL_DAYS = 90  # shareable links expire after 90 days
+VERIFIED_PROJECTION_HANDLE_HEADER = "X-PermitAssist-Projection-Handle"
+VERIFIED_PROJECTION_HANDLES_HEADER = "X-PermitAssist-Projection-Handles"
+VERIFIED_PROJECTION_COOKIE = "pa_vph"
+try:
+    VERIFIED_PROJECTION_HANDOFF_TTL_SECONDS = max(
+        60,
+        min(
+            1800,
+            int(os.environ.get("PERMITASSIST_PROJECTION_HANDOFF_TTL_SECONDS", "900")),
+        ),
+    )
+except (TypeError, ValueError):
+    VERIFIED_PROJECTION_HANDOFF_TTL_SECONDS = 900
+VERIFIED_PROJECTION_HANDOFF_MAX_USES = 12
 
 
 def utc_now() -> datetime:
@@ -842,6 +856,18 @@ _CUSTOMER_EGRESS_FORBIDDEN_FIELD_NAMES = frozenset({
     "debug",
     "retrieval_metadata",
     "evidence_metadata",
+    "decision_projection_sha256",
+    "projection_sha256",
+    "projection_digest",
+    "regulated_projection_sha256",
+    "payload_sha256",
+    "sealed_projection",
+    "verification_metadata",
+    "verified_projection",
+    "already_projected",
+    "trusted_state",
+    "is_verified",
+    "verified",
 })
 
 
@@ -862,7 +888,11 @@ def project_customer_response_egress(value: dict) -> dict:
             for raw_key, child in item.items():
                 key = str(raw_key)
                 key_lc = key.lower()
-                if key_lc.startswith("_") or key_lc in _CUSTOMER_EGRESS_FORBIDDEN_FIELD_NAMES:
+                if (
+                    key_lc.startswith("_")
+                    or key_lc in _CUSTOMER_EGRESS_FORBIDDEN_FIELD_NAMES
+                    or key_lc.endswith(("_sha256", "_hash", "_digest", "_fingerprint"))
+                ):
                     continue
                 public[raw_key] = project(child)
             return public
@@ -6791,6 +6821,30 @@ def init_db():
         )
     """)
     conn.execute("""
+        CREATE TABLE IF NOT EXISTS verified_projection_handoffs (
+            handle_sha256            TEXT PRIMARY KEY,
+            private_envelope_json     TEXT NOT NULL,
+            customer_projection_json TEXT NOT NULL,
+            request_identity_json   TEXT NOT NULL,
+            job_category            TEXT NOT NULL DEFAULT '',
+            owner_scope             TEXT NOT NULL DEFAULT '',
+            created_at                TEXT NOT NULL,
+            expires_at                TEXT NOT NULL,
+            max_uses                  INTEGER NOT NULL,
+            use_count                 INTEGER NOT NULL DEFAULT 0,
+            row_hmac_sha256           TEXT NOT NULL
+        )
+    """)
+    conn.execute("""
+        CREATE INDEX IF NOT EXISTS idx_verified_projection_handoffs_expiry
+        ON verified_projection_handoffs(expires_at)
+    """)
+    ensure_table_columns(
+        conn,
+        "verified_projection_handoffs",
+        {"job_category": "TEXT NOT NULL DEFAULT ''"},
+    )
+    conn.execute("""
         CREATE TABLE IF NOT EXISTS shared_results (
             slug        TEXT PRIMARY KEY,
             job_type    TEXT,
@@ -7013,6 +7067,7 @@ def init_db():
         "saved_jurisdictions",
         "beta_events",
         "beta_feedback",
+        "verified_projection_handoffs",
     }
     missing_tables = sorted(expected_tables - preexisting_tables)
     if missing_tables:
@@ -7910,68 +7965,311 @@ def _unseal_shared_public_result(stored: object) -> dict | None:
     return payload if canonical == payload_json else None
 
 
-_CORE_REHYDRATION_MATCH_FIELDS = tuple(sorted(_SEALED_CORE_REGULATED_FIELDS))
+def _canonical_projection_request_identity(
+    job_type: str, city: str, state: str
+) -> str:
+    identity = {
+        "job_type": " ".join(str(job_type or "").strip().lower().split()),
+        "city": " ".join(str(city or "").strip().lower().split()),
+        "state": str(state or "").strip().upper(),
+    }
+    return json.dumps(identity, sort_keys=True, separators=(",", ":"))
 
 
-def _rehydrate_cached_verified_core_projection(
+def _canonical_projection_json(value: object) -> str:
+    return json.dumps(
+        value if isinstance(value, dict) else {},
+        sort_keys=True,
+        separators=(",", ":"),
+        ensure_ascii=False,
+    )
+
+
+def _projection_owner_scope(user_email: str | None) -> str:
+    email = str(user_email or "").strip().lower()
+    if not email:
+        return ""
+    return "user:" + hashlib.sha256(email.encode("utf-8")).hexdigest()
+
+
+def _projection_owner_scope_from_headers(headers) -> str:
+    session_token = str(headers.get("X-Session-Token", "") or "").strip()
+    if session_token:
+        user_email = validate_session_token(session_token)
+        if user_email:
+            return _projection_owner_scope(user_email)
+    auth_header = str(headers.get("Authorization", "") or "").strip()
+    if auth_header.startswith("Bearer "):
+        api_key = auth_header.split(" ", 1)[1].strip()
+        if api_key:
+            try:
+                with sqlite3.connect(CACHE_DB) as conn:
+                    row = conn.execute(
+                        "SELECT email FROM api_keys WHERE key=?", [api_key]
+                    ).fetchone()
+                if row and row[0]:
+                    return _projection_owner_scope(row[0])
+            except Exception as exc:
+                print(f"[core-projection] Owner-scope lookup unavailable: {exc}")
+    return ""
+
+
+def _projection_handoff_handle_from_headers(headers) -> str:
+    handle = str(headers.get(VERIFIED_PROJECTION_HANDLE_HEADER, "") or "").strip()
+    if not handle:
+        cookie_header = str(headers.get("Cookie", "") or "")
+        for item in cookie_header.split(";"):
+            name, separator, value = item.strip().partition("=")
+            if separator and name == VERIFIED_PROJECTION_COOKIE:
+                handle = value.strip()
+                break
+    if not re.fullmatch(r"vp_[A-Za-z0-9_-]{32,96}", handle):
+        return ""
+    return handle
+
+
+def _projection_handoff_response_headers(
+    handle: str, request_headers=None
+) -> dict[str, str]:
+    if not re.fullmatch(r"vp_[A-Za-z0-9_-]{32,96}", str(handle or "")):
+        return {}
+    host = str((request_headers or {}).get("Host", "") or "").split(":", 1)[0].lower()
+    is_loopback = host in {"localhost", "127.0.0.1", "::1"}
+    cookie_flags = "Path=/; HttpOnly; SameSite=Strict"
+    if not is_loopback:
+        cookie_flags += "; Secure"
+    return {
+        VERIFIED_PROJECTION_HANDLE_HEADER: handle,
+        "Set-Cookie": (
+            f"{VERIFIED_PROJECTION_COOKIE}={handle}; "
+            f"Max-Age={VERIFIED_PROJECTION_HANDOFF_TTL_SECONDS}; "
+            f"{cookie_flags}"
+        ),
+    }
+
+
+def _projection_handoff_row_hmac(row: dict) -> str:
+    sealed = {
+        "handle_sha256": str(row.get("handle_sha256") or ""),
+        "private_envelope_json": str(row.get("private_envelope_json") or ""),
+        "customer_projection_json": str(row.get("customer_projection_json") or ""),
+        "request_identity_json": str(row.get("request_identity_json") or ""),
+        "job_category": str(row.get("job_category") or ""),
+        "owner_scope": str(row.get("owner_scope") or ""),
+        "created_at": str(row.get("created_at") or ""),
+        "expires_at": str(row.get("expires_at") or ""),
+        "max_uses": int(row.get("max_uses") or 0),
+    }
+    canonical = json.dumps(sealed, sort_keys=True, separators=(",", ":"))
+    return hmac.new(
+        SESSION_SECRET.encode("utf-8"),
+        canonical.encode("utf-8"),
+        hashlib.sha256,
+    ).hexdigest()
+
+
+def create_verified_projection_handoff(
+    private_result: object,
+    customer_result: object,
+    job_type: str,
+    city: str,
+    state: str,
+    *,
+    job_category: str = "",
+    owner_scope: str = "",
+) -> str:
+    """Persist a short-lived private envelope behind an opaque bearer handle.
+
+    The public DTO is stored only so a later request can be checked for exact
+    transport fidelity. It is never treated as proof: every consume revalidates
+    the private sealed envelope and compares regulated fields before restoring
+    the in-process verified wrapper.
+    """
+    if not isinstance(private_result, dict) or not isinstance(
+        private_result.get("_permit_rule_engine_core"), dict
+    ):
+        return ""
+    verified = _project_core_customer_boundary_once(
+        private_result,
+        job_type=job_type,
+        city=city,
+        state=state,
+        job_category=job_category,
+    )
+    if (
+        not isinstance(verified, _VerifiedCustomerProjection)
+        or str(verified.get("decision_source") or "")
+        != "sealed_permit_rule_engine_envelope"
+    ):
+        return ""
+    redacted_customer = redact_public_output(
+        customer_result if isinstance(customer_result, dict) else {}
+    )
+    customer_public = project_customer_response_egress(
+        redacted_customer if isinstance(redacted_customer, dict) else {}
+    )
+    if any(
+        customer_public.get(field) != verified.get(field)
+        for field in _SEALED_CORE_REGULATED_FIELDS
+    ):
+        return ""
+    try:
+        private_json = _canonical_projection_json(private_result)
+        customer_json = _canonical_projection_json(customer_public)
+    except (TypeError, ValueError):
+        return ""
+
+    handle = "vp_" + secrets.token_urlsafe(32)
+    now = utc_now()
+    row = {
+        "handle_sha256": hashlib.sha256(handle.encode("utf-8")).hexdigest(),
+        "private_envelope_json": private_json,
+        "customer_projection_json": customer_json,
+        "request_identity_json": _canonical_projection_request_identity(
+            job_type, city, state
+        ),
+        "job_category": str(job_category or ""),
+        "owner_scope": str(owner_scope or ""),
+        "created_at": now.isoformat(),
+        "expires_at": (
+            now + timedelta(seconds=VERIFIED_PROJECTION_HANDOFF_TTL_SECONDS)
+        ).isoformat(),
+        "max_uses": VERIFIED_PROJECTION_HANDOFF_MAX_USES,
+    }
+    row["row_hmac_sha256"] = _projection_handoff_row_hmac(row)
+    try:
+        with sqlite3.connect(CACHE_DB) as conn:
+            conn.execute(
+                "DELETE FROM verified_projection_handoffs WHERE expires_at <= ?",
+                [now.isoformat()],
+            )
+            conn.execute(
+                """
+                INSERT INTO verified_projection_handoffs (
+                    handle_sha256, private_envelope_json,
+                    customer_projection_json, request_identity_json,
+                    job_category, owner_scope, created_at, expires_at, max_uses,
+                    use_count, row_hmac_sha256
+                ) VALUES (?,?,?,?,?,?,?,?,?,0,?)
+                """,
+                [
+                    row["handle_sha256"],
+                    row["private_envelope_json"],
+                    row["customer_projection_json"],
+                    row["request_identity_json"],
+                    row["job_category"],
+                    row["owner_scope"],
+                    row["created_at"],
+                    row["expires_at"],
+                    row["max_uses"],
+                    row["row_hmac_sha256"],
+                ],
+            )
+        return handle
+    except Exception as exc:
+        print(f"[core-projection] Handoff creation unavailable: {exc}")
+        return ""
+
+
+def consume_verified_projection_handoff(
+    handle: str,
     submitted_result: object,
     job_type: str,
     city: str,
     state: str,
+    *,
+    owner_scope: str = "",
 ) -> _VerifiedCustomerProjection | None:
-    """Recover verified private state for a serialized API DTO.
-
-    Share/checklist requests cross an HTTP boundary, so the in-process projection
-    type is intentionally lost. A plain customer dictionary is never trusted as
-    proof. Instead, locate the matching private cache row, validate its sealed
-    envelope through the strict core projector, and compare authoritative public
-    fields before restoring the internal wrapper type.
-    """
-    submitted = submitted_result if isinstance(submitted_result, dict) else {}
-    if not submitted or not all(
-        field in submitted for field in _CORE_REHYDRATION_MATCH_FIELDS
-    ):
+    """Revalidate a private envelope and consume one bounded handoff use."""
+    if not re.fullmatch(r"vp_[A-Za-z0-9_-]{32,96}", str(handle or "")):
         return None
+    handle_sha256 = hashlib.sha256(handle.encode("utf-8")).hexdigest()
     try:
         with sqlite3.connect(CACHE_DB) as conn:
-            rows = conn.execute(
+            raw = conn.execute(
                 """
-                SELECT result_json, COALESCE(job_category, '')
-                FROM permit_cache
-                WHERE lower(trim(job_type)) = lower(trim(?))
-                  AND lower(trim(city)) = lower(trim(?))
-                  AND upper(trim(state)) = upper(trim(?))
-                ORDER BY created_at DESC
-                LIMIT 12
+                SELECT private_envelope_json, customer_projection_json,
+                       request_identity_json, job_category, owner_scope, created_at,
+                       expires_at, max_uses, use_count, row_hmac_sha256
+                FROM verified_projection_handoffs
+                WHERE handle_sha256=?
                 """,
-                [job_type, city, state],
-            ).fetchall()
+                [handle_sha256],
+            ).fetchone()
+            if not raw:
+                return None
+            row = {
+                "handle_sha256": handle_sha256,
+                "private_envelope_json": raw[0],
+                "customer_projection_json": raw[1],
+                "request_identity_json": raw[2],
+                "job_category": raw[3] or "",
+                "owner_scope": raw[4] or "",
+                "created_at": raw[5],
+                "expires_at": raw[6],
+                "max_uses": int(raw[7] or 0),
+                "use_count": int(raw[8] or 0),
+                "row_hmac_sha256": str(raw[9] or ""),
+            }
+            expected_hmac = _projection_handoff_row_hmac(row)
+            if not hmac.compare_digest(row["row_hmac_sha256"], expected_hmac):
+                return None
+            if parse_timestamp(row["expires_at"]) <= utc_now():
+                conn.execute(
+                    "DELETE FROM verified_projection_handoffs WHERE handle_sha256=?",
+                    [handle_sha256],
+                )
+                return None
+            if row["use_count"] >= row["max_uses"]:
+                return None
+            if row["request_identity_json"] != _canonical_projection_request_identity(
+                job_type, city, state
+            ):
+                return None
+            if row["owner_scope"] and not hmac.compare_digest(
+                row["owner_scope"], str(owner_scope or "")
+            ):
+                return None
+            if not isinstance(submitted_result, dict):
+                return None
+            submitted_json = _canonical_projection_json(submitted_result)
+            if not hmac.compare_digest(
+                submitted_json, row["customer_projection_json"]
+            ):
+                return None
+            private_result = json.loads(row["private_envelope_json"])
+            customer_projection = json.loads(row["customer_projection_json"])
+            verified = _project_core_customer_boundary_once(
+                private_result,
+                job_type=job_type,
+                city=city,
+                state=state,
+                job_category=row["job_category"],
+            )
+            if (
+                not isinstance(verified, _VerifiedCustomerProjection)
+                or str(verified.get("decision_source") or "")
+                != "sealed_permit_rule_engine_envelope"
+                or any(
+                    customer_projection.get(field) != verified.get(field)
+                    for field in _SEALED_CORE_REGULATED_FIELDS
+                )
+            ):
+                return None
+            updated = conn.execute(
+                """
+                UPDATE verified_projection_handoffs
+                SET use_count=use_count+1
+                WHERE handle_sha256=? AND use_count=? AND use_count < max_uses
+                """,
+                [handle_sha256, row["use_count"]],
+            )
+            if updated.rowcount != 1:
+                return None
+        return _VerifiedCustomerProjection(customer_projection)
     except Exception as exc:
-        print(f"[core-projection] Cached rehydration unavailable: {exc}")
+        print(f"[core-projection] Handoff validation unavailable: {exc}")
         return None
-
-    for raw_json, job_category in rows:
-        try:
-            candidate = json.loads(raw_json)
-        except (TypeError, ValueError):
-            continue
-        verified = _project_core_customer_boundary_once(
-            candidate,
-            job_type=job_type,
-            city=city,
-            state=state,
-            job_category=str(job_category or ""),
-        )
-        if not isinstance(verified, _VerifiedCustomerProjection):
-            continue
-        if str(verified.get("decision_source") or "") != "sealed_permit_rule_engine_envelope":
-            continue
-        if all(
-            submitted.get(field) == verified.get(field)
-            for field in _CORE_REHYDRATION_MATCH_FIELDS
-        ):
-            return verified
-    return None
 
 
 def create_share(job_type: str, city: str, state: str, result: dict) -> str:
@@ -8294,8 +8592,6 @@ def get_or_create_checklist(result: dict, job_type: str = "", city: str = "", st
         # A core-active checklist is a deterministic renderer of the same one
         # customer projection. Integrity-fail-closed projections retain all
         # applicable family lanes and never invoke an AI/legacy mutator.
-        core = result.get("_permit_rule_engine_core") if isinstance(result, dict) else {}
-        sealed = core.get("sealed_projection") if isinstance(core, dict) else {}
         raw_family_rows = core_projection.get("family_decisions")
         family_rows: list[dict] = raw_family_rows if isinstance(raw_family_rows, list) else []
         items = [
@@ -8312,7 +8608,6 @@ def get_or_create_checklist(result: dict, job_type: str = "", city: str = "", st
             "summary": str(core_projection.get("coverage_reason") or "Source-backed permit decision checklist"),
             "items": items[:12],
             "cached": False,
-            "decision_projection_sha256": str(sealed.get("payload_sha256") or "") if isinstance(sealed, dict) else "",
         }
     # Checklist generation can enrich/mutate its input; keep the CustomerView DTO
     # boundary immutable so public lookup/share/report/checklist surfaces stay identical.
@@ -9779,7 +10074,11 @@ class Handler(BaseHTTPRequestHandler):
             self.send_header("Content-Type", "application/json")
             self.send_header("Content-Length", str(len(body)))
             self.send_header("Access-Control-Allow-Origin", "*")
-            self.send_header("Access-Control-Expose-Headers", "X-Free-Lookups-Used, X-Free-Lookups-Remaining")
+            self.send_header(
+                "Access-Control-Expose-Headers",
+                "X-Free-Lookups-Used, X-Free-Lookups-Remaining, "
+                f"{VERIFIED_PROJECTION_HANDLE_HEADER}, {VERIFIED_PROJECTION_HANDLES_HEADER}",
+            )
             if _evidence_pack_indexing_guard_enabled():
                 self.send_header("X-Robots-Tag", "noindex, nofollow")
                 self.send_header("Cache-Control", "no-store")
@@ -9866,7 +10165,12 @@ class Handler(BaseHTTPRequestHandler):
         self.send_response(200)
         self.send_header("Access-Control-Allow-Origin", "*")
         self.send_header("Access-Control-Allow-Methods", "GET, POST, PATCH, DELETE, OPTIONS")
-        self.send_header("Access-Control-Allow-Headers", "Content-Type, X-Session-Token, Authorization, X-Admin-Token, X-PermitIQ-Benchmark-Secret, X-PermitIQ-Engine, X-PermitAssist-Cache-Mode")
+        self.send_header(
+            "Access-Control-Allow-Headers",
+            "Content-Type, X-Session-Token, Authorization, X-Admin-Token, "
+            "X-PermitIQ-Benchmark-Secret, X-PermitIQ-Engine, "
+            f"X-PermitAssist-Cache-Mode, {VERIFIED_PROJECTION_HANDLE_HEADER}",
+        )
         self.end_headers()
 
     def do_PATCH(self):
@@ -10944,6 +11248,7 @@ class Handler(BaseHTTPRequestHandler):
                         suppress_cache_write=evidence_allowed or qa_cache_mode == "bypass",
                         bypass_lookup_caches=bool(qa_cache_mode),
                     )
+                    private_handoff_result = copy.deepcopy(result)
                     is_cached = result.get("_cached", False)
 
                     if not unlimited and not is_sample_demo:
@@ -11001,6 +11306,21 @@ class Handler(BaseHTTPRequestHandler):
                         job_category=job_category,
                         explicit_vertical=explicit_vertical,
                     )
+                    projection_handle = create_verified_projection_handoff(
+                        private_handoff_result,
+                        customer_result,
+                        job_type,
+                        city,
+                        state,
+                        job_category=job_category,
+                        owner_scope=_projection_owner_scope(user_email),
+                    )
+                    response_headers = {
+                        **response_headers,
+                        **_projection_handoff_response_headers(
+                            projection_handle, self.headers
+                        ),
+                    }
 
                     self.send_json(200, customer_result, extra_headers=response_headers)
                 finally:
@@ -11026,6 +11346,7 @@ class Handler(BaseHTTPRequestHandler):
                     self.send_json(400, {"error": "Max 20 lookups per batch"})
                     return
                 from concurrent.futures import ThreadPoolExecutor, as_completed
+                batch_owner_scope = _projection_owner_scope_from_headers(self.headers)
 
                 def run_lookup(item):
                     job_type = item.get("job_type", "")
@@ -11038,6 +11359,7 @@ class Handler(BaseHTTPRequestHandler):
                     try:
                         evidence_allowed = evidence_pack_allowed_for_request("/api/batch-permit", self.headers)
                         result = research_permit(job_type, city, state, zip_code, job_category=job_category, job_value=job_value, use_cache=not evidence_allowed, suppress_cache_write=evidence_allowed)
+                        private_handoff_result = copy.deepcopy(result)
                         if evidence_allowed:
                             result = finalize_permit_lookup_result(result, job_type, city, state, is_cached=result.get("_cached", False), explicit_vertical=explicit_vertical, evidence_allowed=evidence_allowed, job_category=job_category)
 # Contract sentinel for legacy stability test and batch customer ViewModel boundary:
@@ -11051,20 +11373,37 @@ class Handler(BaseHTTPRequestHandler):
                             explicit_vertical=explicit_vertical,
                         )
                         response.update({"job_type": job_type, "city": city, "state": state, "error": None})
-                        return response
+                        projection_handle = create_verified_projection_handoff(
+                            private_handoff_result,
+                            response,
+                            job_type,
+                            city,
+                            state,
+                            job_category=job_category,
+                            owner_scope=batch_owner_scope,
+                        )
+                        return response, projection_handle
                     except Exception as e:
-                        return {"job_type": job_type, "city": city, "state": state, "error": str(e)}
+                        return ({"job_type": job_type, "city": city, "state": state, "error": str(e)}, "")
 
                 results = [None] * len(lookups)
+                projection_handles = [""] * len(lookups)
                 with ThreadPoolExecutor(max_workers=5) as executor:
                     futures = {executor.submit(run_lookup, item): (idx, item) for idx, item in enumerate(lookups)}
                     for future in as_completed(futures, timeout=120):
                         idx, item = futures[future]
                         try:
-                            results[idx] = future.result(timeout=30)
+                            result_row, projection_handle = future.result(timeout=30)
+                            results[idx] = result_row
+                            projection_handles[idx] = projection_handle
                         except Exception as e:
                             results[idx] = {"job_type": item.get("job_type"), "city": item.get("city"), "state": item.get("state"), "error": str(e)}
                 results = [r if isinstance(r, dict) else {"error": "lookup did not complete"} for r in results]
+                batch_headers = {}
+                if any(projection_handles):
+                    batch_headers[VERIFIED_PROJECTION_HANDLES_HEADER] = json.dumps(
+                        projection_handles, separators=(",", ":")
+                    )
                 self.send_json(200, {
                     "results": results,
                     "total": len(results),
@@ -11073,7 +11412,7 @@ class Handler(BaseHTTPRequestHandler):
                         "no_permit": sum(1 for r in results if r.get("permit_verdict") == "NO"),
                         "resolved_review": sum(1 for r in results if r.get("permit_verdict") not in {"YES", "NO"}),
                     }
-                })
+                }, extra_headers=batch_headers)
             except Exception as e:
                 self.send_json(500, {"error": str(e)})
 
@@ -11126,6 +11465,17 @@ class Handler(BaseHTTPRequestHandler):
                 if not user_email:
                     self.send_json(401, {"error": "login_required"})
                     return
+                result = data.get("result") if isinstance(data.get("result"), dict) else {}
+                verified_result = consume_verified_projection_handoff(
+                    _projection_handoff_handle_from_headers(self.headers),
+                    result,
+                    str(data.get("job_type") or ""),
+                    str(data.get("city") or ""),
+                    str(data.get("state") or ""),
+                    owner_scope=_projection_owner_scope(user_email),
+                )
+                if verified_result is not None:
+                    data = {**data, "result": verified_result}
                 html_doc = _redact_sensitive_text(render_white_label_report_html(redact_public_output(data)))
                 self.send_response(200)
                 self.send_header("Content-Type", "text/html; charset=utf-8")
@@ -11251,8 +11601,14 @@ class Handler(BaseHTTPRequestHandler):
                 if not job_type or not city or not state or not result:
                     self.send_json(400, {"error": "job_type, city, state, result required"})
                     return
-                verified_result = _rehydrate_cached_verified_core_projection(
-                    result, job_type, city, state
+                projection_handle = _projection_handoff_handle_from_headers(self.headers)
+                verified_result = consume_verified_projection_handoff(
+                    projection_handle,
+                    result,
+                    job_type,
+                    city,
+                    state,
+                    owner_scope=_projection_owner_scope_from_headers(self.headers),
                 )
                 slug = create_share(
                     job_type,
@@ -11278,8 +11634,14 @@ class Handler(BaseHTTPRequestHandler):
                 if not result:
                     self.send_json(400, {"error": "result is required"})
                     return
-                verified_result = _rehydrate_cached_verified_core_projection(
-                    result, job_type, city, state
+                projection_handle = _projection_handoff_handle_from_headers(self.headers)
+                verified_result = consume_verified_projection_handoff(
+                    projection_handle,
+                    result,
+                    job_type,
+                    city,
+                    state,
+                    owner_scope=_projection_owner_scope_from_headers(self.headers),
                 )
                 core_result = verified_result or _project_core_customer_boundary_once(
                     result,
@@ -11407,6 +11769,7 @@ class Handler(BaseHTTPRequestHandler):
                     suppress_cache_write=evidence_allowed or qa_cache_mode == "bypass",
                     bypass_lookup_caches=bool(qa_cache_mode),
                 )
+                private_handoff_result = copy.deepcopy(result)
                 original_apply_url = result.get("apply_url") if isinstance(result, dict) else None
                 is_cached = result.get("_cached", False) if isinstance(result, dict) else False
                 result = finalize_permit_lookup_result(
@@ -11435,7 +11798,22 @@ class Handler(BaseHTTPRequestHandler):
                     and original_apply_url in ("", None)
                 ):
                     api_result["apply_url"] = original_apply_url or ""
-                self.send_json(200, api_result)
+                projection_handle = create_verified_projection_handoff(
+                    private_handoff_result,
+                    api_result,
+                    job_type,
+                    city,
+                    state,
+                    job_category=job_category,
+                    owner_scope=_projection_owner_scope(user_email),
+                )
+                self.send_json(
+                    200,
+                    api_result,
+                    extra_headers=_projection_handoff_response_headers(
+                        projection_handle, self.headers
+                    ),
+                )
             except Exception as e:
                 print(f"[api-v1-permit] Error: {e}")
                 self.send_json(500, {"error": str(e)})
@@ -11451,6 +11829,16 @@ class Handler(BaseHTTPRequestHandler):
                 if not email or "@" not in email:
                     self.send_json(400, {"error": "Valid email required"})
                     return
+                verified_result = consume_verified_projection_handoff(
+                    _projection_handoff_handle_from_headers(self.headers),
+                    rdata,
+                    job,
+                    city,
+                    state,
+                    owner_scope=_projection_owner_scope_from_headers(self.headers),
+                )
+                if verified_result is not None:
+                    rdata = verified_result
                 save_email_capture(email, "email-report")
                 # Run SMTP in thread with 10s timeout to prevent handler hang
                 import concurrent.futures

@@ -1,10 +1,10 @@
 {
   "schema_version": "permitassist.rule-engine-part4-integrated-customer-boundary-contract-manifest.v2",
   "frozen_before_behavior_change": false,
-  "contract_correction": "Public share storage and report embedding both apply the universal default-deny customer egress projection; sealed Decision Cell content remains authoritative internally while claim_citations and private diagnostics are excluded from customer surfaces.",
+  "contract_correction": "Public share storage and report embedding both apply the universal default-deny customer egress projection; sealed Decision Cell content remains authoritative internally while claim_citations, proof hashes/digests, and private diagnostics are excluded from customer surfaces.",
   "base_checkpoint_sha": "594ab25125e1b6f6c0598d08c316d78ebecaea24",
   "sha256": {
-    "tests/test_permit_rule_engine_part4.py": "2a0611ff4ef4cebd517ad96910b44a7e8601daa99c006e7d72e92ba29b760c71",
+    "tests/test_permit_rule_engine_part4.py": "e05b0397b93bf24a26e1b3fca019b9b52ea53eec7de311f7fa52c55984c8987e",
     "tests/fixtures/permit_rule_engine_part4_contract.json": "428abb68e1eba8657544b8bb46271da10eff681cfd6bcf8a0949a817145799e3"
   }
 }
