@@ -395,6 +395,20 @@ def _normalize_text(value: Any) -> str:
     return re.sub(r"\s+", " ", str(value or "")).strip()
 
 
+def _canonical_jurisdiction_id(value: Any) -> str:
+    """Normalize only separator spelling in a stable jurisdiction identifier.
+
+    Jurisdiction ids are opaque apart from the repository's established
+    lowercase separator convention.  Folding runs of whitespace, underscores,
+    and hyphens prevents source-index aliases such as ``us-wi-eau_claire`` and
+    ``us-wi-eau-claire`` from creating a false ambiguous-AHJ boundary, while
+    preserving token distinctions such as ``springfield`` versus
+    ``spring-field`` and every other punctuation character.
+    """
+
+    return re.sub(r"[\s_-]+", "-", _normalize_text(value).lower()).strip("-")
+
+
 def _mapping(value: Any) -> dict[str, Any]:
     return dict(value) if isinstance(value, Mapping) else {}
 
@@ -1500,14 +1514,14 @@ def get_rule_engine_core_mode() -> str:
 
 def _core_allowlist() -> frozenset[str]:
     return frozenset(
-        item.strip().lower()
+        _canonical_jurisdiction_id(item)
         for item in str(os.environ.get(CORE_ALLOWLIST_SETTING, "") or "").split(",")
-        if item.strip()
+        if _canonical_jurisdiction_id(item)
     )
 
 
 def core_activation_allowed(jurisdiction_id: str) -> bool:
-    normalized = _normalize_text(jurisdiction_id).lower()
+    normalized = _canonical_jurisdiction_id(jurisdiction_id)
     return bool(
         normalized
         and get_rule_engine_core_mode() == "active"
@@ -1520,6 +1534,7 @@ def resolve_jurisdiction_identity(
     state: str,
     *,
     index: Mapping[str, Mapping[str, Any]] | None = None,
+    canonicalize_id_aliases: bool = True,
 ) -> JurisdictionIdentityResolution:
     state_key = _normalize_text(state).upper()
     city_key = _slug(city)
@@ -1538,7 +1553,12 @@ def resolve_jurisdiction_identity(
             continue
         if _normalize_text(cell.get("state")).upper() != state_key or _slug(cell.get("ahj")) != city_key:
             continue
-        jurisdiction_id = _normalize_text(cell.get("jurisdiction_id")).lower()
+        raw_jurisdiction_id = _normalize_text(cell.get("jurisdiction_id")).lower()
+        jurisdiction_id = (
+            _canonical_jurisdiction_id(raw_jurisdiction_id)
+            if canonicalize_id_aliases
+            else raw_jurisdiction_id
+        )
         if not jurisdiction_id:
             continue
         row = grouped.setdefault(
@@ -1817,14 +1837,24 @@ def _route_matches_family(route: ApplicationRoute, family: str, authority: Autho
 
 
 def _route_scope_mismatch(route: ApplicationRoute, project_family: str) -> bool:
-    """Fail closed when route provenance is visibly bound to another scope."""
+    """Fail closed only when route provenance is visibly residential-only."""
 
     if not project_family.startswith("commercial"):
         return False
     provenance_text = " ".join(
         f"{record.source_url} {record.source_quote}" for record in route.provenance
     ).lower()
-    return bool(re.search(r"(?:/|\b)residential(?:/|\b)", provenance_text))
+    residential_scope = bool(
+        re.search(r"(?:/|\b)residential(?:/|\b)", provenance_text)
+    )
+    commercial_scope = bool(
+        re.search(
+            r"(?:/|\b)(?:commercial|non[-\s]?residential|business)(?:/|\b)"
+            r"|\btenant (?:improvement|build[- ]?out)",
+            provenance_text,
+        )
+    )
+    return residential_scope and not commercial_scope
 
 
 def build_family_authority_routes(cell: Mapping[str, Any]) -> tuple[FamilyAuthorityRoute, ...]:
@@ -2128,9 +2158,9 @@ def _identity_from_resolution(resolution: V24Resolution, city: str, state: str) 
     if indexed_identity.status is JurisdictionResolutionStatus.AMBIGUOUS:
         return indexed_identity
     cell = resolution.cell if isinstance(resolution.cell, Mapping) else None
-    if cell and _normalize_text(cell.get("jurisdiction_id")):
+    if cell and _canonical_jurisdiction_id(cell.get("jurisdiction_id")):
         candidate = JurisdictionCandidate(
-            jurisdiction_id=_normalize_text(cell.get("jurisdiction_id")).lower(),
+            jurisdiction_id=_canonical_jurisdiction_id(cell.get("jurisdiction_id")),
             ahj_name=_normalize_text(cell.get("ahj")) or _normalize_text(city),
             state=_normalize_text(cell.get("state") or state).upper(),
             county=_normalize_text(cell.get("county")) or None,
@@ -2224,7 +2254,8 @@ def build_core_decision_envelope(
         query_guard["enabled"]
         and query_guard["valid"]
         and isinstance(official_query_evidence, OfficialQueryEvidence)
-        and official_query_evidence.jurisdiction_id.strip().lower() == selected_jurisdiction_id
+        and _canonical_jurisdiction_id(official_query_evidence.jurisdiction_id)
+        == _canonical_jurisdiction_id(selected_jurisdiction_id)
         and query_decision.verdict in {FamilyVerdict.REQUIRED, FamilyVerdict.NOT_REQUIRED}
         and identity.status is JurisdictionResolutionStatus.EXACT
         and work.valid
@@ -3152,6 +3183,7 @@ def promote_factory_seed(candidate: MigratedSeed, *, source_cell: Mapping[str, A
     identity = resolve_jurisdiction_identity(
         _normalize_text(source_cell.get("ahj")),
         _normalize_text(source_cell.get("state")),
+        canonicalize_id_aliases=False,
     )
     if identity.status is not JurisdictionResolutionStatus.EXACT:
         return candidate

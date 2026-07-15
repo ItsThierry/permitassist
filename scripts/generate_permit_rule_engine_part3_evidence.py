@@ -92,6 +92,30 @@ def ambiguous_identity_names(index: Mapping[str, Any]) -> set[tuple[str, str]]:
     return {pair for pair, values in ids.items() if len(values) > 1}
 
 
+def canonical_alias_reconciliation_names(
+    index: Mapping[str, Any],
+) -> set[tuple[str, str]]:
+    """Return raw-ambiguous AHJ names whose IDs differ only by separators."""
+    raw_ids: dict[tuple[str, str], set[str]] = {}
+    canonical_ids: dict[tuple[str, str], set[str]] = {}
+    for cell in index.values():
+        pair = (
+            str(cell.get("state", "")).upper(),
+            str(cell.get("ahj", "")).casefold(),
+        )
+        raw_id = str(cell.get("jurisdiction_id", "")).strip().lower()
+        canonical_id = pre._canonical_jurisdiction_id(raw_id)
+        if raw_id:
+            raw_ids.setdefault(pair, set()).add(raw_id)
+        if canonical_id:
+            canonical_ids.setdefault(pair, set()).add(canonical_id)
+    return {
+        pair
+        for pair, values in raw_ids.items()
+        if len(values) > 1 and len(canonical_ids.get(pair, set())) == 1
+    }
+
+
 def generate(repo_root: Path, output_dir: Path, source_commit: str) -> dict[str, Any]:
     output_dir.mkdir(parents=True, exist_ok=True)
     index = load_v24_index() or {}
@@ -112,8 +136,11 @@ def generate(repo_root: Path, output_dir: Path, source_commit: str) -> dict[str,
     family_occurrences = Counter(family for seed in seeds.values() for family in seed.source_families)
     binary_occurrences = Counter(family for seed in seeds.values() for family in seed.binary_families)
     ambiguous_names = ambiguous_identity_names(index)
+    canonical_alias_names = canonical_alias_reconciliation_names(index)
 
     customer_violations: list[dict[str, Any]] = []
+    canonical_alias_reconciliations: list[dict[str, Any]] = []
+    unexpected_projection_transitions: list[dict[str, Any]] = []
     projection_rows: list[dict[str, Any]] = []
     verified_partial_actionable = 0
     verified_partial_with_tasks = 0
@@ -124,10 +151,44 @@ def generate(repo_root: Path, output_dir: Path, source_commit: str) -> dict[str,
         payload = public_projection(key, cell)
         family_rows = {row["family"]: row for row in payload["family_decisions"]}
         issues: list[str] = []
+        identity_name = (
+            str(cell.get("state", "")).upper(),
+            str(cell.get("ahj", "")).casefold(),
+        )
+        canonical_alias_reconciliation = (
+            identity_name in canonical_alias_names
+            and seed.classification is pre.SeedClassification.JURISDICTION_HOLD
+            and payload["seed_classification"]
+            in {
+                pre.SeedClassification.EXACT_COMPLETE.value,
+                pre.SeedClassification.EXACT_PARTIAL.value,
+            }
+        )
         if payload["seed_classification"] != seed.classification.value:
-            issues.append("seed_classification_mismatch")
+            transition = {
+                "source_index_key": key,
+                "raw_seed_classification": seed.classification.value,
+                "customer_projection_classification": payload[
+                    "seed_classification"
+                ],
+            }
+            if canonical_alias_reconciliation:
+                canonical_alias_reconciliations.append(
+                    {
+                        **transition,
+                        "canonical_jurisdiction_id": pre._canonical_jurisdiction_id(
+                            cell.get("jurisdiction_id")
+                        ),
+                    }
+                )
+            else:
+                issues.append("seed_classification_mismatch")
+                unexpected_projection_transitions.append(transition)
         for family, verdict in source_family_verdicts(cell).items():
-            if seed.classification in {pre.SeedClassification.EXACT_COMPLETE, pre.SeedClassification.EXACT_PARTIAL}:
+            if canonical_alias_reconciliation or seed.classification in {
+                pre.SeedClassification.EXACT_COMPLETE,
+                pre.SeedClassification.EXACT_PARTIAL,
+            }:
                 if family not in family_rows:
                     issues.append(f"missing_source_family:{family}")
                 elif family_rows[family]["verdict"] != verdict:
@@ -136,7 +197,7 @@ def generate(repo_root: Path, output_dir: Path, source_commit: str) -> dict[str,
             pre.SeedClassification.FAIL_CLOSED,
             pre.SeedClassification.JURISDICTION_HOLD,
             pre.SeedClassification.UNSUPPORTED_SCOPE,
-        }:
+        } and not canonical_alias_reconciliation:
             if payload["permit_decision"] != "UNKNOWN" or payload["permit_required"] is not None:
                 issues.append("unsafe_top_line_binary")
             if any(row["verdict"] in {"REQUIRED", "NOT_REQUIRED"} for row in payload["family_decisions"]):
@@ -241,16 +302,50 @@ def generate(repo_root: Path, output_dir: Path, source_commit: str) -> dict[str,
             "passed": unsupported is pre.SeedClassification.UNSUPPORTED_SCOPE,
         }
     )
-    ambiguous_key = next(
-        key
-        for key, cell in sorted(index.items())
-        if (str(cell.get("state", "")).upper(), str(cell.get("ahj", "")).casefold()) in ambiguous_names
+    synthetic_a = copy.deepcopy(index["WI|eau_claire|commercial_tenant_improvement"])
+    synthetic_b = copy.deepcopy(synthetic_a)
+    synthetic_a.update(
+        {
+            "cell_id": "genuine-token-ambiguity-a",
+            "jurisdiction_id": "us-ex-springfield",
+            "ahj": "Spring Field",
+            "state": "EX",
+        }
     )
-    ambiguous_projection = public_projection(ambiguous_key, index[ambiguous_key])
+    synthetic_b.update(
+        {
+            "cell_id": "genuine-token-ambiguity-b",
+            "jurisdiction_id": "us-ex-spring-field",
+            "ahj": "Spring Field",
+            "state": "EX",
+        }
+    )
+    synthetic_index = {
+        "EX|springfield|commercial_tenant_improvement": synthetic_a,
+        "EX|spring_field|commercial_tenant_improvement": synthetic_b,
+    }
+    original_index_loader = pre.load_v24_index
+    try:
+        pre.load_v24_index = lambda: synthetic_index  # type: ignore[assignment]
+        ambiguous_envelope = pre.build_core_decision_envelope(
+            resolution(
+                "EX|springfield|commercial_tenant_improvement",
+                synthetic_a,
+            ),
+            job_type="Commercial tenant improvement",
+            city="Spring Field",
+            state="EX",
+            job_category="commercial",
+        )
+    finally:
+        pre.load_v24_index = original_index_loader  # type: ignore[assignment]
+    ambiguous_projection = json.loads(
+        ambiguous_envelope.sealed_projection.payload_json
+    )
     counterfactual_rows.append(
         {
             "case_id": "ambiguous_jurisdiction",
-            "source_index_key": ambiguous_key,
+            "source_index_key": "synthetic-token-distinct-jurisdictions",
             "classification": ambiguous_projection["seed_classification"],
             "permit_decision": ambiguous_projection["permit_decision"],
             "passed": ambiguous_projection["seed_classification"] == "jurisdiction_hold" and ambiguous_projection["permit_decision"] == "UNKNOWN",
@@ -338,6 +433,13 @@ def generate(repo_root: Path, output_dir: Path, source_commit: str) -> dict[str,
         "jurisdiction_identity_name_count": identity_name_count,
         "ambiguous_identity_name_count": len(ambiguous_names),
         "ambiguous_seed_count": classification_counts["jurisdiction_hold"],
+        "canonical_alias_identity_name_count": len(canonical_alias_names),
+        "canonical_alias_reconciliation_count": len(
+            canonical_alias_reconciliations
+        ),
+        "unexpected_projection_transition_count": len(
+            unexpected_projection_transitions
+        ),
         "reverification_pass_count": sum(1 for row in reverify_rows if row["ok"]),
         "reverification_failure_count": sum(1 for row in reverify_rows if not row["ok"]),
         "source_family_labels": sorted(family_occurrences),
@@ -358,6 +460,11 @@ def generate(repo_root: Path, output_dir: Path, source_commit: str) -> dict[str,
         "seeded_random_pass_count": sum(1 for row in random_rows if row["ok"]),
         "counterfactual_count": len(counterfactual_rows),
         "counterfactual_pass_count": sum(1 for row in counterfactual_rows if row["passed"]),
+        "genuine_ambiguity_counterfactual_passed": next(
+            row["passed"]
+            for row in counterfactual_rows
+            if row["case_id"] == "ambiguous_jurisdiction"
+        ),
         "flag_off_byte_parity": flag_off,
         "activation_boundary": "disabled_by_default_exact_allowlist_only",
         "production_push_or_deploy": False,
@@ -377,6 +484,12 @@ def generate(repo_root: Path, output_dir: Path, source_commit: str) -> dict[str,
         "canaries": summary["canary_outcome_pass_count"] != summary["canary_count"],
         "seeded_random": summary["seeded_random_pass_count"] != summary["seeded_random_sample_count"],
         "counterfactuals": summary["counterfactual_pass_count"] != summary["counterfactual_count"],
+        "canonical_alias_reconciliation": (
+            summary["canonical_alias_identity_name_count"] != 5
+            or summary["canonical_alias_reconciliation_count"] != 10
+            or summary["unexpected_projection_transition_count"] != 0
+            or not summary["genuine_ambiguity_counterfactual_passed"]
+        ),
         "flag_off_parity": not flag_off["byte_identical"],
         "exact_family_preservation": sorted(family_occurrences) != contract["observed_exact_permit_families"],
         "seed_uniqueness": summary["unique_source_cell_id_count"] != 2162 or summary["unique_seed_sha256_count"] != 2162,
@@ -394,6 +507,14 @@ def generate(repo_root: Path, output_dir: Path, source_commit: str) -> dict[str,
     write_json(output_dir / "canary_results.json", {"schema_version": SCHEMA_VERSION, "rows": canary_rows})
     write_json(output_dir / "seeded_random_and_counterfactual_results.json", {"schema_version": SCHEMA_VERSION, "random_rows": random_rows, "counterfactual_rows": counterfactual_rows})
     write_json(output_dir / "customer_projection_audit.json", {"schema_version": SCHEMA_VERSION, "violations": customer_violations, "canary_projections": projection_rows})
+    write_json(
+        output_dir / "canonical_alias_reconciliation_audit.json",
+        {
+            "schema_version": SCHEMA_VERSION,
+            "allowed_reconciliations": canonical_alias_reconciliations,
+            "unexpected_projection_transitions": unexpected_projection_transitions,
+        },
+    )
     write_json(output_dir / "preactivation_family_audit.json", preactivation)
     write_json(output_dir / "ontology_predicates_templates.json", model_package)
     write_json(output_dir / "flag_off_parity.json", flag_off)
