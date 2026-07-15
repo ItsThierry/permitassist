@@ -40,8 +40,8 @@ EXPECTED_SOURCE_SHA = os.environ.get(
     "PERMITASSIST_EXPECTED_SOURCE_SHA",
     "408df57a7a653592f91388de1917a2419814624e",
 )
-FIXED_SESSION_SECRET = (
-    "permitassist-trust-successor-red-contract-fixed-session-secret-v1"
+FIXED_SESSION_SIGNING_MATERIAL = (
+    "test-only-permitassist-trust-successor-session-signing-material-v1"
 )
 OFFICIAL_URL = "https://example.test/official-permit-authority"
 
@@ -227,7 +227,7 @@ def server(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
     cache_dir.mkdir()
     monkeypatch.setenv("CACHE_DIR", str(cache_dir))
     monkeypatch.setenv("FREE_LOOKUP_DB", str(cache_dir / "ip_lookups.db"))
-    monkeypatch.setenv("SESSION_SECRET", FIXED_SESSION_SECRET)
+    monkeypatch.setenv("SESSION_SECRET", FIXED_SESSION_SIGNING_MATERIAL)
     monkeypatch.setenv("PERMITASSIST_NO_BACKGROUND_WORKERS", "1")
     monkeypatch.delenv("OPENAI_API_KEY", raising=False)
     monkeypatch.delenv("RESEND_API_KEY", raising=False)
@@ -242,7 +242,7 @@ def server(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
     module.CACHE_DB = str(cache_dir / "cache.db")
     module.EMAILS_CSV = str(cache_dir / "captured_emails.csv")
     module.FREE_LOOKUP_DB = str(cache_dir / "ip_lookups.db")
-    module.SESSION_SECRET = FIXED_SESSION_SECRET
+    module.SESSION_SECRET = FIXED_SESSION_SIGNING_MATERIAL
     module.init_db()
 
     def _network_forbidden(*_args, **_kwargs):
@@ -668,7 +668,7 @@ def test_snapshot_survives_restart_with_same_secret_and_database(server, monkeyp
     restarted = importlib.reload(server)
     restarted.CACHE_DB = cache_db
     restarted.DATA_DIR = data_dir
-    restarted.SESSION_SECRET = FIXED_SESSION_SECRET
+    restarted.SESSION_SECRET = FIXED_SESSION_SIGNING_MATERIAL
     restarted.init_db()
     assert _consume_snapshot(restarted, handle, customer) is not None
 
