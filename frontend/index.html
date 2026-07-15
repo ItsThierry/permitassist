@@ -4123,7 +4123,7 @@ async function shareResult() {
   const origText = btn ? btn.innerHTML : '';
   if (btn) { btn.innerHTML = '⏳ Creating…'; btn.disabled = true; }
   try {
-    const resp = await fetch('/api/share', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ job_type: job, city, state, result: data }) });
+    const resp = await fetch('/api/share', { method: 'POST', headers: { ...getAuthHeaders(), 'Content-Type': 'application/json' }, body: JSON.stringify({ job_type: job, city, state, result: data }) });
     const r = await resp.json();
     if (!r.url) throw new Error(r.error || 'No URL returned');
     if (navigator.share) {
@@ -4391,7 +4391,7 @@ function emailResult() {
     const modal = document.getElementById('email-report-modal');
     const btn = document.getElementById('email-report-send-btn');
     if (btn) { btn.textContent = 'Sending…'; btn.disabled = true; }
-    fetch('/api/email-report', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, job, city, state, data }) })
+    fetch('/api/email-report', { method: 'POST', headers: { ...getAuthHeaders(), 'Content-Type': 'application/json' }, body: JSON.stringify({ email, job, city, state, data }) })
       .then(r => r.json()).then(r => {
         if (modal) modal.remove();
         if (r.sent) {
@@ -4486,7 +4486,7 @@ function emailToForeman() {
     if (sendBtn) { sendBtn.textContent = 'Sending…'; sendBtn.disabled = true; }
     fetch('/api/email-report', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { ...getAuthHeaders(), 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, job, city, state, data: { ...data, inspections: normalizeInspectionItems(data.inspections || []) } })
     })
       .then(r => r.json())
@@ -5246,7 +5246,7 @@ async function loadComplianceChecklist(job, city, state, result){
   if(!el) return;
   el.innerHTML='Generating your action checklist…';
   try{
-    const r=await fetch('/api/checklist',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({job_type:job, city, state, result})});
+    const r=await fetch('/api/checklist',{method:'POST',headers:{...getAuthHeaders(),'Content-Type':'application/json'},body:JSON.stringify({job_type:job, city, state, result})});
     const checklist=await r.json();
     renderComplianceChecklist(checklist, job, city, state);
   }catch(e){

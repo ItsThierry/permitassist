@@ -80,7 +80,22 @@ test('every customer server surface uses the one strict single-projection bounda
   assert.ok((serverPy.match(/_project_core_customer_boundary_once\(/g) || []).length >= 7);
   assert.match(serverPy, /class _VerifiedCustomerProjection\(dict\)/);
   assert.match(serverPy, /has_intact_regulated_projection/);
-  assert.match(serverPy, /_rehydrate_cached_verified_core_projection/);
+  assert.doesNotMatch(serverPy, /def _rehydrate_cached_verified_core_projection/);
+});
+
+test('all owner-bound browser continuity requests forward authentication headers', () => {
+  assert.match(
+    indexHtml,
+    /fetch\('\/api\/share',[\s\S]*?headers:\s*\{\s*\.\.\.getAuthHeaders\(\),\s*'Content-Type':\s*'application\/json'\s*\}/,
+  );
+  assert.match(
+    indexHtml,
+    /fetch\('\/api\/checklist',[\s\S]*?headers:\s*\{\s*\.\.\.getAuthHeaders\(\),\s*'Content-Type':\s*'application\/json'\s*\}/,
+  );
+  const emailReportCalls = indexHtml.match(
+    /fetch\('\/api\/email-report',[\s\S]*?headers:\s*\{\s*\.\.\.getAuthHeaders\(\),\s*'Content-Type':\s*'application\/json'\s*\}/g,
+  ) || [];
+  assert.equal(emailReportCalls.length, 2);
 });
 
 test('shared public results use the v2 hash-sealed schema', () => {

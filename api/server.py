@@ -8033,7 +8033,11 @@ def _projection_handoff_response_headers(
 ) -> dict[str, str]:
     if not re.fullmatch(r"vp_[A-Za-z0-9_-]{32,96}", str(handle or "")):
         return {}
-    host = str((request_headers or {}).get("Host", "") or "").split(":", 1)[0].lower()
+    raw_host = str((request_headers or {}).get("Host", "") or "").strip().lower()
+    if raw_host.startswith("[") and "]" in raw_host:
+        host = raw_host[1 : raw_host.index("]")]
+    else:
+        host = raw_host.split(":", 1)[0]
     is_loopback = host in {"localhost", "127.0.0.1", "::1"}
     cookie_flags = "Path=/; HttpOnly; SameSite=Strict"
     if not is_loopback:
@@ -8059,6 +8063,7 @@ def _projection_handoff_row_hmac(row: dict) -> str:
         "created_at": str(row.get("created_at") or ""),
         "expires_at": str(row.get("expires_at") or ""),
         "max_uses": int(row.get("max_uses") or 0),
+        "use_count": int(row.get("use_count") or 0),
     }
     canonical = json.dumps(sealed, sort_keys=True, separators=(",", ":"))
     return hmac.new(
@@ -8135,6 +8140,7 @@ def create_verified_projection_handoff(
             now + timedelta(seconds=VERIFIED_PROJECTION_HANDOFF_TTL_SECONDS)
         ).isoformat(),
         "max_uses": VERIFIED_PROJECTION_HANDOFF_MAX_USES,
+        "use_count": 0,
     }
     row["row_hmac_sha256"] = _projection_handoff_row_hmac(row)
     try:
@@ -8234,7 +8240,8 @@ def consume_verified_projection_handoff(
                 return None
             submitted_json = _canonical_projection_json(submitted_result)
             if not hmac.compare_digest(
-                submitted_json, row["customer_projection_json"]
+                submitted_json.encode("utf-8"),
+                row["customer_projection_json"].encode("utf-8"),
             ):
                 return None
             private_result = json.loads(row["private_envelope_json"])
@@ -8256,13 +8263,22 @@ def consume_verified_projection_handoff(
                 )
             ):
                 return None
+            next_row_hmac = _projection_handoff_row_hmac(
+                {**row, "use_count": row["use_count"] + 1}
+            )
             updated = conn.execute(
                 """
                 UPDATE verified_projection_handoffs
-                SET use_count=use_count+1
+                SET use_count=use_count+1, row_hmac_sha256=?
                 WHERE handle_sha256=? AND use_count=? AND use_count < max_uses
+                  AND row_hmac_sha256=?
                 """,
-                [handle_sha256, row["use_count"]],
+                [
+                    next_row_hmac,
+                    handle_sha256,
+                    row["use_count"],
+                    row["row_hmac_sha256"],
+                ],
             )
             if updated.rowcount != 1:
                 return None

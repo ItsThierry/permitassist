@@ -609,6 +609,54 @@ def test_repeat_and_server_side_handoff_revalidation_are_byte_stable(
     assert server.json.loads(snapshots[0])["public"] == expected_wire_projection
 
 
+def test_valid_handoff_with_non_ascii_customer_projection_remains_consumable(
+    tmp_path, monkeypatch
+):
+    server = _import_server(tmp_path, monkeypatch)
+    case = _active_core_wrapped_result(monkeypatch)
+    customer_projection = server.build_customer_response_egress(
+        case["wrapped"],
+        case["job_type"],
+        case["city"],
+        case["state"],
+        job_category=case["job_category"],
+    )
+    assert isinstance(customer_projection, dict)
+    customer_projection = server.redact_public_output(customer_projection)
+    assert isinstance(customer_projection.get("sources"), list)
+    customer_projection["sources"][0]["title"] = (
+        "Cañon City – División de Permisos"
+    )
+    customer_projection["requirements"] = [
+        "Submit the city’s façade and re-roofing documents."
+    ]
+    external_plain_dict = server.json.loads(
+        server.json.dumps(customer_projection, ensure_ascii=False)
+    )
+    handle = server.create_verified_projection_handoff(
+        case["wrapped"],
+        external_plain_dict,
+        case["job_type"],
+        case["city"],
+        case["state"],
+        job_category=case["job_category"],
+    )
+    assert handle.startswith("vp_")
+
+    verified = server.consume_verified_projection_handoff(
+        handle,
+        external_plain_dict,
+        case["job_type"],
+        case["city"],
+        case["state"],
+    )
+    assert isinstance(verified, server._VerifiedCustomerProjection)
+    assert verified["sources"][0]["title"] == "Cañon City – División de Permisos"
+    assert verified["requirements"] == [
+        "Submit the city’s façade and re-roofing documents."
+    ]
+
+
 def test_handoff_rejects_tamper_expiry_substitution_owner_mismatch_and_stale_core(
     tmp_path, monkeypatch
 ):
@@ -685,6 +733,24 @@ def test_handoff_rejects_tamper_expiry_substitution_owner_mismatch_and_stale_cor
         ),
         server._VerifiedCustomerProjection,
     )
+
+    tampered_use_count_handle = issue()
+    tampered_use_count_sha = server.hashlib.sha256(
+        tampered_use_count_handle.encode("utf-8")
+    ).hexdigest()
+    with server.sqlite3.connect(server.CACHE_DB) as conn:
+        conn.execute(
+            "UPDATE verified_projection_handoffs SET use_count=7 "
+            "WHERE handle_sha256=?",
+            [tampered_use_count_sha],
+        )
+    assert server.consume_verified_projection_handoff(
+        tampered_use_count_handle,
+        customer,
+        case["job_type"],
+        case["city"],
+        case["state"],
+    ) is None
 
     tampered_row_handle = issue()
     tampered_row_sha = server.hashlib.sha256(
@@ -933,6 +999,12 @@ def test_evidence_no_cache_api_share_report_and_checklist_keep_authoritative_pro
     assert f"pa_vph={projection_handle}" in cookie
     assert "HttpOnly" in cookie and "SameSite=Strict" in cookie
     assert "Secure" not in cookie
+    ipv6_loopback_cookie = server._projection_handoff_response_headers(
+        projection_handle, {"Host": "[::1]:8765"}
+    )["Set-Cookie"]
+    assert "HttpOnly" in ipv6_loopback_cookie
+    assert "SameSite=Strict" in ipv6_loopback_cookie
+    assert "Secure" not in ipv6_loopback_cookie
     production_cookie = server._projection_handoff_response_headers(
         projection_handle, {"Host": "permitassist.io"}
     )["Set-Cookie"]
@@ -967,6 +1039,98 @@ def _post_json(base: str, path: str, payload: dict, headers: dict[str, str]) -> 
         base, path, payload, headers
     )
     return response_payload
+
+
+def test_authenticated_http_continuity_preserves_owner_bound_projection_across_consumers(
+    tmp_path, monkeypatch
+):
+    server = _import_server(tmp_path, monkeypatch)
+    case = _active_core_wrapped_result(monkeypatch)
+    _install_real_active_core_endpoint_stubs(server, monkeypatch, case)
+    session_token = "owned-session-token"
+    user_email = "owner@example.test"
+    monkeypatch.setattr(
+        server,
+        "validate_session_token",
+        lambda token: user_email if token == session_token else None,
+    )
+    monkeypatch.setattr(server, "is_paid_user", lambda email: email == user_email)
+    monkeypatch.setattr(server, "save_email_capture", lambda *_args, **_kwargs: None)
+    emailed_results = []
+
+    def capture_email(_email, _job, _city, _state, result):
+        emailed_results.append(copy.deepcopy(result))
+        return True
+
+    monkeypatch.setattr(server, "send_email_report", capture_email)
+    request_row = {
+        "job_type": case["job_type"],
+        "job_category": case["job_category"],
+        "city": case["city"],
+        "state": case["state"],
+        "zip_code": "85326",
+    }
+    auth_headers = {
+        "X-Session-Token": session_token,
+        "X-Sample-Demo": "1",
+    }
+
+    with _LiveServer(server.Handler) as live:
+        public, response_headers = _post_json_with_response_headers(
+            live.base,
+            "/api/permit",
+            request_row,
+            auth_headers,
+        )
+        projection_handle = response_headers[
+            server.VERIFIED_PROJECTION_HANDLE_HEADER
+        ]
+        continuity_headers = {
+            "X-Session-Token": session_token,
+            server.VERIFIED_PROJECTION_HANDLE_HEADER: projection_handle,
+        }
+        checklist = _post_json(
+            live.base,
+            "/api/checklist",
+            {**request_row, "result": public},
+            continuity_headers,
+        )
+        share = _post_json(
+            live.base,
+            "/api/share",
+            {**request_row, "result": public},
+            continuity_headers,
+        )
+        emailed = _post_json(
+            live.base,
+            "/api/email-report",
+            {
+                "email": "recipient@example.test",
+                "job": case["job_type"],
+                "city": case["city"],
+                "state": case["state"],
+                "data": public,
+            },
+            continuity_headers,
+        )
+
+    assert public["permit_decision"] == "REQUIRED"
+    stored_share = server.get_share(share["slug"])
+    assert stored_share is not None
+    assert stored_share["data"]["permit_decision"] == "REQUIRED"
+    building = next(
+        item for item in checklist["items"] if item.get("category") == "building"
+    )
+    assert building["required"] is True
+    assert emailed == {"sent": True}
+    assert emailed_results[-1]["permit_decision"] == "REQUIRED"
+    with server.sqlite3.connect(server.CACHE_DB) as conn:
+        use_count = conn.execute(
+            "SELECT use_count FROM verified_projection_handoffs "
+            "WHERE handle_sha256=?",
+            [server.hashlib.sha256(projection_handle.encode("utf-8")).hexdigest()],
+        ).fetchone()[0]
+    assert use_count == 3
 
 
 @pytest.mark.parametrize(
