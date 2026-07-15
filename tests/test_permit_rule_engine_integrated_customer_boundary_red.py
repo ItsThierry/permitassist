@@ -669,7 +669,7 @@ def test_valid_handoff_with_non_ascii_customer_projection_remains_consumable(
     ]
 
 
-def test_handoff_rejects_tamper_expiry_substitution_owner_mismatch_and_stale_core(
+def test_handoff_rejects_tamper_expiry_substitution_owner_mismatch_and_survives_core_flag_change(
     tmp_path, monkeypatch
 ):
     server = _import_server(tmp_path, monkeypatch)
@@ -769,9 +769,19 @@ def test_handoff_rejects_tamper_expiry_substitution_owner_mismatch_and_stale_cor
         tampered_row_handle.encode("utf-8")
     ).hexdigest()
     with server.sqlite3.connect(server.CACHE_DB) as conn:
+        columns = [
+            row[1]
+            for row in conn.execute(
+                'PRAGMA table_info("verified_projection_handoffs")'
+            )
+        ]
+        assert not any(
+            forbidden in " ".join(columns).lower()
+            for forbidden in ("private", "raw_result", "core_envelope", "sealed_projection")
+        )
         conn.execute(
-            "UPDATE verified_projection_handoffs SET private_envelope_json='{}' "
-            "WHERE handle_sha256=?",
+            "UPDATE verified_projection_handoffs "
+            "SET customer_projection_json='{}' WHERE handle_sha256=?",
             [tampered_row_sha],
         )
     assert server.consume_verified_projection_handoff(
@@ -787,64 +797,47 @@ def test_handoff_rejects_tamper_expiry_substitution_owner_mismatch_and_stale_cor
         with server.sqlite3.connect(server.CACHE_DB) as conn:
             raw = conn.execute(
                 """
-                SELECT private_envelope_json, customer_projection_json,
-                       request_identity_json, job_category, owner_scope, created_at,
-                       expires_at, max_uses
+                SELECT customer_projection_json, customer_projection_sha256,
+                       request_identity_json, owner_scope, created_at,
+                       expires_at, max_uses, use_count
                 FROM verified_projection_handoffs WHERE handle_sha256=?
                 """,
                 [handle_sha],
             ).fetchone()
             row = {
                 "handle_sha256": handle_sha,
-                "private_envelope_json": raw[0],
-                "customer_projection_json": raw[1],
+                "customer_projection_json": raw[0],
+                "customer_projection_sha256": raw[1],
                 "request_identity_json": raw[2],
-                "job_category": raw[3],
-                "owner_scope": raw[4],
-                "created_at": raw[5],
-                "expires_at": raw[6],
-                "max_uses": raw[7],
+                "owner_scope": raw[3],
+                "created_at": raw[4],
+                "expires_at": raw[5],
+                "max_uses": raw[6],
+                "use_count": raw[7],
             }
             row.update(updates)
             row_hmac = server._projection_handoff_row_hmac(row)
             conn.execute(
                 """
                 UPDATE verified_projection_handoffs
-                SET private_envelope_json=?, customer_projection_json=?,
-                    request_identity_json=?, job_category=?, owner_scope=?,
-                    created_at=?, expires_at=?, max_uses=?, row_hmac_sha256=?
+                SET customer_projection_json=?, customer_projection_sha256=?,
+                    request_identity_json=?, owner_scope=?, created_at=?,
+                    expires_at=?, max_uses=?, use_count=?, row_hmac_sha256=?
                 WHERE handle_sha256=?
                 """,
                 [
-                    row["private_envelope_json"],
                     row["customer_projection_json"],
+                    row["customer_projection_sha256"],
                     row["request_identity_json"],
-                    row["job_category"],
                     row["owner_scope"],
                     row["created_at"],
                     row["expires_at"],
                     row["max_uses"],
+                    row["use_count"],
                     row_hmac,
                     handle_sha,
                 ],
             )
-
-    corrupted_private_handle = issue()
-    corrupted_private = server.copy.deepcopy(case["wrapped"])
-    corrupted_private["_permit_rule_engine_core"]["sealed_projection"][
-        "payload_json"
-    ] = "{}"
-    reseal_row(
-        corrupted_private_handle,
-        private_envelope_json=server._canonical_projection_json(corrupted_private),
-    )
-    assert server.consume_verified_projection_handoff(
-        corrupted_private_handle,
-        customer,
-        case["job_type"],
-        case["city"],
-        case["state"],
-    ) is None
 
     expired_handle = issue()
     reseal_row(
@@ -879,15 +872,18 @@ def test_handoff_rejects_tamper_expiry_substitution_owner_mismatch_and_stale_cor
         case["state"],
     ) is None
 
-    stale_handle = issue()
+    core_flag_independent_handle = issue()
     monkeypatch.setenv("PERMITASSIST_RULE_ENGINE_CORE", "off")
-    assert server.consume_verified_projection_handoff(
-        stale_handle,
-        customer,
-        case["job_type"],
-        case["city"],
-        case["state"],
-    ) is None
+    assert isinstance(
+        server.consume_verified_projection_handoff(
+            core_flag_independent_handle,
+            customer,
+            case["job_type"],
+            case["city"],
+            case["state"],
+        ),
+        server._VerifiedCustomerProjection,
+    )
 
 
 def test_http_share_and_checklist_without_handoff_fail_closed_even_with_cache_row(
@@ -1059,12 +1055,12 @@ def test_authenticated_http_continuity_preserves_owner_bound_projection_across_c
     server = _import_server(tmp_path, monkeypatch)
     case = _active_core_wrapped_result(monkeypatch)
     _install_real_active_core_endpoint_stubs(server, monkeypatch, case)
-    session_token = "owned-session-token"
+    auth_session = "owned-session-token"
     user_email = "owner@example.test"
     monkeypatch.setattr(
         server,
         "validate_session_token",
-        lambda token: user_email if token == session_token else None,
+        lambda token: user_email if token == auth_session else None,
     )
     monkeypatch.setattr(server, "is_paid_user", lambda email: email == user_email)
     monkeypatch.setattr(server, "save_email_capture", lambda *_args, **_kwargs: None)
@@ -1083,7 +1079,7 @@ def test_authenticated_http_continuity_preserves_owner_bound_projection_across_c
         "zip_code": "85326",
     }
     auth_headers = {
-        "X-Session-Token": session_token,
+        "X-Session-Token": auth_session,
         "X-Sample-Demo": "1",
     }
 
@@ -1098,7 +1094,7 @@ def test_authenticated_http_continuity_preserves_owner_bound_projection_across_c
             server.VERIFIED_PROJECTION_HANDLE_HEADER
         ]
         continuity_headers = {
-            "X-Session-Token": session_token,
+            "X-Session-Token": auth_session,
             server.VERIFIED_PROJECTION_HANDLE_HEADER: projection_handle,
         }
         checklist = _post_json(

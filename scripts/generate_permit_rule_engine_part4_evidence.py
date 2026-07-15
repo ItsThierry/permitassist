@@ -166,6 +166,7 @@ def generate(output_dir: Path, source_commit: str) -> dict[str, Any]:
                     job_type=job_type,
                     job_category=job_category,
                 )
+                current_request = server._mark_server_owned_result(wrapped)
                 projected = pre.project_core_customer_boundary(
                     wrapped,
                     job_type=job_type,
@@ -174,30 +175,34 @@ def generate(output_dir: Path, source_commit: str) -> dict[str, Any]:
                     job_category=job_category,
                 )
                 api_view = server.build_customer_permit_view_model(
-                    wrapped,
+                    current_request,
                     job_type,
                     city,
                     state,
                     job_category,
                 )
                 finalized = server.finalize_permit_lookup_result(
-                    wrapped,
+                    current_request,
                     job_type,
                     city,
                     state,
                     job_category=job_category,
                 )
-                checklist = server.get_or_create_checklist(wrapped, job_type, city, state)
+                checklist = server.get_or_create_checklist(
+                    current_request, job_type, city, state
+                )
                 report_html = server.render_white_label_report_html(
                     {
-                        "result": wrapped,
+                        "result": current_request,
                         "job_type": job_type,
                         "job_category": job_category,
                         "city": city,
                         "state": state,
                     }
                 )
-                slug = server.create_share(job_type, city, state, wrapped)
+                slug = server.create_share(
+                    job_type, city, state, current_request
+                )
                 share = server.get_share(slug)
                 if share is None:
                     raise AssertionError("sealed share retrieval failed")
@@ -279,6 +284,7 @@ def generate(output_dir: Path, source_commit: str) -> dict[str, Any]:
             )
             for case in TAMPER_CASES:
                 broken = tamper(wrapped, case)
+                current_request = server._mark_server_owned_result(broken)
                 projected = pre.project_core_customer_boundary(
                     broken,
                     job_type="commercial tenant improvement",
@@ -287,21 +293,21 @@ def generate(output_dir: Path, source_commit: str) -> dict[str, Any]:
                     job_category="commercial",
                 )
                 api_view = server.build_customer_permit_view_model(
-                    broken,
+                    current_request,
                     "commercial tenant improvement",
                     "Anchorage",
                     "AK",
                     "commercial",
                 )
                 checklist = server.get_or_create_checklist(
-                    broken,
+                    current_request,
                     "commercial tenant improvement",
                     "Anchorage",
                     "AK",
                 )
                 report_html = server.render_white_label_report_html(
                     {
-                        "result": broken,
+                        "result": current_request,
                         "job_type": "commercial tenant improvement",
                         "job_category": "commercial",
                         "city": "Anchorage",
@@ -349,7 +355,10 @@ def generate(output_dir: Path, source_commit: str) -> dict[str, Any]:
                 job_type="residential reroof",
                 job_category="residential",
             )
-            slug = server.create_share("residential reroof", "Buckeye", "AZ", wrapped)
+            current_request = server._mark_server_owned_result(wrapped)
+            slug = server.create_share(
+                "residential reroof", "Buckeye", "AZ", current_request
+            )
             with sqlite3.connect(server.CACHE_DB) as conn:
                 raw = conn.execute("SELECT result_json FROM shared_results WHERE slug=?", [slug]).fetchone()[0]
                 stored = json.loads(raw)

@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import copy
 import hashlib
+import hmac
 import json
 import os
 import re
@@ -2349,6 +2350,25 @@ def build_core_decision_envelope(
     return CoreDecisionEnvelope(**base, envelope_sha256=envelope_hash)
 
 
+class _ServerOwnedCoreEnvelope(dict):
+    """Private in-process marker for a freshly attached core envelope.
+
+    The marker is deliberately carried by the Python type and an out-of-band
+    digest rather than by a JSON field.  Serializing and decoding the mapping
+    produces an ordinary ``dict`` that cannot assert server ownership.
+    """
+
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        super().__init__(*args, **kwargs)
+        self._server_owned_sha256 = stable_sha256(dict(self))
+
+    def has_intact_server_owned_payload(self) -> bool:
+        return hmac.compare_digest(
+            str(getattr(self, "_server_owned_sha256", "") or ""),
+            stable_sha256(dict(self)),
+        )
+
+
 def attach_core_decision_envelope(
     result: Mapping[str, Any],
     envelope: CoreDecisionEnvelope,
@@ -2358,7 +2378,7 @@ def attach_core_decision_envelope(
     output = copy.deepcopy(dict(result))
     output["_permit_rule_engine_cache_schema_version"] = CORE_CACHE_SCHEMA_VERSION
     output["_permit_rule_engine_core"] = to_primitive(envelope)
-    return output
+    return _ServerOwnedCoreEnvelope(output)
 
 
 def _validated_core_payload(result: Mapping[str, Any]) -> tuple[dict[str, Any], dict[str, Any]] | None:

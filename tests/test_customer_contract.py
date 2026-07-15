@@ -334,10 +334,51 @@ def test_customer_apply_path_scrubs_cached_uncertainty_and_renames_documents(tmp
 def test_lookup_share_report_checklist_public_surfaces_banned_text_scan(tmp_path, monkeypatch):
     server = _import_server(tmp_path, monkeypatch)
     public = server.build_customer_permit_view_model(_legacy_unknown_result(), "water heater replacement", "Phoenix", "AZ")
-    slug = server.create_share("water heater replacement", "Phoenix", "AZ", public)
+    handle = server.create_customer_snapshot_handoff(
+        public,
+        "water heater replacement",
+        "Phoenix",
+        "AZ",
+    )
+    verified_share = server.consume_customer_snapshot_handoff(
+        handle,
+        public,
+        "water heater replacement",
+        "Phoenix",
+        "AZ",
+    )
+    verified_checklist = server.consume_customer_snapshot_handoff(
+        handle,
+        public,
+        "water heater replacement",
+        "Phoenix",
+        "AZ",
+    )
+    verified_report = server.consume_customer_snapshot_handoff(
+        handle,
+        public,
+        "water heater replacement",
+        "Phoenix",
+        "AZ",
+    )
+    assert verified_share is not None
+    assert verified_checklist is not None
+    assert verified_report is not None
+    slug = server.create_share(
+        "water heater replacement", "Phoenix", "AZ", verified_share
+    )
     share = server.get_share(slug)
-    checklist = server.get_or_create_checklist(public, "water heater replacement", "Phoenix", "AZ")
-    report = server.render_white_label_report_html({"result": public, "job_type": "water heater replacement", "city": "Phoenix", "state": "AZ"})
+    checklist = server.get_or_create_checklist(
+        verified_checklist, "water heater replacement", "Phoenix", "AZ"
+    )
+    report = server.render_white_label_report_html(
+        {
+            "result": verified_report,
+            "job_type": "water heater replacement",
+            "city": "Phoenix",
+            "state": "AZ",
+        }
+    )
     for surface in (public, share, checklist, report):
         text = surface if isinstance(surface, str) else json.dumps(surface, sort_keys=True, default=str)
         assert not BANNED_RE.search(text), text

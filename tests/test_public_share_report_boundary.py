@@ -287,7 +287,7 @@ def _get(url: str):
         ("Commercial restaurant tenant improvement", "Austin", "TX", "Commercial Building / Tenant Improvement"),
     ],
 )
-def test_actual_share_report_http_path_uses_public_safe_payload(
+def test_actual_share_report_http_path_fails_closed_for_untrusted_payload(
     tmp_path, monkeypatch, job_type, city, state, permit_kind
 ):
     server = _import_server(tmp_path, monkeypatch)
@@ -309,7 +309,8 @@ def test_actual_share_report_http_path_uses_public_safe_payload(
     assert report_status == 200
     payload = _extract_report_payload(html)
     _assert_public_payload_has_no_internal_keys(payload)
-    assert payload["share"]["data"]["permit_decision"] == "REQUIRED"
+    assert payload["share"]["data"]["permit_decision"] == "UNKNOWN"
+    assert payload["share"]["data"]["permit_required"] is None
     assert payload["share"]["data"]["permit_kind"] == permit_kind
     soup = BeautifulSoup(html, "html.parser")
     assert len(soup.find_all("script")) == 2
@@ -353,13 +354,29 @@ def test_verified_share_round_trip_preserves_live_shaped_public_permit_rows(tmp_
             "required": True,
         },
     ]
-    expected = server.project_customer_response_egress(result)
+    customer = server.project_customer_response_egress(result)
+    handle = server.create_customer_snapshot_handoff(
+        customer,
+        "replace the existing residential asphalt shingle roof",
+        "Buckeye",
+        "AZ",
+    )
+    assert handle
+    verified = server.consume_customer_snapshot_handoff(
+        handle,
+        json.loads(json.dumps(customer)),
+        "replace the existing residential asphalt shingle roof",
+        "Buckeye",
+        "AZ",
+    )
+    assert isinstance(verified, server._VerifiedCustomerProjection)
+    expected = server.project_customer_response_egress(verified)
 
     slug = server.create_share(
         "replace the existing residential asphalt shingle roof",
         "Buckeye",
         "AZ",
-        result,
+        verified,
     )
     share = server.get_share(slug)
     html = server.render_share_page(share)

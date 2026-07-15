@@ -217,7 +217,7 @@ os.makedirs(DATA_DIR, exist_ok=True)
 FREE_LOOKUP_DB = os.environ.get("FREE_LOOKUP_DB") or "/app/data/ip_lookups.db"
 try:
     os.makedirs(os.path.dirname(FREE_LOOKUP_DB), exist_ok=True)
-except PermissionError:
+except OSError:
     FREE_LOOKUP_DB = os.path.join(DATA_DIR, "ip_lookups.db")
     os.makedirs(os.path.dirname(FREE_LOOKUP_DB), exist_ok=True)
 
@@ -876,7 +876,7 @@ _CUSTOMER_EGRESS_FORBIDDEN_FIELD_NAMES = frozenset({
     "handoff_handles",
 })
 
-_OPAQUE_PROJECTION_HANDLE_RE = re.compile(r"^vp_[A-Za-z0-9_-]{40,}$")
+_OPAQUE_PROJECTION_HANDLE_RE = re.compile(r"vp_[A-Za-z0-9_-]{32,96}")
 
 
 def project_customer_response_egress(value: dict) -> dict:
@@ -908,8 +908,8 @@ def project_customer_response_egress(value: dict) -> dict:
             return [project(child) for child in item]
         if isinstance(item, tuple):
             return [project(child) for child in item]
-        if isinstance(item, str) and _OPAQUE_PROJECTION_HANDLE_RE.fullmatch(item):
-            return ""
+        if isinstance(item, str):
+            return _OPAQUE_PROJECTION_HANDLE_RE.sub("", item)
         return copy.deepcopy(item)
 
     projected = project(value if isinstance(value, dict) else {})
@@ -926,59 +926,69 @@ _EVIDENCE_PACK_CONTROLLED_CUSTOMER_FIELDS = frozenset({
 })
 
 
-_SEALED_CORE_REGULATED_FIELDS = frozenset({
-    "projection_schema_version",
-    "jurisdiction_id",
-    "city",
-    "state",
-    "project_family",
-    "permit_decision",
-    "permit_required",
-    "permit_verdict",
-    "permit_kind",
-    "permit_name",
-    "decision_source",
-    "source_cell_id",
-    "coverage_status",
-    "family_decisions",
-    "applying_office",
-    "apply_url",
-})
-
-
-def _sealed_core_regulated_sha256(result: dict) -> str:
-    regulated = {
-        field: result.get(field)
-        for field in sorted(_SEALED_CORE_REGULATED_FIELDS)
-    }
+def _customer_projection_marker_sha256(result: dict) -> str:
     canonical = json.dumps(
-        regulated,
+        dict(result),
         sort_keys=True,
         separators=(",", ":"),
         ensure_ascii=False,
+        allow_nan=False,
     )
     return hashlib.sha256(canonical.encode("utf-8")).hexdigest()
 
 
 class _VerifiedCustomerProjection(dict):
-    """In-process proof that the private core envelope was projected once.
+    """Private proof that a canonical customer snapshot was authenticated.
 
-    The proof is the Python type plus an out-of-band regulated-field digest, not
-    a payload field. JSON serialization emits only the customer DTO, so external
-    or cached plain dictionaries can never self-assert that they already passed
-    private-envelope integrity validation. A downstream regulated-field mutation
-    invalidates the wrapper and is sent through strict fail-closed projection.
+    The proof is the Python type plus an out-of-band exact-DTO digest. JSON
+    serialization emits only the customer DTO, so the proof cannot cross a JSON
+    boundary or be reconstructed from payload fields.
     """
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self._regulated_projection_sha256 = _sealed_core_regulated_sha256(self)
+        self._regulated_projection_sha256 = _customer_projection_marker_sha256(self)
 
     def has_intact_regulated_projection(self) -> bool:
         return hmac.compare_digest(
             str(getattr(self, "_regulated_projection_sha256", "") or ""),
-            _sealed_core_regulated_sha256(self),
+            _customer_projection_marker_sha256(self),
         )
+
+
+class _ServerOwnedLegacyResult(dict):
+    """Private, mutation-sensitive marker for a lookup result created in-process."""
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._server_owned_sha256 = _customer_projection_marker_sha256(self)
+
+    def has_intact_server_owned_payload(self) -> bool:
+        return hmac.compare_digest(
+            str(getattr(self, "_server_owned_sha256", "") or ""),
+            _customer_projection_marker_sha256(self),
+        )
+
+
+def _is_server_owned_core_result(result: object) -> bool:
+    """Recognize the private core marker across package/top-level imports."""
+    checker = getattr(result, "has_intact_server_owned_payload", None)
+    return bool(
+        isinstance(result, dict)
+        and type(result).__name__ == "_ServerOwnedCoreEnvelope"
+        and str(type(result).__module__).endswith("permit_rule_engine")
+        and callable(checker)
+        and checker()
+    )
+
+
+def _mark_server_owned_result(result: object) -> dict:
+    """Mark a result at the lookup boundary without adding a serializable key."""
+    if isinstance(result, _VerifiedCustomerProjection):
+        return _VerifiedCustomerProjection(copy.deepcopy(dict(result)))
+    if _is_server_owned_core_result(result):
+        return result
+    return _ServerOwnedLegacyResult(copy.deepcopy(result) if isinstance(result, dict) else {})
 
 
 def _project_core_customer_boundary_once(
@@ -995,6 +1005,12 @@ def _project_core_customer_boundary_once(
         and result.has_intact_regulated_projection()
     ):
         return copy.deepcopy(result)
+    server_owned = _is_server_owned_core_result(result) or (
+        isinstance(result, _ServerOwnedLegacyResult)
+        and result.has_intact_server_owned_payload()
+    )
+    if not server_owned:
+        return None
     core_projection = project_core_customer_boundary(
         result if isinstance(result, dict) else {},
         job_type=job_type,
@@ -1007,7 +1023,7 @@ def _project_core_customer_boundary_once(
     return _VerifiedCustomerProjection(copy.deepcopy(core_projection))
 
 
-def build_customer_response_egress(
+def _build_trusted_customer_response_egress(
     result: dict,
     job_type: str,
     city: str,
@@ -1058,6 +1074,123 @@ def build_customer_response_egress(
                     "instructions": "Verify the application route with the issuing authority.",
                 }
     return project_customer_response_egress(public)
+
+
+def _fail_closed_untrusted_customer_projection(result: object) -> dict:
+    """Keep useful customer guidance while removing every binary authority bit."""
+    raw = result if isinstance(result, dict) else {}
+    projected = project_customer_response_egress(redact_public_output(raw))
+
+    def demote(value):
+        if isinstance(value, dict):
+            safe = {}
+            for key, child in value.items():
+                normalized = str(key).lower().lstrip("_")
+                if normalized == "permit_decision":
+                    safe[key] = "UNKNOWN"
+                elif normalized == "permit_required":
+                    safe[key] = None
+                elif normalized == "permit_verdict":
+                    safe[key] = "VERIFY"
+                elif normalized == "required" and isinstance(child, bool):
+                    safe[key] = None
+                elif normalized in {"required_status", "decision", "status", "verdict"} and str(child or "").upper() in {
+                    "YES", "NO", "REQUIRED", "NOT_REQUIRED"
+                }:
+                    safe[key] = "VERIFY"
+                else:
+                    safe[key] = demote(child)
+            return safe
+        if isinstance(value, list):
+            return [demote(child) for child in value]
+        if isinstance(value, tuple):
+            return [demote(child) for child in value]
+        return copy.deepcopy(value)
+
+    public = demote(projected)
+    public["permit_decision"] = "UNKNOWN"
+    public["permit_required"] = None
+    had_core_envelope = _is_server_owned_core_result(raw) or isinstance(
+        raw.get("_permit_rule_engine_core"), dict
+    )
+    public["permit_verdict"] = "CONTACT_AHJ" if had_core_envelope else "VERIFY"
+    public["decision_source"] = "permit_rule_engine_integrity_fail_closed"
+    public.setdefault(
+        "customer_headline", "Verify the permit requirement with the issuing authority."
+    )
+    public.setdefault(
+        "customer_next_step",
+        "Contact the issuing authority before relying on a required/not-required answer.",
+    )
+    evidence_meta = raw.get("_evidence_pack")
+    if (
+        isinstance(evidence_meta, dict)
+        and evidence_meta.get("enabled") is True
+        and "apply_url" in set(evidence_meta.get("failed_closed_fields") or [])
+        and raw.get("apply_url") in (None, "")
+    ):
+        public["apply_path"] = {
+            "support_level": "not available",
+            "url": None,
+            "instructions": "Verify the application route with the issuing authority.",
+        }
+
+    rows = public.get("permits_required")
+    if isinstance(rows, list):
+        for row in rows:
+            if not isinstance(row, dict):
+                continue
+            row["required"] = None
+            row["required_status"] = "VERIFY"
+            if "decision" in row:
+                row["decision"] = "VERIFY"
+            if "status" in row:
+                row["status"] = "VERIFY"
+            if not any(
+                str(row.get(field) or "").strip()
+                for field in ("next_step", "verification_step", "trigger", "description")
+            ):
+                family = str(
+                    row.get("filing_family")
+                    or row.get("permit_family")
+                    or row.get("permit_kind")
+                    or row.get("category")
+                    or "permit"
+                ).replace("_", " ")
+                row["verification_step"] = (
+                    f"Contact the issuing authority to verify the {family} filing lane."
+                )
+    return project_customer_response_egress(public)
+
+
+def build_customer_response_egress(
+    result: dict,
+    job_type: str,
+    city: str,
+    state: str,
+    *,
+    job_category: str = "",
+    explicit_vertical: str = "",
+) -> dict:
+    """Return exact trusted results; fail closed for every ordinary mapping."""
+    if (
+        isinstance(result, _VerifiedCustomerProjection)
+        and result.has_intact_regulated_projection()
+    ):
+        return project_customer_response_egress(copy.deepcopy(result))
+    if _is_server_owned_core_result(result) or (
+        isinstance(result, _ServerOwnedLegacyResult)
+        and result.has_intact_server_owned_payload()
+    ):
+        return _build_trusted_customer_response_egress(
+            result,
+            job_type,
+            city,
+            state,
+            job_category=job_category,
+            explicit_vertical=explicit_vertical,
+        )
+    return _fail_closed_untrusted_customer_projection(result)
 
 
 _PUBLIC_KEEP_EMPTY_FIELDS = frozenset({
@@ -6830,30 +6963,47 @@ def init_db():
             last_checked_at TEXT
         )
     """)
+    # Handoffs are deliberately disposable. Retire the former core-only table
+    # shape instead of migrating private envelopes into the generic snapshot.
+    snapshot_columns = {
+        "handle_sha256",
+        "customer_projection_json",
+        "customer_projection_sha256",
+        "request_identity_json",
+        "owner_scope",
+        "created_at",
+        "expires_at",
+        "max_uses",
+        "use_count",
+        "row_hmac_sha256",
+    }
+    existing_snapshot_columns = {
+        row[1]
+        for row in conn.execute(
+            "PRAGMA table_info(verified_projection_handoffs)"
+        ).fetchall()
+    }
+    if existing_snapshot_columns and existing_snapshot_columns != snapshot_columns:
+        conn.execute("DROP TABLE verified_projection_handoffs")
+        drift_fixes.append("retired private-envelope projection handoffs")
     conn.execute("""
         CREATE TABLE IF NOT EXISTS verified_projection_handoffs (
-            handle_sha256            TEXT PRIMARY KEY,
-            private_envelope_json     TEXT NOT NULL,
-            customer_projection_json TEXT NOT NULL,
-            request_identity_json   TEXT NOT NULL,
-            job_category            TEXT NOT NULL DEFAULT '',
-            owner_scope             TEXT NOT NULL DEFAULT '',
-            created_at                TEXT NOT NULL,
-            expires_at                TEXT NOT NULL,
-            max_uses                  INTEGER NOT NULL,
-            use_count                 INTEGER NOT NULL DEFAULT 0,
-            row_hmac_sha256           TEXT NOT NULL
+            handle_sha256              TEXT PRIMARY KEY,
+            customer_projection_json   TEXT NOT NULL,
+            customer_projection_sha256 TEXT NOT NULL,
+            request_identity_json       TEXT NOT NULL,
+            owner_scope                TEXT NOT NULL DEFAULT '',
+            created_at                 TEXT NOT NULL,
+            expires_at                 TEXT NOT NULL,
+            max_uses                   INTEGER NOT NULL,
+            use_count                  INTEGER NOT NULL DEFAULT 0,
+            row_hmac_sha256             TEXT NOT NULL
         )
     """)
     conn.execute("""
         CREATE INDEX IF NOT EXISTS idx_verified_projection_handoffs_expiry
         ON verified_projection_handoffs(expires_at)
     """)
-    ensure_table_columns(
-        conn,
-        "verified_projection_handoffs",
-        {"job_category": "TEXT NOT NULL DEFAULT ''"},
-    )
     conn.execute("""
         CREATE TABLE IF NOT EXISTS shared_results (
             slug        TEXT PRIMARY KEY,
@@ -7992,6 +8142,7 @@ def _canonical_projection_json(value: object) -> str:
         sort_keys=True,
         separators=(",", ":"),
         ensure_ascii=False,
+        allow_nan=False,
     )
 
 
@@ -8000,6 +8151,15 @@ def _projection_owner_scope(user_email: str | None) -> str:
     if not email:
         return ""
     return "user:" + hashlib.sha256(email.encode("utf-8")).hexdigest()
+
+
+def _canonical_projection_owner_scope(owner_scope: object) -> str:
+    scope = str(owner_scope or "").strip()
+    if not scope:
+        return ""
+    if re.fullmatch(r"user:[0-9a-f]{64}", scope, flags=re.I):
+        return scope.lower()
+    return "scope:" + hashlib.sha256(scope.encode("utf-8")).hexdigest()
 
 
 def _projection_owner_scope_from_headers(headers) -> str:
@@ -8062,13 +8222,14 @@ def _projection_handoff_response_headers(
     }
 
 
-def _projection_handoff_row_hmac(row: dict) -> str:
+def _customer_snapshot_row_hmac(row: dict) -> str:
     sealed = {
         "handle_sha256": str(row.get("handle_sha256") or ""),
-        "private_envelope_json": str(row.get("private_envelope_json") or ""),
         "customer_projection_json": str(row.get("customer_projection_json") or ""),
+        "customer_projection_sha256": str(
+            row.get("customer_projection_sha256") or ""
+        ),
         "request_identity_json": str(row.get("request_identity_json") or ""),
-        "job_category": str(row.get("job_category") or ""),
         "owner_scope": str(row.get("owner_scope") or ""),
         "created_at": str(row.get("created_at") or ""),
         "expires_at": str(row.get("expires_at") or ""),
@@ -8083,6 +8244,231 @@ def _projection_handoff_row_hmac(row: dict) -> str:
     ).hexdigest()
 
 
+def _projection_handoff_row_hmac(row: dict) -> str:
+    """Compatibility test seam for the one generic snapshot HMAC."""
+    return _customer_snapshot_row_hmac(row)
+
+
+def create_customer_snapshot_handoff(
+    customer: object,
+    job_type: str,
+    city: str,
+    state: str,
+    *,
+    job_category: str = "",
+    owner_scope: str = "",
+) -> str:
+    """Persist one canonical customer DTO behind a short-lived bearer handle."""
+    if not isinstance(customer, dict):
+        return ""
+    redacted_customer = redact_public_output(customer)
+    customer_public = project_customer_response_egress(
+        redacted_customer if isinstance(redacted_customer, dict) else {}
+    )
+    try:
+        customer_json = _canonical_projection_json(customer_public)
+    except (TypeError, ValueError):
+        return ""
+
+    handle = "vp_" + secrets.token_urlsafe(32)
+    if not re.fullmatch(r"vp_[A-Za-z0-9_-]{43}", handle):
+        return ""
+    now = utc_now()
+    row = {
+        "handle_sha256": hashlib.sha256(handle.encode("utf-8")).hexdigest(),
+        "customer_projection_json": customer_json,
+        "customer_projection_sha256": hashlib.sha256(
+            customer_json.encode("utf-8")
+        ).hexdigest(),
+        "request_identity_json": _canonical_projection_request_identity(
+            job_type, city, state
+        ),
+        "owner_scope": _canonical_projection_owner_scope(owner_scope),
+        "created_at": now.isoformat(),
+        "expires_at": (
+            now + timedelta(seconds=VERIFIED_PROJECTION_HANDOFF_TTL_SECONDS)
+        ).isoformat(),
+        "max_uses": VERIFIED_PROJECTION_HANDOFF_MAX_USES,
+        "use_count": 0,
+    }
+    row["row_hmac_sha256"] = _customer_snapshot_row_hmac(row)
+    conn = None
+    try:
+        conn = sqlite3.connect(CACHE_DB)
+        conn.execute("BEGIN IMMEDIATE")
+        conn.execute(
+            "DELETE FROM verified_projection_handoffs WHERE expires_at <= ?",
+            [now.isoformat()],
+        )
+        conn.execute(
+            """
+            INSERT INTO verified_projection_handoffs (
+                handle_sha256, customer_projection_json,
+                customer_projection_sha256, request_identity_json,
+                owner_scope, created_at, expires_at, max_uses,
+                use_count, row_hmac_sha256
+            ) VALUES (?,?,?,?,?,?,?,?,0,?)
+            """,
+            [
+                row["handle_sha256"],
+                row["customer_projection_json"],
+                row["customer_projection_sha256"],
+                row["request_identity_json"],
+                row["owner_scope"],
+                row["created_at"],
+                row["expires_at"],
+                row["max_uses"],
+                row["row_hmac_sha256"],
+            ],
+        )
+        conn.commit()
+        return handle
+    except Exception as exc:
+        if conn is not None:
+            conn.rollback()
+        print(f"[customer-snapshot] Handoff creation unavailable: {exc}")
+        return ""
+    finally:
+        if conn is not None:
+            conn.close()
+
+
+def consume_customer_snapshot_handoff(
+    handle: str,
+    customer: object,
+    job_type: str,
+    city: str,
+    state: str,
+    *,
+    owner_scope: str = "",
+) -> _VerifiedCustomerProjection | None:
+    """Atomically authenticate and consume one exact customer snapshot use."""
+    if not re.fullmatch(r"vp_[A-Za-z0-9_-]{43}", str(handle or "")):
+        return None
+    handle_sha256 = hashlib.sha256(handle.encode("utf-8")).hexdigest()
+    conn = None
+    try:
+        now = utc_now()
+        conn = sqlite3.connect(CACHE_DB)
+        conn.execute("BEGIN IMMEDIATE")
+        conn.execute(
+            "DELETE FROM verified_projection_handoffs WHERE expires_at <= ?",
+            [now.isoformat()],
+        )
+        raw = conn.execute(
+            """
+            SELECT customer_projection_json, customer_projection_sha256,
+                   request_identity_json, owner_scope, created_at, expires_at,
+                   max_uses, use_count, row_hmac_sha256
+            FROM verified_projection_handoffs
+            WHERE handle_sha256=?
+            """,
+            [handle_sha256],
+        ).fetchone()
+        if not raw:
+            conn.commit()
+            return None
+        row = {
+            "handle_sha256": handle_sha256,
+            "customer_projection_json": raw[0],
+            "customer_projection_sha256": raw[1],
+            "request_identity_json": raw[2],
+            "owner_scope": raw[3] or "",
+            "created_at": raw[4],
+            "expires_at": raw[5],
+            "max_uses": int(raw[6] or 0),
+            "use_count": int(raw[7] or 0),
+            "row_hmac_sha256": str(raw[8] or ""),
+        }
+        expected_hmac = _customer_snapshot_row_hmac(row)
+        if not hmac.compare_digest(row["row_hmac_sha256"], expected_hmac):
+            conn.commit()
+            return None
+        if parse_timestamp(row["expires_at"]) <= now:
+            conn.execute(
+                "DELETE FROM verified_projection_handoffs WHERE handle_sha256=?",
+                [handle_sha256],
+            )
+            conn.commit()
+            return None
+        if row["use_count"] >= row["max_uses"]:
+            conn.commit()
+            return None
+        if not hmac.compare_digest(
+            row["request_identity_json"],
+            _canonical_projection_request_identity(job_type, city, state),
+        ):
+            conn.commit()
+            return None
+        if not hmac.compare_digest(
+            row["owner_scope"], _canonical_projection_owner_scope(owner_scope)
+        ):
+            conn.commit()
+            return None
+        if not isinstance(customer, dict):
+            conn.commit()
+            return None
+        submitted_json = _canonical_projection_json(customer)
+        submitted_hash = hashlib.sha256(submitted_json.encode("utf-8")).hexdigest()
+        if not (
+            hmac.compare_digest(
+                submitted_json.encode("utf-8"),
+                row["customer_projection_json"].encode("utf-8"),
+            )
+            and hmac.compare_digest(
+                submitted_hash, row["customer_projection_sha256"]
+            )
+            and hmac.compare_digest(
+                hashlib.sha256(
+                    row["customer_projection_json"].encode("utf-8")
+                ).hexdigest(),
+                row["customer_projection_sha256"],
+            )
+        ):
+            conn.commit()
+            return None
+        customer_projection = json.loads(row["customer_projection_json"])
+        if (
+            not isinstance(customer_projection, dict)
+            or _canonical_projection_json(customer_projection)
+            != row["customer_projection_json"]
+            or project_customer_response_egress(customer_projection)
+            != customer_projection
+        ):
+            conn.commit()
+            return None
+        next_row_hmac = _customer_snapshot_row_hmac(
+            {**row, "use_count": row["use_count"] + 1}
+        )
+        updated = conn.execute(
+            """
+            UPDATE verified_projection_handoffs
+            SET use_count=use_count+1, row_hmac_sha256=?
+            WHERE handle_sha256=? AND use_count=? AND use_count < max_uses
+              AND row_hmac_sha256=?
+            """,
+            [
+                next_row_hmac,
+                handle_sha256,
+                row["use_count"],
+                row["row_hmac_sha256"],
+            ],
+        )
+        if updated.rowcount != 1:
+            conn.rollback()
+            return None
+        conn.commit()
+        return _VerifiedCustomerProjection(customer_projection)
+    except Exception as exc:
+        if conn is not None:
+            conn.rollback()
+        print(f"[customer-snapshot] Handoff validation unavailable: {exc}")
+        return None
+    finally:
+        if conn is not None:
+            conn.close()
+
+
 def create_verified_projection_handoff(
     private_result: object,
     customer_result: object,
@@ -8093,98 +8479,15 @@ def create_verified_projection_handoff(
     job_category: str = "",
     owner_scope: str = "",
 ) -> str:
-    """Persist a short-lived private envelope behind an opaque bearer handle.
-
-    The public DTO is stored only so a later request can be checked for exact
-    transport fidelity. It is never treated as proof: every consume revalidates
-    the private sealed envelope and compares regulated fields before restoring
-    the in-process verified wrapper.
-    """
-    if not isinstance(private_result, dict) or not isinstance(
-        private_result.get("_permit_rule_engine_core"), dict
-    ):
-        return ""
-    verified = _project_core_customer_boundary_once(
-        private_result,
-        job_type=job_type,
-        city=city,
-        state=state,
+    """Compatibility alias; private envelopes are intentionally not persisted."""
+    return create_customer_snapshot_handoff(
+        customer_result,
+        job_type,
+        city,
+        state,
         job_category=job_category,
+        owner_scope=owner_scope,
     )
-    if (
-        not isinstance(verified, _VerifiedCustomerProjection)
-        or str(verified.get("decision_source") or "")
-        != "sealed_permit_rule_engine_envelope"
-    ):
-        return ""
-    redacted_customer = redact_public_output(
-        customer_result if isinstance(customer_result, dict) else {}
-    )
-    customer_public = project_customer_response_egress(
-        redacted_customer if isinstance(redacted_customer, dict) else {}
-    )
-    if any(
-        customer_public.get(field) != verified.get(field)
-        for field in _SEALED_CORE_REGULATED_FIELDS
-    ):
-        return ""
-    try:
-        private_json = _canonical_projection_json(private_result)
-        customer_json = _canonical_projection_json(customer_public)
-    except (TypeError, ValueError):
-        return ""
-
-    handle = "vp_" + secrets.token_urlsafe(32)
-    now = utc_now()
-    row = {
-        "handle_sha256": hashlib.sha256(handle.encode("utf-8")).hexdigest(),
-        "private_envelope_json": private_json,
-        "customer_projection_json": customer_json,
-        "request_identity_json": _canonical_projection_request_identity(
-            job_type, city, state
-        ),
-        "job_category": str(job_category or ""),
-        "owner_scope": str(owner_scope or ""),
-        "created_at": now.isoformat(),
-        "expires_at": (
-            now + timedelta(seconds=VERIFIED_PROJECTION_HANDOFF_TTL_SECONDS)
-        ).isoformat(),
-        "max_uses": VERIFIED_PROJECTION_HANDOFF_MAX_USES,
-        "use_count": 0,
-    }
-    row["row_hmac_sha256"] = _projection_handoff_row_hmac(row)
-    try:
-        with sqlite3.connect(CACHE_DB) as conn:
-            conn.execute(
-                "DELETE FROM verified_projection_handoffs WHERE expires_at <= ?",
-                [now.isoformat()],
-            )
-            conn.execute(
-                """
-                INSERT INTO verified_projection_handoffs (
-                    handle_sha256, private_envelope_json,
-                    customer_projection_json, request_identity_json,
-                    job_category, owner_scope, created_at, expires_at, max_uses,
-                    use_count, row_hmac_sha256
-                ) VALUES (?,?,?,?,?,?,?,?,?,0,?)
-                """,
-                [
-                    row["handle_sha256"],
-                    row["private_envelope_json"],
-                    row["customer_projection_json"],
-                    row["request_identity_json"],
-                    row["job_category"],
-                    row["owner_scope"],
-                    row["created_at"],
-                    row["expires_at"],
-                    row["max_uses"],
-                    row["row_hmac_sha256"],
-                ],
-            )
-        return handle
-    except Exception as exc:
-        print(f"[core-projection] Handoff creation unavailable: {exc}")
-        return ""
 
 
 def consume_verified_projection_handoff(
@@ -8196,106 +8499,15 @@ def consume_verified_projection_handoff(
     *,
     owner_scope: str = "",
 ) -> _VerifiedCustomerProjection | None:
-    """Revalidate a private envelope and consume one bounded handoff use."""
-    if not re.fullmatch(r"vp_[A-Za-z0-9_-]{32,96}", str(handle or "")):
-        return None
-    handle_sha256 = hashlib.sha256(handle.encode("utf-8")).hexdigest()
-    try:
-        with sqlite3.connect(CACHE_DB) as conn:
-            raw = conn.execute(
-                """
-                SELECT private_envelope_json, customer_projection_json,
-                       request_identity_json, job_category, owner_scope, created_at,
-                       expires_at, max_uses, use_count, row_hmac_sha256
-                FROM verified_projection_handoffs
-                WHERE handle_sha256=?
-                """,
-                [handle_sha256],
-            ).fetchone()
-            if not raw:
-                return None
-            row = {
-                "handle_sha256": handle_sha256,
-                "private_envelope_json": raw[0],
-                "customer_projection_json": raw[1],
-                "request_identity_json": raw[2],
-                "job_category": raw[3] or "",
-                "owner_scope": raw[4] or "",
-                "created_at": raw[5],
-                "expires_at": raw[6],
-                "max_uses": int(raw[7] or 0),
-                "use_count": int(raw[8] or 0),
-                "row_hmac_sha256": str(raw[9] or ""),
-            }
-            expected_hmac = _projection_handoff_row_hmac(row)
-            if not hmac.compare_digest(row["row_hmac_sha256"], expected_hmac):
-                return None
-            if parse_timestamp(row["expires_at"]) <= utc_now():
-                conn.execute(
-                    "DELETE FROM verified_projection_handoffs WHERE handle_sha256=?",
-                    [handle_sha256],
-                )
-                return None
-            if row["use_count"] >= row["max_uses"]:
-                return None
-            if row["request_identity_json"] != _canonical_projection_request_identity(
-                job_type, city, state
-            ):
-                return None
-            if row["owner_scope"] and not hmac.compare_digest(
-                row["owner_scope"], str(owner_scope or "")
-            ):
-                return None
-            if not isinstance(submitted_result, dict):
-                return None
-            submitted_json = _canonical_projection_json(submitted_result)
-            if not hmac.compare_digest(
-                submitted_json.encode("utf-8"),
-                row["customer_projection_json"].encode("utf-8"),
-            ):
-                return None
-            private_result = json.loads(row["private_envelope_json"])
-            customer_projection = json.loads(row["customer_projection_json"])
-            verified = _project_core_customer_boundary_once(
-                private_result,
-                job_type=job_type,
-                city=city,
-                state=state,
-                job_category=row["job_category"],
-            )
-            if (
-                not isinstance(verified, _VerifiedCustomerProjection)
-                or str(verified.get("decision_source") or "")
-                != "sealed_permit_rule_engine_envelope"
-                or any(
-                    customer_projection.get(field) != verified.get(field)
-                    for field in _SEALED_CORE_REGULATED_FIELDS
-                )
-            ):
-                return None
-            next_row_hmac = _projection_handoff_row_hmac(
-                {**row, "use_count": row["use_count"] + 1}
-            )
-            updated = conn.execute(
-                """
-                UPDATE verified_projection_handoffs
-                SET use_count=use_count+1, row_hmac_sha256=?
-                WHERE handle_sha256=? AND use_count=? AND use_count < max_uses
-                  AND row_hmac_sha256=?
-                """,
-                [
-                    next_row_hmac,
-                    handle_sha256,
-                    row["use_count"],
-                    row["row_hmac_sha256"],
-                ],
-            )
-            if updated.rowcount != 1:
-                return None
-        return _VerifiedCustomerProjection(customer_projection)
-    except Exception as exc:
-        print(f"[core-projection] Handoff validation unavailable: {exc}")
-        return None
+    """Compatibility alias for the one generic snapshot consumer."""
+    return consume_customer_snapshot_handoff(
+        handle,
+        submitted_result,
+        job_type,
+        city,
+        state,
+        owner_scope=owner_scope,
+    )
 
 
 def create_share(job_type: str, city: str, state: str, result: dict) -> str:
@@ -8615,20 +8827,31 @@ def get_or_create_checklist(result: dict, job_type: str = "", city: str = "", st
         state=state,
     )
     if core_projection is not None:
-        # A core-active checklist is a deterministic renderer of the same one
-        # customer projection. Integrity-fail-closed projections retain all
-        # applicable family lanes and never invoke an AI/legacy mutator.
         raw_family_rows = core_projection.get("family_decisions")
         family_rows: list[dict] = raw_family_rows if isinstance(raw_family_rows, list) else []
-        items = [
-            {
-                "label": f"{str(row.get('family') or 'permit').replace('_', ' ').title()}: {str(row.get('verdict') or 'VERIFY')}",
-                "category": str(row.get("family") or "permit"),
-                "required": row.get("verdict") == "REQUIRED",
-            }
-            for row in family_rows
-            if isinstance(row, dict)
-        ]
+        if family_rows:
+            items = [
+                {
+                    "label": f"{str(row.get('family') or 'permit').replace('_', ' ').title()}: {str(row.get('verdict') or 'VERIFY')}",
+                    "description": str(row.get("trigger") or "Confirm this filing lane with the issuing authority."),
+                    "category": str(row.get("family") or "permit"),
+                    "required": True if row.get("verdict") == "REQUIRED" else False if row.get("verdict") == "NOT_REQUIRED" else None,
+                }
+                for row in family_rows
+                if isinstance(row, dict)
+            ]
+        else:
+            permit_rows = core_projection.get("permits_required")
+            items = [
+                {
+                    "label": str(row.get("permit_type") or row.get("permit_kind") or row.get("filing_family") or "Permit filing lane"),
+                    "description": str(row.get("next_step") or row.get("verification_step") or row.get("trigger") or row.get("description") or "Confirm this filing lane with the issuing authority."),
+                    "category": str(row.get("filing_family") or row.get("permit_family") or row.get("permit_kind") or row.get("category") or "permit").lower(),
+                    "required": row.get("required") if isinstance(row.get("required"), bool) else None,
+                }
+                for row in (permit_rows if isinstance(permit_rows, list) else [])
+                if isinstance(row, dict)
+            ]
         return {
             "title": f"Permit checklist — {city}, {state}",
             "summary": str(core_projection.get("coverage_reason") or "Source-backed permit decision checklist"),
@@ -8638,6 +8861,34 @@ def get_or_create_checklist(result: dict, job_type: str = "", city: str = "", st
     # Checklist generation can enrich/mutate its input; keep the CustomerView DTO
     # boundary immutable so public lookup/share/report/checklist surfaces stay identical.
     result = copy.deepcopy(result) if isinstance(result, dict) else {}
+    permit_rows = result.get("permits_required")
+    if (
+        str(result.get("permit_decision") or "").upper() == "UNKNOWN"
+        and result.get("permit_required") is None
+        and isinstance(permit_rows, list)
+        and permit_rows
+    ):
+        items = [
+            {
+                "label": str(row.get("permit_type") or row.get("permit_kind") or row.get("filing_family") or "Permit filing lane"),
+                "description": str(row.get("next_step") or row.get("verification_step") or row.get("trigger") or row.get("description") or "Contact the issuing authority to verify this filing lane."),
+                "category": str(row.get("filing_family") or row.get("permit_family") or row.get("permit_kind") or row.get("category") or "permit").lower(),
+                "required": None,
+            }
+            for row in permit_rows
+            if isinstance(row, dict)
+        ]
+        return _sanitize_checklist_customer_output(
+            {
+                "title": f"Permit verification checklist — {city}, {state}",
+                "summary": "Verify each applicable filing lane with the issuing authority before work or filing.",
+                "items": items[:12],
+                "cached": False,
+            },
+            job_type,
+            city,
+            state,
+        )
     result_hash = make_result_hash(result)
     try:
         conn = sqlite3.connect(CACHE_DB)
@@ -9173,9 +9424,14 @@ def send_email_report(to_email: str, job: str, city: str, state: str, data: dict
         return s.replace("<", "&lt;").replace(">", "&gt;").replace('"', "&quot;")
 
     subject = f"Permit Research: {job} in {city}, {state}"
-    pv = "YES" if (data.get("permit_required") is True or data.get("permit_verdict") == "YES" or data.get("permit_decision") == "REQUIRED") else "NO"
-    verdict_color = {"YES": "#10b981", "NO": "#ef4444"}.get(pv, "#10b981")
-    verdict_bg    = {"YES": "rgba(16,185,129,.12)", "NO": "rgba(239,68,68,.12)"}.get(pv, "rgba(16,185,129,.12)")
+    if data.get("permit_required") is True or data.get("permit_verdict") == "YES" or data.get("permit_decision") == "REQUIRED":
+        pv = "YES"
+    elif data.get("permit_required") is False or data.get("permit_verdict") == "NO" or data.get("permit_decision") == "NOT_REQUIRED":
+        pv = "NO"
+    else:
+        pv = "VERIFY"
+    verdict_color = {"YES": "#10b981", "NO": "#ef4444", "VERIFY": "#d97706"}.get(pv, "#d97706")
+    verdict_bg    = {"YES": "rgba(16,185,129,.12)", "NO": "rgba(239,68,68,.12)", "VERIFY": "rgba(217,119,6,.12)"}.get(pv, "rgba(217,119,6,.12)")
 
     fee    = esc(data.get("fee_range", ""))
     office = esc(data.get("applying_office", ""))
@@ -9194,8 +9450,8 @@ def send_email_report(to_email: str, job: str, city: str, state: str, data: dict
     # Build permit rows
     permit_rows = ""
     for p in permits:
-        req = "YES" if p.get("required") is not False else "NO"
-        req_color = {"YES": "#10b981", "NO": "#ef4444"}.get(req, "#94a3b8")
+        req = "YES" if p.get("required") is True else "NO" if p.get("required") is False else "VERIFY"
+        req_color = {"YES": "#10b981", "NO": "#ef4444", "VERIFY": "#d97706"}.get(req, "#94a3b8")
         permit_rows += f"""
         <tr>
           <td style="padding:10px 0;border-bottom:1px solid #e2e8f0;vertical-align:top;width:60px">
@@ -9229,7 +9485,7 @@ def send_email_report(to_email: str, job: str, city: str, state: str, data: dict
     # Plain text fallback
     text_lines = [f"PERMIT RESEARCH REPORT\nJob: {job}\nLocation: {city}, {state}\n"]
     for p in permits:
-        req = "YES" if p.get("required") is not False else "NO"
+        req = "YES" if p.get("required") is True else "NO" if p.get("required") is False else "VERIFY"
         text_lines.append(f"[{req}] {p.get('permit_type','')}")
         if p.get("notes"): text_lines.append(f"  {p['notes']}")
     if fee:      text_lines.append(f"\nFee: {data.get('fee_range','')}")
@@ -10044,7 +10300,8 @@ def _path_match_is_inside_url(text: str, start: int) -> bool:
 
 
 def _redact_sensitive_text(text: str) -> str:
-    redacted = _SENSITIVE_SECRET_RE.sub("[REDACTED]", text)
+    redacted = _OPAQUE_PROJECTION_HANDLE_RE.sub("[REDACTED]", text)
+    redacted = _SENSITIVE_SECRET_RE.sub("[REDACTED]", redacted)
 
     def replace_path(match: re.Match[str]) -> str:
         return match.group(0) if _path_match_is_inside_url(redacted, match.start()) else "[REDACTED]"
@@ -11274,7 +11531,6 @@ class Handler(BaseHTTPRequestHandler):
                         suppress_cache_write=evidence_allowed or qa_cache_mode == "bypass",
                         bypass_lookup_caches=bool(qa_cache_mode),
                     )
-                    private_handoff_result = copy.deepcopy(result)
                     is_cached = result.get("_cached", False)
 
                     if not unlimited and not is_sample_demo:
@@ -11286,7 +11542,16 @@ class Handler(BaseHTTPRequestHandler):
                     elif unlimited:
                         result["remaining_lookups"] = FREE_LOOKUP_LIMIT
 
-                    result = finalize_permit_lookup_result(result, job_type, city, state, is_cached=is_cached, explicit_vertical=explicit_vertical, evidence_allowed=evidence_allowed, job_category=job_category)
+                    result = finalize_permit_lookup_result(
+                        _mark_server_owned_result(result),
+                        job_type,
+                        city,
+                        state,
+                        is_cached=is_cached,
+                        explicit_vertical=explicit_vertical,
+                        evidence_allowed=evidence_allowed,
+                        job_category=job_category,
+                    )
                     existing_citations = result.get("claim_citations") if isinstance(result.get("claim_citations"), list) else []
                     display_sources = _source_dicts(result, city=city, state=state)
                     result["source_urls"] = [s.get("url") for s in display_sources if s.get("url")]
@@ -11325,15 +11590,14 @@ class Handler(BaseHTTPRequestHandler):
                     # execution, but every request class uses the same final
                     # customer ViewModel and egress projection.
                     customer_result = build_customer_response_egress(
-                        result,
+                        _mark_server_owned_result(result),
                         job_type,
                         city,
                         state,
                         job_category=job_category,
                         explicit_vertical=explicit_vertical,
                     )
-                    projection_handle = create_verified_projection_handoff(
-                        private_handoff_result,
+                    projection_handle = create_customer_snapshot_handoff(
                         customer_result,
                         job_type,
                         city,
@@ -11385,13 +11649,12 @@ class Handler(BaseHTTPRequestHandler):
                     try:
                         evidence_allowed = evidence_pack_allowed_for_request("/api/batch-permit", self.headers)
                         result = research_permit(job_type, city, state, zip_code, job_category=job_category, job_value=job_value, use_cache=not evidence_allowed, suppress_cache_write=evidence_allowed)
-                        private_handoff_result = copy.deepcopy(result)
                         if evidence_allowed:
-                            result = finalize_permit_lookup_result(result, job_type, city, state, is_cached=result.get("_cached", False), explicit_vertical=explicit_vertical, evidence_allowed=evidence_allowed, job_category=job_category)
+                            result = finalize_permit_lookup_result(_mark_server_owned_result(result), job_type, city, state, is_cached=result.get("_cached", False), explicit_vertical=explicit_vertical, evidence_allowed=evidence_allowed, job_category=job_category)
 # Contract sentinel for legacy stability test and batch customer ViewModel boundary:
                         # build_customer_permit_view_model(result, job_type, city, state)
                         response = build_customer_response_egress(
-                            result,
+                            _mark_server_owned_result(result),
                             job_type,
                             city,
                             state,
@@ -11399,8 +11662,7 @@ class Handler(BaseHTTPRequestHandler):
                             explicit_vertical=explicit_vertical,
                         )
                         response.update({"job_type": job_type, "city": city, "state": state, "error": None})
-                        projection_handle = create_verified_projection_handoff(
-                            private_handoff_result,
+                        projection_handle = create_customer_snapshot_handoff(
                             response,
                             job_type,
                             city,
@@ -11500,8 +11762,14 @@ class Handler(BaseHTTPRequestHandler):
                     str(data.get("state") or ""),
                     owner_scope=_projection_owner_scope(user_email),
                 )
-                if verified_result is not None:
-                    data = {**data, "result": verified_result}
+                safe_result = verified_result if verified_result is not None else build_customer_response_egress(
+                    result,
+                    str(data.get("job_type") or ""),
+                    str(data.get("city") or ""),
+                    str(data.get("state") or ""),
+                    job_category=str(data.get("job_category") or ""),
+                )
+                data = {**data, "result": safe_result}
                 html_doc = _redact_sensitive_text(render_white_label_report_html(redact_public_output(data)))
                 self.send_response(200)
                 self.send_header("Content-Type", "text/html; charset=utf-8")
@@ -11669,20 +11937,17 @@ class Handler(BaseHTTPRequestHandler):
                     state,
                     owner_scope=_projection_owner_scope_from_headers(self.headers),
                 )
-                core_result = verified_result or _project_core_customer_boundary_once(
-                    result,
-                    job_type=job_type,
-                    city=city,
-                    state=state,
-                    job_category=job_category,
-                )
-                checklist_input = core_result or build_customer_response_egress(
-                    result,
-                    job_type,
-                    city,
-                    state,
-                    job_category=job_category,
-                    explicit_vertical=explicit_vertical,
+                checklist_input = (
+                    verified_result
+                    if verified_result is not None
+                    else build_customer_response_egress(
+                        result,
+                        job_type,
+                        city,
+                        state,
+                        job_category=job_category,
+                        explicit_vertical=explicit_vertical,
+                    )
                 )
                 self.send_json(
                     200,
@@ -11795,11 +12060,10 @@ class Handler(BaseHTTPRequestHandler):
                     suppress_cache_write=evidence_allowed or qa_cache_mode == "bypass",
                     bypass_lookup_caches=bool(qa_cache_mode),
                 )
-                private_handoff_result = copy.deepcopy(result)
                 original_apply_url = result.get("apply_url") if isinstance(result, dict) else None
                 is_cached = result.get("_cached", False) if isinstance(result, dict) else False
                 result = finalize_permit_lookup_result(
-                    result,
+                    _mark_server_owned_result(result),
                     job_type,
                     city,
                     state,
@@ -11809,7 +12073,7 @@ class Handler(BaseHTTPRequestHandler):
                     job_category=job_category,
                 )
                 api_result = build_customer_response_egress(
-                    result,
+                    _mark_server_owned_result(result),
                     job_type,
                     city,
                     state,
@@ -11824,8 +12088,7 @@ class Handler(BaseHTTPRequestHandler):
                     and original_apply_url in ("", None)
                 ):
                     api_result["apply_url"] = original_apply_url or ""
-                projection_handle = create_verified_projection_handoff(
-                    private_handoff_result,
+                projection_handle = create_customer_snapshot_handoff(
                     api_result,
                     job_type,
                     city,
@@ -11863,8 +12126,12 @@ class Handler(BaseHTTPRequestHandler):
                     state,
                     owner_scope=_projection_owner_scope_from_headers(self.headers),
                 )
-                if verified_result is not None:
-                    rdata = verified_result
+                rdata = verified_result if verified_result is not None else build_customer_response_egress(
+                    rdata,
+                    job,
+                    city,
+                    state,
+                )
                 save_email_capture(email, "email-report")
                 # Run SMTP in thread with 10s timeout to prevent handler hang
                 import concurrent.futures
@@ -11895,6 +12162,26 @@ class Handler(BaseHTTPRequestHandler):
                 if not job_name or not city or not state:
                     self.send_json(400, {"error": "job_name, city, state required"})
                     return
+                submitted_result = data.get("result_json")
+                job_type = str(data.get("job_type") or data.get("trade") or "").strip()
+                verified_result = consume_customer_snapshot_handoff(
+                    _projection_handoff_handle_from_headers(self.headers),
+                    submitted_result,
+                    job_type,
+                    city,
+                    state,
+                    owner_scope=_projection_owner_scope(user_email),
+                )
+                safe_result = (
+                    verified_result
+                    if verified_result is not None
+                    else build_customer_response_egress(
+                        submitted_result,
+                        job_type,
+                        city,
+                        state,
+                    )
+                ) if isinstance(submitted_result, dict) else None
                 job = create_job(
                     user_email, job_name, city, state,
                     address=data.get("address", ""),
@@ -11903,7 +12190,7 @@ class Handler(BaseHTTPRequestHandler):
                     status=data.get("status", "planning"),
                     notes=data.get("notes", ""),
                     expiry_date=data.get("expiry_date", ""),
-                    result_json=data.get("result_json"),
+                    result_json=safe_result,
                 )
                 if job.get("expiry_date"):
                     upsert_permit_reminder(user_email, job_name, city, state, job.get("expiry_date", ""))

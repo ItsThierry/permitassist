@@ -331,7 +331,8 @@ def test_beta_feedback_and_white_label_report_endpoints(tmp_path, monkeypatch):
         assert headers["Content-Type"].startswith("text/html")
         assert "Boban Build Co" in html
         assert "Print / Save PDF" in html
-        assert "Tenant finish permits are required." in html
+        assert "Tenant finish permits are required." not in html
+        assert "Permit decision" in html
 
     with sqlite3.connect(server.CACHE_DB) as conn:
         feedback_count = conn.execute("SELECT COUNT(*) FROM beta_feedback").fetchone()[0]

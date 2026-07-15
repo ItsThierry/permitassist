@@ -299,7 +299,22 @@ def test_customer_api_share_report_projection_carries_canonical_rows_and_mirror_
     assert public["permits_required"][0]["filing_family"] == "building"
     assert public["permits_required_logic"][0]["segment"] == "commercial"
 
-    slug = server.create_share(job, "Miami", "FL", raw)
+    handle = server.create_customer_snapshot_handoff(
+        public,
+        job,
+        "Miami",
+        "FL",
+        job_category="commercial",
+    )
+    verified = server.consume_customer_snapshot_handoff(
+        handle,
+        public,
+        job,
+        "Miami",
+        "FL",
+    )
+    assert verified is not None
+    slug = server.create_share(job, "Miami", "FL", verified)
     share_json = server.get_share(slug)
     html = server.render_share_page(share_json)
     assert "permit_decision_contract" not in html

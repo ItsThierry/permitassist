@@ -542,6 +542,7 @@ def test_part4_server_surfaces_use_one_safe_projection_for_tampered_active_paylo
         job_category="commercial",
     )
     broken = _tamper(wrapped, "sealed_projection_payload_json")
+    current_request = server._mark_server_owned_result(broken)
     expected = pre.project_core_customer_boundary(
         broken,
         job_type="commercial tenant improvement",
@@ -550,7 +551,7 @@ def test_part4_server_surfaces_use_one_safe_projection_for_tampered_active_paylo
         job_category="commercial",
     )
     view = server.build_customer_permit_view_model(
-        broken,
+        current_request,
         "commercial tenant improvement",
         "Anchorage",
         "AK",
@@ -558,16 +559,16 @@ def test_part4_server_surfaces_use_one_safe_projection_for_tampered_active_paylo
     )
     assert view == expected
     checklist = server.get_or_create_checklist(
-        broken,
+        current_request,
         "commercial tenant improvement",
         "Anchorage",
         "AK",
     )
     assert [item["category"] for item in checklist["items"]] == _fixture()["w4_family_order"]
-    assert {item["required"] for item in checklist["items"]} == {False}
+    assert {item["required"] for item in checklist["items"]} == {None}
     report_html = server.render_white_label_report_html(
         {
-            "result": broken,
+            "result": current_request,
             "job_type": "commercial tenant improvement",
             "city": "Anchorage",
             "state": "AK",
