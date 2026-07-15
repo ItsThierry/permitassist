@@ -1,0 +1,9 @@
+{
+  "manifest_version": "permitassist.rule-engine-part2-jurisdiction-id-canonicalization-red-manifest.v1",
+  "frozen_before_behavior_edits": true,
+  "baseline_red_checkpoint": "04f970c23b31d171a32d998af673601c8a506349",
+  "files": {
+    "tests/test_permit_rule_engine_part2_jurisdiction_id_canonicalization.py": "0f2639b7d40eb6c10cb38f4c9794100df9b9594eebfe4c5e7b92be70229dcd77"
+  },
+  "review_basis": "/home/boban/.hermes/tmp/permitassist-rule-engine-trust-successor-20260715/part2_release_continuation_20260715/OPUS_PRE_FIX_DESIGN_REVIEW.txt"
+}
