@@ -48,6 +48,12 @@ FORBIDDEN_PUBLIC_KEYS = {
     "trusted_state",
     "is_verified",
     "verified",
+    "projection_handle",
+    "projection_handles",
+    "verified_projection_handle",
+    "verified_projection_handles",
+    "handoff_handle",
+    "handoff_handles",
     "snapshot_hash",
     "projection_hash",
     "packet_hash",
@@ -214,8 +220,13 @@ def _projected_customer_payload() -> dict:
         "nested": {
             "retrieval_metadata": {"query": "internal"},
             "snapshot_hash": "a" * 64,
-            "deeper": {"projection_digest": "b" * 64},
+            "deeper": {
+                "projection_digest": "b" * 64,
+                "verified_projection_handles": ["vp_" + "A" * 43],
+                "continuity_token": "vp_" + "B" * 43,
+            },
         },
+        "projection_handle": "vp_" + "C" * 43,
         "packet_hash": "c" * 64,
         "request_fingerprint_sha256": "d" * 64,
     }
@@ -387,6 +398,7 @@ def test_customer_egress_is_idempotent_and_does_not_demote_ten_lane_packet(tmp_p
 
     assert once == twice
     _assert_public_boundary(once)
+    assert "vp_" not in json.dumps(once, sort_keys=True)
 
 
 def test_historical_active_core_finalize_then_egress_keeps_authoritative_required_decision(

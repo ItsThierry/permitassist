@@ -868,7 +868,15 @@ _CUSTOMER_EGRESS_FORBIDDEN_FIELD_NAMES = frozenset({
     "trusted_state",
     "is_verified",
     "verified",
+    "projection_handle",
+    "projection_handles",
+    "verified_projection_handle",
+    "verified_projection_handles",
+    "handoff_handle",
+    "handoff_handles",
 })
+
+_OPAQUE_PROJECTION_HANDLE_RE = re.compile(r"^vp_[A-Za-z0-9_-]{40,}$")
 
 
 def project_customer_response_egress(value: dict) -> dict:
@@ -900,6 +908,8 @@ def project_customer_response_egress(value: dict) -> dict:
             return [project(child) for child in item]
         if isinstance(item, tuple):
             return [project(child) for child in item]
+        if isinstance(item, str) and _OPAQUE_PROJECTION_HANDLE_RE.fullmatch(item):
+            return ""
         return copy.deepcopy(item)
 
     projected = project(value if isinstance(value, dict) else {})
