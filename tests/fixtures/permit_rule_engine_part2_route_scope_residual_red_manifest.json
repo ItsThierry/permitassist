@@ -1,0 +1,19 @@
+{
+  "schema_version": "permitassist.rule-engine-part2-route-scope-residual-red-manifest.v1",
+  "baseline_commit": "6a2316cb0ec46c4a0d41d6c0c7c6e3864e4c3516",
+  "frozen_before_behavior_edit": true,
+  "review_finding_sources": [
+    "exact_6a2316cb0ec4/FABLE_REVIEW.raw.txt:59-62",
+    "exact_6a2316cb0ec4/OPUS_REVIEW.raw.txt:53-56"
+  ],
+  "contract": [
+    "explicit commercial redirects to a different authority fail closed",
+    "explicit no-commercial language fails closed",
+    "explicit commercial exclusion language fails closed",
+    "affirmative residential-and-commercial scope at the same authority remains accepted",
+    "no jurisdiction-specific conditionals or URL allowlists"
+  ],
+  "files": {
+    "test_permit_rule_engine_part2_route_scope_residual.py": "e683c1ec3aa7f1a727ec62773668a900caf2dc729b5ffbb0a666c9d3658ef661"
+  }
+}
