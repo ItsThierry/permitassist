@@ -5101,20 +5101,21 @@ def build_customer_permit_view_model(result: dict, job_type: str = "", city: str
                 if str(canonical_original.get("permit_decision") or "").upper().strip() == "REQUIRED":
                     final_public = canonical_original
             if cell_lock and str(cell_lock.get("permit_decision") or "").upper().strip() == "NOT_REQUIRED":
-                final_public["permit_decision"] = "NOT_REQUIRED"
-                final_public["permit_required"] = False
-                final_public["permit_verdict"] = "NO"
-                final_public["permit_name"] = "No permit required"
+                # Final public-boundary re-enforcement must repair every customer
+                # mirror, not only the top-level binary fields. Later package and
+                # summary normalizers can otherwise leave REQUIRED prose beneath
+                # an authoritative NOT_REQUIRED decision.
+                final_public = enforce_decision_cell_primary(
+                    final_public,
+                    cell_lock,
+                    city,
+                    state,
+                    public=True,
+                )
                 final_public["permit_type"] = "No permit required"
-                final_public["permit_kind"] = "Not Required"
-                final_public["permits_required"] = []
                 final_public["required_permit_names"] = []
                 final_public["required_permit_families"] = []
                 final_public["required_permit_segments"] = []
-                if cell_lock.get("customer_action"):
-                    final_public["not_required_reason"] = cell_lock.get("customer_action")
-                if cell_lock.get("source_urls"):
-                    final_public["source_urls"] = list(cell_lock.get("source_urls") or [])
                 final_public["data_source"] = _AUTHORITATIVE_NOT_REQUIRED_PUBLIC_SOURCE
             final_public = enforce_unbound_not_required_source_floor(
                 final_public,

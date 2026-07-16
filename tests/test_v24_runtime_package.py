@@ -548,4 +548,10 @@ def test_v24_exact_not_required_lock_survives_internal_finalize_until_public_egr
     assert public["permit_verdict"] == "NO"
     assert public["permit_name"] == "No permit required"
     assert public["permits_required"] == []
+    assert public["customer_headline"].lower().startswith("no permit required")
+    assert "file the required permit" not in public["customer_next_step"].lower()
+    assert public["customer_result_summary"]["permit_decision"] == "NOT_REQUIRED"
+    assert public["customer_result_summary"]["permit_name"] == "No permit required"
+    assert public["customer_first_screen_summary"]["decision"] == "NOT_REQUIRED"
+    assert "file the required permit" not in public["customer_first_screen_summary"]["next_action"].lower()
     assert "_decision_cell_primary_lock" not in json.dumps(public, sort_keys=True)
