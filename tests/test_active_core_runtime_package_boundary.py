@@ -27,6 +27,8 @@ from api import permit_rule_engine as pre  # noqa: E402
 from api import server  # noqa: E402
 from api import v24_decision_cells as v24  # noqa: E402
 
+_server_pre = sys.modules[server.build_active_core_first_result.__module__]
+
 MANIFEST = ROOT / "knowledge" / "v24" / "permitassist_v24_manifest.json"
 MANIFEST_SHA256 = hashlib.sha256(MANIFEST.read_bytes()).hexdigest()
 STALE_MANIFEST_SHA256 = "0" * 64
@@ -170,6 +172,103 @@ def test_allowlisted_missing_core_envelope_raises_typed_failure(
             job_category="residential",
         )
     assert caught.value.package_code == "core_envelope_unavailable"
+
+
+def test_active_allowlisted_nonexact_identity_never_calls_legacy(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    _activate_buckeye(monkeypatch, MANIFEST_SHA256)
+    legacy_calls = 0
+
+    def forbidden_legacy(*_args, **_kwargs):
+        nonlocal legacy_calls
+        legacy_calls += 1
+        raise AssertionError("active allowlisted identity failure must not enter legacy research")
+
+    monkeypatch.setattr(server, "research_permit", forbidden_legacy)
+    monkeypatch.setattr(
+        _server_pre,
+        "resolve_jurisdiction_identity",
+        lambda *_args, **_kwargs: _server_pre.JurisdictionIdentityResolution(
+            _server_pre.JurisdictionResolutionStatus.UNCOVERED,
+            (),
+            None,
+            "simulated non-exact active identity",
+        ),
+    )
+
+    with pytest.raises(server.ActiveCorePackageUnavailableError) as caught:
+        server._research_permit_with_budget(
+            "residential reroof",
+            "Buckeye",
+            "AZ",
+            job_category="residential",
+        )
+
+    assert caught.value.package_code == "jurisdiction_identity_uncovered"
+    assert legacy_calls == 0
+
+
+@pytest.mark.parametrize(
+    ("broken_symbol", "expected_package_code"),
+    (
+        ("resolve_jurisdiction_identity", "jurisdiction_identity_unavailable"),
+        ("resolve_v24_cell", "v24_resolution_unavailable"),
+        ("extract_sealed_public_projection", "core_envelope_unavailable"),
+    ),
+)
+def test_active_allowlisted_unexpected_core_exception_never_calls_legacy(
+    monkeypatch: pytest.MonkeyPatch,
+    broken_symbol: str,
+    expected_package_code: str,
+) -> None:
+    _activate_buckeye(monkeypatch, MANIFEST_SHA256)
+    legacy_calls = 0
+
+    def broken_stage(*_args, **_kwargs):
+        raise RuntimeError(f"simulated {broken_symbol} failure")
+
+    def forbidden_legacy(*_args, **_kwargs):
+        nonlocal legacy_calls
+        legacy_calls += 1
+        raise AssertionError("active allowlisted core exception must not enter legacy research")
+
+    monkeypatch.setattr(_server_pre, broken_symbol, broken_stage)
+    monkeypatch.setattr(server, "research_permit", forbidden_legacy)
+
+    with pytest.raises(server.ActiveCorePackageUnavailableError) as caught:
+        server._research_permit_with_budget(
+            "residential reroof",
+            "Buckeye",
+            "AZ",
+            job_category="residential",
+        )
+
+    assert caught.value.package_code == expected_package_code
+    assert legacy_calls == 0
+
+
+def test_unallowlisted_unexpected_identity_exception_preserves_legacy(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    _activate_buckeye(monkeypatch, MANIFEST_SHA256)
+    marker = {"legacy_path": True}
+
+    def broken_identity(*_args, **_kwargs):
+        raise RuntimeError("simulated unallowlisted identity failure")
+
+    monkeypatch.setattr(_server_pre, "resolve_jurisdiction_identity", broken_identity)
+    monkeypatch.setattr(server, "research_permit", lambda *_args, **_kwargs: marker)
+
+    assert (
+        server._research_permit_with_budget(
+            "commercial tenant improvement",
+            "Denver",
+            "CO",
+            job_category="commercial",
+        )
+        is marker
+    )
 
 
 def test_core_off_preserves_legacy_path_when_package_is_unavailable(

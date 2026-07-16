@@ -2868,24 +2868,36 @@ def build_active_core_first_result(
 ) -> dict[str, Any] | None:
     """Return a deterministic exact-complete core result before legacy research.
 
-    Partial, unsupported, ambiguous, uncovered, unallowlisted, and flag-off
-    requests return ``None`` and continue through the existing research path.
+    Flag-off and intentionally unallowlisted requests return ``None`` and
+    continue through the existing research path. Once a request lexically
+    targets an active allowlisted jurisdiction, every identity, package,
+    resolution, envelope, and projection failure is typed and fail-closed.
     """
 
     if get_rule_engine_core_mode() != "active":
         return None
     targets_active_core = _request_targets_active_core(city, state)
-    identity = resolve_jurisdiction_identity(city, state)
+    try:
+        identity = resolve_jurisdiction_identity(city, state)
+    except Exception as exc:
+        if targets_active_core:
+            raise ActiveCorePackageUnavailableError("jurisdiction_identity_unavailable") from exc
+        return None
     if identity.status is JurisdictionResolutionStatus.INDEX_UNAVAILABLE and targets_active_core:
         health = active_core_runtime_health()
         raise ActiveCorePackageUnavailableError(str(health.get("code") or "index_unavailable"))
-    if (
-        identity.status is not JurisdictionResolutionStatus.EXACT
-        or identity.selected is None
-        or not core_activation_allowed(identity.selected.jurisdiction_id)
-    ):
+    if identity.status is not JurisdictionResolutionStatus.EXACT or identity.selected is None:
+        if targets_active_core:
+            raise ActiveCorePackageUnavailableError(
+                f"jurisdiction_identity_{identity.status.value}"
+            )
         return None
-    resolution = resolve_v24_cell(city, state, job_type, job_category, force=True)
+    if not core_activation_allowed(identity.selected.jurisdiction_id):
+        return None
+    try:
+        resolution = resolve_v24_cell(city, state, job_type, job_category, force=True)
+    except Exception as exc:
+        raise ActiveCorePackageUnavailableError("v24_resolution_unavailable") from exc
     if resolution.status is V24ResolutionStatus.INDEX_UNAVAILABLE:
         health = active_core_runtime_health()
         raise ActiveCorePackageUnavailableError(str(health.get("code") or "index_unavailable"))
@@ -2899,9 +2911,10 @@ def build_active_core_first_result(
             facts=facts,
         )
         result = attach_core_decision_envelope({}, envelope)
+        sealed_projection = extract_sealed_public_projection(result, city=city, state=state)
     except Exception as exc:
         raise ActiveCorePackageUnavailableError("core_envelope_unavailable") from exc
-    if extract_sealed_public_projection(result, city=city, state=state) is None:
+    if sealed_projection is None:
         raise ActiveCorePackageUnavailableError("core_envelope_unavailable")
     return result
 
