@@ -1069,6 +1069,102 @@ def _merge_locked_decision_cell_sources(result: dict[str, Any], lock: dict[str, 
         result["source_urls"] = [source["url"] for source in merged_sources]
 
 
+_LOCKED_NOT_REQUIRED_STALE_WARNING_RE = re.compile(
+    r"\b(?:before\s+filing|demoted\s+to\s+verify|primary\s+permit\s+was\s+repaired|"
+    r"forced\s+away\s+from\s+residential|claim[-\s]?linked\s+official\s+decision\s+evidence|"
+    r"exact\s+permit\s+(?:name|category)|form\s+title|requires?\s+building\s*/\s*ti\s+review)\b",
+    re.I,
+)
+
+
+def _repair_locked_not_required_customer_mirrors(result: dict[str, Any], lock: dict[str, Any]) -> None:
+    """Scrub stale primary-filing mirrors for a validated exact exemption lock.
+
+    This helper is intentionally lock-gated. It does not infer trust from a
+    submitted/public DTO and it preserves separately triggered companion rows,
+    companion warnings, and their customer guidance.
+    """
+    result["permits_required_logic"] = []
+    result["required_permit_names"] = []
+    result["required_permit_families"] = []
+    result["required_permit_segments"] = []
+
+    apply_path = dict(result.get("apply_path") or {}) if isinstance(result.get("apply_path"), dict) else {}
+    apply_path.update({
+        "state": "NOT_APPLICABLE",
+        "channel": "no_permit_required",
+        "support_level": "not applicable",
+        "permit_category": None,
+        "permit_type": None,
+        "portal_url": None,
+        "platform": None,
+        "login_required": None,
+        "verification_note": "No permit filing path is needed for the resolved NOT_REQUIRED scope.",
+    })
+    result["apply_path"] = apply_path
+
+    raw_warnings = (result.get("warnings") if isinstance(result.get("warnings"), list) else []) or []
+    safe_warnings: list[Any] = []
+    seen_warnings: set[str] = set()
+    for warning in raw_warnings:
+        text = str(warning or "").strip()
+        if not text or _LOCKED_NOT_REQUIRED_STALE_WARNING_RE.search(text):
+            continue
+        key = text.casefold()
+        if key not in seen_warnings:
+            seen_warnings.add(key)
+            safe_warnings.append(warning)
+    result["warnings"] = safe_warnings
+
+    locked_urls = [
+        str(value or "").strip()
+        for value in ((lock.get("source_urls") if isinstance(lock.get("source_urls"), list) else []) or [])
+        if str(value or "").strip().startswith("http")
+    ]
+    locked_sources = (lock.get("sources") if isinstance(lock.get("sources"), list) else []) or []
+    for source in locked_sources:
+        if isinstance(source, dict):
+            url = str(source.get("url") or source.get("source_url") or "").strip()
+            if url.startswith("http"):
+                locked_urls.append(url)
+        elif str(source or "").strip().startswith("http"):
+            locked_urls.append(str(source).strip())
+    has_locked_source = bool(locked_urls)
+
+    source_support = dict(result.get("source_support") or {}) if isinstance(result.get("source_support"), dict) else {}
+    if has_locked_source:
+        source_support["has_source_backed_evidence"] = True
+        source_support["has_official_source"] = True
+    source_support["decision_mutation_allowed"] = False
+    result["source_support"] = source_support
+
+    source_floor = dict(result.get("source_evidence_floor") or {}) if isinstance(result.get("source_evidence_floor"), dict) else {}
+    if source_floor:
+        if has_locked_source:
+            source_floor["has_source_backed_evidence"] = True
+        source_floor["decision_mutation_allowed"] = False
+        source_floor["source_support"] = copy.deepcopy(source_support)
+        result["source_evidence_floor"] = source_floor
+
+    contract = dict(result.get("permit_decision_contract") or {}) if isinstance(result.get("permit_decision_contract"), dict) else {}
+    if contract:
+        contract["source_support"] = copy.deepcopy(source_support)
+        contract_floor = dict(contract.get("source_evidence_floor") or {}) if isinstance(contract.get("source_evidence_floor"), dict) else {}
+        if contract_floor:
+            if has_locked_source:
+                contract_floor["has_source_backed_evidence"] = True
+            contract_floor["decision_mutation_allowed"] = False
+            contract_floor["source_support"] = copy.deepcopy(source_support)
+            contract["source_evidence_floor"] = contract_floor
+        result["permit_decision_contract"] = contract
+
+    customer_summary = dict(result.get("customer_result_summary") or {}) if isinstance(result.get("customer_result_summary"), dict) else {}
+    freshness = str(customer_summary.get("freshness_label") or "")
+    if re.search(r"\bbefore\s+filing\b", freshness, re.I):
+        customer_summary["freshness_label"] = "Official source date not published; verify current requirements before starting work"
+        result["customer_result_summary"] = customer_summary
+
+
 def enforce_decision_cell_primary(result: dict[str, Any], lock: dict[str, Any] | None = None, city: str = "", state: str = "", public: bool = False) -> dict[str, Any]:
     if not isinstance(result, dict):
         return {}
@@ -1166,6 +1262,8 @@ def enforce_decision_cell_primary(result: dict[str, Any], lock: dict[str, Any] |
             "next_action": result.get("customer_next_step"),
         })
         result["customer_first_screen_summary"] = first_screen
+    if decision == PERMIT_DECISION_NOT_REQUIRED:
+        _repair_locked_not_required_customer_mirrors(result, lock)
     if public:
         result.pop("_decision_cell_primary_lock", None)
     return _repair_customer_decision_prose_coherence(result, str(result.get("permit_decision") or ""))

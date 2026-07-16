@@ -862,6 +862,7 @@ def reconcile_v24_result(result: dict[str, Any], resolution: V24Resolution | Non
         if result.get(field) is not None:
             field_sources[field] = "permitassist_v24_decision_cell"
     result["_field_sources"] = field_sources
+    trusted_cell_sources = copy.deepcopy(payload.get("sources")) if isinstance(payload.get("sources"), list) else []
     result["_decision_cell_primary_lock"] = {
         "source": "permitassist_v24_decision_cell",
         "exact_match": True,
@@ -871,6 +872,13 @@ def reconcile_v24_result(result: dict[str, Any], resolution: V24Resolution | Non
         "permit_name": payload.get("permit_name"),
         "apply_url": result.get("apply_url"),
         "applying_office": result.get("applying_office"),
+        # Bind official provenance into the same server-held exact-cell lock as
+        # the regulatory decision.  Later finalizers may rebuild or sanitize the
+        # public source mirrors; they must not make a validated exact
+        # NOT_REQUIRED cell look unbacked merely because those mutable mirrors
+        # were stale.  Submitted DTOs cannot create this lock.
+        "source_urls": [source.get("url") for source in trusted_cell_sources if isinstance(source, dict) and source.get("url")],
+        "sources": trusted_cell_sources,
     }
     result["_v24_cell_id"] = cell.get("cell_id")
     result["_v24_resolver_version"] = V24_RESOLVER_VERSION

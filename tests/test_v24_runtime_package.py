@@ -515,6 +515,29 @@ def test_v24_exact_not_required_lock_survives_internal_finalize_until_public_egr
     )
     assert raw is not None
     reconcile_authoritative_result(raw, v24_resolution=resolution, v231_resolution=None)
+    companion_warning = "Commercial scope may require companion reviews/permits not fully proven here: electrical, mechanical, plumbing."
+    raw["warnings"] = [
+        "Commercial scope detected; primary permit was repaired or forced away from residential/trade-only leakage. confirm the exact permit name and form title with the building department before filing.",
+        companion_warning,
+        "The unverified NOT_REQUIRED answer was demoted to VERIFY because no claim-linked official decision evidence was available.",
+    ]
+    raw["source_support"] = {
+        "has_source_backed_evidence": False,
+        "has_official_source": True,
+        "decision_mutation_allowed": False,
+        "confidence_tier": "AHJ_DIRECT",
+    }
+    raw["permits_required_logic"] = [{
+        "permit_type": "Commercial Building / Tenant Improvement Permit",
+        "included_because": "Official permit rule: tenant-improvement work requires building/TI review.",
+        "filing_family": "building",
+    }]
+    raw["apply_path"] = {
+        "state": "NOT_APPLICABLE",
+        "channel": "no_permit_required",
+        "permit_category": "Building",
+        "permit_type": "Commercial Building / Tenant Improvement Permit",
+    }
     assert raw["_decision_cell_primary_lock"]["permit_decision"] == "NOT_REQUIRED"
 
     # Keep this gate offline while retaining the real classifier, source-floor,
@@ -554,10 +577,23 @@ def test_v24_exact_not_required_lock_survives_internal_finalize_until_public_egr
     assert public["customer_result_summary"]["permit_name"] == "No permit required"
     assert public["customer_first_screen_summary"]["decision"] == "NOT_REQUIRED"
     assert "file the required permit" not in public["customer_first_screen_summary"]["next_action"].lower()
+    assert companion_warning in public["warnings"]
+    assert public["source_support"]["has_source_backed_evidence"] is True
+    assert public["source_support"]["has_official_source"] is True
+    assert public["source_support"]["decision_mutation_allowed"] is False
+    assert public["permits_required_logic"] == []
+    assert public["apply_path"]["permit_type"] is None
+    assert public["apply_path"]["permit_category"] is None
     public_blob = json.dumps(public, sort_keys=True).lower()
     assert "permit required for the resolved scope" not in public_blob
     assert "required permit package" not in public_blob
     assert "file the required permit" not in public_blob
+    assert "before filing" not in public_blob
+    assert "demoted to verify" not in public_blob
+    assert "primary permit was repaired" not in public_blob
+    assert "forced away from residential" not in public_blob
+    assert "requires building/ti review" not in public_blob
+    assert "commercial building / tenant improvement permit" not in public_blob
     checklist = server.build_checklist_fallback(
         public,
         "commercial tenant improvement",
