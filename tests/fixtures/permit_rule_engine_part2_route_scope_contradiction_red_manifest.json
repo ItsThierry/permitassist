@@ -1,0 +1,19 @@
+{
+  "schema_version": "permitassist.rule-engine-part2-route-scope-contradiction-red-manifest.v1",
+  "baseline_commit": "2fe43a4dae08d50373f17b02b7112f0abf7d3f5a",
+  "frozen_before_behavior_edit": true,
+  "reviewer_finding": "Fable nonblocking observation 1 reproduced as fail-open and promoted to a blocking trust-boundary regression",
+  "expected_contract": {
+    "residential_only_or_redirected_route_for_commercial_scope": "route_provenance_scope_mismatch",
+    "affirmative_mixed_residential_and_commercial_scope": "accepted"
+  },
+  "forbidden_shortcuts": [
+    "jurisdiction-specific branch",
+    "source URL allowlist",
+    "customer-lane neutering",
+    "threshold weakening"
+  ],
+  "files": {
+    "tests/test_permit_rule_engine_part2_route_scope_contradiction.py": "0200a6c11cc6e7101ceb89c2ab4d28502ddceef74dfb9e83e6512bb097995568"
+  }
+}
