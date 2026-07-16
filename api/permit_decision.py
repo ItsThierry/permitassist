@@ -568,6 +568,12 @@ _REQUIRED_NO_PERMIT_PROSE_RE = re.compile(
     re.I,
 )
 _APPLY_ONLINE_RE = re.compile(r"\bapply\s+online\b", re.I)
+_NOT_REQUIRED_AFFIRMATIVE_PRIMARY_RE = re.compile(
+    r"\b(?:permit\s+required|required\s+permit\s+package|"
+    r"file\s+the\s+required\s+permit|apply\s+for\s+(?:the\s+)?"
+    r"(?:required\s+)?(?:building\s+)?permit)\b",
+    re.I,
+)
 
 
 def _visible_decision_text(result: dict[str, Any]) -> str:
@@ -640,6 +646,83 @@ def _repair_customer_decision_prose_coherence(result: dict[str, Any], decision: 
             if _APPLY_ONLINE_RE.search(str(first.get("next_action") or "")):
                 first["next_action"] = "Keep the official no-permit note with the job file before starting work."
             result["customer_first_screen_summary"] = first
+
+        # Late customer-shape normalizers can synthesize affirmative primary-
+        # permit copy before an exact NOT_REQUIRED lock is re-applied. Repair the
+        # affected primary-filing fields without deleting separately listed
+        # CONDITIONAL/VERIFY companion permits or their trigger guidance.
+        safe_timeline = (
+            "No primary permit review timeline applies to the resolved scope; "
+            "separately triggered companion permits may have their own timelines."
+        )
+        safe_fee = (
+            "No primary permit fee applies to the resolved scope; separately "
+            "triggered companion permits may have their own fees."
+        )
+        safe_inspection = (
+            "No primary permit inspection is scheduled for the resolved scope; "
+            "separately triggered companion permits may have their own inspections."
+        )
+        safe_summary = "No primary permit is required for the resolved scope."
+        for key in ("timeline", "approval_timeline"):
+            value = result.get(key)
+            if isinstance(value, str) and _NOT_REQUIRED_AFFIRMATIVE_PRIMARY_RE.search(value):
+                result[key] = safe_timeline
+            elif isinstance(value, dict):
+                repaired = dict(value)
+                for child_key, child in repaired.items():
+                    if isinstance(child, str) and _NOT_REQUIRED_AFFIRMATIVE_PRIMARY_RE.search(child):
+                        repaired[child_key] = safe_timeline
+                result[key] = repaired
+        for key in ("fee_range", "fee_estimate", "total_cost_estimate"):
+            value = result.get(key)
+            if isinstance(value, str) and _NOT_REQUIRED_AFFIRMATIVE_PRIMARY_RE.search(value):
+                result[key] = safe_fee
+        if _NOT_REQUIRED_AFFIRMATIVE_PRIMARY_RE.search(str(result.get("inspection_booking") or "")):
+            result["inspection_booking"] = safe_inspection
+        if _NOT_REQUIRED_AFFIRMATIVE_PRIMARY_RE.search(str(result.get("required_permit_summary") or "")):
+            result["required_permit_summary"] = safe_summary
+
+        safe_list_copy = {
+            "checklist": (
+                "Confirm the work remains within the exact no-permit scope; check "
+                "separately listed conditional companion permits if the scope changes."
+            ),
+            "what_to_bring": (
+                "Keep photos/invoices documenting that the work remained within "
+                "the exact no-permit scope."
+            ),
+            "documents_needed": (
+                "Keep photos/invoices documenting that the work remained within "
+                "the exact no-permit scope."
+            ),
+            "requirements": (
+                "Keep the primary work within the exact no-permit scope and review "
+                "any separately listed companion-permit triggers if the scope changes."
+            ),
+        }
+        for key, replacement in safe_list_copy.items():
+            values = result.get(key)
+            if not isinstance(values, list):
+                continue
+            repaired_values = []
+            for value in values:
+                repaired_value = (
+                    replacement
+                    if isinstance(value, str) and _NOT_REQUIRED_AFFIRMATIVE_PRIMARY_RE.search(value)
+                    else value
+                )
+                if repaired_value not in repaired_values:
+                    repaired_values.append(repaired_value)
+            result[key] = repaired_values
+
+        if isinstance(result.get("customer_result_summary"), dict):
+            summary = dict(result.get("customer_result_summary") or {})
+            if _NOT_REQUIRED_AFFIRMATIVE_PRIMARY_RE.search(str(summary.get("timeline") or "")):
+                summary["timeline"] = safe_timeline
+            if _NOT_REQUIRED_AFFIRMATIVE_PRIMARY_RE.search(str(summary.get("fee_cost_caveat") or "")):
+                summary["fee_cost_caveat"] = safe_fee
+            result["customer_result_summary"] = summary
     return result
 
 

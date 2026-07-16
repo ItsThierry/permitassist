@@ -554,4 +554,8 @@ def test_v24_exact_not_required_lock_survives_internal_finalize_until_public_egr
     assert public["customer_result_summary"]["permit_name"] == "No permit required"
     assert public["customer_first_screen_summary"]["decision"] == "NOT_REQUIRED"
     assert "file the required permit" not in public["customer_first_screen_summary"]["next_action"].lower()
-    assert "_decision_cell_primary_lock" not in json.dumps(public, sort_keys=True)
+    public_blob = json.dumps(public, sort_keys=True).lower()
+    assert "permit required for the resolved scope" not in public_blob
+    assert "required permit package" not in public_blob
+    assert "file the required permit" not in public_blob
+    assert "_decision_cell_primary_lock" not in public_blob
