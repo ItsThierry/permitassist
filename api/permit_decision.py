@@ -1099,6 +1099,10 @@ def _repair_locked_not_required_customer_mirrors(result: dict[str, Any], lock: d
         "portal_url": None,
         "platform": None,
         "login_required": None,
+        "documents_to_prepare": [],
+        "portal_selection_path": [],
+        "steps": [],
+        "stop_before": None,
         "verification_note": "No permit filing path is needed for the resolved NOT_REQUIRED scope.",
     })
     result["apply_path"] = apply_path

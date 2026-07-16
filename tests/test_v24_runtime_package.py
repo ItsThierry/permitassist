@@ -537,6 +537,16 @@ def test_v24_exact_not_required_lock_survives_internal_finalize_until_public_egr
         "channel": "no_permit_required",
         "permit_category": "Building",
         "permit_type": "Commercial Building / Tenant Improvement Permit",
+        "documents_to_prepare": ["scope of work", "plans/drawings if required"],
+        "portal_selection_path": [
+            "No verified online filing path is available; verify the correct portal before filing",
+            "Ask the building department which permit category best matches",
+        ],
+        "steps": [
+            "No verified online filing path is available; verify the correct portal before filing",
+            "Prepare scope of work before final submission",
+        ],
+        "stop_before": "final submit, payment, signature, or legal attestation",
     }
     assert raw["_decision_cell_primary_lock"]["permit_decision"] == "NOT_REQUIRED"
 
@@ -558,6 +568,10 @@ def test_v24_exact_not_required_lock_survives_internal_finalize_until_public_egr
     assert finalized["permit_decision"] == "NOT_REQUIRED"
     assert finalized["permit_required"] is False
     assert finalized["permits_required"] == []
+    assert finalized["apply_path"]["documents_to_prepare"] == []
+    assert finalized["apply_path"]["portal_selection_path"] == []
+    assert finalized["apply_path"]["steps"] == []
+    assert finalized["apply_path"]["stop_before"] is None
 
     public = server.build_customer_response_egress(
         server._mark_server_owned_result(finalized),
@@ -578,12 +592,25 @@ def test_v24_exact_not_required_lock_survives_internal_finalize_until_public_egr
     assert public["customer_first_screen_summary"]["decision"] == "NOT_REQUIRED"
     assert "file the required permit" not in public["customer_first_screen_summary"]["next_action"].lower()
     assert companion_warning in public["warnings"]
+    related_by_family = {
+        row.get("family"): row
+        for row in public.get("related_permits", [])
+        if isinstance(row, dict)
+    }
+    assert related_by_family["planning"]["decision"] == "CONDITIONAL"
+    assert related_by_family["planning"]["condition_text"]
+    assert related_by_family["co"]["decision"] == "CONDITIONAL"
+    assert related_by_family["co"]["condition_text"]
     assert public["source_support"]["has_source_backed_evidence"] is True
     assert public["source_support"]["has_official_source"] is True
     assert public["source_support"]["decision_mutation_allowed"] is False
     assert public["permits_required_logic"] == []
     assert public["apply_path"]["permit_type"] is None
     assert public["apply_path"]["permit_category"] is None
+    assert public["apply_path"].get("documents_to_prepare", []) == []
+    assert public["apply_path"].get("portal_selection_path", []) == []
+    assert public["apply_path"].get("steps", []) == []
+    assert public["apply_path"].get("stop_before") is None
     public_blob = json.dumps(public, sort_keys=True).lower()
     assert "permit required for the resolved scope" not in public_blob
     assert "required permit package" not in public_blob
