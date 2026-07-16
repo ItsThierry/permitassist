@@ -1854,7 +1854,26 @@ def _route_scope_mismatch(route: ApplicationRoute, project_family: str) -> bool:
             provenance_text,
         )
     )
-    return residential_scope and not commercial_scope
+    residential_only_scope = bool(
+        re.search(
+            r"\bresidential(?:\s+(?:building\s+)?"
+            r"(?:permit|permits|project|projects|work|application|applications|alteration|alterations))"
+            r"{0,3}\s+only\b"
+            r"|\bonly\s+(?:for\s+)?residential\b",
+            provenance_text,
+        )
+    )
+    commercial_exclusion_scope = bool(
+        re.search(
+            r"\b(?:not|is\s+not|isn't)\s+(?:intended\s+)?for\s+commercial\b",
+            provenance_text,
+        )
+    )
+    return (
+        residential_only_scope
+        or commercial_exclusion_scope
+        or (residential_scope and not commercial_scope)
+    )
 
 
 def build_family_authority_routes(cell: Mapping[str, Any]) -> tuple[FamilyAuthorityRoute, ...]:
