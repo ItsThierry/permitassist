@@ -558,4 +558,17 @@ def test_v24_exact_not_required_lock_survives_internal_finalize_until_public_egr
     assert "permit required for the resolved scope" not in public_blob
     assert "required permit package" not in public_blob
     assert "file the required permit" not in public_blob
+    checklist = server.build_checklist_fallback(
+        public,
+        "commercial tenant improvement",
+        "Crook County",
+        "WY",
+    )
+    checklist_blob = json.dumps(checklist, sort_keys=True).lower()
+    assert checklist["title"] == "No-Primary-Permit Scope Checklist"
+    assert "pull no permit required" not in checklist_blob
+    assert "pay permit fee" not in checklist_blob
+    assert "required documents" not in checklist_blob
+    assert "planning/zoning use verification" in checklist_blob
+    assert "certificate of occupancy" in checklist_blob
     assert "_decision_cell_primary_lock" not in public_blob

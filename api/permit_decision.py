@@ -664,6 +664,10 @@ def _repair_customer_decision_prose_coherence(result: dict[str, Any], decision: 
             "separately triggered companion permits may have their own inspections."
         )
         safe_summary = "No primary permit is required for the resolved scope."
+        for key in ("summary", "job_summary"):
+            value = result.get(key)
+            if isinstance(value, str) and _NOT_REQUIRED_AFFIRMATIVE_PRIMARY_RE.search(value):
+                result[key] = safe_summary
         for key in ("timeline", "approval_timeline"):
             value = result.get(key)
             if isinstance(value, str) and _NOT_REQUIRED_AFFIRMATIVE_PRIMARY_RE.search(value):

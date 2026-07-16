@@ -8743,6 +8743,72 @@ def build_checklist_fallback(result: dict, job_type: str = "", city: str = "", s
             )
         ) if text
     ))
+    is_not_required = (
+        str(result.get("permit_decision") or "").upper().strip() == "NOT_REQUIRED"
+        and result.get("permit_required") is False
+    )
+    if is_not_required:
+        items = [
+            {
+                "label": "Keep the official no-permit determination with the project records",
+                "category": "permit",
+                "required": False,
+            },
+            {
+                "label": "Confirm the work remains within the resolved no-primary-permit scope before starting",
+                "category": "scope",
+                "required": True,
+            },
+            {
+                "label": "Primary permit fee: none for the resolved scope; separately triggered companion permits may have their own fees",
+                "category": "fees",
+                "required": False,
+            },
+            {
+                "label": "Primary permit review timeline: none for the resolved scope; separately triggered companion permits may have their own timelines",
+                "category": "timeline",
+                "required": False,
+            },
+        ]
+        if docs:
+            items.append({
+                "label": f"Project records: {', '.join(docs[:6])}",
+                "category": "documents",
+                "required": False,
+            })
+        related = _checklist_list(result.get("related_permits"))
+        for companion in related[:6]:
+            if not isinstance(companion, dict):
+                continue
+            name = _checklist_dict_text(
+                companion,
+                "permit_name",
+                "permit_type",
+                "approval_type",
+                "display_family",
+            ) or "Companion permit/review"
+            condition = _checklist_dict_text(
+                companion,
+                "condition_text",
+                "required_if",
+                "trigger_condition",
+                "rationale",
+            )
+            items.append({
+                "label": f"Review conditional companion trigger: {name}{' — ' + condition if condition else ''}",
+                "category": "companion",
+                "required": False,
+            })
+        for note in special_notes[:2]:
+            items.append({"label": note, "category": "special", "required": False})
+        return {
+            "title": "No-Primary-Permit Scope Checklist",
+            "summary": (
+                f"Recordkeeping and conditional companion-trigger checklist for "
+                f"{job_type or 'the resolved scope'} in {city}, {state}"
+            ),
+            "items": items[:12],
+        }
     items = [
         {"label": f"Pull {permit_name} before starting work", "category": "permit", "required": True},
         {"label": f"Confirm jurisdiction for {city}, {state}", "category": "jurisdiction", "required": True},
@@ -8770,6 +8836,13 @@ def build_checklist_fallback(result: dict, job_type: str = "", city: str = "", s
 
 def generate_checklist(result: dict, job_type: str = "", city: str = "", state: str = "") -> dict:
     fallback = build_checklist_fallback(result, job_type, city, state)
+    if (
+        str((result or {}).get("permit_decision") or "").upper().strip() == "NOT_REQUIRED"
+        and (result or {}).get("permit_required") is False
+    ):
+        # A binary authoritative exemption must not be reinterpreted by checklist
+        # generation. The deterministic fallback retains conditional companions.
+        return fallback
     system_prompt = (
         "You generate short, practical pre-construction compliance checklists for contractors. "
         "Return JSON with keys title, summary, items. Each item must be an object with label, category, required. "
