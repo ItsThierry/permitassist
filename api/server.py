@@ -6737,6 +6737,14 @@ def finalize_permit_lookup_result(result: dict, job_type: str, city: str, state:
         result["data_source"] = _DETERMINISTIC_NOT_REQUIRED_PUBLIC_SOURCE
     result = bind_positive_exemption_decision_citation(result, city, state)
     result = sanitize_customer_visible_result(result, strip_internal_keys=False)
+    # The sanitizer intentionally removes decision-cell internals.  This object,
+    # however, is still an internal server-owned handoff to the single customer
+    # egress projection.  Preserve the already-validated lock across that handoff
+    # and re-enforce it after every finalizer mutation; the customer egress strips
+    # the lock before serialization.  Without this handoff, generic scope
+    # classifiers can silently turn an exact authoritative NOT_REQUIRED decision
+    # back into REQUIRED.
+    egress_cell_lock = final_cell_lock if isinstance(final_cell_lock, dict) else None
     # Some controlled evidence-pack modes return this finalized object directly
     # from `/api/permit` instead of routing it through the customer ViewModel.
     # Enforce the NOT_REQUIRED claim floor here as well so that no public endpoint
@@ -6748,12 +6756,21 @@ def finalize_permit_lookup_result(result: dict, job_type: str, city: str, state:
         job_type,
         city,
         state,
-        cell_lock=_get_decision_cell_primary_lock(result),
+        cell_lock=egress_cell_lock or _get_decision_cell_primary_lock(result),
         enforce_unbound_input=(
             input_was_not_required
             and not _not_required_public_evidence_is_persisted(result, city, state)
         ),
     )
+    if egress_cell_lock and isinstance(result, dict):
+        result["_decision_cell_primary_lock"] = egress_cell_lock
+        result = enforce_decision_cell_primary(
+            result,
+            egress_cell_lock,
+            city,
+            state,
+            public=False,
+        )
     return _mark_server_owned_result(result)
 
 

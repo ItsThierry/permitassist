@@ -1,3 +1,4 @@
+import hashlib
 import json
 import os
 import re
@@ -375,6 +376,10 @@ def test_v24_crook_county_exact_cell_uses_official_not_required_authority(monkey
     provenance = cell["tier1"]["main_decision"]["provenance"]
     assert "crookcounty.wy.gov" in provenance["source_url"]
     assert "does not have Land Use Regulations, Zoning Regulations, Adopted Building Codes, or Building Permit Requirements" in provenance["source_quote"]
+    snapshot_path = ROOT / provenance["snapshot_path"]
+    assert snapshot_path.is_file()
+    assert hashlib.sha256(snapshot_path.read_bytes()).hexdigest() == provenance["snapshot_hash"]
+    assert provenance["source_quote"] in snapshot_path.read_text(encoding="utf-8")
 
     payload = regulated_payload_from_cell(cell)
     assert payload["permit_required"] is False
@@ -487,3 +492,60 @@ def test_v24_crook_county_not_required_survives_customer_and_report_boundaries(m
         "/home/boban",
     ):
         assert forbidden not in rendered
+
+
+def test_v24_exact_not_required_lock_survives_internal_finalize_until_public_egress(monkeypatch):
+    monkeypatch.setenv("PERMITASSIST_V24_MODE", "active")
+    monkeypatch.setenv("OPENAI_API_KEY", "test-key-for-import-only")
+    monkeypatch.setenv("SESSION_SECRET", "local-test-only")
+    from api.research_engine import _deterministic_v24_result_from_resolution
+    from api import server
+
+    resolution = resolve_v24_cell(
+        "Crook County",
+        "WY",
+        "commercial tenant improvement",
+        "commercial",
+    )
+    raw = _deterministic_v24_result_from_resolution(
+        resolution,
+        "commercial tenant improvement",
+        "Crook County",
+        "WY",
+    )
+    assert raw is not None
+    reconcile_authoritative_result(raw, v24_resolution=resolution, v231_resolution=None)
+    assert raw["_decision_cell_primary_lock"]["permit_decision"] == "NOT_REQUIRED"
+
+    # Keep this gate offline while retaining the real classifier, source-floor,
+    # lock-enforcement, sanitizer, and customer-egress sequence.
+    monkeypatch.setattr(server, "sanitize_result_urls", lambda result: result)
+    monkeypatch.setattr(server, "enrich_result_response", lambda result, *_args, **_kwargs: result)
+    monkeypatch.setattr(server, "apply_permitiq_quality_gate", lambda result, *_args, **_kwargs: result)
+
+    finalized = server.finalize_permit_lookup_result(
+        server._mark_server_owned_result(raw),
+        "commercial tenant improvement",
+        "Crook County",
+        "WY",
+        evidence_allowed=False,
+        job_category="commercial",
+    )
+    assert finalized["_decision_cell_primary_lock"]["permit_decision"] == "NOT_REQUIRED"
+    assert finalized["permit_decision"] == "NOT_REQUIRED"
+    assert finalized["permit_required"] is False
+    assert finalized["permits_required"] == []
+
+    public = server.build_customer_response_egress(
+        server._mark_server_owned_result(finalized),
+        "commercial tenant improvement",
+        "Crook County",
+        "WY",
+        job_category="commercial",
+    )
+    assert public["permit_decision"] == "NOT_REQUIRED"
+    assert public["permit_required"] is False
+    assert public["permit_verdict"] == "NO"
+    assert public["permit_name"] == "No permit required"
+    assert public["permits_required"] == []
+    assert "_decision_cell_primary_lock" not in json.dumps(public, sort_keys=True)

@@ -13,15 +13,21 @@
   "decision_cells_file": "permitassist_decision_cells_v24.json",
   "deferred_manifest_file": "permitassist_v24_deferred_manifest.json",
   "files": {
-    "permitassist_decision_cell_index_v24.json": "e8188ebe2fd2542287a2d894143436742340248e4d570ebb20760f59e1a420fe",
-    "permitassist_decision_cells_v24.json": "d53548e5d06301e86e54cfa4c1cd2f3b21df6646c6c35d11b1a183ff703f1de7",
+    "permitassist_decision_cell_index_v24.json": "eb996e2d9d6bfe643f8aa73eadaa2e77a9432fb9b12fdce17cdb71f0d588ff29",
+    "permitassist_decision_cells_v24.json": "c04f9d8348fee696897cc6416fca0e02aa60a34bcc1c1314405980eb278f9da7",
     "permitassist_v24_deferred_manifest.json": "873ac003b4c8b3530c6b7e3644d6185ab3447971487e7d30b016b557529b2ac0",
-    "permitassist_v24_manifest.json": "8fd4d1edae722f139edfa74e6250a02939091dac2965e808abebff2cfe0b8b4d"
+    "permitassist_v24_manifest.json": "a65c7935beee247671b2bbd7cb7e6dc0ee53b0f645143b8940644cfe6121c9a5",
+    "snapshots/us-wy-crook_county-commercial-tenant-improvement-building.txt": "af8d8de0042e0aa6cd1745103b5c68409182b58c28902a18a39fc4d5dd857249"
   },
   "mode": "staged_app_runtime_candidate_not_deployed",
-  "package_sha256": "b42795ae33da1b55c5edc1a018c67d999aef601d021799716ca7df356c7576bf",
+  "package_sha256": "83255618f6f0c36188fad2d91532939ac153d39eab81cff2b7b7931812932220",
   "repair_note_20260625": "Delmar DE residential_remodel promoted from runtime fail-closed using current official Town of Delmar residential building permit application and fee schedule; live fallback remains enabled for other data gaps.",
   "repair_note_20260716": "Crook County WY commercial tenant-improvement county building decision corrected to official-source-backed NOT_REQUIRED; misclassified electrical wiring and septic holding-tank evidence removed from county-building authority fields. Counts are unchanged.",
+  "repair_note_20260716_snapshot_binding": {
+    "path": "knowledge/v24/snapshots/us-wy-crook_county-commercial-tenant-improvement-building.txt",
+    "sha256": "af8d8de0042e0aa6cd1745103b5c68409182b58c28902a18a39fc4d5dd857249",
+    "source_quote_exactly_contained": true
+  },
   "schema": "permitassist.v24.runtime_package_manifest.v1",
   "target_manifest_sha256": "f9fb3c4976bc1ed16f84ec61b82f76de324b831db23d9d5ce05abf6fc4438c75",
   "validation": {
