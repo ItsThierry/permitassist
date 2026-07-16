@@ -349,3 +349,141 @@ def test_generic_icc_apply_url_demoted_not_decision_neutered(monkeypatch):
     assert public["permit_verdict"] == "YES"
     assert "townofdelmar.us" in (public.get("apply_url") or "")
     assert "iccsafe.org" not in (public.get("apply_url") or "")
+
+
+def test_v24_crook_county_exact_cell_uses_official_not_required_authority(monkeypatch):
+    """A specialty-trade source must not establish a county building permit."""
+    monkeypatch.setenv("PERMITASSIST_V24_MODE", "active")
+
+    resolution = resolve_v24_cell(
+        "Crook County",
+        "WY",
+        "commercial office tenant improvement",
+        "commercial",
+    )
+    assert resolution.status == V24ResolutionStatus.EXACT_CELL_PUBLISHABLE
+    assert resolution.key == "WY|crook_county|commercial_tenant_improvement"
+
+    cell = resolution.cell or {}
+    validation = validate_v24_cell(cell, strict_snapshots=False, require_live_url_check=False)
+    assert validation.ok, validation.to_dict()
+    assert cell["tier1"]["main_decision"]["value"] == "NOT_REQUIRED"
+    assert cell["tier1"]["permits_required"] == []
+    assert cell["tier1"]["trade_authority"] == []
+    assert cell["tier1"]["apply"] == []
+
+    provenance = cell["tier1"]["main_decision"]["provenance"]
+    assert "crookcounty.wy.gov" in provenance["source_url"]
+    assert "does not have Land Use Regulations, Zoning Regulations, Adopted Building Codes, or Building Permit Requirements" in provenance["source_quote"]
+
+    payload = regulated_payload_from_cell(cell)
+    assert payload["permit_required"] is False
+    assert payload["permit_decision"] == "NOT_REQUIRED"
+    assert payload["permit_name"] == "No permit required"
+    assert payload["permits_required"] == []
+    assert payload["apply"] == []
+
+    rendered = json.dumps(payload, sort_keys=True).lower()
+    assert "commercial building permit" not in rendered
+    assert "permit to wire" not in rendered
+    assert "private holding tank" not in rendered
+
+
+def test_v24_crook_county_not_required_overrides_pipeline_required_conflict(monkeypatch):
+    """The corrected exact authority wins across the real v2.3.1->v2.4 merge order."""
+    monkeypatch.setenv("PERMITASSIST_V24_MODE", "active")
+    from api.v231_decision_cells import reconcile_v231_result, resolve_v231_cell
+
+    result = {
+        "permit_required": True,
+        "permit_decision": "REQUIRED",
+        "permit_verdict": "YES",
+        "permit_name": "Commercial Building Permit",
+        "permits_required": [
+            {
+                "permit_type": "Commercial Building Permit",
+                "permit_kind": "building",
+                "required": True,
+            }
+        ],
+        "hidden_triggers": [],
+    }
+    v231 = resolve_v231_cell(
+        "Crook County",
+        "WY",
+        "commercial office tenant improvement",
+        "commercial",
+    )
+    reconcile_v231_result(result, v231)
+    assert result["_v231_resolution_status"] == "exact_cell_covered"
+    assert result["permit_required"] is False
+    assert result["permit_decision"] == "NOT_REQUIRED"
+
+    v24 = resolve_v24_cell(
+        "Crook County",
+        "WY",
+        "commercial office tenant improvement",
+        "commercial",
+    )
+    reconcile_authoritative_result(result, v24_resolution=v24, v231_resolution=v231)
+
+    assert result["permit_required"] is False
+    assert result["permit_decision"] == "NOT_REQUIRED"
+    assert result["permit_verdict"] == "NO"
+    assert result["permit_name"] == "No permit required"
+    assert result["permits_required"] == []
+    assert result["_field_sources"]["permit_required"] == "permitassist_v24_decision_cell"
+    assert result["_decision_cell_primary_lock"]["permit_decision"] == "NOT_REQUIRED"
+
+
+def test_v24_crook_county_not_required_survives_customer_and_report_boundaries(monkeypatch):
+    monkeypatch.setenv("PERMITASSIST_V24_MODE", "active")
+    monkeypatch.setenv("OPENAI_API_KEY", "test-key-for-import-only")
+    from api.research_engine import _deterministic_v24_result_from_resolution
+    from api.server import build_customer_permit_view_model, render_white_label_report_html
+
+    resolution = resolve_v24_cell(
+        "Crook County",
+        "WY",
+        "commercial office tenant improvement",
+        "commercial",
+    )
+    raw = _deterministic_v24_result_from_resolution(
+        resolution,
+        "commercial office tenant improvement",
+        "Crook County",
+        "WY",
+    )
+    assert raw is not None
+    reconcile_authoritative_result(raw, v24_resolution=resolution, v231_resolution=None)
+    public = build_customer_permit_view_model(
+        raw,
+        "commercial office tenant improvement",
+        "Crook County",
+        "WY",
+        job_category="commercial",
+    )
+    assert public["permit_required"] is False
+    assert public["permit_decision"] == "NOT_REQUIRED"
+    assert public["permit_verdict"] == "NO"
+
+    report_html = render_white_label_report_html(
+        {
+            "result": public,
+            "job_type": "commercial office tenant improvement",
+            "city": "Crook County",
+            "state": "WY",
+        }
+    )
+    rendered = (json.dumps(public, sort_keys=True) + report_html).lower()
+    for forbidden in (
+        "commercial building permit",
+        "permit to wire",
+        "private holding tank",
+        "permitassist_v24",
+        "_v24",
+        "decision_cell",
+        "cell_id",
+        "/home/boban",
+    ):
+        assert forbidden not in rendered
