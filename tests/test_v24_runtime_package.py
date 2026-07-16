@@ -571,4 +571,10 @@ def test_v24_exact_not_required_lock_survives_internal_finalize_until_public_egr
     assert "required documents" not in checklist_blob
     assert "planning/zoning use verification" in checklist_blob
     assert "certificate of occupancy" in checklist_blob
+    report_template = server.load_report_template()
+    assert "const isNotRequired" in report_template
+    assert "'Scope records & safeguards' : 'Required documents'" in report_template
+    assert "'Inspection status' : 'Inspection checklist'" in report_template
+    assert "'Scope & companion checklist' : 'Pre-construction checklist'" in report_template
+    assert "No primary permit inspection applies to the resolved scope" in report_template
     assert "_decision_cell_primary_lock" not in public_blob

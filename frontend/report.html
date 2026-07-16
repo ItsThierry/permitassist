@@ -66,6 +66,7 @@
     const permitName = textValue(d.permit_name || d.permit_type || primaryPermit.permit_type || firstPermit.permit_type, 'Permit details');
     const rawVerdict = textValue(d.permit_verdict).toUpperCase();
     const verdict = rawVerdict || (d.permit_required === true ? 'YES' : d.permit_required === false ? 'NO' : 'VERIFY');
+    const isNotRequired = verdict === 'NO' || textValue(d.permit_decision).toUpperCase() === 'NOT_REQUIRED';
     const verdictLabel = verdict === 'YES' ? 'Permit required: Yes' : (verdict === 'NO' ? 'Permit required: No' : 'Permit status: Verify');
     const timeline = textValue((d.approval_timeline && (d.approval_timeline.simple || d.approval_timeline.complex)) || d.timeline, 'Varies by jurisdiction');
     const docs = [...new Set([...safeArray(d.what_to_bring), ...safeArray(d.requirements), ...safeArray(d.documents_needed), ...safeArray(d.checklist)].map(x => textValue(x)).filter(Boolean))];
@@ -204,7 +205,7 @@
     meta.appendChild(metaRow('Permit', permitName));
     meta.appendChild(metaRow('Fees', textValue(d.fee_range, 'Call to confirm')));
     meta.appendChild(metaRow('Timeline', timeline));
-    meta.appendChild(metaRow('Where to apply', whereToApply));
+    meta.appendChild(metaRow(isNotRequired ? 'Permit office / companion contact' : 'Where to apply', whereToApply));
 
     const summaryCard = addText(grid, 'div', { className: 'card' });
     addText(summaryCard, 'div', { className: 'label', text: 'Summary' });
@@ -241,10 +242,24 @@
       }
     }
 
-    grid.appendChild(listCard('Required documents', docs, 'Scope of work'));
+    const documentsTitle = isNotRequired ? 'Scope records & safeguards' : 'Required documents';
     const inspectionFallback = safeArray(checklist.items).filter(i => i && i.category === 'inspection').map(i => i.label).filter(Boolean).slice(0, 8);
-    grid.appendChild(listCard('Inspection checklist', inspections.length ? inspections : inspectionFallback, 'Confirm inspection phases with the jurisdiction.'));
-    grid.appendChild(listCard('Pre-construction checklist', safeArray(checklist.items).map(item => item && item.label).filter(Boolean), 'Pull permit before starting work'));
+    const conditionalInspections = inspections.filter(item => /\b(?:conditional|companion|if|when|trigger)\b/i.test(item));
+    const noPermitInspectionText = textValue(
+      d.inspection_booking,
+      'No primary permit inspection applies to the resolved scope; review separately triggered companion inspections if the scope changes.'
+    );
+    const inspectionItems = isNotRequired
+      ? [noPermitInspectionText, ...conditionalInspections]
+      : (inspections.length ? inspections : inspectionFallback);
+    const inspectionTitle = isNotRequired ? 'Inspection status' : 'Inspection checklist';
+    const constructionChecklistTitle = isNotRequired ? 'Scope & companion checklist' : 'Pre-construction checklist';
+    const constructionChecklistFallback = isNotRequired
+      ? 'Keep the work within the resolved no-primary-permit scope and review conditional companion triggers if the scope changes.'
+      : 'Pull permit before starting work';
+    grid.appendChild(listCard(documentsTitle, docs, isNotRequired ? 'Keep records showing that the work remained within the resolved scope.' : 'Scope of work'));
+    grid.appendChild(listCard(inspectionTitle, inspectionItems, isNotRequired ? noPermitInspectionText : 'Confirm inspection phases with the jurisdiction.'));
+    grid.appendChild(listCard(constructionChecklistTitle, safeArray(checklist.items).map(item => item && item.label).filter(Boolean), constructionChecklistFallback));
 
     const sourceRows = sources.map(src => ({ src, url: safeExternalUrl(sourceUrl(src)) })).filter(row => row.url);
     if (sourceRows.length) {
