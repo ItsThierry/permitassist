@@ -24,6 +24,8 @@ try:
         DEFAULT_V24_MANIFEST_PATH,
         V24Resolution,
         V24ResolutionStatus,
+        get_v24_mode,
+        inspect_v24_runtime_package,
         load_v24_index,
         resolve_v24_cell,
         validate_v24_cell,
@@ -33,6 +35,8 @@ except ImportError:  # server.py imports research_engine as a top-level module
         DEFAULT_V24_MANIFEST_PATH,
         V24Resolution,
         V24ResolutionStatus,
+        get_v24_mode,
+        inspect_v24_runtime_package,
         load_v24_index,
         resolve_v24_cell,
         validate_v24_cell,
@@ -1310,6 +1314,17 @@ CORE_CACHE_SCHEMA_VERSION = "permitassist.rule-engine-cache.v1"
 CORE_SETTING = "PERMITASSIST_RULE_ENGINE_CORE"
 CORE_ALLOWLIST_SETTING = "PERMITASSIST_RULE_ENGINE_CORE_ALLOWLIST"
 
+
+class ActiveCorePackageUnavailableError(RuntimeError):
+    """Typed fail-closed boundary for an active-core package integrity failure."""
+
+    code = "active_core_package_unavailable"
+
+    def __init__(self, package_code: str = "index_unavailable") -> None:
+        self.package_code = str(package_code or "index_unavailable")
+        super().__init__("active core runtime package unavailable")
+
+
 DecisionVerdict = FamilyVerdict
 
 
@@ -1518,6 +1533,118 @@ def _core_allowlist() -> frozenset[str]:
         for item in str(os.environ.get(CORE_ALLOWLIST_SETTING, "") or "").split(",")
         if _canonical_jurisdiction_id(item)
     )
+
+
+def _requested_jurisdiction_id(city: str, state: str) -> str:
+    """Build the same canonical ID shape used by exact v2.4 AHJ rows."""
+
+    return _canonical_jurisdiction_id(f"us-{_normalize_text(state)}-{_normalize_text(city)}")
+
+
+def _request_targets_active_core(city: str, state: str) -> bool:
+    return bool(
+        get_rule_engine_core_mode() == "active"
+        and _requested_jurisdiction_id(city, state) in _core_allowlist()
+    )
+
+
+def active_core_runtime_source_sha256() -> str | None:
+    """Return a non-secret traffic-plane marker for request-serving source."""
+
+    api_dir = Path(__file__).resolve().parent
+    hashes: dict[str, str] = {}
+    try:
+        for name in ("permit_rule_engine.py", "server.py", "v24_decision_cells.py"):
+            hashes[name] = hashlib.sha256((api_dir / name).read_bytes()).hexdigest()
+    except OSError:
+        return None
+    payload = json.dumps(hashes, sort_keys=True, separators=(",", ":")).encode("utf-8")
+    return hashlib.sha256(payload).hexdigest()
+
+
+def active_core_runtime_health() -> dict[str, Any]:
+    """Return deployment-safe package readiness for the active core boundary."""
+
+    core_mode = get_rule_engine_core_mode()
+    allowlist = sorted(_core_allowlist())
+    v24_mode = get_v24_mode()
+    runtime_source_sha256 = active_core_runtime_source_sha256()
+    source_identity = {"runtime_source_sha256": runtime_source_sha256}
+    empty_identity = {
+        "expected_manifest_sha256": None,
+        "actual_manifest_sha256": None,
+        "expected_index_sha256": None,
+        "actual_index_sha256": None,
+        "index_entries": 0,
+    }
+    if core_mode != "active":
+        return {
+            "ready": True,
+            "code": "inactive",
+            "core_mode": core_mode,
+            "v24_mode": v24_mode,
+            "allowlist": allowlist,
+            **source_identity,
+            **empty_identity,
+        }
+    if not runtime_source_sha256:
+        return {
+            "ready": False,
+            "code": "runtime_source_identity_unavailable",
+            "core_mode": core_mode,
+            "v24_mode": v24_mode,
+            "allowlist": allowlist,
+            **source_identity,
+            **empty_identity,
+        }
+    if not allowlist:
+        return {
+            "ready": False,
+            "code": "allowlist_missing",
+            "core_mode": core_mode,
+            "v24_mode": v24_mode,
+            "allowlist": [],
+            **source_identity,
+            **empty_identity,
+        }
+
+    package = inspect_v24_runtime_package(require_manifest_pin=True).to_dict()
+    package.update({
+        "core_mode": core_mode,
+        "v24_mode": v24_mode,
+        "allowlist": allowlist,
+        **source_identity,
+    })
+    if not package["ready"]:
+        return package
+
+    index = load_v24_index()
+    if index is None:
+        package.update({"ready": False, "code": "index_invalid", "index_entries": 0})
+        return package
+    available_jurisdictions = {
+        _canonical_jurisdiction_id(cell.get("jurisdiction_id"))
+        for cell in index.values()
+        if isinstance(cell, Mapping) and _canonical_jurisdiction_id(cell.get("jurisdiction_id"))
+    }
+    missing = sorted(set(allowlist) - available_jurisdictions)
+    if missing:
+        package.update({
+            "ready": False,
+            "code": "allowlist_jurisdiction_missing",
+            "missing_allowlist": missing,
+        })
+        return package
+    return package
+
+
+def assert_active_core_runtime_ready() -> dict[str, Any]:
+    """Abort active-core startup when source, configuration, and package diverge."""
+
+    health = active_core_runtime_health()
+    if not health["ready"]:
+        raise ActiveCorePackageUnavailableError(str(health.get("code") or "index_unavailable"))
+    return health
 
 
 def core_activation_allowed(jurisdiction_id: str) -> bool:
@@ -2747,7 +2874,11 @@ def build_active_core_first_result(
 
     if get_rule_engine_core_mode() != "active":
         return None
+    targets_active_core = _request_targets_active_core(city, state)
     identity = resolve_jurisdiction_identity(city, state)
+    if identity.status is JurisdictionResolutionStatus.INDEX_UNAVAILABLE and targets_active_core:
+        health = active_core_runtime_health()
+        raise ActiveCorePackageUnavailableError(str(health.get("code") or "index_unavailable"))
     if (
         identity.status is not JurisdictionResolutionStatus.EXACT
         or identity.selected is None
@@ -2755,19 +2886,23 @@ def build_active_core_first_result(
     ):
         return None
     resolution = resolve_v24_cell(city, state, job_type, job_category, force=True)
-    envelope = build_core_decision_envelope(
-        resolution,
-        job_type=job_type,
-        city=city,
-        state=state,
-        job_category=job_category,
-        facts=facts,
-    )
-    if envelope.precedence_stage is not PrecedenceStage.VALIDATED_EXACT_COMPLETE:
-        return None
-    result = attach_core_decision_envelope({}, envelope)
+    if resolution.status is V24ResolutionStatus.INDEX_UNAVAILABLE:
+        health = active_core_runtime_health()
+        raise ActiveCorePackageUnavailableError(str(health.get("code") or "index_unavailable"))
+    try:
+        envelope = build_core_decision_envelope(
+            resolution,
+            job_type=job_type,
+            city=city,
+            state=state,
+            job_category=job_category,
+            facts=facts,
+        )
+        result = attach_core_decision_envelope({}, envelope)
+    except Exception as exc:
+        raise ActiveCorePackageUnavailableError("core_envelope_unavailable") from exc
     if extract_sealed_public_projection(result, city=city, state=state) is None:
-        return None
+        raise ActiveCorePackageUnavailableError("core_envelope_unavailable")
     return result
 
 

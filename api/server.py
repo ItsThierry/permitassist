@@ -74,14 +74,20 @@ from residential_universal_gate import apply_residential_universal_gate
 from permit_model import build_permit_package, project_permit_package, validate_customer_view
 try:
     from permit_rule_engine import (
+        ActiveCorePackageUnavailableError,
         ExemptionPolarity,
+        active_core_runtime_health,
+        assert_active_core_runtime_ready,
         build_active_core_first_result,
         classify_exemption_polarity,
         project_core_customer_boundary,
     )
 except ImportError:  # package import path in focused tests
     from api.permit_rule_engine import (
+        ActiveCorePackageUnavailableError,
         ExemptionPolarity,
+        active_core_runtime_health,
+        assert_active_core_runtime_ready,
         build_active_core_first_result,
         classify_exemption_polarity,
         project_core_customer_boundary,
@@ -4415,6 +4421,8 @@ def _research_permit_with_budget(job_type: str, city: str, state: str, zip_code:
             state=state,
             job_category=str(kwargs.get("job_category") or ""),
         )
+    except ActiveCorePackageUnavailableError:
+        raise
     except Exception as exc:
         print(f"[permit][core-first-fallback] {type(exc).__name__}: {exc}")
         core_first = None
@@ -10842,8 +10850,21 @@ class Handler(BaseHTTPRequestHandler):
         elif path in ("/admin", "/admin.html", "/admin/"):
             self.send_file(os.path.join(FRONTEND_DIR, "admin.html"), "text/html; charset=utf-8")
         elif path == "/health":
-            self.send_json(200, {"status": "ok", "service": "PermitAssist"})
-
+            rule_engine_health = active_core_runtime_health()
+            if not rule_engine_health["ready"]:
+                self.send_json(503, {
+                    "status": "degraded",
+                    "service": "PermitAssist",
+                    "error": "active_core_package_unavailable",
+                    "rule_engine": rule_engine_health,
+                })
+                return
+            self.send_json(200, {
+                "status": "ok",
+                "service": "PermitAssist",
+                "rule_engine": rule_engine_health,
+            })
+            return
         # ── Facebook Webhook verification (GET) ───────────────────────────────
         elif path == "/api/fb-webhook":
             params = parse_qs(urlparse(self.path).query)
@@ -11695,14 +11716,30 @@ class Handler(BaseHTTPRequestHandler):
                             }, extra_headers=response_headers)
                             return
                     _use_cache = (not is_benchmark) and (not evidence_allowed) and (not qa_cache_mode)
-                    result = _research_permit_with_budget(
-                        job_type, city, state, zip_code,
-                        job_category=job_category,
-                        use_cache=_use_cache,
-                        force_model=force_model,
-                        suppress_cache_write=evidence_allowed or qa_cache_mode == "bypass",
-                        bypass_lookup_caches=bool(qa_cache_mode),
-                    )
+                    try:
+                        result = _research_permit_with_budget(
+                            job_type, city, state, zip_code,
+                            job_category=job_category,
+                            use_cache=_use_cache,
+                            force_model=force_model,
+                            suppress_cache_write=evidence_allowed or qa_cache_mode == "bypass",
+                            bypass_lookup_caches=bool(qa_cache_mode),
+                        )
+                    except ActiveCorePackageUnavailableError as exc:
+                        print(f"[permit][active-core-blocked] package_code={exc.package_code}")
+                        try:
+                            record_beta_event("lookup_failed", {
+                                "error_type": exc.code,
+                                "package_code": exc.package_code,
+                                "path": "/api/permit",
+                            })
+                        except Exception:
+                            pass
+                        self.send_json(503, {
+                            "error": exc.code,
+                            "message": "PermitAssist rule-engine data is temporarily unavailable. Please retry shortly.",
+                        }, extra_headers={**response_headers, "Retry-After": "30"})
+                        return
                     is_cached = result.get("_cached", False)
 
                     if not unlimited and not is_sample_demo:
@@ -12942,6 +12979,22 @@ def background_task_worker():
 
 
 if __name__ == "__main__":
+    try:
+        _startup_rule_engine_health = assert_active_core_runtime_ready()
+    except ActiveCorePackageUnavailableError as exc:
+        print(f"[startup][active-core-blocked] package_code={exc.package_code}")
+        raise SystemExit(78) from exc
+    print("[startup][rule-engine] " + json.dumps({
+        "ready": _startup_rule_engine_health["ready"],
+        "code": _startup_rule_engine_health["code"],
+        "core_mode": _startup_rule_engine_health["core_mode"],
+        "v24_mode": _startup_rule_engine_health["v24_mode"],
+        "allowlist": _startup_rule_engine_health["allowlist"],
+        "runtime_source_sha256": _startup_rule_engine_health["runtime_source_sha256"],
+        "expected_manifest_sha256": _startup_rule_engine_health["expected_manifest_sha256"],
+        "actual_manifest_sha256": _startup_rule_engine_health["actual_manifest_sha256"],
+        "index_entries": _startup_rule_engine_health["index_entries"],
+    }, sort_keys=True))
     init_db()
     init_free_lookup_db()
     process_due_reminders()

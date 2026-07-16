@@ -653,9 +653,39 @@ class V24Resolution:
     resolver_version: str = V24_RESOLVER_VERSION
     package_manifest_sha256: str | None = None
 
+
+@dataclass(frozen=True)
+class V24PackageHealth:
+    """Secret-safe identity and integrity status for the shipped v2.4 package."""
+
+    ready: bool
+    code: str
+    mode: str
+    expected_manifest_sha256: str | None = None
+    actual_manifest_sha256: str | None = None
+    expected_index_sha256: str | None = None
+    actual_index_sha256: str | None = None
+    index_entries: int = 0
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "ready": self.ready,
+            "code": self.code,
+            "mode": self.mode,
+            "expected_manifest_sha256": self.expected_manifest_sha256,
+            "actual_manifest_sha256": self.actual_manifest_sha256,
+            "expected_index_sha256": self.expected_index_sha256,
+            "actual_index_sha256": self.actual_index_sha256,
+            "index_entries": self.index_entries,
+        }
+
+
 _V24_INDEX_CACHE: dict[str, Any] = {}
 _V24_INDEX_CACHE_SOURCE: Path | None = None
 _V24_INDEX_CACHE_MTIME_NS: int | None = None
+_V24_INDEX_CACHE_MANIFEST_SOURCE: Path | None = None
+_V24_INDEX_CACHE_MANIFEST_MTIME_NS: int | None = None
+_V24_INDEX_CACHE_EXPECTED_MANIFEST_SHA256: str | None = None
 _V24_INDEX_CACHE_LOAD_FAILED = False
 
 
@@ -701,24 +731,51 @@ def _sha256_text_file(path: Path) -> str:
 
 
 def load_v24_index(index_path: str | Path | None = None, manifest_path: str | Path | None = None, expected_manifest_sha256: str | None = None) -> dict[str, dict[str, Any]] | None:
-    global _V24_INDEX_CACHE, _V24_INDEX_CACHE_SOURCE, _V24_INDEX_CACHE_MTIME_NS, _V24_INDEX_CACHE_LOAD_FAILED
+    global _V24_INDEX_CACHE, _V24_INDEX_CACHE_SOURCE, _V24_INDEX_CACHE_MTIME_NS
+    global _V24_INDEX_CACHE_MANIFEST_SOURCE, _V24_INDEX_CACHE_MANIFEST_MTIME_NS
+    global _V24_INDEX_CACHE_EXPECTED_MANIFEST_SHA256, _V24_INDEX_CACHE_LOAD_FAILED
     path = Path(index_path or os.environ.get("PERMITASSIST_V24_INDEX_PATH") or DEFAULT_V24_INDEX_PATH)
     manifest = Path(manifest_path or os.environ.get("PERMITASSIST_V24_MANIFEST_PATH") or DEFAULT_V24_MANIFEST_PATH)
-    expected = expected_manifest_sha256 or os.environ.get("PERMITASSIST_V24_MANIFEST_SHA256")
+    expected = str(expected_manifest_sha256 or os.environ.get("PERMITASSIST_V24_MANIFEST_SHA256") or "").strip().lower() or None
     try:
         stat = path.stat()
     except OSError:
         _V24_INDEX_CACHE_LOAD_FAILED = True
         return None
-    if index_path is None and _V24_INDEX_CACHE_SOURCE == path and _V24_INDEX_CACHE_MTIME_NS == stat.st_mtime_ns and not _V24_INDEX_CACHE_LOAD_FAILED:
+    try:
+        manifest_mtime_ns = manifest.stat().st_mtime_ns
+    except OSError:
+        manifest_mtime_ns = None
+    if (
+        index_path is None
+        and _V24_INDEX_CACHE_SOURCE == path
+        and _V24_INDEX_CACHE_MTIME_NS == stat.st_mtime_ns
+        and _V24_INDEX_CACHE_MANIFEST_SOURCE == manifest
+        and _V24_INDEX_CACHE_MANIFEST_MTIME_NS == manifest_mtime_ns
+        and _V24_INDEX_CACHE_EXPECTED_MANIFEST_SHA256 == expected
+        and not _V24_INDEX_CACHE_LOAD_FAILED
+    ):
         return _V24_INDEX_CACHE
     try:
         obj = json.loads(path.read_text(encoding="utf-8"))
         entries = obj.get("index") if isinstance(obj, dict) else None
         if not isinstance(entries, dict):
             raise ValueError("missing index")
-        if manifest.exists() and expected and _sha256_text_file(manifest) != expected:
-            raise ValueError("manifest sha256 mismatch")
+        if expected and not manifest.exists():
+            raise ValueError("manifest missing")
+        if manifest.exists():
+            loaded_manifest = json.loads(manifest.read_text(encoding="utf-8"))
+            if not isinstance(loaded_manifest, dict):
+                raise ValueError("invalid manifest")
+            if expected and _sha256_text_file(manifest).lower() != expected:
+                raise ValueError("manifest sha256 mismatch")
+            manifest_files = loaded_manifest.get("files") if isinstance(loaded_manifest.get("files"), dict) else {}
+            manifest_index_name = str(loaded_manifest.get("decision_cell_index_file") or "").strip()
+            expected_index_sha256 = str(
+                manifest_files.get(manifest_index_name) or manifest_files.get(path.name) or ""
+            ).strip().lower()
+            if expected_index_sha256 and _sha256_text_file(path).lower() != expected_index_sha256:
+                raise ValueError("index sha256 mismatch")
         normalized: dict[str, dict[str, Any]] = {}
         for key, cell in entries.items():
             if not isinstance(key, str) or not isinstance(cell, dict):
@@ -731,8 +788,63 @@ def load_v24_index(index_path: str | Path | None = None, manifest_path: str | Pa
         _V24_INDEX_CACHE = normalized
         _V24_INDEX_CACHE_SOURCE = path
         _V24_INDEX_CACHE_MTIME_NS = stat.st_mtime_ns
+        _V24_INDEX_CACHE_MANIFEST_SOURCE = manifest
+        _V24_INDEX_CACHE_MANIFEST_MTIME_NS = manifest_mtime_ns
+        _V24_INDEX_CACHE_EXPECTED_MANIFEST_SHA256 = expected
         _V24_INDEX_CACHE_LOAD_FAILED = False
     return normalized
+
+
+def inspect_v24_runtime_package(*, require_manifest_pin: bool = True) -> V24PackageHealth:
+    """Validate the runtime package without exposing local paths or credentials."""
+
+    mode = get_v24_mode()
+    index_path = Path(os.environ.get("PERMITASSIST_V24_INDEX_PATH") or DEFAULT_V24_INDEX_PATH)
+    manifest_path = Path(os.environ.get("PERMITASSIST_V24_MANIFEST_PATH") or DEFAULT_V24_MANIFEST_PATH)
+    expected_manifest = str(os.environ.get("PERMITASSIST_V24_MANIFEST_SHA256") or "").strip().lower() or None
+    base: dict[str, Any] = {
+        "mode": mode,
+        "expected_manifest_sha256": expected_manifest,
+    }
+    if require_manifest_pin and not expected_manifest:
+        return V24PackageHealth(False, "manifest_pin_missing", **base)
+    if not index_path.is_file():
+        return V24PackageHealth(False, "index_missing", **base)
+    if not manifest_path.is_file():
+        return V24PackageHealth(False, "manifest_missing", **base)
+
+    try:
+        actual_manifest = _sha256_text_file(manifest_path).lower()
+    except OSError:
+        return V24PackageHealth(False, "manifest_unreadable", **base)
+    base["actual_manifest_sha256"] = actual_manifest
+    if expected_manifest and actual_manifest != expected_manifest:
+        return V24PackageHealth(False, "manifest_sha256_mismatch", **base)
+
+    try:
+        manifest_obj = json.loads(manifest_path.read_text(encoding="utf-8"))
+    except (OSError, ValueError, TypeError):
+        return V24PackageHealth(False, "manifest_invalid", **base)
+    if not isinstance(manifest_obj, dict):
+        return V24PackageHealth(False, "manifest_invalid", **base)
+    files = manifest_obj.get("files") if isinstance(manifest_obj.get("files"), dict) else {}
+    manifest_index_name = str(manifest_obj.get("decision_cell_index_file") or "").strip()
+    expected_index = str(
+        files.get(manifest_index_name) or files.get(index_path.name) or ""
+    ).strip().lower() or None
+    try:
+        actual_index = _sha256_text_file(index_path).lower()
+    except OSError:
+        return V24PackageHealth(False, "index_unreadable", **base)
+    base["expected_index_sha256"] = expected_index
+    base["actual_index_sha256"] = actual_index
+    if expected_index and actual_index != expected_index:
+        return V24PackageHealth(False, "index_sha256_mismatch", **base)
+
+    index = load_v24_index(expected_manifest_sha256=expected_manifest)
+    if index is None:
+        return V24PackageHealth(False, "index_invalid", **base)
+    return V24PackageHealth(True, "ready", index_entries=len(index), **base)
 
 
 def _v24_ahj_has_any_project(index: dict[str, dict[str, Any]], state_key: str, ahj_key: str) -> bool:
