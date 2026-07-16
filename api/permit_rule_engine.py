@@ -1865,13 +1865,47 @@ def _route_scope_mismatch(route: ApplicationRoute, project_family: str) -> bool:
     )
     commercial_exclusion_scope = bool(
         re.search(
-            r"\b(?:not|is\s+not|isn't)\s+(?:intended\s+)?for\s+commercial\b",
+            r"\b(?:not|is\s+not|isn't)\s+(?:intended\s+)?for\s+commercial\b"
+            r"|\bno\s+commercial\b"
+            r"|\b(?:exclude|excludes|excluding|excluded)\s+commercial\b"
+            r"|\bcommercial(?:\s+\w+){0,4}\s+"
+            r"(?:(?:is|are|will\s+be)\s+)?(?:not|never)\s+"
+            r"(?:accepted|issued|processed|handled|available)\b",
             provenance_text,
         )
     )
-    return (
+
+    # A commercial clause that explicitly sends the applicant to another
+    # authority cannot establish this route. County/state mentions are not
+    # redirects when the named route office is itself that authority.
+    office_scope = _slug(route.office_name)
+    commercial_redirect_scope = False
+    redirect_patterns = (
+        r"\bcommercial(?:\s+\w+){0,4}\s+"
+        r"(?:(?:are|is|must\s+be|will\s+be)\s+)?"
+        r"(?:handled|processed|administered)\s+by\s+(?:the\s+)?"
+        r"(?P<authority>county|state|another|other|separate|different)\b",
+        r"\b(?:for\s+)?commercial(?:\s+\w+){0,4}\s+"
+        r"(?:contact|visit|use)\s+(?:the\s+)?"
+        r"(?P<authority>county|state|another|other|separate|different)\b",
+        r"\bcommercial(?:\s+\w+){0,4}\s+"
+        r"(?:go(?:es)?|must\s+go)\s+through\s+(?:a\s+|the\s+)?"
+        r"(?P<authority>county|state|another|other|separate|different)\b",
+    )
+    for redirect_pattern in redirect_patterns:
+        for redirect_match in re.finditer(redirect_pattern, provenance_text):
+            authority = _slug(redirect_match.group("authority"))
+            if authority in {"county", "state"} and authority in office_scope:
+                continue
+            commercial_redirect_scope = True
+            break
+        if commercial_redirect_scope:
+            break
+
+    return bool(
         residential_only_scope
         or commercial_exclusion_scope
+        or commercial_redirect_scope
         or (residential_scope and not commercial_scope)
     )
 
