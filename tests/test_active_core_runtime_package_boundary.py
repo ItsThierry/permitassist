@@ -212,7 +212,9 @@ def test_active_allowlisted_nonexact_identity_never_calls_legacy(
 @pytest.mark.parametrize(
     ("broken_symbol", "expected_package_code"),
     (
+        ("_request_targets_active_core", "active_core_runtime_unavailable"),
         ("resolve_jurisdiction_identity", "jurisdiction_identity_unavailable"),
+        ("core_activation_allowed", "active_core_runtime_unavailable"),
         ("resolve_v24_cell", "v24_resolution_unavailable"),
         ("extract_sealed_public_projection", "core_envelope_unavailable"),
     ),

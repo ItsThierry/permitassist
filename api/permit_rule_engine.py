@@ -2876,47 +2876,49 @@ def build_active_core_first_result(
 
     if get_rule_engine_core_mode() != "active":
         return None
-    targets_active_core = _request_targets_active_core(city, state)
     try:
-        identity = resolve_jurisdiction_identity(city, state)
-    except Exception as exc:
-        if targets_active_core:
+        if not _request_targets_active_core(city, state):
+            return None
+        try:
+            identity = resolve_jurisdiction_identity(city, state)
+        except Exception as exc:
             raise ActiveCorePackageUnavailableError("jurisdiction_identity_unavailable") from exc
-        return None
-    if identity.status is JurisdictionResolutionStatus.INDEX_UNAVAILABLE and targets_active_core:
-        health = active_core_runtime_health()
-        raise ActiveCorePackageUnavailableError(str(health.get("code") or "index_unavailable"))
-    if identity.status is not JurisdictionResolutionStatus.EXACT or identity.selected is None:
-        if targets_active_core:
+        if identity.status is JurisdictionResolutionStatus.INDEX_UNAVAILABLE:
+            health = active_core_runtime_health()
+            raise ActiveCorePackageUnavailableError(str(health.get("code") or "index_unavailable"))
+        if identity.status is not JurisdictionResolutionStatus.EXACT or identity.selected is None:
             raise ActiveCorePackageUnavailableError(
                 f"jurisdiction_identity_{identity.status.value}"
             )
-        return None
-    if not core_activation_allowed(identity.selected.jurisdiction_id):
-        return None
-    try:
-        resolution = resolve_v24_cell(city, state, job_type, job_category, force=True)
+        if not core_activation_allowed(identity.selected.jurisdiction_id):
+            raise ActiveCorePackageUnavailableError("jurisdiction_identity_not_allowlisted")
+        try:
+            resolution = resolve_v24_cell(city, state, job_type, job_category, force=True)
+        except Exception as exc:
+            raise ActiveCorePackageUnavailableError("v24_resolution_unavailable") from exc
+        if resolution.status is V24ResolutionStatus.INDEX_UNAVAILABLE:
+            health = active_core_runtime_health()
+            raise ActiveCorePackageUnavailableError(str(health.get("code") or "index_unavailable"))
+        try:
+            envelope = build_core_decision_envelope(
+                resolution,
+                job_type=job_type,
+                city=city,
+                state=state,
+                job_category=job_category,
+                facts=facts,
+            )
+            result = attach_core_decision_envelope({}, envelope)
+            sealed_projection = extract_sealed_public_projection(result, city=city, state=state)
+        except Exception as exc:
+            raise ActiveCorePackageUnavailableError("core_envelope_unavailable") from exc
+        if sealed_projection is None:
+            raise ActiveCorePackageUnavailableError("core_envelope_unavailable")
+        return result
+    except ActiveCorePackageUnavailableError:
+        raise
     except Exception as exc:
-        raise ActiveCorePackageUnavailableError("v24_resolution_unavailable") from exc
-    if resolution.status is V24ResolutionStatus.INDEX_UNAVAILABLE:
-        health = active_core_runtime_health()
-        raise ActiveCorePackageUnavailableError(str(health.get("code") or "index_unavailable"))
-    try:
-        envelope = build_core_decision_envelope(
-            resolution,
-            job_type=job_type,
-            city=city,
-            state=state,
-            job_category=job_category,
-            facts=facts,
-        )
-        result = attach_core_decision_envelope({}, envelope)
-        sealed_projection = extract_sealed_public_projection(result, city=city, state=state)
-    except Exception as exc:
-        raise ActiveCorePackageUnavailableError("core_envelope_unavailable") from exc
-    if sealed_projection is None:
-        raise ActiveCorePackageUnavailableError("core_envelope_unavailable")
-    return result
+        raise ActiveCorePackageUnavailableError("active_core_runtime_unavailable") from exc
 
 
 # ─── Part 3: immutable seed migration and evidence-gated factory ─────────────
