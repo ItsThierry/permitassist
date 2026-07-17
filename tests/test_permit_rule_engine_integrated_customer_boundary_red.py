@@ -11,6 +11,7 @@ import importlib
 import json
 import sys
 import threading
+import urllib.error
 import urllib.request
 from http.server import HTTPServer
 from pathlib import Path
@@ -345,8 +346,8 @@ def _install_real_active_core_endpoint_stubs(server, monkeypatch, case) -> None:
     monkeypatch.setattr(server, "is_paid_user", lambda _email: True)
 
 
-def _post_permit(base: str, headers: dict[str, str]) -> dict:
-    body = json.dumps(
+def _permit_request_body() -> bytes:
+    return json.dumps(
         {
             "job_type": "replace an existing residential asphalt shingle roof",
             "job_category": "residential",
@@ -355,15 +356,236 @@ def _post_permit(base: str, headers: dict[str, str]) -> dict:
             "zip_code": "85326",
         }
     ).encode("utf-8")
+
+
+def _post_permit_http(base: str, headers: dict[str, str]) -> tuple[int, dict, dict]:
     request = urllib.request.Request(
         f"{base}/api/permit",
-        data=body,
+        data=_permit_request_body(),
         method="POST",
         headers={"Content-Type": "application/json", **headers},
     )
-    with urllib.request.urlopen(request, timeout=10) as response:
-        assert response.status == 200
-        return json.loads(response.read().decode("utf-8"))
+    try:
+        with urllib.request.urlopen(request, timeout=10) as response:
+            return (
+                response.status,
+                json.loads(response.read().decode("utf-8")),
+                dict(response.headers.items()),
+            )
+    except urllib.error.HTTPError as exc:
+        return (
+            exc.code,
+            json.loads(exc.read().decode("utf-8")),
+            dict(exc.headers.items()),
+        )
+
+
+def _post_permit(base: str, headers: dict[str, str]) -> dict:
+    status, payload, _response_headers = _post_permit_http(base, headers)
+    assert status == 200
+    return payload
+
+
+def test_v15_admin_canary_hits_exact_abuse_budget_on_lookup_eleven(tmp_path, monkeypatch):
+    """Characterize the V15 live failure: admin bypass did not bypass 10/min/IP."""
+    server = _import_server(tmp_path, monkeypatch)
+    real_check_rate_limit = server.check_rate_limit
+    _install_endpoint_stubs(server, monkeypatch, evidence_allowed=True)
+    monkeypatch.setattr(server, "check_rate_limit", real_check_rate_limit)
+    monkeypatch.setattr(server, "is_unlimited_lookup_ip", lambda _ip: False)
+    server._RATE_LIMIT_STATE.clear()
+    headers = {
+        "X-Admin-Token": "integrated-red-admin-token",
+        "X-Forwarded-For": "8.8.8.8",
+    }
+
+    with _LiveServer(server.Handler) as live:
+        first_ten = [_post_permit_http(live.base, headers) for _ in range(10)]
+        eleventh = _post_permit_http(live.base, headers)
+
+    assert [status for status, _payload, _headers in first_ten] == [200] * 10
+    assert eleventh[0] == 429
+    assert eleventh[1] == {
+        "error": "rate_limit_exceeded",
+        "message": "Too many requests. Please wait a minute and try again.",
+    }
+    assert int(eleventh[2]["Retry-After"]) >= 1
+    assert len(server._RATE_LIMIT_STATE["8.8.8.8"]) == 10
+
+
+def _canary_admin_token() -> str:
+    # Must be >= 32 chars to satisfy the canary secret floor.
+    return "integrated-red-canary-admin-token-v16-32b"
+
+
+def _canary_attempt_id() -> str:
+    return "3e7416b-v16-20260717"
+
+
+def _canary_deployment_id() -> str:
+    return "d8448821-b889-4fcc-9d0c-7fcdcb02ad85"
+
+
+def _permit_request_dict() -> dict:
+    return {
+        "job_type": "replace an existing residential asphalt shingle roof",
+        "job_category": "residential",
+        "city": "Buckeye",
+        "state": "AZ",
+        "zip_code": "85326",
+    }
+
+
+def _signed_canary_headers(server, *, ordinal: int, data: dict | None = None) -> dict[str, str]:
+    payload = data if data is not None else _permit_request_dict()
+    attempt = _canary_attempt_id()
+    deployment = _canary_deployment_id()
+    signature = server._staging_canary_signature(
+        _canary_admin_token(),
+        attempt_id=attempt,
+        deployment_id=deployment,
+        ordinal=ordinal,
+        data=payload,
+    )
+    return {
+        "X-Admin-Token": _canary_admin_token(),
+        "X-Forwarded-For": "8.8.8.8",
+        server.CANARY_ATTEMPT_HEADER: attempt,
+        server.CANARY_CONTROLLER_HEADER: server.CANARY_CONTROLLER_VALUE,
+        server.CANARY_DEPLOYMENT_HEADER: deployment,
+        server.CANARY_ORDINAL_HEADER: str(ordinal),
+        server.CANARY_NO_CACHE_HEADER: "1",
+        server.CANARY_SIGNATURE_HEADER: signature,
+    }
+
+
+def _install_canary_endpoint_stubs(server, monkeypatch, *, capture: list | None = None) -> None:
+    real_check_rate_limit = server.check_rate_limit
+    _install_endpoint_stubs(server, monkeypatch, evidence_allowed=False)
+    monkeypatch.setattr(server, "ADMIN_TOKEN", _canary_admin_token())
+    monkeypatch.setattr(server, "check_rate_limit", real_check_rate_limit)
+    monkeypatch.setattr(server, "is_unlimited_lookup_ip", lambda _ip: False)
+    server._RATE_LIMIT_STATE.clear()
+    server._CANARY_NEXT_ORDINAL.clear()
+    monkeypatch.setenv("RAILWAY_ENVIRONMENT_NAME", "staging")
+    monkeypatch.setenv(server.CANARY_ATTEMPT_ENV, _canary_attempt_id())
+    monkeypatch.setenv("RAILWAY_DEPLOYMENT_ID", _canary_deployment_id())
+
+    def _research(*_args, **kwargs):
+        if capture is not None:
+            capture.append(
+                {
+                    "use_cache": kwargs.get("use_cache"),
+                    "suppress_cache_write": kwargs.get("suppress_cache_write"),
+                    "bypass_lookup_caches": kwargs.get("bypass_lookup_caches"),
+                }
+            )
+        return copy.deepcopy(_dirty_internal_result())
+
+    monkeypatch.setattr(server, "_research_permit_with_budget", _research)
+
+
+def test_v16_signed_staging_canary_allows_exact_twelve_lookups_and_suppresses_cache(
+    tmp_path, monkeypatch
+):
+    """Green path for the V15 11th-request failure under the exact 6+6 budget."""
+    server = _import_server(tmp_path, monkeypatch)
+    research_calls: list[dict] = []
+    _install_canary_endpoint_stubs(server, monkeypatch, capture=research_calls)
+
+    with _LiveServer(server.Handler) as live:
+        statuses = []
+        for ordinal in range(1, 13):
+            status, payload, _headers = _post_permit_http(
+                live.base,
+                _signed_canary_headers(server, ordinal=ordinal),
+            )
+            statuses.append(status)
+            _assert_public_boundary(payload)
+        thirteenth = _post_permit_http(
+            live.base,
+            _signed_canary_headers(server, ordinal=13),
+        )
+
+    assert statuses == [200] * 12
+    assert len(research_calls) == 12
+    assert all(call["use_cache"] is False for call in research_calls)
+    assert all(call["suppress_cache_write"] is True for call in research_calls)
+    assert thirteenth[0] == 403
+    assert thirteenth[1]["error"] == "canary_request_rejected"
+    assert server._RATE_LIMIT_STATE.get("8.8.8.8") in (None, [])
+
+
+def test_v16_canary_rejects_replay_wrong_body_and_bare_admin_stays_limited(
+    tmp_path, monkeypatch
+):
+    server = _import_server(tmp_path, monkeypatch)
+    _install_canary_endpoint_stubs(server, monkeypatch)
+
+    with _LiveServer(server.Handler) as live:
+        first = _post_permit_http(live.base, _signed_canary_headers(server, ordinal=1))
+        replay = _post_permit_http(live.base, _signed_canary_headers(server, ordinal=1))
+        wrong_body_headers = _signed_canary_headers(server, ordinal=2)
+        # Signature is still bound to the canonical Buckeye body; mutate payload only.
+        request = urllib.request.Request(
+            f"{live.base}/api/permit",
+            data=json.dumps(
+                {
+                    **_permit_request_dict(),
+                    "city": "Phoenix",
+                }
+            ).encode("utf-8"),
+            method="POST",
+            headers={"Content-Type": "application/json", **wrong_body_headers},
+        )
+        try:
+            with urllib.request.urlopen(request, timeout=10) as response:
+                wrong_body = (
+                    response.status,
+                    json.loads(response.read().decode("utf-8")),
+                    dict(response.headers.items()),
+                )
+        except urllib.error.HTTPError as exc:
+            wrong_body = (
+                exc.code,
+                json.loads(exc.read().decode("utf-8")),
+                dict(exc.headers.items()),
+            )
+
+        bare_admin_statuses = []
+        for _ in range(11):
+            status, payload, headers = _post_permit_http(
+                live.base,
+                {
+                    "X-Admin-Token": _canary_admin_token(),
+                    "X-Forwarded-For": "1.1.1.1",
+                },
+            )
+            bare_admin_statuses.append(status)
+
+    assert first[0] == 200
+    assert replay[0] == 403
+    assert replay[1]["error"] == "canary_request_rejected"
+    assert wrong_body[0] == 403
+    assert wrong_body[1]["error"] == "canary_request_rejected"
+    assert bare_admin_statuses[:10] == [200] * 10
+    assert bare_admin_statuses[10] == 429
+
+
+def test_v16_canary_headers_without_staging_binding_are_rejected(tmp_path, monkeypatch):
+    server = _import_server(tmp_path, monkeypatch)
+    _install_canary_endpoint_stubs(server, monkeypatch)
+    monkeypatch.delenv(server.CANARY_ATTEMPT_ENV, raising=False)
+    monkeypatch.setenv("RAILWAY_ENVIRONMENT_NAME", "production")
+
+    with _LiveServer(server.Handler) as live:
+        status, payload, _headers = _post_permit_http(
+            live.base,
+            _signed_canary_headers(server, ordinal=1),
+        )
+
+    assert status == 403
+    assert payload["error"] == "canary_request_rejected"
 
 
 @pytest.mark.parametrize(

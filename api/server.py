@@ -234,6 +234,23 @@ RATE_LIMIT_MAX_REQUESTS = 10
 _RATE_LIMIT_STATE = {}
 _RATE_LIMIT_LOCK = threading.Lock()
 
+# Staging canary abuse-limit exemption protocol. This is deliberately separate
+# from ordinary admin/free-tier bypass behavior: an X-Admin-Token by itself must
+# still traverse the normal 10/minute/IP limiter. The exemption is active only
+# while staging has an exact attempt ID configured, and each request is bound to
+# the body and a strictly increasing one-shot ordinal.
+CANARY_ATTEMPT_ENV = "PERMITASSIST_CANARY_ATTEMPT_ID"
+CANARY_ATTEMPT_HEADER = "X-PermitAssist-Canary-Attempt"
+CANARY_CONTROLLER_HEADER = "X-PermitAssist-Canary-Controller"
+CANARY_CONTROLLER_VALUE = "tracked-background-v1"
+CANARY_DEPLOYMENT_HEADER = "X-PermitAssist-Canary-Deployment"
+CANARY_ORDINAL_HEADER = "X-PermitAssist-Canary-Ordinal"
+CANARY_NO_CACHE_HEADER = "X-PermitAssist-Canary-No-Cache"
+CANARY_SIGNATURE_HEADER = "X-PermitAssist-Canary-Signature"
+CANARY_MAX_LOOKUPS = 12
+_CANARY_ORDINAL_LOCK = threading.Lock()
+_CANARY_NEXT_ORDINAL: dict[str, int] = {}
+
 
 def _normalize_ip(value: str) -> str:
     raw = (value or "").strip()
@@ -377,7 +394,126 @@ def check_rate_limit(ip: str) -> tuple[bool, int]:
                 _RATE_LIMIT_STATE.pop(key, None)
     return False, 0
 
-# ── URL validation ────────────────────────────────────────────────────────────
+
+def _canonical_canary_body_sha256(data: dict) -> str:
+    encoded = json.dumps(
+        data,
+        sort_keys=True,
+        separators=(",", ":"),
+        ensure_ascii=False,
+    ).encode("utf-8")
+    return hashlib.sha256(encoded).hexdigest()
+
+
+def _staging_canary_signature(
+    secret: str,
+    *,
+    attempt_id: str,
+    deployment_id: str,
+    ordinal: int,
+    data: dict,
+) -> str:
+    """Bind a staging canary authorization to one exact request body/ordinal."""
+    message = "\n".join(
+        (
+            "permitassist-staging-canary-v1",
+            "POST",
+            "/api/permit",
+            attempt_id,
+            deployment_id,
+            CANARY_CONTROLLER_VALUE,
+            str(ordinal),
+            "no-cache-no-write",
+            _canonical_canary_body_sha256(data),
+        )
+    ).encode("utf-8")
+    return hmac.new(secret.encode("utf-8"), message, hashlib.sha256).hexdigest()
+
+
+def _authorize_staging_canary_rate_limit_exemption(headers, data: dict) -> tuple[str, int | None]:
+    """Return absent/rejected/authorized for the 12-request staging protocol.
+
+    Authorization requires the existing server-held admin secret, exact staging
+    attempt and deployment bindings, a body-bound HMAC, and a strictly increasing
+    one-shot ordinal. Invalid or replayed canary-shaped requests are rejected;
+    ordinary requests (including a bare admin token) remain on their prior path.
+    """
+    canary_header_names = (
+        CANARY_ATTEMPT_HEADER,
+        CANARY_CONTROLLER_HEADER,
+        CANARY_DEPLOYMENT_HEADER,
+        CANARY_ORDINAL_HEADER,
+        CANARY_NO_CACHE_HEADER,
+        CANARY_SIGNATURE_HEADER,
+    )
+    attempted = any(str(headers.get(name, "") or "").strip() for name in canary_header_names)
+    if not attempted:
+        return "absent", None
+
+    configured_attempt = (os.environ.get(CANARY_ATTEMPT_ENV, "") or "").strip()
+    configured_deployment = (os.environ.get("RAILWAY_DEPLOYMENT_ID", "") or "").strip()
+    request_attempt = (headers.get(CANARY_ATTEMPT_HEADER, "") or "").strip()
+    request_deployment = (headers.get(CANARY_DEPLOYMENT_HEADER, "") or "").strip()
+    controller = (headers.get(CANARY_CONTROLLER_HEADER, "") or "").strip()
+    no_cache = (headers.get(CANARY_NO_CACHE_HEADER, "") or "").strip()
+    supplied_admin = headers.get("X-Admin-Token", "") or ""
+    supplied_signature = (headers.get(CANARY_SIGNATURE_HEADER, "") or "").strip().lower()
+
+    if (os.environ.get("RAILWAY_ENVIRONMENT_NAME", "") or "").strip().lower() != "staging":
+        return "rejected", None
+    if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._:-]{7,127}", configured_attempt):
+        return "rejected", None
+    if not re.fullmatch(r"[0-9a-fA-F-]{36}", configured_deployment):
+        return "rejected", None
+    if not hmac.compare_digest(request_attempt, configured_attempt):
+        return "rejected", None
+    if not hmac.compare_digest(request_deployment, configured_deployment):
+        return "rejected", None
+    if controller != CANARY_CONTROLLER_VALUE or no_cache != "1":
+        return "rejected", None
+    if any(
+        str(headers.get(name, "") or "").strip()
+        for name in (
+            "X-Sample-Demo",
+            "X-PermitIQ-Benchmark-Secret",
+            "X-PermitIQ-Engine",
+            "X-PermitAssist-Cache-Mode",
+            "X-Session-Token",
+            "Authorization",
+        )
+    ):
+        return "rejected", None
+    if len(ADMIN_TOKEN) < 32 or not supplied_admin or not hmac.compare_digest(supplied_admin, ADMIN_TOKEN):
+        return "rejected", None
+    try:
+        ordinal = int((headers.get(CANARY_ORDINAL_HEADER, "") or "").strip())
+    except (TypeError, ValueError):
+        return "rejected", None
+    if ordinal < 1 or ordinal > CANARY_MAX_LOOKUPS:
+        return "rejected", None
+    if not re.fullmatch(r"[0-9a-f]{64}", supplied_signature):
+        return "rejected", None
+
+    expected_signature = _staging_canary_signature(
+        ADMIN_TOKEN,
+        attempt_id=configured_attempt,
+        deployment_id=configured_deployment,
+        ordinal=ordinal,
+        data=data,
+    )
+    if not hmac.compare_digest(supplied_signature, expected_signature):
+        return "rejected", None
+
+    with _CANARY_ORDINAL_LOCK:
+        for stale_attempt in tuple(_CANARY_NEXT_ORDINAL):
+            if stale_attempt != configured_attempt:
+                _CANARY_NEXT_ORDINAL.pop(stale_attempt, None)
+        expected_ordinal = _CANARY_NEXT_ORDINAL.get(configured_attempt, 1)
+        if ordinal != expected_ordinal:
+            return "rejected", None
+        _CANARY_NEXT_ORDINAL[configured_attempt] = expected_ordinal + 1
+    return "authorized", ordinal
+
 # ── URL validation ────────────────────────────────────────────────────────────
 # Allowlist of known-good permit portal domains, skip validation for these
 TRUSTED_PERMIT_DOMAINS = [
@@ -11729,6 +11865,18 @@ class Handler(BaseHTTPRequestHandler):
                     self.send_json(400, {"error": "job_type, city, and state are required"})
                     return
 
+                canary_auth, canary_ordinal = _authorize_staging_canary_rate_limit_exemption(
+                    self.headers,
+                    data,
+                )
+                if canary_auth == "rejected":
+                    self.send_json(403, {
+                        "error": "canary_request_rejected",
+                        "message": "Request authorization is invalid or expired.",
+                    })
+                    return
+                is_staging_canary = canary_auth == "authorized"
+
                 ip = self.client_ip()
                 fingerprint = _normalize_fingerprint(self.headers.get("X-Client-Fingerprint", ""))
 
@@ -11753,26 +11901,35 @@ class Handler(BaseHTTPRequestHandler):
                 session_token = self.headers.get("X-Session-Token", "")
                 user_email = validate_session_token(session_token) if session_token else None
                 paid = is_paid_user(user_email) if user_email else False
-                unlimited = is_sample_demo or paid or is_unlimited_lookup_ip(ip) or is_benchmark
+                unlimited = is_sample_demo or paid or is_unlimited_lookup_ip(ip) or is_benchmark or is_staging_canary
                 used_before = 0 if unlimited else get_effective_free_usage(ip, fingerprint)
                 response_headers = {} if unlimited else build_free_lookup_headers(used_before)
 
-                admin_bypass = False
+                admin_token = self.headers.get("X-Admin-Token", "")
+                admin_bypass = bool(
+                    ADMIN_TOKEN
+                    and admin_token
+                    and hmac.compare_digest(admin_token, ADMIN_TOKEN)
+                )
                 if not is_sample_demo and not is_benchmark:
-                    limited, retry_after = check_rate_limit(ip)
-                    if limited and not unlimited:
-                        self.send_json(429, {
-                            "error": "rate_limit_exceeded",
-                            "message": "Too many requests. Please wait a minute and try again.",
-                        }, extra_headers={**response_headers, "Retry-After": str(retry_after)})
-                        return
+                    # A bare admin token deliberately remains subject to the
+                    # ordinary abuse limiter. Only the exact, signed, one-shot
+                    # staging canary protocol is exempt.
+                    if not is_staging_canary:
+                        limited, retry_after = check_rate_limit(ip)
+                        if limited and not unlimited:
+                            self.send_json(429, {
+                                "error": "rate_limit_exceeded",
+                                "message": "Too many requests. Please wait a minute and try again.",
+                            }, extra_headers={**response_headers, "Retry-After": str(retry_after)})
+                            return
 
-                    # Admin-bypass: if X-Admin-Token header matches ADMIN_TOKEN env, skip the free-tier limit
-                    admin_token = self.headers.get("X-Admin-Token", "")
-                    if ADMIN_TOKEN and admin_token == ADMIN_TOKEN:
-                        admin_bypass = True
-                        # Log the bypass for audit trail
-                        print(f"[admin-bypass] /api/permit lookup bypass at {datetime.utcnow().isoformat()} email={data.get('email','')}")
+                    # Admin-bypass: matching X-Admin-Token skips only the free-tier limit.
+                    if admin_bypass:
+                        if is_staging_canary:
+                            print(f"[canary] authorized cache-suppressed lookup ordinal={canary_ordinal}")
+                        else:
+                            print(f"[admin-bypass] /api/permit lookup bypass at {datetime.utcnow().isoformat()} email={data.get('email','')}")
                         # Skip free-tier limit check — proceed to engine
                     else:
                         if used_before >= FREE_LOOKUP_LIMIT and not unlimited:
@@ -11858,14 +12015,23 @@ class Handler(BaseHTTPRequestHandler):
                                 "upgrade_url": FREE_LOOKUP_UPGRADE_URL,
                             }, extra_headers=response_headers)
                             return
-                    _use_cache = (not is_benchmark) and (not evidence_allowed) and (not qa_cache_mode)
+                    _use_cache = (
+                        (not is_benchmark)
+                        and (not evidence_allowed)
+                        and (not qa_cache_mode)
+                        and (not is_staging_canary)
+                    )
                     try:
                         result = _research_permit_with_budget(
                             job_type, city, state, zip_code,
                             job_category=job_category,
                             use_cache=_use_cache,
                             force_model=force_model,
-                            suppress_cache_write=evidence_allowed or qa_cache_mode == "bypass",
+                            suppress_cache_write=(
+                                evidence_allowed
+                                or qa_cache_mode == "bypass"
+                                or is_staging_canary
+                            ),
                             bypass_lookup_caches=bool(qa_cache_mode),
                         )
                     except ActiveCorePackageUnavailableError as exc:
