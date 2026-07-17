@@ -9081,6 +9081,69 @@ def _deterministic_v231_result_from_resolution(v231_resolution, job_type: str, c
     }
 
 
+def resolve_authoritative_decision_cell_fallback(
+    job_type: str,
+    city: str,
+    state: str,
+    job_category: str | None = None,
+) -> dict | None:
+    """Return a locked deterministic result for an exact authoritative cell.
+
+    This is the authority-boundary escape hatch for callers whose outer timeout
+    or exception boundary fires before :func:`research_permit` can return its
+    normal late-reconciled result.  Exact v2.4 cells take precedence over v2.3.1
+    cells, matching the main research pipeline.  Uncovered or ambiguous requests
+    return ``None`` so callers can retain their ordinary degraded behavior.
+    """
+    requested_category = job_category.lower().strip() if isinstance(job_category, str) else ""
+    if requested_category not in ("residential", "commercial"):
+        requested_category = ""
+    scope_contract = build_scope_contract(
+        job_type,
+        city,
+        state,
+        job_category=requested_category or None,
+    )
+    inferred_category = str(scope_contract.get("category") or "").lower().strip()
+    resolved_category = (
+        inferred_category
+        if inferred_category in ("residential", "commercial")
+        else (requested_category or "residential")
+    )
+
+    v231_resolution = resolve_v231_cell(city, state, job_type, resolved_category)
+    v24_resolution = resolve_v24_cell(city, state, job_type, resolved_category)
+    v24_result = _deterministic_v24_result_from_resolution(
+        v24_resolution,
+        job_type,
+        city,
+        state,
+    )
+    result = v24_result
+    if result is None:
+        result = _deterministic_v231_result_from_resolution(
+            v231_resolution,
+            job_type,
+            city,
+            state,
+        )
+    if result is None:
+        return None
+
+    # A v2.4 fail-closed row intentionally preserves a source-backed legacy
+    # binary result when one exists, so reproduce the main pipeline's v2.3.1 →
+    # v2.4 order for v2.4 fallback material.  When only v2.3.1 applies, the
+    # universal reconciler performs that merge once.
+    if v24_result is not None:
+        reconcile_v231_result(result, v231_resolution)
+    reconcile_authoritative_result(
+        result,
+        v24_resolution=v24_resolution,
+        v231_resolution=v231_resolution,
+    )
+    return result
+
+
 def research_permit(job_type: str, city: str, state: str, zip_code: str = "", use_cache: bool = True, job_category: str | None = None, job_value: float | None = None, force_model: str | None = None, suppress_cache_write: bool = False, bypass_lookup_caches: bool = False) -> dict:
     """
     Research permit requirements for a job + location.

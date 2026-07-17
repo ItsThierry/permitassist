@@ -4411,6 +4411,73 @@ def _build_degraded_lookup_fallback(job_type: str, city: str, state: str, *, rea
     }
 
 
+def resolve_authoritative_decision_cell_fallback(
+    job_type: str,
+    city: str,
+    state: str,
+    *,
+    job_category: str = "",
+) -> dict | None:
+    """Load the authority resolver without expanding server import-time requirements.
+
+    A number of isolated boundary tests intentionally install a minimal
+    ``research_engine`` stub before importing this module.  Keep that supported;
+    production and full-source executions still resolve the real helper here.
+    """
+    try:
+        from research_engine import (  # noqa: WPS433 - deliberate lazy boundary
+            resolve_authoritative_decision_cell_fallback as resolver,
+        )
+    except ImportError:
+        try:
+            from api.research_engine import (  # noqa: WPS433 - package import fallback
+                resolve_authoritative_decision_cell_fallback as resolver,
+            )
+        except ImportError:
+            return None
+    return resolver(
+        job_type,
+        city,
+        state,
+        job_category=job_category,
+    )
+
+
+def _build_authority_preserving_lookup_fallback(
+    job_type: str,
+    city: str,
+    state: str,
+    *,
+    job_category: str = "",
+    reason: str = "lookup_timeout",
+) -> dict:
+    """Recover exact Decision Cell truth before using a heuristic fallback.
+
+    The research worker normally applies late v2.4/v2.3.1 reconciliation.  If an
+    outer API timeout or exception wins that race, this boundary must independently
+    recover the same authenticated cell and primary lock; otherwise a generic
+    heuristic can demote an authoritative result before the finalizer sees it.
+    """
+    try:
+        authoritative = resolve_authoritative_decision_cell_fallback(
+            job_type,
+            city,
+            state,
+            job_category=job_category or "",
+        )
+    except Exception as exc:
+        print(f"[permit][authority-fallback-error] {type(exc).__name__}")
+        authoritative = None
+    if isinstance(authoritative, dict):
+        recovered = copy.deepcopy(authoritative)
+        recovered["_runtime_authority_recovery"] = {
+            "reason": reason,
+            "timeout_seconds": PERMIT_LOOKUP_TOTAL_TIMEOUT_SECONDS,
+        }
+        return recovered
+    return _build_degraded_lookup_fallback(job_type, city, state, reason=reason)
+
+
 def _research_permit_with_budget(job_type: str, city: str, state: str, zip_code: str = "", **kwargs) -> dict:
     # Exact-complete allowlisted core cells are deterministic and already carry
     # a sealed customer projection. Resolve them before any search/model thread.
@@ -4436,10 +4503,22 @@ def _research_permit_with_budget(job_type: str, city: str, state: str, zip_code:
     except FutureTimeout:
         print(f"[permit][timeout-fallback] lookup exceeded {PERMIT_LOOKUP_TOTAL_TIMEOUT_SECONDS}s for {city}, {state}: {job_type[:120]}")
         future.cancel()
-        return _build_degraded_lookup_fallback(job_type, city, state, reason="lookup_timeout")
+        return _build_authority_preserving_lookup_fallback(
+            job_type,
+            city,
+            state,
+            job_category=str(kwargs.get("job_category") or ""),
+            reason="lookup_timeout",
+        )
     except Exception as exc:
         print(f"[permit][error-fallback] {type(exc).__name__}: {exc}")
-        return _build_degraded_lookup_fallback(job_type, city, state, reason=type(exc).__name__)
+        return _build_authority_preserving_lookup_fallback(
+            job_type,
+            city,
+            state,
+            job_category=str(kwargs.get("job_category") or ""),
+            reason=type(exc).__name__,
+        )
     finally:
         executor.shutdown(wait=False, cancel_futures=True)
 
