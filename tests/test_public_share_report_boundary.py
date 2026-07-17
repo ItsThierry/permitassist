@@ -21,7 +21,16 @@ def _import_server(tmp_path, monkeypatch):
         if path not in sys.path:
             sys.path.insert(0, path)
     research_module = sys.modules.get("research_engine")
-    if research_module is not None and not hasattr(research_module, "classify_source_tier"):
+    expected_research_path = (api_dir / "research_engine.py").resolve()
+    loaded_research_path = Path(str(getattr(research_module, "__file__", "") or ""))
+    if research_module is not None and (
+        not loaded_research_path
+        or loaded_research_path.resolve() != expected_research_path
+    ):
+        # Earlier suites intentionally install a partially capable top-level
+        # research_engine stub. Presence of one classifier is not proof that the
+        # real Maps builder or authority resolver is loaded, so remove any module
+        # that is not the repository implementation before re-importing server.
         sys.modules.pop("research_engine", None)
     # Other contract tests intentionally pop/reload api.server with stubs.
     # Import a fresh module here so this suite is order-independent.
@@ -212,10 +221,16 @@ def test_public_share_report_payload_is_allowlisted_across_scope_matrix(
 
 def test_report_json_embedding_prevents_script_breakout_and_markup_payloads(tmp_path, monkeypatch):
     server = _import_server(tmp_path, monkeypatch)
+    hostile_result = _base_result(
+        "Commercial Building / Tenant Improvement",
+        marker=XSS_MARKER,
+        source_url=_local_source_url("Dallas", "TX"),
+    )
+    hostile_result["applying_office"] = f"Dallas Permit Office {XSS_MARKER}"
 
     html = server.render_share_page(
         {
-            "data": _base_result("Commercial Building / Tenant Improvement", marker=XSS_MARKER, source_url=_local_source_url("Dallas", "TX")),
+            "data": hostile_result,
             "job_type": XSS_MARKER,
             "city": "Dallas",
             "state": "TX",
@@ -226,6 +241,11 @@ def test_report_json_embedding_prevents_script_breakout_and_markup_payloads(tmp_
     payload_text = json.dumps(payload, ensure_ascii=False)
     assert "window.__PA_XSS=1" in payload_text
     assert "<img src=x onerror=alert(1)>" in payload_text
+    assert payload["permit_office_maps_url"].startswith("https://www.google.com/maps")
+    assert payload["permit_office_maps_url"] not in {
+        "https://www.google.com/maps",
+        "https://www.google.com/maps/",
+    }
     soup = BeautifulSoup(html, "html.parser")
     scripts = soup.find_all("script")
     assert [script.get("id") for script in scripts].count("report-data") == 1
@@ -384,10 +404,77 @@ def test_verified_share_round_trip_preserves_live_shaped_public_permit_rows(tmp_
 
     _assert_public_payload_has_no_internal_keys(share)
     _assert_public_payload_has_no_internal_keys(embedded)
-    expected_embedded = server.to_public_share_payload({"data": expected}, {})["share"]["data"]
     assert share["data"] == expected
-    assert embedded["share"]["data"] == expected_embedded
+    # A verified current-request customer DTO is already the public egress
+    # boundary. The report must not apply a second lossy result-field allowlist.
+    assert embedded["share"]["data"] == expected
+    assert set(embedded["share"]["data"]) == set(expected)
     assert len(embedded["share"]["data"]["permits_required"]) == 2
     assert {
         row["permit_type"] for row in embedded["share"]["data"]["permits_required"]
     } == {"Historic Preservation Review", "Roofing / Building Permit"}
+
+
+def test_report_payload_keeps_exact_public_result_and_destination_maps_url(tmp_path, monkeypatch):
+    server = _import_server(tmp_path, monkeypatch)
+    customer = server.project_customer_response_egress(
+        server.build_customer_response_egress(
+            _base_result(
+                "No permit required",
+                source_url="https://www.crookcounty.wy.gov/departments/growth_and_development.php",
+            ),
+            "commercial tenant improvement",
+            "Crook County",
+            "WY",
+        )
+    )
+    customer.update({
+        "permit_required": False,
+        "permit_decision": "NOT_REQUIRED",
+        "permit_verdict": "NO",
+        "permit_name": "No permit required",
+        "permit_type": "No permit required",
+        "permits_required": [],
+        "permits_required_logic": [],
+        "applying_office": "Crook County Growth and Development",
+        "apply_address": "",
+        "family_decisions": {"building": "NOT_REQUIRED", "planning": "CONDITIONAL"},
+        "source_support": {"has_official_source": True, "decision_mutation_allowed": False},
+    })
+    expected = server.project_customer_response_egress(customer)
+    handle = server.create_customer_snapshot_handoff(
+        expected,
+        "commercial tenant improvement",
+        "Crook County",
+        "WY",
+    )
+    assert handle
+    verified = server.consume_customer_snapshot_handoff(
+        handle,
+        json.loads(json.dumps(expected)),
+        "commercial tenant improvement",
+        "Crook County",
+        "WY",
+    )
+    assert isinstance(verified, server._VerifiedCustomerProjection)
+    slug = server.create_share(
+        "commercial tenant improvement",
+        "Crook County",
+        "WY",
+        verified,
+    )
+    share = server.get_share(slug)
+
+    payload = server.to_public_share_payload(share, {})
+    maps_url = payload["permit_office_maps_url"]
+    assert maps_url.startswith("https://www.google.com/maps")
+    assert maps_url not in {"https://www.google.com/maps", "https://www.google.com/maps/"}
+    assert "Crook+County" in maps_url
+    assert "Growth+and+Development" in maps_url
+
+    html = server.render_share_page(share)
+    embedded = _extract_report_payload(html)
+    assert embedded["share"]["data"] == expected
+    assert embedded["permit_office_maps_url"] == maps_url
+    assert "Open in Google Maps" in html
+    _assert_public_payload_has_no_internal_keys(embedded)

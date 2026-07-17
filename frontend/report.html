@@ -68,6 +68,9 @@
     const verdict = rawVerdict || (d.permit_required === true ? 'YES' : d.permit_required === false ? 'NO' : 'VERIFY');
     const isNotRequired = verdict === 'NO' || textValue(d.permit_decision).toUpperCase() === 'NOT_REQUIRED';
     const verdictLabel = verdict === 'YES' ? 'Permit required: Yes' : (verdict === 'NO' ? 'Permit required: No' : 'Permit status: Verify');
+    const feeDisplay = isNotRequired
+      ? textValue(d.fee_estimate, 'No primary permit fee')
+      : textValue(d.fee_range || d.fee_estimate, 'Call to confirm');
     const timeline = textValue((d.approval_timeline && (d.approval_timeline.simple || d.approval_timeline.complex)) || d.timeline, 'Varies by jurisdiction');
     const docs = [...new Set([...safeArray(d.what_to_bring), ...safeArray(d.requirements), ...safeArray(d.documents_needed), ...safeArray(d.checklist)].map(x => textValue(x)).filter(Boolean))];
     const inspectionLabel = (item) => {
@@ -99,6 +102,7 @@
     const applyPhone = looksLikeRawUrl(d.apply_phone) ? '' : d.apply_phone;
     const applyContactLabel = [applyOffice, applyAddress, applyPhone].filter(Boolean).join(' • ');
     const whereToApply = textValue(applyContactLabel || applyPathLabel, 'Contact local building department');
+    const permitOfficeMapsUrl = safeExternalUrl(payload.permit_office_maps_url);
     const permitRows = safeArray(d.permits_required).filter(row => row && typeof row === 'object');
     const verificationTasks = safeArray(d.verification_tasks).filter(row => row && typeof row === 'object');
     const familyKey = (row) => textValue(row && (row.family || row.filing_family || row.permit_kind || row.kind || row.permit_type)).trim().toLowerCase();
@@ -203,9 +207,17 @@
     const meta = addText(coreCard, 'div', { className: 'meta' });
     meta.appendChild(metaRow('Jurisdiction', `${textValue(share.city)}, ${textValue(share.state)}`));
     meta.appendChild(metaRow('Permit', permitName));
-    meta.appendChild(metaRow('Fees', textValue(d.fee_range, 'Call to confirm')));
+    meta.appendChild(metaRow('Fees', feeDisplay));
     meta.appendChild(metaRow('Timeline', timeline));
     meta.appendChild(metaRow(isNotRequired ? 'Permit office / companion contact' : 'Where to apply', whereToApply));
+    if (permitOfficeMapsUrl) {
+      const mapsRow = addText(meta, 'div', { className: 'meta-row' });
+      addText(mapsRow, 'strong', { text: 'Directions' });
+      addText(mapsRow, 'a', {
+        text: 'Open in Google Maps',
+        attrs: { href: permitOfficeMapsUrl, target: '_blank', rel: 'noopener noreferrer' }
+      });
+    }
 
     const summaryCard = addText(grid, 'div', { className: 'card' });
     addText(summaryCard, 'div', { className: 'label', text: 'Summary' });

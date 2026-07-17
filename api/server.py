@@ -4496,6 +4496,35 @@ def _research_permit_with_budget(job_type: str, city: str, state: str, zip_code:
     if core_first is not None:
         return core_first
 
+    # Explicit no-cache/no-write evidence or QA-bypass requests must not race a
+    # provider result against timeout recovery for an exact source-backed
+    # NOT_REQUIRED Decision Cell. Ordinary cache-backed requests and diagnostic
+    # timeout tests retain the existing rich/cache path; REQUIRED cells continue
+    # through the normal worker so filing-packet depth is never replaced by the
+    # minimal deterministic authority fallback.
+    if kwargs.get("use_cache") is False and kwargs.get("suppress_cache_write") is True:
+        try:
+            authoritative_bypass = resolve_authoritative_decision_cell_fallback(
+                job_type,
+                city,
+                state,
+                job_category=str(kwargs.get("job_category") or ""),
+            )
+        except Exception as exc:
+            print(f"[permit][authority-bypass-error] {type(exc).__name__}")
+            authoritative_bypass = None
+        if (
+            isinstance(authoritative_bypass, dict)
+            and authoritative_bypass.get("permit_required") is False
+            and str(authoritative_bypass.get("permit_decision") or "").upper() == "NOT_REQUIRED"
+        ):
+            recovered = copy.deepcopy(authoritative_bypass)
+            recovered["_runtime_authority_recovery"] = {
+                "reason": "cache_bypass_authoritative_not_required",
+                "timeout_seconds": PERMIT_LOOKUP_TOTAL_TIMEOUT_SECONDS,
+            }
+            return recovered
+
     executor = ThreadPoolExecutor(max_workers=1, thread_name_prefix="permit_lookup_budget")
     future = executor.submit(research_permit, job_type, city, state, zip_code, **kwargs)
     try:
@@ -9278,16 +9307,42 @@ def _public_allowlist(source: dict, allowed_fields: frozenset[str]) -> dict:
 
 
 def to_public_share_payload(share: dict, checklist: dict | None = None) -> dict:
-    """Build the default-deny public payload embedded in report/share HTML."""
+    """Build the public payload embedded in report/share HTML."""
     share = share if isinstance(share, dict) else {}
     public_share = _public_allowlist(share, PUBLIC_SHARE_FIELDS)
-    public_share["data"] = _public_allowlist(share.get("data") or {}, PUBLIC_REPORT_RESULT_FIELDS)
+    # Exact DTO preservation is allowed only for a hash-verified stored share.
+    # Plain dictionaries (including direct test/render callers and old/untrusted
+    # ingress) still cross the current request-scoped customer boundary first.
+    verified_stored_share = (
+        isinstance(share, _VerifiedSharePayload)
+        and bool(re.fullmatch(r"[0-9a-f]{64}", str(share._verified_payload_sha256 or "")))
+    )
+    if verified_stored_share:
+        public_data = project_customer_response_egress(share.get("data") or {})
+    else:
+        # Unverified/direct callers retain the original strict report allowlist;
+        # only the private, hash-verified stored-share type may preserve the exact
+        # full public DTO.
+        public_data = _public_allowlist(
+            share.get("data") or {}, PUBLIC_REPORT_RESULT_FIELDS
+        )
+    public_share["data"] = public_data
     public_checklist = _public_allowlist(checklist or {}, PUBLIC_CHECKLIST_FIELDS)
+    city = str(public_share.get("city") or "").strip()
+    state = str(public_share.get("state") or "").strip()
+    office = str(public_data.get("applying_office") or "").strip()
+    address = str(public_data.get("apply_address") or "").strip()
+    permit_office_maps_url = ""
+    if city and state and (address or office):
+        candidate = build_google_maps_url(city, state, address=address, office=office)
+        if candidate not in {"https://www.google.com/maps", "https://www.google.com/maps/"}:
+            permit_office_maps_url = candidate
     return {
         "share": public_share,
         "app_base_url": APP_BASE_URL,
         "generated_at": utc_now().isoformat(),
         "checklist": public_checklist,
+        "permit_office_maps_url": permit_office_maps_url,
     }
 
 
@@ -9317,11 +9372,12 @@ def render_share_page(share: dict) -> str:
         separators=(",", ":"),
         ensure_ascii=False,
     )
-    if (
-        re.fullmatch(r"[0-9a-f]{64}", verified_shared_hash)
+    verified_exact_share = (
+        bool(re.fullmatch(r"[0-9a-f]{64}", verified_shared_hash))
         and hashlib.sha256(canonical_shared_payload.encode("utf-8")).hexdigest()
         == verified_shared_hash
-    ):
+    )
+    if verified_exact_share:
         safe_data = copy.deepcopy(original_data)
     else:
         safe_data = _sanitize_customer_result_for_request_scope(
@@ -9347,6 +9403,14 @@ def render_share_page(share: dict) -> str:
         if not isinstance(safe_data, dict):
             safe_data = {}
     safe_share["data"] = safe_data
+    # Preserve the private hash-verified share proof through the defensive copy;
+    # without this, to_public_share_payload would correctly fall back to the
+    # strict legacy allowlist and recreate the API/report mismatch.
+    share_for_payload: dict = safe_share
+    if verified_exact_share:
+        verified_copy = _VerifiedSharePayload(safe_share)
+        verified_copy._verified_payload_sha256 = verified_shared_hash
+        share_for_payload = verified_copy
     # Report/share rendering must stay deterministic and fast; do not block the
     # HTTP report path on AI checklist generation. The fallback uses the saved
     # customer-visible result and preserves explicit inspection/report steps.
@@ -9359,7 +9423,7 @@ def render_share_page(share: dict) -> str:
         )
     )
     payload = project_customer_response_egress(
-        to_public_share_payload(safe_share, checklist)
+        to_public_share_payload(share_for_payload, checklist)
     )
     return template.replace("__REPORT_DATA__", html_safe_json_dumps(payload))
 

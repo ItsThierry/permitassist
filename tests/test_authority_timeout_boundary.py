@@ -88,6 +88,74 @@ def test_worker_exception_recovers_locked_crook_authority(monkeypatch):
     assert "_runtime_degraded_fallback" not in result
 
 
+def test_cache_bypass_pre_resolves_authoritative_not_required_without_model_race(monkeypatch):
+    """Exact NOT_REQUIRED cells must not race a non-cached AI lookup."""
+    server = _import_server()
+    _force_legacy_budget_path(monkeypatch, server)
+    calls = []
+
+    def model_must_not_run(*args, **kwargs):
+        calls.append((args, kwargs))
+        raise AssertionError("authoritative NOT_REQUIRED bypass must pre-resolve")
+
+    monkeypatch.setattr(server, "research_permit", model_must_not_run)
+    result = server._research_permit_with_budget(
+        *CROOK_ARGS,
+        job_category="commercial",
+        use_cache=False,
+        suppress_cache_write=True,
+    )
+    repeated = server._research_permit_with_budget(
+        *CROOK_ARGS,
+        job_category="commercial",
+        use_cache=False,
+        suppress_cache_write=True,
+    )
+
+    _assert_crook_authority_lock(result)
+    assert repeated == result
+    assert calls == []
+    assert result["_runtime_authority_recovery"]["reason"] == (
+        "cache_bypass_authoritative_not_required"
+    )
+
+
+def test_cache_bypass_does_not_preempt_required_cell_rich_worker_result(monkeypatch):
+    """The deterministic shortcut must not neuter REQUIRED filing packets."""
+    server = _import_server()
+    _force_legacy_budget_path(monkeypatch, server)
+    sentinel = {
+        "permit_decision": "REQUIRED",
+        "permit_required": True,
+        "permit_verdict": "YES",
+        "permit_name": "Rich successful required result",
+        "permits_required": [
+            {"permit_type": "Rich successful required result", "required": True}
+        ],
+        "documents_needed": ["Complete construction plans"],
+    }
+    calls = []
+
+    def successful_model(*args, **kwargs):
+        calls.append((args, kwargs))
+        return sentinel
+
+    monkeypatch.setattr(server, "research_permit", successful_model)
+    result = server._research_permit_with_budget(
+        "commercial office tenant improvement",
+        "Anchorage",
+        "AK",
+        "",
+        job_category="commercial",
+        use_cache=False,
+        suppress_cache_write=True,
+    )
+
+    assert len(calls) == 1
+    assert result is sentinel
+    assert result["documents_needed"] == ["Complete construction plans"]
+
+
 def test_required_exact_cell_stays_locked_on_timeout(monkeypatch):
     server = _import_server()
     _force_legacy_budget_path(monkeypatch, server)
