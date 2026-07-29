@@ -1,0 +1,78 @@
+{
+  "observed_model": "x-ai/grok-4.5",
+  "observed_provider": "openrouter",
+  "path_proof": {
+    "adapter": "grok",
+    "engine_called": false,
+    "engine_result_supplied_to_model": false,
+    "model_call_count": 1
+  },
+  "provider": "openrouter",
+  "provider_response": {
+    "choices": [
+      {
+        "finish_reason": "stop",
+        "index": 0,
+        "logprobs": null,
+        "message": {
+          "content": "{\"permit_decision\":\"VERIFY\",\"jurisdiction\":{\"jurisdiction_id\":\"us-in-crown_point\",\"name\":\"City of Crown Point Building Department\",\"state\":\"IN\",\"type\":\"city_or_local_authority\"},\"project_family\":\"residential_remodel\",\"primary_permit_family\":\"BUILDING\",\"companion_permits\":[{\"family\":\"ELECTRICAL\",\"status\":\"VERIFY\"},{\"family\":\"PLUMBING\",\"status\":\"VERIFY\"},{\"family\":\"MECHANICAL\",\"status\":\"VERIFY\"},{\"family\":\"OTHER\",\"status\":\"VERIFY\"}],\"filing\":{\"authority_id\":\"us-in-crown_point\",\"office\":\"City of Crown Point Building Department\",\"destination_url\":\"https://www.crownpoint.in.gov/161/Building-Department\",\"url_role\":\"INFORMATIONAL_OFFICE\"},\"source_support\":{\"state\":\"OFFICIAL_SOURCE_SUPPORTED\",\"strength\":\"WEAK\",\"evidence\":[{\"url\":\"https://www.crownpoint.in.gov/161/Building-Department\",\"role\":\"INFORMATIONAL_OFFICE\"}]},\"contradictions\":[]}",
+          "reasoning": "The user wants me to evaluate one permit lookup using ONLY the supplied official-source evidence packet and return exactly one JSON object conforming to MODEL_SCHEMA.\n{\n  \"companion_permits\": [\n    {\n      \"family\": \"ELECTRICAL\",\n      \"status\": \"VERIFY\"\n    },\n    {\n      \"family\": \"PLUMBING\",\n      \"status\": \"VERIFY\"\n    },\n    {\n      \"family\": \"MECHANICAL\",\n      \"status\": \"VERIFY\"\n    }\n  ],\n  \"contradictions\": [],\n  \"filing\": {\n    \"authority_id\": \"us-in-crown_point\",\n    \"destination_url\": \"https://www.crownpoint.in.",
+          "reasoning_details": [
+            {
+              "format": "xai-responses-v1",
+              "index": 0,
+              "summary": "The user wants me to evaluate one permit lookup using ONLY the supplied official-source evidence packet and return exactly one JSON object conforming to MODEL_SCHEMA.\n{\n  \"companion_permits\": [\n    {\n      \"family\": \"ELECTRICAL\",\n      \"status\": \"VERIFY\"\n    },\n    {\n      \"family\": \"PLUMBING\",\n      \"status\": \"VERIFY\"\n    },\n    {\n      \"family\": \"MECHANICAL\",\n      \"status\": \"VERIFY\"\n    }\n  ],\n  \"contradictions\": [],\n  \"filing\": {\n    \"authority_id\": \"us-in-crown_point\",\n    \"destination_url\": \"https://www.crownpoint.in.",
+              "type": "reasoning.summary"
+            },
+            {
+              "data": "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",
+              "format": "xai-responses-v1",
+              "id": "rs_17e4b949-d9a8-9941-bb2a-3cc3a853928c",
+              "index": 1,
+              "type": "reasoning.encrypted"
+            }
+          ],
+          "refusal": null,
+          "role": "assistant"
+        },
+        "native_finish_reason": "completed"
+      }
+    ],
+    "created": 1785165781,
+    "id": "gen-1785165781-MDbhicKiVrmI9ofXIUxz",
+    "model": "x-ai/grok-4.5",
+    "object": "chat.completion",
+    "provider": "xAI",
+    "service_tier": "default",
+    "system_fingerprint": null,
+    "usage": {
+      "completion_tokens": 1253,
+      "completion_tokens_details": {
+        "audio_tokens": 0,
+        "image_tokens": 0,
+        "reasoning_tokens": 1010
+      },
+      "cost": 0.0098124,
+      "cost_details": {
+        "upstream_inference_completions_cost": 0.007518,
+        "upstream_inference_cost": 0.0098124,
+        "upstream_inference_prompt_cost": 0.0022944
+      },
+      "is_byok": false,
+      "prompt_tokens": 1256,
+      "prompt_tokens_details": {
+        "audio_tokens": 0,
+        "cache_write_tokens": 0,
+        "cached_tokens": 128,
+        "video_tokens": 0
+      },
+      "total_tokens": 2509
+    }
+  },
+  "raw_text": "{\"permit_decision\":\"VERIFY\",\"jurisdiction\":{\"jurisdiction_id\":\"us-in-crown_point\",\"name\":\"City of Crown Point Building Department\",\"state\":\"IN\",\"type\":\"city_or_local_authority\"},\"project_family\":\"residential_remodel\",\"primary_permit_family\":\"BUILDING\",\"companion_permits\":[{\"family\":\"ELECTRICAL\",\"status\":\"VERIFY\"},{\"family\":\"PLUMBING\",\"status\":\"VERIFY\"},{\"family\":\"MECHANICAL\",\"status\":\"VERIFY\"},{\"family\":\"OTHER\",\"status\":\"VERIFY\"}],\"filing\":{\"authority_id\":\"us-in-crown_point\",\"office\":\"City of Crown Point Building Department\",\"destination_url\":\"https://www.crownpoint.in.gov/161/Building-Department\",\"url_role\":\"INFORMATIONAL_OFFICE\"},\"source_support\":{\"state\":\"OFFICIAL_SOURCE_SUPPORTED\",\"strength\":\"WEAK\",\"evidence\":[{\"url\":\"https://www.crownpoint.in.gov/161/Building-Department\",\"role\":\"INFORMATIONAL_OFFICE\"}]},\"contradictions\":[]}",
+  "requested_model": "x-ai/grok-4.5",
+  "requested_provider": "openrouter",
+  "requested_runtime": "grok",
+  "response_id": "gen-1785165781-MDbhicKiVrmI9ofXIUxz",
+  "runtime": "OpenRouter chat/completions; upstream_provider=xAI"
+}

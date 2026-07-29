@@ -1,0 +1,78 @@
+{
+  "observed_model": "x-ai/grok-4.5",
+  "observed_provider": "openrouter",
+  "path_proof": {
+    "adapter": "grok",
+    "engine_called": false,
+    "engine_result_supplied_to_model": false,
+    "model_call_count": 1
+  },
+  "provider": "openrouter",
+  "provider_response": {
+    "choices": [
+      {
+        "finish_reason": "stop",
+        "index": 0,
+        "logprobs": null,
+        "message": {
+          "content": "{\"permit_decision\":\"REQUIRED\",\"jurisdiction\":{\"jurisdiction_id\":\"us-al-andalusia\",\"name\":\"Andalusia\",\"state\":\"AL\",\"type\":\"city_or_local_authority\"},\"project_family\":\"residential_remodel\",\"primary_permit_family\":\"BUILDING\",\"companion_permits\":[{\"family\":\"ELECTRICAL\",\"status\":\"CONDITIONAL\"},{\"family\":\"PLUMBING\",\"status\":\"CONDITIONAL\"},{\"family\":\"MECHANICAL\",\"status\":\"CONDITIONAL\"}],\"filing\":{\"authority_id\":\"us-al-andalusia\",\"destination_url\":\"https://www.cityofandalusia.com/planning/\",\"office\":\"Inspection Services Planning and Development\",\"url_role\":\"REQUIREMENT_EVIDENCE\"},\"source_support\":{\"state\":\"OFFICIAL_SOURCE_SUPPORTED\",\"strength\":\"STRONG\",\"evidence\":[{\"url\":\"https://www.cityofandalusia.com/planning/\",\"role\":\"REQUIREMENT_EVIDENCE\"}]},\"contradictions\":[]}",
+          "reasoning": "The user wants me to evaluate one permit lookup using ONLY the supplied official-source evidence packet and return exactly one JSON object conforming to MODEL_SCHEMA.\n",
+          "reasoning_details": [
+            {
+              "format": "xai-responses-v1",
+              "index": 0,
+              "summary": "The user wants me to evaluate one permit lookup using ONLY the supplied official-source evidence packet and return exactly one JSON object conforming to MODEL_SCHEMA.\n",
+              "type": "reasoning.summary"
+            },
+            {
+              "data": "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",
+              "format": "xai-responses-v1",
+              "id": "rs_4b71a11f-8b9d-9b77-b4d6-5562d1ebb7ca",
+              "index": 1,
+              "type": "reasoning.encrypted"
+            }
+          ],
+          "refusal": null,
+          "role": "assistant"
+        },
+        "native_finish_reason": "completed"
+      }
+    ],
+    "created": 1785164104,
+    "id": "gen-1785164104-QUsjSJDjVTOfNMuNMpSq",
+    "model": "x-ai/grok-4.5",
+    "object": "chat.completion",
+    "provider": "xAI",
+    "service_tier": "default",
+    "system_fingerprint": null,
+    "usage": {
+      "completion_tokens": 584,
+      "completion_tokens_details": {
+        "audio_tokens": 0,
+        "image_tokens": 0,
+        "reasoning_tokens": 359
+      },
+      "cost": 0.0059824,
+      "cost_details": {
+        "upstream_inference_completions_cost": 0.003504,
+        "upstream_inference_cost": 0.0059824,
+        "upstream_inference_prompt_cost": 0.0024784
+      },
+      "is_byok": false,
+      "prompt_tokens": 1348,
+      "prompt_tokens_details": {
+        "audio_tokens": 0,
+        "cache_write_tokens": 0,
+        "cached_tokens": 128,
+        "video_tokens": 0
+      },
+      "total_tokens": 1932
+    }
+  },
+  "raw_text": "{\"permit_decision\":\"REQUIRED\",\"jurisdiction\":{\"jurisdiction_id\":\"us-al-andalusia\",\"name\":\"Andalusia\",\"state\":\"AL\",\"type\":\"city_or_local_authority\"},\"project_family\":\"residential_remodel\",\"primary_permit_family\":\"BUILDING\",\"companion_permits\":[{\"family\":\"ELECTRICAL\",\"status\":\"CONDITIONAL\"},{\"family\":\"PLUMBING\",\"status\":\"CONDITIONAL\"},{\"family\":\"MECHANICAL\",\"status\":\"CONDITIONAL\"}],\"filing\":{\"authority_id\":\"us-al-andalusia\",\"destination_url\":\"https://www.cityofandalusia.com/planning/\",\"office\":\"Inspection Services Planning and Development\",\"url_role\":\"REQUIREMENT_EVIDENCE\"},\"source_support\":{\"state\":\"OFFICIAL_SOURCE_SUPPORTED\",\"strength\":\"STRONG\",\"evidence\":[{\"url\":\"https://www.cityofandalusia.com/planning/\",\"role\":\"REQUIREMENT_EVIDENCE\"}]},\"contradictions\":[]}",
+  "requested_model": "x-ai/grok-4.5",
+  "requested_provider": "openrouter",
+  "requested_runtime": "grok",
+  "response_id": "gen-1785164104-QUsjSJDjVTOfNMuNMpSq",
+  "runtime": "OpenRouter chat/completions; upstream_provider=xAI"
+}

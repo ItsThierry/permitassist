@@ -1,0 +1,78 @@
+{
+  "observed_model": "x-ai/grok-4.5",
+  "observed_provider": "openrouter",
+  "path_proof": {
+    "adapter": "grok",
+    "engine_called": false,
+    "engine_result_supplied_to_model": false,
+    "model_call_count": 1
+  },
+  "provider": "openrouter",
+  "provider_response": {
+    "choices": [
+      {
+        "finish_reason": "stop",
+        "index": 0,
+        "logprobs": null,
+        "message": {
+          "content": "{\"permit_decision\":\"REQUIRED\",\"jurisdiction\":{\"jurisdiction_id\":\"us-wi-appleton\",\"name\":\"Appleton\",\"state\":\"WI\",\"type\":\"city_or_local_authority\"},\"project_family\":\"commercial_tenant_improvement\",\"primary_permit_family\":\"BUILDING\",\"companion_permits\":[{\"family\":\"ELECTRICAL\",\"status\":\"VERIFY\"},{\"family\":\"PLUMBING\",\"status\":\"VERIFY\"},{\"family\":\"MECHANICAL\",\"status\":\"VERIFY\"},{\"family\":\"FIRE_LIFE_SAFETY\",\"status\":\"VERIFY\"},{\"family\":\"OCCUPANCY\",\"status\":\"VERIFY\"},{\"family\":\"PLANNING_ZONING\",\"status\":\"VERIFY\"}],\"filing\":{\"authority_id\":\"us-wi-appleton\",\"destination_url\":\"https://appletonwi.gov/government/departments/community_development/building_inspections/permit_applications.php\",\"office\":\"Building Inspections\",\"url_role\":\"APPLICATION_START\"},\"source_support\":{\"state\":\"OFFICIAL_SOURCE_SUPPORTED\",\"strength\":\"MODERATE\",\"evidence\":[{\"url\":\"https://appletonwi.gov/government/departments/community_development/building_inspections/permit_applications.php\",\"role\":\"APPLICATION_START\"}]},\"contradictions\":[]}",
+          "reasoning": "The user wants me to evaluate one permit lookup using ONLY the supplied official-source evidence packet and return exactly one JSON object conforming to MODEL_SCHEMA.\n{\n  \"companion_permits\": [\n    {\n      \"family\": \"BUILDING\",\n      \"status\": \"REQUIRED\"\n    },\n    {\n      \"family\": \"ELECTRICAL\",\n      \"status\": \"REQUIRED\"\n    },\n    {\n      \"family\": \"PLUMBING\",\n      \"status\": \" REQUIRED\"\n    },\n    {\n      \"family\": \"MECHANICAL\",\n      \"status\": \"REQUIRED\"\n    },\n    {\n      \"family\": \"FIRE_LIFE_SAFETY\",\n      \"status\": \"REQUIRED\"\n    },\n    {\n      \"family\": \"OCCUPANCY\",\n      \"status\": \" REQUIRED\"\n    },\n    {\n      \"family\": \"PLANNING_ZONING\",\n      \"status\": \"REQUIRED\"\n    }\n  ],\n  \"contradictions\": [],\n  \"filing\": {\n    \"authority_id\": \"us-wi-appleton\",\n    \"destination_url\": \"https://appletonwi.",
+          "reasoning_details": [
+            {
+              "format": "xai-responses-v1",
+              "index": 0,
+              "summary": "The user wants me to evaluate one permit lookup using ONLY the supplied official-source evidence packet and return exactly one JSON object conforming to MODEL_SCHEMA.\n{\n  \"companion_permits\": [\n    {\n      \"family\": \"BUILDING\",\n      \"status\": \"REQUIRED\"\n    },\n    {\n      \"family\": \"ELECTRICAL\",\n      \"status\": \"REQUIRED\"\n    },\n    {\n      \"family\": \"PLUMBING\",\n      \"status\": \" REQUIRED\"\n    },\n    {\n      \"family\": \"MECHANICAL\",\n      \"status\": \"REQUIRED\"\n    },\n    {\n      \"family\": \"FIRE_LIFE_SAFETY\",\n      \"status\": \"REQUIRED\"\n    },\n    {\n      \"family\": \"OCCUPANCY\",\n      \"status\": \" REQUIRED\"\n    },\n    {\n      \"family\": \"PLANNING_ZONING\",\n      \"status\": \"REQUIRED\"\n    }\n  ],\n  \"contradictions\": [],\n  \"filing\": {\n    \"authority_id\": \"us-wi-appleton\",\n    \"destination_url\": \"https://appletonwi.",
+              "type": "reasoning.summary"
+            },
+            {
+              "data": "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",
+              "format": "xai-responses-v1",
+              "id": "rs_944b731b-094d-9ee0-9fc7-8e5effd6e71a",
+              "index": 1,
+              "type": "reasoning.encrypted"
+            }
+          ],
+          "refusal": null,
+          "role": "assistant"
+        },
+        "native_finish_reason": "completed"
+      }
+    ],
+    "created": 1785168604,
+    "id": "gen-1785168604-Hk82rJ4iMEbceJ9A8k5C",
+    "model": "x-ai/grok-4.5",
+    "object": "chat.completion",
+    "provider": "xAI",
+    "service_tier": "default",
+    "system_fingerprint": null,
+    "usage": {
+      "completion_tokens": 1468,
+      "completion_tokens_details": {
+        "audio_tokens": 0,
+        "image_tokens": 0,
+        "reasoning_tokens": 1178
+      },
+      "cost": 0.0098912,
+      "cost_details": {
+        "upstream_inference_completions_cost": 0.008808,
+        "upstream_inference_cost": 0.0098912,
+        "upstream_inference_prompt_cost": 0.0010832
+      },
+      "is_byok": false,
+      "prompt_tokens": 1412,
+      "prompt_tokens_details": {
+        "audio_tokens": 0,
+        "cache_write_tokens": 0,
+        "cached_tokens": 1024,
+        "video_tokens": 0
+      },
+      "total_tokens": 2880
+    }
+  },
+  "raw_text": "{\"permit_decision\":\"REQUIRED\",\"jurisdiction\":{\"jurisdiction_id\":\"us-wi-appleton\",\"name\":\"Appleton\",\"state\":\"WI\",\"type\":\"city_or_local_authority\"},\"project_family\":\"commercial_tenant_improvement\",\"primary_permit_family\":\"BUILDING\",\"companion_permits\":[{\"family\":\"ELECTRICAL\",\"status\":\"VERIFY\"},{\"family\":\"PLUMBING\",\"status\":\"VERIFY\"},{\"family\":\"MECHANICAL\",\"status\":\"VERIFY\"},{\"family\":\"FIRE_LIFE_SAFETY\",\"status\":\"VERIFY\"},{\"family\":\"OCCUPANCY\",\"status\":\"VERIFY\"},{\"family\":\"PLANNING_ZONING\",\"status\":\"VERIFY\"}],\"filing\":{\"authority_id\":\"us-wi-appleton\",\"destination_url\":\"https://appletonwi.gov/government/departments/community_development/building_inspections/permit_applications.php\",\"office\":\"Building Inspections\",\"url_role\":\"APPLICATION_START\"},\"source_support\":{\"state\":\"OFFICIAL_SOURCE_SUPPORTED\",\"strength\":\"MODERATE\",\"evidence\":[{\"url\":\"https://appletonwi.gov/government/departments/community_development/building_inspections/permit_applications.php\",\"role\":\"APPLICATION_START\"}]},\"contradictions\":[]}",
+  "requested_model": "x-ai/grok-4.5",
+  "requested_provider": "openrouter",
+  "requested_runtime": "grok",
+  "response_id": "gen-1785168604-Hk82rJ4iMEbceJ9A8k5C",
+  "runtime": "OpenRouter chat/completions; upstream_provider=xAI"
+}

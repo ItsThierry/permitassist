@@ -1,0 +1,78 @@
+{
+  "observed_model": "x-ai/grok-4.5",
+  "observed_provider": "openrouter",
+  "path_proof": {
+    "adapter": "grok",
+    "engine_called": false,
+    "engine_result_supplied_to_model": false,
+    "model_call_count": 1
+  },
+  "provider": "openrouter",
+  "provider_response": {
+    "choices": [
+      {
+        "finish_reason": "stop",
+        "index": 0,
+        "logprobs": null,
+        "message": {
+          "content": "{\"permit_decision\":\"REQUIRED\",\"jurisdiction\":{\"jurisdiction_id\":\"us-il-waukegan\",\"name\":\"City of Waukegan Building and Code Department\",\"state\":\"IL\",\"type\":\"city_or_local_authority\"},\"project_family\":\"residential_remodel\",\"primary_permit_family\":\"BUILDING\",\"companion_permits\":[{\"family\":\"ELECTRICAL\",\"status\":\"VERIFY\"},{\"family\":\"PLUMBING\",\"status\":\"VERIFY\"},{\"family\":\"MECHANICAL\",\"status\":\"VERIFY\"}],\"filing\":{\"authority_id\":\"us-il-waukegan\",\"destination_url\":\"https://www.waukeganil.gov/101/Building-Department\",\"office\":\"City of Waukegan Building and Code Department\",\"url_role\":\"INFORMATIONAL_OFFICE\"},\"source_support\":{\"state\":\"OFFICIAL_SOURCE_SUPPORTED\",\"strength\":\"MODERATE\",\"evidence\":[{\"url\":\"https://www.waukeganil.gov/101/Building-Department\",\"role\":\"REQUIREMENT_EVIDENCE\"}]},\"contradictions\":[]}",
+          "reasoning": "The user wants me to evaluate one permit lookup using ONLY the supplied official-source evidence packet and return exactly one JSON object conforming to MODEL_SCHEMA.\n",
+          "reasoning_details": [
+            {
+              "format": "xai-responses-v1",
+              "index": 0,
+              "summary": "The user wants me to evaluate one permit lookup using ONLY the supplied official-source evidence packet and return exactly one JSON object conforming to MODEL_SCHEMA.\n",
+              "type": "reasoning.summary"
+            },
+            {
+              "data": "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",
+              "format": "xai-responses-v1",
+              "id": "rs_d7e0a124-b80b-986f-870a-b88723384f77",
+              "index": 1,
+              "type": "reasoning.encrypted"
+            }
+          ],
+          "refusal": null,
+          "role": "assistant"
+        },
+        "native_finish_reason": "completed"
+      }
+    ],
+    "created": 1785165623,
+    "id": "gen-1785165623-AVJw8GRTiU7q6PQGrGlf",
+    "model": "x-ai/grok-4.5",
+    "object": "chat.completion",
+    "provider": "xAI",
+    "service_tier": "default",
+    "system_fingerprint": null,
+    "usage": {
+      "completion_tokens": 598,
+      "completion_tokens_details": {
+        "audio_tokens": 0,
+        "image_tokens": 0,
+        "reasoning_tokens": 356
+      },
+      "cost": 0.0043892,
+      "cost_details": {
+        "upstream_inference_completions_cost": 0.003588,
+        "upstream_inference_cost": 0.0043892,
+        "upstream_inference_prompt_cost": 0.0008012
+      },
+      "is_byok": false,
+      "prompt_tokens": 1271,
+      "prompt_tokens_details": {
+        "audio_tokens": 0,
+        "cache_write_tokens": 0,
+        "cached_tokens": 1024,
+        "video_tokens": 0
+      },
+      "total_tokens": 1869
+    }
+  },
+  "raw_text": "{\"permit_decision\":\"REQUIRED\",\"jurisdiction\":{\"jurisdiction_id\":\"us-il-waukegan\",\"name\":\"City of Waukegan Building and Code Department\",\"state\":\"IL\",\"type\":\"city_or_local_authority\"},\"project_family\":\"residential_remodel\",\"primary_permit_family\":\"BUILDING\",\"companion_permits\":[{\"family\":\"ELECTRICAL\",\"status\":\"VERIFY\"},{\"family\":\"PLUMBING\",\"status\":\"VERIFY\"},{\"family\":\"MECHANICAL\",\"status\":\"VERIFY\"}],\"filing\":{\"authority_id\":\"us-il-waukegan\",\"destination_url\":\"https://www.waukeganil.gov/101/Building-Department\",\"office\":\"City of Waukegan Building and Code Department\",\"url_role\":\"INFORMATIONAL_OFFICE\"},\"source_support\":{\"state\":\"OFFICIAL_SOURCE_SUPPORTED\",\"strength\":\"MODERATE\",\"evidence\":[{\"url\":\"https://www.waukeganil.gov/101/Building-Department\",\"role\":\"REQUIREMENT_EVIDENCE\"}]},\"contradictions\":[]}",
+  "requested_model": "x-ai/grok-4.5",
+  "requested_provider": "openrouter",
+  "requested_runtime": "grok",
+  "response_id": "gen-1785165623-AVJw8GRTiU7q6PQGrGlf",
+  "runtime": "OpenRouter chat/completions; upstream_provider=xAI"
+}

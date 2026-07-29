@@ -1,0 +1,78 @@
+{
+  "observed_model": "x-ai/grok-4.5",
+  "observed_provider": "openrouter",
+  "path_proof": {
+    "adapter": "grok",
+    "engine_called": false,
+    "engine_result_supplied_to_model": false,
+    "model_call_count": 1
+  },
+  "provider": "openrouter",
+  "provider_response": {
+    "choices": [
+      {
+        "finish_reason": "stop",
+        "index": 0,
+        "logprobs": null,
+        "message": {
+          "content": "{\"permit_decision\":\"REQUIRED\",\"jurisdiction\":{\"jurisdiction_id\":\"us-al-auburn\",\"name\":\"Auburn\",\"state\":\"AL\",\"type\":\"city_or_local_authority\"},\"project_family\":\"commercial_tenant_improvement\",\"primary_permit_family\":\"BUILDING\",\"companion_permits\":[{\"family\":\"ELECTRICAL\",\"status\":\"VERIFY\"},{\"family\":\"PLUMBING\",\"status\":\"VERIFY\"},{\"family\":\"MECHANICAL\",\"status\":\"VERIFY\"},{\"family\":\"FIRE_LIFE_SAFETY\",\"status\":\"VERIFY\"},{\"family\":\"OCCUPANCY\",\"status\":\"VERIFY\"},{\"family\":\"PLANNING_ZONING\",\"status\":\"VERIFY\"}],\"filing\":{\"authority_id\":\"us-al-auburn\",\"destination_url\":\"https://www.auburnal.gov/inspection-services/services/\",\"office\":\"City of Auburn Inspection Services / Building\",\"url_role\":\"REQUIREMENT_EVIDENCE\"},\"source_support\":{\"state\":\"OFFICIAL_SOURCE_SUPPORTED\",\"strength\":\"STRONG\",\"evidence\":[{\"url\":\"https://www.auburnal.gov/inspection-services/services/\",\"role\":\"REQUIREMENT_EVIDENCE\"},{\"url\":\"https://www.auburnal.gov/permit-information\",\"role\":\"INFORMATIONAL_OFFICE\"}]},\"contradictions\":[]}",
+          "reasoning": "The user wants me to evaluate one permit lookup using ONLY the supplied official-source evidence packet and return exactly one JSON object conforming to MODEL_SCHEMA. No Markdown fences, commentary, e...",
+          "reasoning_details": [
+            {
+              "format": "xai-responses-v1",
+              "index": 0,
+              "summary": "The user wants me to evaluate one permit lookup using ONLY the supplied official-source evidence packet and return exactly one JSON object conforming to MODEL_SCHEMA. No Markdown fences, commentary, e...",
+              "type": "reasoning.summary"
+            },
+            {
+              "data": "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",
+              "format": "xai-responses-v1",
+              "id": "rs_c0f3090e-1344-9c65-91dd-c66438e0873f",
+              "index": 1,
+              "type": "reasoning.encrypted"
+            }
+          ],
+          "refusal": null,
+          "role": "assistant"
+        },
+        "native_finish_reason": "completed"
+      }
+    ],
+    "created": 1785164206,
+    "id": "gen-1785164206-D2CAMdAnLXSIPYh2gzDR",
+    "model": "x-ai/grok-4.5",
+    "object": "chat.completion",
+    "provider": "xAI",
+    "service_tier": "default",
+    "system_fingerprint": null,
+    "usage": {
+      "completion_tokens": 840,
+      "completion_tokens_details": {
+        "audio_tokens": 0,
+        "image_tokens": 0,
+        "reasoning_tokens": 541
+      },
+      "cost": 0.0079064,
+      "cost_details": {
+        "upstream_inference_completions_cost": 0.00504,
+        "upstream_inference_cost": 0.0079064,
+        "upstream_inference_prompt_cost": 0.0028664
+      },
+      "is_byok": false,
+      "prompt_tokens": 1542,
+      "prompt_tokens_details": {
+        "audio_tokens": 0,
+        "cache_write_tokens": 0,
+        "cached_tokens": 128,
+        "video_tokens": 0
+      },
+      "total_tokens": 2382
+    }
+  },
+  "raw_text": "{\"permit_decision\":\"REQUIRED\",\"jurisdiction\":{\"jurisdiction_id\":\"us-al-auburn\",\"name\":\"Auburn\",\"state\":\"AL\",\"type\":\"city_or_local_authority\"},\"project_family\":\"commercial_tenant_improvement\",\"primary_permit_family\":\"BUILDING\",\"companion_permits\":[{\"family\":\"ELECTRICAL\",\"status\":\"VERIFY\"},{\"family\":\"PLUMBING\",\"status\":\"VERIFY\"},{\"family\":\"MECHANICAL\",\"status\":\"VERIFY\"},{\"family\":\"FIRE_LIFE_SAFETY\",\"status\":\"VERIFY\"},{\"family\":\"OCCUPANCY\",\"status\":\"VERIFY\"},{\"family\":\"PLANNING_ZONING\",\"status\":\"VERIFY\"}],\"filing\":{\"authority_id\":\"us-al-auburn\",\"destination_url\":\"https://www.auburnal.gov/inspection-services/services/\",\"office\":\"City of Auburn Inspection Services / Building\",\"url_role\":\"REQUIREMENT_EVIDENCE\"},\"source_support\":{\"state\":\"OFFICIAL_SOURCE_SUPPORTED\",\"strength\":\"STRONG\",\"evidence\":[{\"url\":\"https://www.auburnal.gov/inspection-services/services/\",\"role\":\"REQUIREMENT_EVIDENCE\"},{\"url\":\"https://www.auburnal.gov/permit-information\",\"role\":\"INFORMATIONAL_OFFICE\"}]},\"contradictions\":[]}",
+  "requested_model": "x-ai/grok-4.5",
+  "requested_provider": "openrouter",
+  "requested_runtime": "grok",
+  "response_id": "gen-1785164206-D2CAMdAnLXSIPYh2gzDR",
+  "runtime": "OpenRouter chat/completions; upstream_provider=xAI"
+}

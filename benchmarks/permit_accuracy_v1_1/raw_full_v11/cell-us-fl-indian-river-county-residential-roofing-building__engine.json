@@ -1,0 +1,155 @@
+{
+  "observed_model": "NONE",
+  "observed_provider": "permitassist-local-engine",
+  "path_proof": {
+    "adapter": "engine",
+    "authority_recovery": null,
+    "decision_cell_reference": null,
+    "engine_called": true,
+    "engine_result_supplied_to_model": false,
+    "engine_stdout": "[url_check] URL verified: https://indianriver.gov/services/community_development/building_division/index.php\n",
+    "model_call_count": 0
+  },
+  "provider": "permitassist-local-engine",
+  "raw_response": {
+    "apply_path": {
+      "channel": "contact_ahj",
+      "documents_to_prepare": [
+        "scope of work",
+        "plans/drawings if required",
+        "contractor license",
+        "valuation",
+        "owner authorization"
+      ],
+      "office_name": "Indian River County Building Division",
+      "permit_category": "Building",
+      "permit_type": "Building Permit",
+      "portal_url": "https://indianriver.gov/services/community_development/building_division/index.php",
+      "primary_filing_source_tier": "none",
+      "primary_requirement_source_tier": "local_ahj",
+      "state": "HONEST_FALLBACK",
+      "steps": [
+        "Open the listed permit portal or contact the permit office",
+        "Select the closest category to: Building Permit",
+        "Confirm exact portal subcategories before final submission"
+      ],
+      "support_level": "not available",
+      "verification_note": "Confirm the exact portal category with the listed permit office before filing"
+    },
+    "apply_url": "https://indianriver.gov/services/community_development/building_division/index.php",
+    "apply_url_known": true,
+    "applying_office": "Indian River County Building Division",
+    "confidence": "high",
+    "confidence_reason": "Official building department official-source permit decision for this exact jurisdiction and project type.",
+    "customer_first_screen_summary": {
+      "ahj_department": "Indian River County Building Division",
+      "decision": "REQUIRED",
+      "kind_category": "Building",
+      "next_action": "File the required permit categories with Indian River County Building Division: Building Permit. Confirm exact portal subcategories before final submission.",
+      "source_cue": "Official source: Official building department source"
+    },
+    "customer_headline": "Permit required: Building Permit.",
+    "customer_next_step": "File the required permit categories with Indian River County Building Division: Building Permit. Confirm exact portal subcategories before final submission.",
+    "customer_result_summary": {
+      "ahj_department": "Indian River County Building Division",
+      "fee_cost_caveat": "Fees depend on valuation, trade scope, plan-review fees, and the current local fee schedule; verify before quoting.",
+      "freshness_label": "Checked 2026-07-27",
+      "jurisdiction": "Indian River County, FL",
+      "next_step": "File the required permit categories with Indian River County Building Division: Building Permit. Confirm exact portal subcategories before final submission.",
+      "permit_decision": "REQUIRED",
+      "permit_kind": "Building",
+      "permit_name": "Building Permit",
+      "source_cue": "Official source: Official building department source"
+    },
+    "degraded_sources": false,
+    "inspection_booking": "Schedule online at Confirm the inspection advance-notice window when booking.",
+    "job_summary": "Permit required: Building Permit.",
+    "local_form_known": true,
+    "online_application_url": null,
+    "permit_decision": "REQUIRED",
+    "permit_kind": "Building",
+    "permit_name": "Building Permit",
+    "permit_required": true,
+    "permit_type": "Building Permit",
+    "permit_verdict": "YES",
+    "permits_required": [
+      {
+        "approval_type": "Building Permit",
+        "decision": "REQUIRED",
+        "display_family": "Building",
+        "family": "building",
+        "filing_family": "building",
+        "kind": "Building",
+        "permit_kind": "building",
+        "permit_name": "Building Permit",
+        "permit_type": "Building Permit",
+        "portal_selection": "Building Permit",
+        "required": true,
+        "segment": "residential",
+        "status": "REQUIRED"
+      }
+    ],
+    "permits_required_logic": [
+      {
+        "filing_family": "building",
+        "included_because": "Official permit rule: Required because the described scope triggers Building review.",
+        "permit_type": "Building Permit",
+        "scope_trigger": "building_scope",
+        "segment": "residential"
+      }
+    ],
+    "required_permit_families": [
+      "Building"
+    ],
+    "required_permit_names": [
+      "Building Permit"
+    ],
+    "required_permit_segments": [
+      "residential"
+    ],
+    "required_permit_summary": "Permit required: Building Permit.",
+    "source_confidence": "AHJ_DIRECT",
+    "source_support": {
+      "apply_url_known": true,
+      "apply_url_source_confidence": "FILING_PATH_DEGRADED",
+      "confidence_tier": "AHJ_DIRECT",
+      "context_source_count": 0,
+      "decision_mutation_allowed": false,
+      "degraded_sources": false,
+      "display_source_count": 1,
+      "exact_form_known": true,
+      "filing_path_state": "HONEST_FALLBACK",
+      "filing_source_count": 0,
+      "has_official_source": true,
+      "has_source_backed_evidence": true,
+      "local_decision_evidence_urls": [
+        "https://indianriver.gov/services/community_development/building_division/index.php"
+      ],
+      "local_form_known": true,
+      "primary_filing_source_tier": "none",
+      "primary_requirement_source_tier": "local_ahj",
+      "requirement_source_count": 1,
+      "source_confidence": "AHJ_DIRECT"
+    },
+    "source_urls": [
+      "https://indianriver.gov/services/community_development/building_division/index.php"
+    ],
+    "sources": [
+      {
+        "publisher": "Indian River County Building Division",
+        "snippet": "ing point of each ‘How To’ subject where you will be able to complete the task with ease. Welcome to Indian River County Online Permitting , a portal for reviewing building plans; issuing construction, repair, and demolition permits; conducting inspections; and conducting activities related to code compliance, contractor licensing, unlicensed and unpermitted activities. For questions or help, please contact: [email protected] or call 985-851-0760 MGO Connect Customer Portal Training MyGovernment",
+        "title": "Official building department source",
+        "url": "https://indianriver.gov/services/community_development/building_division/index.php"
+      }
+    ],
+    "summary": "Permit required: Building Permit.",
+    "warnings": [
+      "Filing path degraded: exact local online filing portal was not verified; permit decision preserved."
+    ]
+  },
+  "requested_model": "NONE",
+  "requested_provider": "permitassist-local-engine",
+  "requested_runtime": "engine",
+  "response_id": null,
+  "runtime": "api.server Decision Cell + finalize + customer egress"
+}

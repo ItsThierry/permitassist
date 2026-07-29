@@ -1,0 +1,85 @@
+{
+  "artifact_count": 15,
+  "artifact_root": "benchmarks/permit_accuracy_v1_2",
+  "artifacts": [
+    {
+      "bytes": 4798,
+      "path": "CANONICAL_PERMIT_FAMILY_ONTOLOGY_SPEC.md",
+      "sha256": "321bc4cb3d9a6b1157ae5f81f41cff27226dd5164403245086254fd3fe57c77b"
+    },
+    {
+      "bytes": 22543,
+      "path": "INDEPENDENT_REVIEW_V12.json",
+      "sha256": "3ae6089b64630d011a82ebe90d33ef74e9e7f3babe840394404114e4c37155d0"
+    },
+    {
+      "bytes": 4316,
+      "path": "README.md",
+      "sha256": "c337b7aa3b47b270f5e9255208ed8a32f92b9888e227491dce6fa688f26d9c38"
+    },
+    {
+      "bytes": 5885,
+      "path": "SESSION1_CLOSEOUT.md",
+      "sha256": "101c82e3c2c82910dda74d4196d40598f51869986055af5532b44d8a7af9f0d8"
+    },
+    {
+      "bytes": 7448,
+      "path": "SESSION1_FORENSICS_AND_TRUTH_AUDIT.md",
+      "sha256": "ef558ba9ca409b20f0f366e8c094ddee862d167e86c7fb328f820ded73760fd5"
+    },
+    {
+      "bytes": 2981,
+      "path": "SESSION1_OPENING_BASELINE.json",
+      "sha256": "1af9aacae2f02025c6a8dd0a83645245d16253734b9853a58aa3de666581b837"
+    },
+    {
+      "bytes": 24155,
+      "path": "benchmark_v12.py",
+      "sha256": "88fa0438b5c1ec4e8da44fdfc5acc77c5efe6ed1bdb289b99220ffd1972e0416"
+    },
+    {
+      "bytes": 8279,
+      "path": "independent_review_v12.py",
+      "sha256": "efbed50f1531cf9feed26bf001e5ed7a590b62d0a24a25176021b4696dc4fc1c"
+    },
+    {
+      "bytes": 673424,
+      "path": "mismatch_forensics_v12.jsonl",
+      "sha256": "a2ab144c5178329c5ff39da5d3fe28ddef9f584a45e3ca0ec68af05b527c6576"
+    },
+    {
+      "bytes": 22337,
+      "path": "offline_rescore_summary_v12.json",
+      "sha256": "b66e749ff243784d8393fc52940951acbf43eb57cc322381f4bedea2a7b777b7"
+    },
+    {
+      "bytes": 14565,
+      "path": "ontology_enum_closure.json",
+      "sha256": "7d1071963f514ecffdec9c8970b232509a8dd6bd819c4f13218a0ab9d591c62f"
+    },
+    {
+      "bytes": 5856,
+      "path": "permit_family_ontology_v1.json",
+      "sha256": "9b5e6748786c890ea6138871a49180c9531283c127c56bf036f23c48741601c8"
+    },
+    {
+      "bytes": 315328,
+      "path": "scoreboard_v12.csv",
+      "sha256": "0ac1047aebf305abb1a88fdedea2ed12e9ffc7393baaf3d5d888e26d828f3ae3"
+    },
+    {
+      "bytes": 7150,
+      "path": "test_benchmark_v12.py",
+      "sha256": "0435199886e13c80739ff106ea2a52a815c042bd2f7058f170f5f40d8d106c09"
+    },
+    {
+      "bytes": 225421,
+      "path": "truth_audit_v12.json",
+      "sha256": "9036748be57c18518858fa17a8ddc1d421cb34f5fef7e27fb5cf664f38f48380"
+    }
+  ],
+  "schema": "permit_accuracy_session1_manifest_v1",
+  "self_hash_excluded": true,
+  "sha256sums_hash_excluded": true,
+  "verdict": "SESSION_1_COMPLETE"
+}

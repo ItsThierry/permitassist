@@ -1,0 +1,78 @@
+{
+  "observed_model": "x-ai/grok-4.5",
+  "observed_provider": "openrouter",
+  "path_proof": {
+    "adapter": "grok",
+    "engine_called": false,
+    "engine_result_supplied_to_model": false,
+    "model_call_count": 1
+  },
+  "provider": "openrouter",
+  "provider_response": {
+    "choices": [
+      {
+        "finish_reason": "stop",
+        "index": 0,
+        "logprobs": null,
+        "message": {
+          "content": "{\"permit_decision\":\"VERIFY\",\"jurisdiction\":{\"jurisdiction_id\":\"us-tx-abilene\",\"name\":\"Abilene\",\"state\":\"TX\",\"type\":\"city_or_local_authority\"},\"project_family\":\"residential_remodel\",\"primary_permit_family\":\"BUILDING\",\"companion_permits\":[{\"family\":\"ELECTRICAL\",\"status\":\"VERIFY\"},{\"family\":\"PLUMBING\",\"status\":\"VERIFY\"},{\"family\":\"MECHANICAL\",\"status\":\"VERIFY\"},{\"family\":\"BUILDING\",\"status\":\"VERIFY\"}],\"filing\":{\"authority_id\":\"us-tx-abilene\",\"destination_url\":\"https://www.abilenetx.gov/FAQ.aspx?QID=430\",\"office\":\"City of Abilene\",\"url_role\":\"REQUIREMENT_EVIDENCE\"},\"source_support\":{\"state\":\"OFFICIAL_SOURCE_SUPPORTED\",\"strength\":\"WEAK\",\"evidence\":[{\"url\":\"https://www.abilenetx.gov/FAQ.aspx?QID=430\",\"role\":\"REQUIREMENT_EVIDENCE\"}]},\"contradictions\":[]}",
+          "reasoning": "The user wants me to evaluate one permit lookup using ONLY the supplied official-source evidence packet and return exactly one JSON object conforming to MODEL_SCHEMA. No Markdown fences, commentary, e...{\n  \"permit_decision\": \"REQUIRED\",\n  \"jurisdiction\": {\n    \"jurisdiction_id\": \"us-tx-abilene\",\n    \"name\": \"Abilene\",\n    \"state\": \"TX\",\n    \"type\": \"city_or_local_authority\"\n  },\n  \"project_family\": \" residential_remodel\",\n  \"primary_permit_family\": \"BUILDING\",\n  \"companion_permits\": [\n    {\n      \"family\": \"ELECTRICAL\",\n      \"status\": \"REQUIRED\"\n    },\n    {\n      \"family\": \"PLUMBING\",\n      \"status\": \"REQUIRED\"\n    },\n    {\n      \"family\": \"MECHANICAL\",\n      \"status\": \"REQUIRED\"\n    }\n  ],\n  \"filing\": {\n    \"authority_id\": null,\n    \"destination_url\": \"https://www.abilenetx.gov/FAQ.",
+          "reasoning_details": [
+            {
+              "format": "xai-responses-v1",
+              "index": 0,
+              "summary": "The user wants me to evaluate one permit lookup using ONLY the supplied official-source evidence packet and return exactly one JSON object conforming to MODEL_SCHEMA. No Markdown fences, commentary, e...{\n  \"permit_decision\": \"REQUIRED\",\n  \"jurisdiction\": {\n    \"jurisdiction_id\": \"us-tx-abilene\",\n    \"name\": \"Abilene\",\n    \"state\": \"TX\",\n    \"type\": \"city_or_local_authority\"\n  },\n  \"project_family\": \" residential_remodel\",\n  \"primary_permit_family\": \"BUILDING\",\n  \"companion_permits\": [\n    {\n      \"family\": \"ELECTRICAL\",\n      \"status\": \"REQUIRED\"\n    },\n    {\n      \"family\": \"PLUMBING\",\n      \"status\": \"REQUIRED\"\n    },\n    {\n      \"family\": \"MECHANICAL\",\n      \"status\": \"REQUIRED\"\n    }\n  ],\n  \"filing\": {\n    \"authority_id\": null,\n    \"destination_url\": \"https://www.abilenetx.gov/FAQ.",
+              "type": "reasoning.summary"
+            },
+            {
+              "data": "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",
+              "format": "xai-responses-v1",
+              "id": "rs_3f5ff0b4-ebb0-9540-bbe1-8097b0013e57",
+              "index": 1,
+              "type": "reasoning.encrypted"
+            }
+          ],
+          "refusal": null,
+          "role": "assistant"
+        },
+        "native_finish_reason": "completed"
+      }
+    ],
+    "created": 1785168070,
+    "id": "gen-1785168070-Uf91C5dVprXmSi7zytvM",
+    "model": "x-ai/grok-4.5",
+    "object": "chat.completion",
+    "provider": "xAI",
+    "service_tier": "default",
+    "system_fingerprint": null,
+    "usage": {
+      "completion_tokens": 1211,
+      "completion_tokens_details": {
+        "audio_tokens": 0,
+        "image_tokens": 0,
+        "reasoning_tokens": 969
+      },
+      "cost": 0.0095904,
+      "cost_details": {
+        "upstream_inference_completions_cost": 0.007266,
+        "upstream_inference_cost": 0.0095904,
+        "upstream_inference_prompt_cost": 0.0023244
+      },
+      "is_byok": false,
+      "prompt_tokens": 1271,
+      "prompt_tokens_details": {
+        "audio_tokens": 0,
+        "cache_write_tokens": 0,
+        "cached_tokens": 128,
+        "video_tokens": 0
+      },
+      "total_tokens": 2482
+    }
+  },
+  "raw_text": "{\"permit_decision\":\"VERIFY\",\"jurisdiction\":{\"jurisdiction_id\":\"us-tx-abilene\",\"name\":\"Abilene\",\"state\":\"TX\",\"type\":\"city_or_local_authority\"},\"project_family\":\"residential_remodel\",\"primary_permit_family\":\"BUILDING\",\"companion_permits\":[{\"family\":\"ELECTRICAL\",\"status\":\"VERIFY\"},{\"family\":\"PLUMBING\",\"status\":\"VERIFY\"},{\"family\":\"MECHANICAL\",\"status\":\"VERIFY\"},{\"family\":\"BUILDING\",\"status\":\"VERIFY\"}],\"filing\":{\"authority_id\":\"us-tx-abilene\",\"destination_url\":\"https://www.abilenetx.gov/FAQ.aspx?QID=430\",\"office\":\"City of Abilene\",\"url_role\":\"REQUIREMENT_EVIDENCE\"},\"source_support\":{\"state\":\"OFFICIAL_SOURCE_SUPPORTED\",\"strength\":\"WEAK\",\"evidence\":[{\"url\":\"https://www.abilenetx.gov/FAQ.aspx?QID=430\",\"role\":\"REQUIREMENT_EVIDENCE\"}]},\"contradictions\":[]}",
+  "requested_model": "x-ai/grok-4.5",
+  "requested_provider": "openrouter",
+  "requested_runtime": "grok",
+  "response_id": "gen-1785168070-Uf91C5dVprXmSi7zytvM",
+  "runtime": "OpenRouter chat/completions; upstream_provider=xAI"
+}

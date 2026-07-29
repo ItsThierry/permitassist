@@ -1,0 +1,97 @@
+{
+  "observed_model": "gpt-5.6-luna",
+  "observed_provider": "openai-codex",
+  "path_proof": {
+    "adapter": "luna",
+    "engine_called": false,
+    "engine_result_supplied_to_model": false,
+    "model_call_count": 1
+  },
+  "provider": "openai-codex",
+  "provider_event_count": 268,
+  "provider_terminal_event": {
+    "response": {
+      "background": false,
+      "completed_at": 1785168713,
+      "created_at": 1785168699,
+      "error": null,
+      "frequency_penalty": 0.0,
+      "id": "resp_01d18625b197fde0016a67833b86d48196b5c3fff8b1cde410",
+      "incomplete_details": null,
+      "instructions": "Follow the user request exactly. Do not call tools.",
+      "max_output_tokens": null,
+      "max_tool_calls": null,
+      "metadata": {},
+      "model": "gpt-5.6-luna",
+      "moderation": null,
+      "object": "response",
+      "output": [],
+      "parallel_tool_calls": true,
+      "presence_penalty": 0.0,
+      "previous_response_id": null,
+      "prompt_cache_key": "77bd5d76-1630-445a-916e-e582729d615e",
+      "prompt_cache_retention": "24h",
+      "reasoning": {
+        "context": "all_turns",
+        "effort": "medium",
+        "mode": "standard",
+        "summary": null
+      },
+      "safety_identifier": "user-FQ7sI0yp0Qqn6wWdqzy9mZic",
+      "service_tier": "default",
+      "status": "completed",
+      "store": false,
+      "temperature": 1.0,
+      "text": {
+        "format": {
+          "type": "text"
+        },
+        "verbosity": "medium"
+      },
+      "tool_choice": "auto",
+      "tool_usage": {
+        "image_gen": {
+          "input_tokens": 0,
+          "input_tokens_details": {
+            "image_tokens": 0,
+            "text_tokens": 0
+          },
+          "output_tokens": 0,
+          "output_tokens_details": {
+            "image_tokens": 0,
+            "text_tokens": 0
+          },
+          "total_tokens": 0
+        },
+        "web_search": {
+          "num_requests": 0
+        }
+      },
+      "tools": [],
+      "top_logprobs": 0,
+      "top_p": 0.98,
+      "truncation": "disabled",
+      "usage": {
+        "input_tokens": 1319,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 0
+        },
+        "output_tokens": 757,
+        "output_tokens_details": {
+          "reasoning_tokens": 493
+        },
+        "total_tokens": 2076
+      },
+      "user": null
+    },
+    "sequence_number": 267,
+    "type": "response.completed"
+  },
+  "raw_text": "{\"permit_decision\":\"VERIFY\",\"jurisdiction\":{\"jurisdiction_id\":\"us-wy-albany_county\",\"name\":\"Albany County\",\"state\":\"WY\",\"type\":\"county\"},\"project_family\":\"commercial_tenant_improvement\",\"primary_permit_family\":\"VERIFY\",\"companion_permits\":[{\"family\":\"BUILDING\",\"status\":\"VERIFY\"},{\"family\":\"ELECTRICAL\",\"status\":\"VERIFY\"},{\"family\":\"PLUMBING\",\"status\":\"VERIFY\"},{\"family\":\"MECHANICAL\",\"status\":\"VERIFY\"},{\"family\":\"FIRE_LIFE_SAFETY\",\"status\":\"VERIFY\"},{\"family\":\"OCCUPANCY\",\"status\":\"VERIFY\"},{\"family\":\"PLANNING_ZONING\",\"status\":\"VERIFY\"}],\"filing\":{\"authority_id\":\"us-wy-albany_county\",\"office\":\"Albany County Planning Department\",\"destination_url\":\"https://www.albanycountywy.gov/257/Applications-Forms\",\"url_role\":\"APPLICATION_START\"},\"source_support\":{\"state\":\"VERIFY\",\"strength\":\"VERIFY\",\"evidence\":[{\"url\":\"https://www.albanycountywy.gov/257/Applications-Forms\",\"role\":\"APPLICATION_START\"},{\"url\":\"https://www.albanycountywy.gov/253/Planning\",\"role\":\"INFORMATIONAL_OFFICE\"}]},\"contradictions\":[]}",
+  "requested_model": "gpt-5.6-luna",
+  "requested_provider": "openai-codex",
+  "requested_runtime": "luna",
+  "response_id": "resp_01d18625b197fde0016a67833b86d48196b5c3fff8b1cde410",
+  "runtime": "openai-codex responses SSE"
+}

@@ -1,0 +1,78 @@
+{
+  "observed_model": "x-ai/grok-4.5",
+  "observed_provider": "openrouter",
+  "path_proof": {
+    "adapter": "grok",
+    "engine_called": false,
+    "engine_result_supplied_to_model": false,
+    "model_call_count": 1
+  },
+  "provider": "openrouter",
+  "provider_response": {
+    "choices": [
+      {
+        "finish_reason": "stop",
+        "index": 0,
+        "logprobs": null,
+        "message": {
+          "content": "{\"permit_decision\":\"REQUIRED\",\"jurisdiction\":{\"jurisdiction_id\":\"us-sd-milbank\",\"name\":\"City of Milbank Planning & Zoning\",\"state\":\"SD\",\"type\":\"city_or_local_authority\"},\"project_family\":\"reroof\",\"primary_permit_family\":\"BUILDING\",\"companion_permits\":[],\"filing\":{\"authority_id\":null,\"office\":\"City of Milbank Planning & Zoning\",\"destination_url\":\"https://www.milbanksd.com/city-of-milbank/planning-zoning/\",\"url_role\":\"REQUIREMENT_EVIDENCE\"},\"source_support\":{\"state\":\"OFFICIAL_SOURCE_SUPPORTED\",\"strength\":\"STRONG\",\"evidence\":[{\"url\":\"https://www.milbanksd.com/city-of-milbank/planning-zoning/\",\"role\":\"REQUIREMENT_EVIDENCE\"}]},\"contradictions\":[]}",
+          "reasoning": "I need to return exactly one JSON object conforming to MODEL_SCHEMA based on the evidence packet.\n",
+          "reasoning_details": [
+            {
+              "format": "xai-responses-v1",
+              "index": 0,
+              "summary": "I need to return exactly one JSON object conforming to MODEL_SCHEMA based on the evidence packet.\n",
+              "type": "reasoning.summary"
+            },
+            {
+              "data": "ec1gJgTDa4aQaIzeOUnPyptRKq1VnS74b7oo9fIYv8/OzOY6ukcphWWpS9RvOmyLpwCgQQzHkPEtqBpE2xZfklS5Vwcin0gM0rc03Gam+3iS2y2jbgk4pNPZ+UbIUm58Ut73MOU0zBD+2VpcDwZvQtl3XLByBhWd240jvBYuNUCgmw78xvQC4ates25sR275tGknJ9pPseP48Fbau1nPOkuHiXsqDJ+0S9TBLI3ePwJvUGKmvY2vUyXnARX6MMC+fhOl2paMsYR7i61bWyDr3gPrPy8iQJcR9QB9en1D8KYcB+8SaKBkcfrcbtuz2m3SW7qj4nUdGNX+RkY8bwUlrLU+9BgNB+DEa80d5s8fNZZXiZ1Kdw39a6f6oR4BKnmd7ZJMs+lk4HFAYMaOGQkk9/ZnvTpwRLO0eNnMmS1/KT6XjX6gOJ/HRWo/q74oFwaepqjYLs5BLDTYq04ILAL0/itloUMgK3uWWLOWftsxILZCu8WaRDHuzXpzONlLRuSOmoF0VAng9rn8D9rseUwoUP/EEhMqT0OA/9YM8n68t7004IyuqlRh1sMY0/Wzuub9gxBJC+6500x4Q7pKnOcyMC9QUsObuP1MsWINvsovSkFHDD8nVykBkYLIpulEtPGBqt4lEWnyIp1K5MsIZAvQVWobdRLSFE8DGQ8hmxrngjJfGlOZkiQfFTLGW24U2GPghlw62xiHwFVFaZWP1J7IPiAa8MSlbw/mHdxRMpilTnu57Q0cpJBTa7WvZIFBh33USaoDwwPR2IAIe31wJuGYM4TTkyKbuyl2gx7E+sKZzBoSjuAybYcpxStnOo86Gs5ruXawSXD7bsTE4ChUPPa9HwPnhdohVTHVFebZbZnl1ez76OsprW6MXfZ2lKTGa7+5s2LhulmS937zwPN9KGznKOIWbsGmX9t8UACfr9RD9KL8bAXaUAPOQo+oc0gAnxej61NLp8b9D0CQcwxNflU2JXa/vYEUM7GP80K6XrnIOhZ/XovBO3VaPe2Flxj9f4i0MO2MqeUZD8fLxPFjHJD9k1NpICOLIxYXKjfhUgayJLR29nkah9MN1VPztyPhTVKDJmvpLU/WKCdLlHtrPykSvuI/E/ND0c8Ou2yl78b+E6oPVu7xQrRp8WqiGF1EoNGSFbZCOvstNUXgIw",
+              "format": "xai-responses-v1",
+              "id": "rs_bd4bf836-17ee-90ac-9c5c-0fa07d695b53",
+              "index": 1,
+              "type": "reasoning.encrypted"
+            }
+          ],
+          "refusal": null,
+          "role": "assistant"
+        },
+        "native_finish_reason": "completed"
+      }
+    ],
+    "created": 1785167852,
+    "id": "gen-1785167852-yaONNTzIoC8cpxC5AjO1",
+    "model": "x-ai/grok-4.5",
+    "object": "chat.completion",
+    "provider": "xAI",
+    "service_tier": "default",
+    "system_fingerprint": null,
+    "usage": {
+      "completion_tokens": 396,
+      "completion_tokens_details": {
+        "audio_tokens": 0,
+        "image_tokens": 0,
+        "reasoning_tokens": 196
+      },
+      "cost": 0.0032512,
+      "cost_details": {
+        "upstream_inference_completions_cost": 0.002376,
+        "upstream_inference_cost": 0.0032512,
+        "upstream_inference_prompt_cost": 0.0008752
+      },
+      "is_byok": false,
+      "prompt_tokens": 1308,
+      "prompt_tokens_details": {
+        "audio_tokens": 0,
+        "cache_write_tokens": 0,
+        "cached_tokens": 1024,
+        "video_tokens": 0
+      },
+      "total_tokens": 1704
+    }
+  },
+  "raw_text": "{\"permit_decision\":\"REQUIRED\",\"jurisdiction\":{\"jurisdiction_id\":\"us-sd-milbank\",\"name\":\"City of Milbank Planning & Zoning\",\"state\":\"SD\",\"type\":\"city_or_local_authority\"},\"project_family\":\"reroof\",\"primary_permit_family\":\"BUILDING\",\"companion_permits\":[],\"filing\":{\"authority_id\":null,\"office\":\"City of Milbank Planning & Zoning\",\"destination_url\":\"https://www.milbanksd.com/city-of-milbank/planning-zoning/\",\"url_role\":\"REQUIREMENT_EVIDENCE\"},\"source_support\":{\"state\":\"OFFICIAL_SOURCE_SUPPORTED\",\"strength\":\"STRONG\",\"evidence\":[{\"url\":\"https://www.milbanksd.com/city-of-milbank/planning-zoning/\",\"role\":\"REQUIREMENT_EVIDENCE\"}]},\"contradictions\":[]}",
+  "requested_model": "x-ai/grok-4.5",
+  "requested_provider": "openrouter",
+  "requested_runtime": "grok",
+  "response_id": "gen-1785167852-yaONNTzIoC8cpxC5AjO1",
+  "runtime": "OpenRouter chat/completions; upstream_provider=xAI"
+}

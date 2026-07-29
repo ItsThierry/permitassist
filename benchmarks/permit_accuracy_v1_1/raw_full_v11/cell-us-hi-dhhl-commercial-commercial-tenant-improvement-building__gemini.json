@@ -1,0 +1,20 @@
+{
+  "observed_model": "Gemini 3.6 Flash (High)",
+  "observed_provider": "google-antigravity-oauth",
+  "path_proof": {
+    "adapter": "gemini",
+    "capture_created_by_model": true,
+    "engine_called": false,
+    "engine_result_supplied_to_model": false,
+    "model_call_count": 1
+  },
+  "provider": "google-antigravity-oauth",
+  "provider_stderr": "",
+  "provider_stdout": "DONE\n",
+  "raw_text": "{\n  \"permit_decision\": \"VERIFY\",\n  \"jurisdiction\": {\n    \"jurisdiction_id\": \"us-hi-dhhl\",\n    \"name\": \"Dhhl\",\n    \"state\": \"HI\",\n    \"type\": \"city_or_local_authority\"\n  },\n  \"project_family\": \"commercial_tenant_improvement\",\n  \"primary_permit_family\": \"VERIFY\",\n  \"companion_permits\": [],\n  \"filing\": {\n    \"authority_id\": \"us-hi-dhhl\",\n    \"office\": \"VERIFY\",\n    \"destination_url\": \"https://dhhl.hawaii.gov/2024/10/01/dhhl-launches-first-ever-in-house-permitting-process/\",\n    \"url_role\": \"APPLICATION_START\"\n  },\n  \"source_support\": {\n    \"state\": \"VERIFY\",\n    \"strength\": \"VERIFY\",\n    \"evidence\": [\n      {\n        \"url\": \"https://fire.honolulu.gov/fire-code/permits\",\n        \"role\": \"REQUIREMENT_EVIDENCE\"\n      },\n      {\n        \"url\": \"https://cca.hawaii.gov/wp-content/uploads/2026/01/CLB-190718-Hiring-Electricians-and-Plumbers.pdf\",\n        \"role\": \"REQUIREMENT_EVIDENCE\"\n      },\n      {\n        \"url\": \"https://dhhl.hawaii.gov/2024/10/01/dhhl-launches-first-ever-in-house-permitting-process/\",\n        \"role\": \"APPLICATION_START\"\n      }\n    ]\n  },\n  \"contradictions\": []\n}\n",
+  "requested_model": "Gemini 3.6 Flash (High)",
+  "requested_provider": "google-antigravity-oauth",
+  "requested_runtime": "gemini",
+  "response_id": null,
+  "runtime": "agy.exe 1.0.2 / language-server 1.1.7"
+}

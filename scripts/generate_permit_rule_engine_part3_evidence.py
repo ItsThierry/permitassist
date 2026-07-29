@@ -139,6 +139,7 @@ def generate(repo_root: Path, output_dir: Path, source_commit: str) -> dict[str,
     canonical_alias_names = canonical_alias_reconciliation_names(index)
 
     customer_violations: list[dict[str, Any]] = []
+    scope_gated_verdict_transitions: list[dict[str, Any]] = []
     canonical_alias_reconciliations: list[dict[str, Any]] = []
     unexpected_projection_transitions: list[dict[str, Any]] = []
     projection_rows: list[dict[str, Any]] = []
@@ -192,7 +193,25 @@ def generate(repo_root: Path, output_dir: Path, source_commit: str) -> dict[str,
                 if family not in family_rows:
                     issues.append(f"missing_source_family:{family}")
                 elif family_rows[family]["verdict"] != verdict:
-                    issues.append(f"source_family_verdict_changed:{family}")
+                    projected_row = family_rows[family]
+                    issue_codes = set(projected_row.get("validation_issue_codes") or [])
+                    if (
+                        projected_row["verdict"] == "VERIFY"
+                        and "family_scope_not_positively_established" in issue_codes
+                    ):
+                        scope_gated_verdict_transitions.append(
+                            {
+                                "source_index_key": key,
+                                "family": family,
+                                "source_verdict": verdict,
+                                "customer_verdict": "VERIFY",
+                                "validation_issue_code": (
+                                    "family_scope_not_positively_established"
+                                ),
+                            }
+                        )
+                    else:
+                        issues.append(f"source_family_verdict_changed:{family}")
         if seed.classification in {
             pre.SeedClassification.FAIL_CLOSED,
             pre.SeedClassification.JURISDICTION_HOLD,
@@ -447,6 +466,9 @@ def generate(repo_root: Path, output_dir: Path, source_commit: str) -> dict[str,
         "binary_family_occurrences": dict(sorted(binary_occurrences.items())),
         "customer_projection_checked_count": len(index),
         "customer_projection_violation_count": len(customer_violations),
+        "scope_gated_verdict_transition_count": len(
+            scope_gated_verdict_transitions
+        ),
         "verified_partial_actionable_next_step_count": verified_partial_actionable,
         "verified_partial_with_family_verification_tasks_count": verified_partial_with_tasks,
         "w4_exact_partial_checked_count": w4_checked,
@@ -506,7 +528,8 @@ def generate(repo_root: Path, output_dir: Path, source_commit: str) -> dict[str,
     write_jsonl(output_dir / "reverification.jsonl", reverify_rows)
     write_json(output_dir / "canary_results.json", {"schema_version": SCHEMA_VERSION, "rows": canary_rows})
     write_json(output_dir / "seeded_random_and_counterfactual_results.json", {"schema_version": SCHEMA_VERSION, "random_rows": random_rows, "counterfactual_rows": counterfactual_rows})
-    write_json(output_dir / "customer_projection_audit.json", {"schema_version": SCHEMA_VERSION, "violations": customer_violations, "canary_projections": projection_rows})
+    write_json(output_dir / "customer_projection_audit.json", {"schema_version": SCHEMA_VERSION, "violations": customer_violations,
+ "scope_gated_verdict_transitions": scope_gated_verdict_transitions, "canary_projections": projection_rows})
     write_json(
         output_dir / "canonical_alias_reconciliation_audit.json",
         {

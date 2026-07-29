@@ -3,6 +3,8 @@ import re
 from importlib import util
 from pathlib import Path
 
+import pytest
+
 _HELPER_SPEC = util.spec_from_file_location(
     "debug_headers_helper",
     Path(__file__).with_name("test_debug_headers_endpoint.py"),
@@ -578,7 +580,7 @@ def test_jurisdiction_authority_graph_accepts_consolidated_ahj_hosts():
         assert authority["local_decision_evidence"] is True, (url, city, state, authority)
 
 
-def test_named_ahj_blank_apply_url_gets_canonical_official_start_url(tmp_path, monkeypatch):
+def test_named_ahj_blank_apply_url_does_not_promote_department_homepage(tmp_path, monkeypatch):
     server = _import_server(tmp_path, monkeypatch)
     result = _dirty_required_result(sources=[])
     result.update({
@@ -602,9 +604,97 @@ def test_named_ahj_blank_apply_url_gets_canonical_official_start_url(tmp_path, m
     public = server.build_customer_permit_view_model(out, "Brooklyn dental clinic tenant improvement", "Brooklyn", "NY")
 
     assert public["permit_decision"] == "REQUIRED"
-    assert public.get("apply_url") == "https://www.nyc.gov/site/buildings/index.page"
-    assert public.get("source_urls") == ["https://www.nyc.gov/site/buildings/index.page"]
-    assert any(src.get("source_type") == "official_local" for src in public.get("sources", []))
+    assert not public.get("apply_url")
+    assert "https://www.nyc.gov/site/buildings/index.page" in public.get("source_urls", [])
+    assert any(
+        src.get("url") == "https://www.nyc.gov/site/buildings/index.page"
+        and src.get("source_type") == "official_local"
+        for src in public.get("sources", [])
+        if isinstance(src, dict)
+    )
+
+
+@pytest.mark.parametrize(
+    "url",
+    [
+        "https://www.nyc.gov/assets/buildings/pdf/permit-information.pdf",
+        "https://www.nyc.gov/site/buildings/industry/online-services.page",
+    ],
+)
+def test_informational_url_substrings_never_become_filing_routes(
+    tmp_path, monkeypatch, url
+):
+    server = _import_server(tmp_path, monkeypatch)
+    result = _dirty_required_result(
+        sources=[{"url": url, "title": "NYC Department of Buildings information"}]
+    )
+    result.update({
+        "apply_url": url,
+        "online_application_url": url,
+        "applying_office": "NYC Department of Buildings",
+        "building_dept_name": "NYC Department of Buildings",
+    })
+
+    public = server.apply_phase1_public_boundary_invariants(
+        result,
+        "Brooklyn",
+        "NY",
+        "commercial tenant improvement",
+    )
+
+    assert server._filing_url_role(url) in {
+        "REQUIREMENT_EVIDENCE",
+        "INFORMATIONAL_OFFICE_PAGE",
+    }
+    assert not public.get("apply_url")
+    assert not public.get("online_application_url")
+    assert public["apply_path"]["channel"] == "contact_ahj"
+    assert url in json.dumps(public.get("sources", []))
+
+
+def test_customer_row_family_uses_token_phrases_not_substrings(tmp_path, monkeypatch):
+    server = _import_server(tmp_path, monkeypatch)
+    assert server._customer_row_family({"permit_type": "assignment review"}) == "other"
+    assert server._customer_row_family({"permit_type": "facade design review"}) == "other"
+    assert server._customer_row_family({"permit_type": "Sign Permit"}) == "sign"
+    assert server._customer_row_family({"permit_type": "Mechanical Permit"}) == "mechanical"
+    assert server._pa20_row_family({"permit_type": "assignment review"}) not in {"sign", "mechanical"}
+    assert server._pa20_row_family({"permit_type": "facade design review"}) not in {"sign", "mechanical"}
+    assert server._pa20_row_family({"permit_type": "Sign Permit"}) == "sign"
+    assert server._pa20_row_family({"permit_type": "Mechanical Permit"}) == "mechanical"
+
+    assignment_profile = server._live60_profile("commercial lighting assignment review")
+    assert assignment_profile["triggered_families"] == {"electrical"}
+    assignment_row = server._live60_make_row(
+        "electrical", assignment_profile, "Exampleville", "EX"
+    )
+    assert "Sign" not in assignment_row["permit_type"]
+
+    sign_profile = server._live60_profile("commercial illuminated sign with lighting")
+    assert {"building", "electrical", "planning"}.issubset(
+        sign_profile["triggered_families"]
+    )
+    sign_row = server._live60_make_row(
+        "electrical", sign_profile, "Exampleville", "EX"
+    )
+    assert "Illuminated Sign" in sign_row["permit_type"]
+
+    assert server._normalize_permit_name("Las Vegas Building Permit") == "building"
+    assert server._normalize_permit_name("Gas Permit") == "gas"
+    enriched = server.enrich_result_response(
+        {
+            "permits_required": [{"permit_type": "Las Vegas Building Permit"}],
+            "companion_permits": [{"permit_type": "Gas Permit", "required": True}],
+        },
+        "Las Vegas commercial tenant improvement with gas piping",
+        "Las Vegas",
+        "NV",
+    )
+    assert [row["permit_type"] for row in enriched["companion_permits"]] == ["Gas Permit"]
+
+    assert server._public_permit_family({"permit_type": "Sign Permit"}) == "Sign"
+    assert server._public_permit_family({"permit_type": "Gas Permit"}) == "Gas"
+    assert server._public_permit_family({"permit_type": "Design Review"}) == "Other"
 
 
 def test_source_backed_result_never_keeps_not_source_backed_apply_path(tmp_path, monkeypatch):

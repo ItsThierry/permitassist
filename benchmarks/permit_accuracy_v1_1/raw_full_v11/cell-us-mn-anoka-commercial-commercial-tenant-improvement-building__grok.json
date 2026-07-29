@@ -1,0 +1,78 @@
+{
+  "observed_model": "x-ai/grok-4.5",
+  "observed_provider": "openrouter",
+  "path_proof": {
+    "adapter": "grok",
+    "engine_called": false,
+    "engine_result_supplied_to_model": false,
+    "model_call_count": 1
+  },
+  "provider": "openrouter",
+  "provider_response": {
+    "choices": [
+      {
+        "finish_reason": "stop",
+        "index": 0,
+        "logprobs": null,
+        "message": {
+          "content": "{\"permit_decision\":\"VERIFY\",\"jurisdiction\":{\"jurisdiction_id\":\"us-mn-anoka\",\"name\":\"Anoka\",\"state\":\"MN\",\"type\":\"city_or_local_authority\"},\"project_family\":\"commercial_tenant_improvement\",\"primary_permit_family\":\"VERIFY\",\"companion_permits\":[{\"family\":\"BUILDING\",\"status\":\"VERIFY\"},{\"family\":\"ELECTRICAL\",\"status\":\"VERIFY\"},{\"family\":\"PLUMBING\",\"status\":\"VERIFY\"},{\"family\":\"MECHANICAL\",\"status\":\"VERIFY\"},{\"family\":\"FIRE_LIFE_SAFETY\",\"status\":\"VERIFY\"},{\"family\":\"OCCUPANCY\",\"status\":\"VERIFY\"},{\"family\":\"PLANNING_ZONING\",\"status\":\"VERIFY\"}],\"filing\":{\"authority_id\":null,\"office\":\"VERIFY\",\"destination_url\":\"https://www.anokacountymn.gov/4286/Permits-New-Construction\",\"url_role\":\"INFORMATIONAL_OFFICE\"},\"source_support\":{\"state\":\"OFFICIAL_SOURCE_UNSUPPORTED\",\"strength\":\"WEAK\",\"evidence\":[{\"url\":\"https://www.anokacountymn.gov/4286/Permits-New-Construction\",\"role\":\"INFORMATIONAL_OFFICE\"}]},\"contradictions\":[\"Anoka County official evidence states the county does NOT issue permits nor inspect permitted projects and that each city/jurisdiction oversees issuance and final approval, but the packet provides no City of Anoka permit requirements source.\"]}",
+          "reasoning": "The user wants me to evaluate one permit lookup using ONLY the supplied official-source evidence packet and return exactly one JSON object conforming to MODEL_SCHEMA.\n{\n  \"companion_permits\": [\n    {\n      \"family\": \"BUILDING\",\n      \"status\": \"VERIFY\"\n    },\n    {\n      \"family\": \"ELECTRICAL\",\n      \"status\": \"VERIFY\"\n    },\n    {\n      \"family\": \"FIRE_LIFE_SAFETY\",\n      \" status\": \"VERIFY\"\n    },\n    {\n      \"family\": \"GAS\",\n      \"status\": \"VERIFY\"\n    },\n    {\n      \"family\": \"MECHANICAL\",\n      \"status\": \"VERIFY\"\n    },\n    {\n      \"family\": \"OCCUPANCY\",\n      \"status\": \"VERIFY\"\n },\n    {\n      \"family\": \"PLANNING_ZONING\",\n      \"status\": \"VERIFY\"\n    },\n    {\n      \"family\": \"PLUMBING\",\n      \"status\": \"VERIFY\"\n    }\n  ],\n  \"contradictions\": [\n    \"County does not issue permits; each city/jur isdiction oversees issuance\"\n  ],\n  \"filing\": {\n    \"authority_id\": null,\n    \"destination_url\": \"https://www.anokacountymn.",
+          "reasoning_details": [
+            {
+              "format": "xai-responses-v1",
+              "index": 0,
+              "summary": "The user wants me to evaluate one permit lookup using ONLY the supplied official-source evidence packet and return exactly one JSON object conforming to MODEL_SCHEMA.\n{\n  \"companion_permits\": [\n    {\n      \"family\": \"BUILDING\",\n      \"status\": \"VERIFY\"\n    },\n    {\n      \"family\": \"ELECTRICAL\",\n      \"status\": \"VERIFY\"\n    },\n    {\n      \"family\": \"FIRE_LIFE_SAFETY\",\n      \" status\": \"VERIFY\"\n    },\n    {\n      \"family\": \"GAS\",\n      \"status\": \"VERIFY\"\n    },\n    {\n      \"family\": \"MECHANICAL\",\n      \"status\": \"VERIFY\"\n    },\n    {\n      \"family\": \"OCCUPANCY\",\n      \"status\": \"VERIFY\"\n },\n    {\n      \"family\": \"PLANNING_ZONING\",\n      \"status\": \"VERIFY\"\n    },\n    {\n      \"family\": \"PLUMBING\",\n      \"status\": \"VERIFY\"\n    }\n  ],\n  \"contradictions\": [\n    \"County does not issue permits; each city/jur isdiction oversees issuance\"\n  ],\n  \"filing\": {\n    \"authority_id\": null,\n    \"destination_url\": \"https://www.anokacountymn.",
+              "type": "reasoning.summary"
+            },
+            {
+              "data": "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",
+              "format": "xai-responses-v1",
+              "id": "rs_6470f07c-d272-914c-9127-b19132aecb2a",
+              "index": 1,
+              "type": "reasoning.encrypted"
+            }
+          ],
+          "refusal": null,
+          "role": "assistant"
+        },
+        "native_finish_reason": "completed"
+      }
+    ],
+    "created": 1785166450,
+    "id": "gen-1785166450-aikpHMPBxaC065qiV9hq",
+    "model": "x-ai/grok-4.5",
+    "object": "chat.completion",
+    "provider": "xAI",
+    "service_tier": "default",
+    "system_fingerprint": null,
+    "usage": {
+      "completion_tokens": 1701,
+      "completion_tokens_details": {
+        "audio_tokens": 0,
+        "image_tokens": 0,
+        "reasoning_tokens": 1368
+      },
+      "cost": 0.0127684,
+      "cost_details": {
+        "upstream_inference_completions_cost": 0.010206,
+        "upstream_inference_cost": 0.0127684,
+        "upstream_inference_prompt_cost": 0.0025624
+      },
+      "is_byok": false,
+      "prompt_tokens": 1390,
+      "prompt_tokens_details": {
+        "audio_tokens": 0,
+        "cache_write_tokens": 0,
+        "cached_tokens": 128,
+        "video_tokens": 0
+      },
+      "total_tokens": 3091
+    }
+  },
+  "raw_text": "{\"permit_decision\":\"VERIFY\",\"jurisdiction\":{\"jurisdiction_id\":\"us-mn-anoka\",\"name\":\"Anoka\",\"state\":\"MN\",\"type\":\"city_or_local_authority\"},\"project_family\":\"commercial_tenant_improvement\",\"primary_permit_family\":\"VERIFY\",\"companion_permits\":[{\"family\":\"BUILDING\",\"status\":\"VERIFY\"},{\"family\":\"ELECTRICAL\",\"status\":\"VERIFY\"},{\"family\":\"PLUMBING\",\"status\":\"VERIFY\"},{\"family\":\"MECHANICAL\",\"status\":\"VERIFY\"},{\"family\":\"FIRE_LIFE_SAFETY\",\"status\":\"VERIFY\"},{\"family\":\"OCCUPANCY\",\"status\":\"VERIFY\"},{\"family\":\"PLANNING_ZONING\",\"status\":\"VERIFY\"}],\"filing\":{\"authority_id\":null,\"office\":\"VERIFY\",\"destination_url\":\"https://www.anokacountymn.gov/4286/Permits-New-Construction\",\"url_role\":\"INFORMATIONAL_OFFICE\"},\"source_support\":{\"state\":\"OFFICIAL_SOURCE_UNSUPPORTED\",\"strength\":\"WEAK\",\"evidence\":[{\"url\":\"https://www.anokacountymn.gov/4286/Permits-New-Construction\",\"role\":\"INFORMATIONAL_OFFICE\"}]},\"contradictions\":[\"Anoka County official evidence states the county does NOT issue permits nor inspect permitted projects and that each city/jurisdiction oversees issuance and final approval, but the packet provides no City of Anoka permit requirements source.\"]}",
+  "requested_model": "x-ai/grok-4.5",
+  "requested_provider": "openrouter",
+  "requested_runtime": "grok",
+  "response_id": "gen-1785166450-aikpHMPBxaC065qiV9hq",
+  "runtime": "OpenRouter chat/completions; upstream_provider=xAI"
+}

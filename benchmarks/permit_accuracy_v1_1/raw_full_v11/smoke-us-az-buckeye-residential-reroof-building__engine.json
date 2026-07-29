@@ -1,0 +1,107 @@
+{
+  "observed_model": "NONE",
+  "observed_provider": "permitassist-local-engine",
+  "path_proof": {
+    "adapter": "engine",
+    "authority_recovery": null,
+    "decision_cell_reference": null,
+    "engine_called": true,
+    "engine_result_supplied_to_model": false,
+    "engine_stdout": "",
+    "model_call_count": 0
+  },
+  "provider": "permitassist-local-engine",
+  "raw_response": {
+    "apply_url": "https://www.buckeyeaz.gov/business/development-services/permit-center",
+    "applying_office": "City of Buckeye Development Services Permit Center",
+    "city": "Buckeye",
+    "companion_permits": [],
+    "coverage_reason": "source-backed exact AHJ/project row closes family, authority, provenance, and routing requirements",
+    "coverage_status": "validated_exact_complete",
+    "customer_headline": "Permit decision: YES",
+    "customer_next_step": "Apply with City of Buckeye Development Services Permit Center.",
+    "decision_source": "sealed_permit_rule_engine_envelope",
+    "family_authority_routes": [
+      {
+        "application_route": {
+          "apply_url": "https://www.buckeyeaz.gov/business/development-services/permit-center",
+          "channel": "online",
+          "office_name": "City of Buckeye Development Services Permit Center",
+          "permit_name": "Building Permit",
+          "provenance": [
+            {
+              "effective_date": null,
+              "last_verified_at": "2026-06-01T02:22:13Z",
+              "quote": ", construct, enlarge, alter, repair, move, improve, remove, convert or demolish any buildings or structures within the Buckeye city limits. Permits are also required, but not limited to fencing, pools, spas, patios, solar and re-roofs. If in doubt as to whether your project requires a permit, please contact the Permit Center for clarification at permitcenter@buckeyeaz.gov or by phone at 623-349-6200. To apply for a permit with the city, you will need to complete a Permit Application . This application can be submitted by emailing a completed application and plans to permitcenter@buckeyeaz.gov . We are currently accepting online applications for miscellaneous permits. For a list of these permit types, please see 'Online Permits' below. We need the fol",
+              "source_quote": ", construct, enlarge, alter, repair, move, improve, remove, convert or demolish any buildings or structures within the Buckeye city limits. Permits are also required, but not limited to fencing, pools, spas, patios, solar and re-roofs. If in doubt as to whether your project requires a permit, please contact the Permit Center for clarification at permitcenter@buckeyeaz.gov or by phone at 623-349-6200. To apply for a permit with the city, you will need to complete a Permit Application . This application can be submitted by emailing a completed application and plans to permitcenter@buckeyeaz.gov . We are currently accepting online applications for miscellaneous permits. For a list of these permit types, please see 'Online Permits' below. We need the fol",
+              "source_url": "https://www.buckeyeaz.gov/business/development-services/permit-center",
+              "title": "Official jurisdiction source",
+              "url": "https://www.buckeyeaz.gov/business/development-services/permit-center"
+            }
+          ],
+          "validation_issue_codes": []
+        },
+        "authority": {
+          "application_authority": "City of Buckeye Development Services Permit Center",
+          "family": "building",
+          "issuing_authority": "City of Buckeye Development Services Permit Center"
+        },
+        "family": "building"
+      }
+    ],
+    "family_decisions": [
+      {
+        "apply_url": "https://www.buckeyeaz.gov/business/development-services/permit-center",
+        "authority": "City of Buckeye Development Services Permit Center",
+        "family": "building",
+        "trigger": "Residential re-roof",
+        "validation_issue_codes": [],
+        "verdict": "REQUIRED"
+      }
+    ],
+    "jurisdiction_id": "us-az-buckeye",
+    "jurisdiction_name": "Buckeye",
+    "online_application_url": "https://www.buckeyeaz.gov/business/development-services/permit-center",
+    "permit_decision": "REQUIRED",
+    "permit_kind": "building",
+    "permit_name": "Building Permit",
+    "permit_required": true,
+    "permit_verdict": "YES",
+    "permits_required": [
+      {
+        "apply_url": "https://www.buckeyeaz.gov/business/development-services/permit-center",
+        "applying_office": "City of Buckeye Development Services Permit Center",
+        "permit_kind": "building",
+        "permit_type": "Building Permit",
+        "required": true,
+        "required_status": "REQUIRED",
+        "trigger": "Residential re-roof"
+      }
+    ],
+    "project_family": "reroof",
+    "projection_schema_version": "permitassist.customer-decision-projection.v1",
+    "related_permits": [],
+    "seed_classification": "exact_complete",
+    "source_cell_id": "us-az-buckeye__residential__reroof__building",
+    "sources": [
+      {
+        "effective_date": null,
+        "last_verified_at": "2026-06-01T02:22:13Z",
+        "quote": ", construct, enlarge, alter, repair, move, improve, remove, convert or demolish any buildings or structures within the Buckeye city limits. Permits are also required, but not limited to fencing, pools, spas, patios, solar and re-roofs. If in doubt as to whether your project requires a permit, please contact the Permit Center for clarification at permitcenter@buckeyeaz.gov or by phone at 623-349-6200. To apply for a permit with the city, you will need to complete a Permit Application . This application can be submitted by emailing a completed application and plans to permitcenter@buckeyeaz.gov . We are currently accepting online applications for miscellaneous permits. For a list of these permit types, please see 'Online Permits' below. We need the fol",
+        "source_quote": ", construct, enlarge, alter, repair, move, improve, remove, convert or demolish any buildings or structures within the Buckeye city limits. Permits are also required, but not limited to fencing, pools, spas, patios, solar and re-roofs. If in doubt as to whether your project requires a permit, please contact the Permit Center for clarification at permitcenter@buckeyeaz.gov or by phone at 623-349-6200. To apply for a permit with the city, you will need to complete a Permit Application . This application can be submitted by emailing a completed application and plans to permitcenter@buckeyeaz.gov . We are currently accepting online applications for miscellaneous permits. For a list of these permit types, please see 'Online Permits' below. We need the fol",
+        "source_url": "https://www.buckeyeaz.gov/business/development-services/permit-center",
+        "title": "Official jurisdiction source",
+        "url": "https://www.buckeyeaz.gov/business/development-services/permit-center"
+      }
+    ],
+    "state": "AZ",
+    "summary": "source-backed exact AHJ/project row closes family, authority, provenance, and routing requirements",
+    "verification_tasks": [],
+    "warnings": []
+  },
+  "requested_model": "NONE",
+  "requested_provider": "permitassist-local-engine",
+  "requested_runtime": "engine",
+  "response_id": null,
+  "runtime": "api.server Decision Cell + finalize + customer egress"
+}

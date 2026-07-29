@@ -1,0 +1,78 @@
+{
+  "observed_model": "x-ai/grok-4.5",
+  "observed_provider": "openrouter",
+  "path_proof": {
+    "adapter": "grok",
+    "engine_called": false,
+    "engine_result_supplied_to_model": false,
+    "model_call_count": 1
+  },
+  "provider": "openrouter",
+  "provider_response": {
+    "choices": [
+      {
+        "finish_reason": "stop",
+        "index": 0,
+        "logprobs": null,
+        "message": {
+          "content": "{\"permit_decision\":\"CONDITIONAL\",\"jurisdiction\":{\"jurisdiction_id\":\"us-wa-seattle\",\"name\":\"Seattle Department of Construction and Inspections\",\"state\":\"WA\",\"type\":\"city_or_local_authority\"},\"project_family\":\"reroof\",\"primary_permit_family\":\"BUILDING\",\"companion_permits\":[],\"filing\":{\"authority_id\":\"us-wa-seattle\",\"office\":\"Seattle Department of Construction and Inspections\",\"destination_url\":\"https://www.seattle.gov/sdci/permits/permits-we-issue-(a-z)/re-roof-permit\",\"url_role\":\"REQUIREMENT_EVIDENCE\"},\"source_support\":{\"state\":\"OFFICIAL_SOURCE_SUPPORTED\",\"strength\":\"STRONG\",\"evidence\":[{\"url\":\"https://www.seattle.gov/sdci/permits/permits-we-issue-(a-z)/re-roof-permit\",\"role\":\"REQUIREMENT_EVIDENCE\"}]},\"contradictions\":[]}",
+          "reasoning": "The user wants me to evaluate a permit lookup using ONLY the supplied official-source evidence packet and return exactly one JSON object conforming to MODEL_SCHEMA.\n",
+          "reasoning_details": [
+            {
+              "format": "xai-responses-v1",
+              "index": 0,
+              "summary": "The user wants me to evaluate a permit lookup using ONLY the supplied official-source evidence packet and return exactly one JSON object conforming to MODEL_SCHEMA.\n",
+              "type": "reasoning.summary"
+            },
+            {
+              "data": "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",
+              "format": "xai-responses-v1",
+              "id": "rs_6437722f-6da7-9aa5-9249-db88a5ab8ff2",
+              "index": 1,
+              "type": "reasoning.encrypted"
+            }
+          ],
+          "refusal": null,
+          "role": "assistant"
+        },
+        "native_finish_reason": "completed"
+      }
+    ],
+    "created": 1785168814,
+    "id": "gen-1785168814-kzeAGg4uHmridH68QxlQ",
+    "model": "x-ai/grok-4.5",
+    "object": "chat.completion",
+    "provider": "xAI",
+    "service_tier": "default",
+    "system_fingerprint": null,
+    "usage": {
+      "completion_tokens": 819,
+      "completion_tokens_details": {
+        "audio_tokens": 0,
+        "image_tokens": 0,
+        "reasoning_tokens": 598
+      },
+      "cost": 0.0072584,
+      "cost_details": {
+        "upstream_inference_completions_cost": 0.004914,
+        "upstream_inference_cost": 0.0072584,
+        "upstream_inference_prompt_cost": 0.0023444
+      },
+      "is_byok": false,
+      "prompt_tokens": 1281,
+      "prompt_tokens_details": {
+        "audio_tokens": 0,
+        "cache_write_tokens": 0,
+        "cached_tokens": 128,
+        "video_tokens": 0
+      },
+      "total_tokens": 2100
+    }
+  },
+  "raw_text": "{\"permit_decision\":\"CONDITIONAL\",\"jurisdiction\":{\"jurisdiction_id\":\"us-wa-seattle\",\"name\":\"Seattle Department of Construction and Inspections\",\"state\":\"WA\",\"type\":\"city_or_local_authority\"},\"project_family\":\"reroof\",\"primary_permit_family\":\"BUILDING\",\"companion_permits\":[],\"filing\":{\"authority_id\":\"us-wa-seattle\",\"office\":\"Seattle Department of Construction and Inspections\",\"destination_url\":\"https://www.seattle.gov/sdci/permits/permits-we-issue-(a-z)/re-roof-permit\",\"url_role\":\"REQUIREMENT_EVIDENCE\"},\"source_support\":{\"state\":\"OFFICIAL_SOURCE_SUPPORTED\",\"strength\":\"STRONG\",\"evidence\":[{\"url\":\"https://www.seattle.gov/sdci/permits/permits-we-issue-(a-z)/re-roof-permit\",\"role\":\"REQUIREMENT_EVIDENCE\"}]},\"contradictions\":[]}",
+  "requested_model": "x-ai/grok-4.5",
+  "requested_provider": "openrouter",
+  "requested_runtime": "grok",
+  "response_id": "gen-1785168814-kzeAGg4uHmridH68QxlQ",
+  "runtime": "OpenRouter chat/completions; upstream_provider=xAI"
+}

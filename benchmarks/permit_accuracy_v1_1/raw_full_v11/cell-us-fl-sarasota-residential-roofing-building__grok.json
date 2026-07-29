@@ -1,0 +1,78 @@
+{
+  "observed_model": "x-ai/grok-4.5",
+  "observed_provider": "openrouter",
+  "path_proof": {
+    "adapter": "grok",
+    "engine_called": false,
+    "engine_result_supplied_to_model": false,
+    "model_call_count": 1
+  },
+  "provider": "openrouter",
+  "provider_response": {
+    "choices": [
+      {
+        "finish_reason": "stop",
+        "index": 0,
+        "logprobs": null,
+        "message": {
+          "content": "{\"permit_decision\":\"REQUIRED\",\"jurisdiction\":{\"jurisdiction_id\":\"us-fl-sarasota\",\"name\":\"City of Sarasota Building & Permitting\",\"state\":\"FL\",\"type\":\"city_or_local_authority\"},\"project_family\":\"reroof\",\"primary_permit_family\":\"BUILDING\",\"companion_permits\":[],\"filing\":{\"authority_id\":\"us-fl-sarasota\",\"destination_url\":\"https://www.sarasotafl.gov/Department-Pages/Development-Services/Building-Permitting\",\"office\":\"City of Sarasota Building & Permitting\",\"url_role\":\"APPLICATION_START\"},\"source_support\":{\"state\":\"OFFICIAL_SOURCE_SUPPORTED\",\"strength\":\"MODERATE\",\"evidence\":[{\"url\":\"https://www.sarasotafl.gov/Department-Pages/Development-Services/Building-Permitting\",\"role\":\"APPLICATION_START\"}]},\"contradictions\":[]}",
+          "reasoning": "The user wants me to return exactly one JSON object conforming to MODEL_SCHEMA based on the evidence packet. No markdown fences, commentary, etc. Just JSON.\n{\n  \"permit_decision\": \"REQUIRED\",\n  \"jurisdiction\": {\n    \"jurisdiction_id\": \"us-fl-sarasota\",\n    \"name\": \"City of Sarasota Building & Permitting\",\n    \"state\": \"FL\",\n    \"type\": \"city_or_local_authority\"\n  },\n  \"project_family\": \"reroof\",\n   \"primary_permit_family\": \"BUILDING\",\n   \"companion_permits\": [],\n   \"filing\": {\n     \"authority_id\": \"us-fl-sarasota\",\n     \"destination_url\": \"https://www.sarasotafl.",
+          "reasoning_details": [
+            {
+              "format": "xai-responses-v1",
+              "index": 0,
+              "summary": "The user wants me to return exactly one JSON object conforming to MODEL_SCHEMA based on the evidence packet. No markdown fences, commentary, etc. Just JSON.\n{\n  \"permit_decision\": \"REQUIRED\",\n  \"jurisdiction\": {\n    \"jurisdiction_id\": \"us-fl-sarasota\",\n    \"name\": \"City of Sarasota Building & Permitting\",\n    \"state\": \"FL\",\n    \"type\": \"city_or_local_authority\"\n  },\n  \"project_family\": \"reroof\",\n   \"primary_permit_family\": \"BUILDING\",\n   \"companion_permits\": [],\n   \"filing\": {\n     \"authority_id\": \"us-fl-sarasota\",\n     \"destination_url\": \"https://www.sarasotafl.",
+              "type": "reasoning.summary"
+            },
+            {
+              "data": "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",
+              "format": "xai-responses-v1",
+              "id": "rs_d7f8ea2b-e50d-9ef4-951f-d854a4f44a9e",
+              "index": 1,
+              "type": "reasoning.encrypted"
+            }
+          ],
+          "refusal": null,
+          "role": "assistant"
+        },
+        "native_finish_reason": "completed"
+      }
+    ],
+    "created": 1785165174,
+    "id": "gen-1785165174-bNg2ZrxQ4bcl7VM2iCMS",
+    "model": "x-ai/grok-4.5",
+    "object": "chat.completion",
+    "provider": "xAI",
+    "service_tier": "default",
+    "system_fingerprint": null,
+    "usage": {
+      "completion_tokens": 999,
+      "completion_tokens_details": {
+        "audio_tokens": 0,
+        "image_tokens": 0,
+        "reasoning_tokens": 787
+      },
+      "cost": 0.0085404,
+      "cost_details": {
+        "upstream_inference_completions_cost": 0.005994,
+        "upstream_inference_cost": 0.0085404,
+        "upstream_inference_prompt_cost": 0.0025464
+      },
+      "is_byok": false,
+      "prompt_tokens": 1382,
+      "prompt_tokens_details": {
+        "audio_tokens": 0,
+        "cache_write_tokens": 0,
+        "cached_tokens": 128,
+        "video_tokens": 0
+      },
+      "total_tokens": 2381
+    }
+  },
+  "raw_text": "{\"permit_decision\":\"REQUIRED\",\"jurisdiction\":{\"jurisdiction_id\":\"us-fl-sarasota\",\"name\":\"City of Sarasota Building & Permitting\",\"state\":\"FL\",\"type\":\"city_or_local_authority\"},\"project_family\":\"reroof\",\"primary_permit_family\":\"BUILDING\",\"companion_permits\":[],\"filing\":{\"authority_id\":\"us-fl-sarasota\",\"destination_url\":\"https://www.sarasotafl.gov/Department-Pages/Development-Services/Building-Permitting\",\"office\":\"City of Sarasota Building & Permitting\",\"url_role\":\"APPLICATION_START\"},\"source_support\":{\"state\":\"OFFICIAL_SOURCE_SUPPORTED\",\"strength\":\"MODERATE\",\"evidence\":[{\"url\":\"https://www.sarasotafl.gov/Department-Pages/Development-Services/Building-Permitting\",\"role\":\"APPLICATION_START\"}]},\"contradictions\":[]}",
+  "requested_model": "x-ai/grok-4.5",
+  "requested_provider": "openrouter",
+  "requested_runtime": "grok",
+  "response_id": "gen-1785165174-bNg2ZrxQ4bcl7VM2iCMS",
+  "runtime": "OpenRouter chat/completions; upstream_provider=xAI"
+}

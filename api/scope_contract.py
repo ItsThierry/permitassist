@@ -520,6 +520,62 @@ def customer_text_mentions_forbidden_scope(value: Any, scope_contract: dict[str,
     return False
 
 
+_CUSTOMER_SCOPE_FILTERED_TEXT_KEYS = frozenset({
+    "snippet",
+    "quoted_snippet",
+    "source_quote",
+    "source_excerpt",
+    "quote_context",
+    "delegation_note",
+    "scope",
+})
+
+
+def project_scope_relevant_source_excerpts(result: dict[str, Any], scope_contract: dict[str, Any] | None) -> dict[str, Any]:
+    """Project mixed-scope evidence and routing copy into honest excerpts.
+
+    Authenticated source snapshots and Decision Cell locks remain untouched on
+    the private result. This function operates on the customer projection copy.
+    Mixed-scope source excerpts, routing scope labels, and delegation notes are
+    common on official pages; out-of-scope phrases are represented by an
+    ellipsis instead of being leaked or silently presented as verbatim text.
+    """
+    if not isinstance(result, dict) or not scope_contract:
+        return result
+    forbidden_terms = _firebreak_forbidden_terms(scope_contract)
+    if not forbidden_terms:
+        return result
+
+    patterns = [
+        re.compile(r"(?<![a-z0-9])" + re.escape(_norm(term)) + r"(?![a-z0-9])", flags=re.I)
+        for term in sorted(forbidden_terms, key=len, reverse=True)
+        if _norm(term)
+    ]
+
+    def excerpt(text: str) -> str:
+        projected = str(text)
+        for pattern in patterns:
+            projected = pattern.sub(" … ", projected)
+        projected = re.sub(r"(?:\s*…\s*){2,}", " … ", projected)
+        projected = re.sub(r"\s+([,.;:])", r"\1", projected)
+        projected = re.sub(r"([,;:])(?:\s*…\s*)+([,;:])", r"\1 …\2", projected)
+        return re.sub(r"\s{2,}", " ", projected).strip()
+
+    def walk(value: Any, key: str = "") -> Any:
+        if isinstance(value, str):
+            return excerpt(value) if key in _CUSTOMER_SCOPE_FILTERED_TEXT_KEYS else value
+        if isinstance(value, list):
+            return [walk(item, key) for item in value]
+        if isinstance(value, dict):
+            return {
+                child_key: walk(child_value, str(child_key).lower())
+                for child_key, child_value in value.items()
+            }
+        return value
+
+    return walk(result)
+
+
 def sanitize_result_for_scope_contract(result: dict[str, Any], scope_contract: dict[str, Any], *, fail_on_removal_in_tests: bool = True) -> dict[str, Any]:
     """Final customer-visible tripwire for leaked scope text.
 

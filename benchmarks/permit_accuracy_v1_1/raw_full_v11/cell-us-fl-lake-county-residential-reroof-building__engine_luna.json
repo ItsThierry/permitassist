@@ -1,0 +1,238 @@
+{
+  "observed_model": "gpt-5.6-luna",
+  "observed_provider": "openai-codex",
+  "path_proof": {
+    "adapter": "engine_luna",
+    "authority_recovery": null,
+    "decision_cell_reference": null,
+    "engine_called": true,
+    "engine_result_supplied_to_model": false,
+    "engine_stdout": "[url_check] URL verified: https://cdn.lakecountyfl.gov/media/lwgowl4d/cl16-re-roof-permit-checklist-ada.pdf\n[pdf_strip] Moved PDF to apply_pdf: https://cdn.lakecountyfl.gov/media/lwgowl4d/cl16-re-roof-permit-checklist-ada.pdf\n",
+    "local_merge_customer_path_called": true,
+    "model_call_count": 1
+  },
+  "provider": "openai-codex",
+  "provider_terminal_event": {
+    "response": {
+      "background": false,
+      "completed_at": 1785165162,
+      "created_at": 1785165153,
+      "error": null,
+      "frequency_penalty": 0.0,
+      "id": "resp_0403b7ccd05ac9aa016a677561cff481a289cb5480a6556e3b",
+      "incomplete_details": null,
+      "instructions": "Follow the user request exactly. Do not call tools.",
+      "max_output_tokens": null,
+      "max_tool_calls": null,
+      "metadata": {},
+      "model": "gpt-5.6-luna",
+      "moderation": null,
+      "object": "response",
+      "output": [],
+      "parallel_tool_calls": true,
+      "presence_penalty": 0.0,
+      "previous_response_id": null,
+      "prompt_cache_key": "bb948507-7563-43ca-a147-22a2bc52e87c",
+      "prompt_cache_retention": "24h",
+      "reasoning": {
+        "context": "all_turns",
+        "effort": "medium",
+        "mode": "standard",
+        "summary": null
+      },
+      "safety_identifier": "user-FQ7sI0yp0Qqn6wWdqzy9mZic",
+      "service_tier": "default",
+      "status": "completed",
+      "store": false,
+      "temperature": 1.0,
+      "text": {
+        "format": {
+          "type": "text"
+        },
+        "verbosity": "medium"
+      },
+      "tool_choice": "auto",
+      "tool_usage": {
+        "image_gen": {
+          "input_tokens": 0,
+          "input_tokens_details": {
+            "image_tokens": 0,
+            "text_tokens": 0
+          },
+          "output_tokens": 0,
+          "output_tokens_details": {
+            "image_tokens": 0,
+            "text_tokens": 0
+          },
+          "total_tokens": 0
+        },
+        "web_search": {
+          "num_requests": 0
+        }
+      },
+      "tools": [],
+      "top_logprobs": 0,
+      "top_p": 0.98,
+      "truncation": "disabled",
+      "usage": {
+        "input_tokens": 1099,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 0
+        },
+        "output_tokens": 483,
+        "output_tokens_details": {
+          "reasoning_tokens": 298
+        },
+        "total_tokens": 1582
+      },
+      "user": null
+    },
+    "sequence_number": 188,
+    "type": "response.completed"
+  },
+  "raw_model_text": "{\"permit_decision\":\"CONDITIONAL\",\"jurisdiction\":{\"jurisdiction_id\":\"us-fl-lake_county\",\"name\":\"Lake County\",\"state\":\"FL\",\"type\":\"county\"},\"project_family\":\"reroof\",\"primary_permit_family\":\"BUILDING\",\"companion_permits\":[],\"filing\":{\"authority_id\":\"us-fl-lake_county\",\"office\":\"VERIFY\",\"destination_url\":\"https://cdn.lakecountyfl.gov/media/lwgowl4d/cl16-re-roof-permit-checklist-ada.pdf\",\"url_role\":\"REQUIREMENT_EVIDENCE\"},\"source_support\":{\"state\":\"OFFICIAL_SOURCE_SUPPORTED\",\"strength\":\"STRONG\",\"evidence\":[{\"url\":\"https://cdn.lakecountyfl.gov/media/lwgowl4d/cl16-re-roof-permit-checklist-ada.pdf\",\"role\":\"REQUIREMENT_EVIDENCE\"}]},\"contradictions\":[]}",
+  "raw_response": {
+    "apply_path": {
+      "channel": "contact_ahj",
+      "documents_to_prepare": [
+        "scope of work",
+        "plans/drawings if required",
+        "contractor license",
+        "valuation",
+        "owner authorization"
+      ],
+      "office_name": "Lake County Building Services",
+      "permit_category": "Building",
+      "permit_type": "Building Permit",
+      "platform": "PDF / paper form",
+      "portal_url": "https://cdn.lakecountyfl.gov/media/lwgowl4d/cl16-re-roof-permit-checklist-ada.pdf",
+      "primary_filing_source_tier": "none",
+      "primary_requirement_source_tier": "county",
+      "state": "HONEST_FALLBACK",
+      "steps": [
+        "Open the listed permit portal or contact the permit office",
+        "Select the closest category to: Building Permit",
+        "Confirm exact portal subcategories before final submission"
+      ],
+      "support_level": "not available",
+      "verification_note": "Confirm the exact portal category with the listed permit office before filing"
+    },
+    "apply_url": "https://cdn.lakecountyfl.gov/media/lwgowl4d/cl16-re-roof-permit-checklist-ada.pdf",
+    "apply_url_known": true,
+    "applying_office": "Lake County Building Services",
+    "customer_first_screen_summary": {
+      "ahj_department": "Lake County Building Services",
+      "decision": "REQUIRED",
+      "kind_category": "Building",
+      "next_action": "File the required permit categories with Lake County Building Services: Building Permit. Confirm exact portal subcategories before final submission.",
+      "source_cue": "Official source: Official building department source"
+    },
+    "customer_headline": "Permit required: Building Permit.",
+    "customer_next_step": "File the required permit categories with Lake County Building Services: Building Permit. Confirm exact portal subcategories before final submission.",
+    "customer_result_summary": {
+      "ahj_department": "Lake County Building Services",
+      "fee_cost_caveat": "Fees depend on valuation, trade scope, plan-review fees, and the current local fee schedule; verify before quoting.",
+      "freshness_label": "Checked 2026-07-27",
+      "jurisdiction": "Lake County, FL",
+      "next_step": "File the required permit categories with Lake County Building Services: Building Permit. Confirm exact portal subcategories before final submission.",
+      "permit_decision": "REQUIRED",
+      "permit_kind": "Building",
+      "permit_name": "Building Permit",
+      "source_cue": "Official source: Official building department source"
+    },
+    "degraded_sources": false,
+    "job_summary": "Permit required: Building Permit.",
+    "local_form_known": true,
+    "online_application_url": null,
+    "permit_decision": "REQUIRED",
+    "permit_kind": "Building",
+    "permit_name": "Building Permit",
+    "permit_required": true,
+    "permit_type": "Building Permit",
+    "permit_verdict": "YES",
+    "permits_required": [
+      {
+        "approval_type": "Building Permit",
+        "decision": "REQUIRED",
+        "display_family": "Building",
+        "family": "building",
+        "filing_family": "building",
+        "kind": "Building",
+        "permit_kind": "building",
+        "permit_name": "Building Permit",
+        "permit_type": "Building Permit",
+        "portal_selection": "Building Permit",
+        "required": true,
+        "segment": "residential",
+        "status": "REQUIRED"
+      }
+    ],
+    "permits_required_logic": [
+      {
+        "filing_family": "building",
+        "included_because": "Official permit rule: Required because the described scope triggers Building review.",
+        "permit_type": "Building Permit",
+        "scope_trigger": "building_scope",
+        "segment": "residential"
+      }
+    ],
+    "required_permit_families": [
+      "Building"
+    ],
+    "required_permit_names": [
+      "Building Permit"
+    ],
+    "required_permit_segments": [
+      "residential"
+    ],
+    "required_permit_summary": "Permit required: Building Permit.",
+    "source_confidence": "AHJ_DIRECT",
+    "source_support": {
+      "apply_url_known": true,
+      "apply_url_source_confidence": "FILING_PATH_DEGRADED",
+      "context_source_count": 0,
+      "decision_mutation_allowed": false,
+      "degraded_sources": false,
+      "display_source_count": 1,
+      "evidence": [
+        {
+          "role": "REQUIREMENT_EVIDENCE"
+        }
+      ],
+      "filing_path_state": "HONEST_FALLBACK",
+      "filing_source_count": 0,
+      "has_source_backed_evidence": true,
+      "local_decision_evidence_urls": [
+        "https://cdn.lakecountyfl.gov/media/lwgowl4d/cl16-re-roof-permit-checklist-ada.pdf"
+      ],
+      "local_form_known": true,
+      "primary_filing_source_tier": "none",
+      "primary_requirement_source_tier": "county",
+      "requirement_source_count": 1,
+      "source_confidence": "AHJ_DIRECT",
+      "state": "OFFICIAL_SOURCE_SUPPORTED",
+      "strength": "STRONG"
+    },
+    "source_urls": [
+      "https://cdn.lakecountyfl.gov/media/lwgowl4d/cl16-re-roof-permit-checklist-ada.pdf"
+    ],
+    "sources": [
+      {
+        "publisher": "Lake County Building Services",
+        "snippet": "Residential- Reroof Online Permitting When applying for a residential re-roof permit online, please note that these permits are auto-issue permits, which means that once you have submitted your application packet, the fees will automatically generate, and you will be issued the building permit. However, if the property is in a flood zone, additional reviews will be required before the permit can be issued.",
+        "title": "Official building department source",
+        "url": "https://cdn.lakecountyfl.gov/media/lwgowl4d/cl16-re-roof-permit-checklist-ada.pdf"
+      }
+    ],
+    "summary": "Permit required: Building Permit.",
+    "warnings": [
+      "Filing path degraded: exact local online filing portal was not verified; permit decision preserved."
+    ]
+  },
+  "requested_model": "gpt-5.6-luna",
+  "requested_provider": "openai-codex",
+  "requested_runtime": "engine_luna",
+  "response_id": "resp_0403b7ccd05ac9aa016a677561cff481a289cb5480a6556e3b",
+  "runtime": "openai-codex responses SSE + api.server real local finalize/customer path"
+}

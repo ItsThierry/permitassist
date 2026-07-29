@@ -1,0 +1,6 @@
+PermitAssist independently adjudicated official filing route
+Official source URL: https://decaturil.gov/472/Building-Permits
+Official filing URL: https://decaturil.portal.opengov.com/categories/1071/record-types/6427
+Verification boundary: PASS_OFFICIAL_PAGE_WEB_EXTRACT_20260728
+Exact official quote:
+You can request a permit through the City of Decatur OpenGov platform.

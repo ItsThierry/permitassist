@@ -1,0 +1,256 @@
+{
+  "observed_model": "gpt-5.6-luna",
+  "observed_provider": "openai-codex",
+  "path_proof": {
+    "adapter": "engine_luna",
+    "authority_recovery": null,
+    "decision_cell_reference": null,
+    "engine_called": true,
+    "engine_result_supplied_to_model": false,
+    "engine_stdout": "[url_check] URL verified: https://sterlingheights.gov/150/Building\n",
+    "local_merge_customer_path_called": true,
+    "model_call_count": 1
+  },
+  "provider": "openai-codex",
+  "provider_terminal_event": {
+    "response": {
+      "background": false,
+      "completed_at": 1785166437,
+      "created_at": 1785166420,
+      "error": null,
+      "frequency_penalty": 0.0,
+      "id": "resp_0f1c046a2ca7f4c7016a677a54134c8195ae8bcd63d4dcc8ee",
+      "incomplete_details": null,
+      "instructions": "Follow the user request exactly. Do not call tools.",
+      "max_output_tokens": null,
+      "max_tool_calls": null,
+      "metadata": {},
+      "model": "gpt-5.6-luna",
+      "moderation": null,
+      "object": "response",
+      "output": [],
+      "parallel_tool_calls": true,
+      "presence_penalty": 0.0,
+      "previous_response_id": null,
+      "prompt_cache_key": "d09db766-c064-4f7f-b9a2-7f1bf788b4dc",
+      "prompt_cache_retention": "24h",
+      "reasoning": {
+        "context": "all_turns",
+        "effort": "medium",
+        "mode": "standard",
+        "summary": null
+      },
+      "safety_identifier": "user-FQ7sI0yp0Qqn6wWdqzy9mZic",
+      "service_tier": "default",
+      "status": "completed",
+      "store": false,
+      "temperature": 1.0,
+      "text": {
+        "format": {
+          "type": "text"
+        },
+        "verbosity": "medium"
+      },
+      "tool_choice": "auto",
+      "tool_usage": {
+        "image_gen": {
+          "input_tokens": 0,
+          "input_tokens_details": {
+            "image_tokens": 0,
+            "text_tokens": 0
+          },
+          "output_tokens": 0,
+          "output_tokens_details": {
+            "image_tokens": 0,
+            "text_tokens": 0
+          },
+          "total_tokens": 0
+        },
+        "web_search": {
+          "num_requests": 0
+        }
+      },
+      "tools": [],
+      "top_logprobs": 0,
+      "top_p": 0.98,
+      "truncation": "disabled",
+      "usage": {
+        "input_tokens": 1165,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 0
+        },
+        "output_tokens": 956,
+        "output_tokens_details": {
+          "reasoning_tokens": 729
+        },
+        "total_tokens": 2121
+      },
+      "user": null
+    },
+    "sequence_number": 232,
+    "type": "response.completed"
+  },
+  "raw_model_text": "{\"permit_decision\":\"CONDITIONAL\",\"jurisdiction\":{\"jurisdiction_id\":\"us-mi-sterling_heights\",\"name\":\"City of Sterling Heights, Office of Building\",\"state\":\"MI\",\"type\":\"city_or_local_authority\"},\"project_family\":\"reroof\",\"primary_permit_family\":\"BUILDING\",\"companion_permits\":[],\"filing\":{\"authority_id\":\"us-mi-sterling_heights\",\"office\":\"City of Sterling Heights, Office of Building\",\"destination_url\":\"https://sterlingheights.gov/150/Building\",\"url_role\":\"APPLICATION_START\"},\"source_support\":{\"state\":\"OFFICIAL_SOURCE_SUPPORTED\",\"strength\":\"MODERATE\",\"evidence\":[{\"url\":\"https://www.legislature.mi.gov/Laws/MCL?objectName=mcl-125-1510\",\"role\":\"REQUIREMENT_EVIDENCE\"},{\"url\":\"https://sterlingheights.gov/1902/Permit-Applications\",\"role\":\"INFORMATIONAL_OFFICE\"},{\"url\":\"https://sterlingheights.gov/150/Building\",\"role\":\"APPLICATION_START\"}]},\"contradictions\":[]}",
+  "raw_response": {
+    "apply_path": {
+      "channel": "contact_ahj",
+      "documents_to_prepare": [
+        "scope of work",
+        "plans/drawings if required",
+        "contractor license",
+        "valuation",
+        "owner authorization"
+      ],
+      "office_name": "City of Sterling Heights, Office of Building",
+      "permit_category": "Building",
+      "permit_type": "Building Permit",
+      "primary_filing_source_tier": "none",
+      "primary_requirement_source_tier": "none",
+      "state": "HONEST_FALLBACK",
+      "steps": [
+        "Open the listed permit portal or contact the permit office",
+        "Select the closest category to: Building Permit",
+        "Confirm exact portal subcategories before final submission"
+      ],
+      "support_level": "not available",
+      "verification_note": "Confirm the exact portal category with the listed permit office before filing"
+    },
+    "apply_url": "https://sterlingheights.gov/150/Building",
+    "apply_url_known": false,
+    "applying_office": "City of Sterling Heights, Office of Building",
+    "customer_first_screen_summary": {
+      "ahj_department": "City of Sterling Heights, Office of Building",
+      "decision": "REQUIRED",
+      "kind_category": "Building",
+      "next_action": "File the required permit categories with City of Sterling Heights, Office of Building: Building Permit. Confirm exact portal subcategories before final submission.",
+      "source_cue": "Official source: Official building department source"
+    },
+    "customer_headline": "Permit required: Building Permit.",
+    "customer_next_step": "File the required permit categories with City of Sterling Heights, Office of Building: Building Permit. Confirm exact portal subcategories before final submission.",
+    "customer_result_summary": {
+      "ahj_department": "City of Sterling Heights, Office of Building",
+      "fee_cost_caveat": "Fees depend on valuation, trade scope, plan-review fees, and the current local fee schedule; verify before quoting.",
+      "freshness_label": "Source date not published; verify current requirements before filing",
+      "jurisdiction": "City of Sterling Heights, Office of Building, MI",
+      "next_step": "File the required permit categories with City of Sterling Heights, Office of Building: Building Permit. Confirm exact portal subcategories before final submission.",
+      "permit_decision": "REQUIRED",
+      "permit_kind": "Building",
+      "permit_name": "Building Permit",
+      "source_cue": "Official source: Official building department source"
+    },
+    "degraded_sources": true,
+    "inspection_booking": "Schedule online at Confirm the inspection advance-notice window when booking.",
+    "job_summary": "Permit required: Building Permit.",
+    "local_form_known": true,
+    "online_application_url": null,
+    "permit_decision": "REQUIRED",
+    "permit_kind": "Building",
+    "permit_name": "Building Permit",
+    "permit_required": true,
+    "permit_type": "Building Permit",
+    "permit_verdict": "YES",
+    "permits_required": [
+      {
+        "approval_type": "Building Permit",
+        "decision": "REQUIRED",
+        "display_family": "Building",
+        "family": "building",
+        "filing_family": "building",
+        "kind": "Building",
+        "permit_kind": "building",
+        "permit_name": "Building Permit",
+        "permit_type": "Building Permit",
+        "portal_selection": "Building Permit",
+        "required": true,
+        "segment": "residential",
+        "status": "REQUIRED"
+      }
+    ],
+    "permits_required_logic": [
+      {
+        "filing_family": "building",
+        "included_because": "Official permit rule: Required because the described scope triggers Building review.",
+        "permit_type": "Building Permit",
+        "scope_trigger": "building_scope",
+        "segment": "residential"
+      }
+    ],
+    "required_permit_families": [
+      "Building"
+    ],
+    "required_permit_names": [
+      "Building Permit"
+    ],
+    "required_permit_segments": [
+      "residential"
+    ],
+    "required_permit_summary": "Permit required: Building Permit.",
+    "source_confidence": "SCOPE_DEFAULT",
+    "source_support": {
+      "apply_url_known": false,
+      "apply_url_source_confidence": "NEEDS_AHJ_SOURCE",
+      "context_source_count": 0,
+      "decision_mutation_allowed": false,
+      "degraded_sources": true,
+      "demoted_nonlocal_apply_urls": [
+        "https://sterlingheights.gov/150/Building"
+      ],
+      "display_source_count": 0,
+      "evidence": [
+        {
+          "role": "REQUIREMENT_EVIDENCE"
+        },
+        {
+          "role": "INFORMATIONAL_OFFICE"
+        },
+        {
+          "role": "APPLICATION_START"
+        }
+      ],
+      "filing_path_state": "HONEST_FALLBACK",
+      "filing_source_count": 0,
+      "has_source_backed_evidence": false,
+      "local_form_known": true,
+      "primary_filing_source_tier": "none",
+      "primary_requirement_source_tier": "none",
+      "requirement_source_count": 0,
+      "source_confidence": "SCOPE_DEFAULT",
+      "state": "OFFICIAL_SOURCE_SUPPORTED",
+      "strength": "MODERATE"
+    },
+    "source_urls": [
+      "https://www.legislature.mi.gov/Laws/MCL?objectName=mcl-125-1510",
+      "https://sterlingheights.gov/1902/Permit-Applications"
+    ],
+    "sources": [
+      {
+        "publisher": "City of Sterling Heights, Office of Building",
+        "snippet": "Except as otherwise provided in the code, before construction of a building or structure, the owner, or the owner's builder, architect, engineer, or agent, shall submit an application in writing to the appropriate enforcing agency for a building permit.",
+        "title": "Official building department source",
+        "url": "https://www.legislature.mi.gov/Laws/MCL?objectName=mcl-125-1510"
+      },
+      {
+        "publisher": "City of Sterling Heights, Office of Building",
+        "snippet": "Building Permit Application - Electrical Permit Application - Plumbing Permit Application - Mechanical Permit Application - Fence Permit Application - Fire Alarm Permit Application",
+        "title": "Official building department source",
+        "url": "https://sterlingheights.gov/1902/Permit-Applications"
+      }
+    ],
+    "summary": "Permit required: Building Permit.",
+    "warnings": [
+      "Permit decision preserved, but a non-local/generic filing URL was removed; use building department-specific source evidence for the application path.",
+      "Permit decision preserved, but a non-local/generic filing URL was removed; use building department-specific source evidence for the application path.",
+      "Exact local source support is degraded; the customer permit decision remains resolved.",
+      "Filing path degraded: exact local online filing portal was not verified; permit decision preserved.",
+      "Permit decision preserved, but a non-local/generic filing URL was removed; use building department-specific source evidence for the application path.",
+      "Permit decision preserved, but a non-local/generic filing URL was removed; use building department-specific source evidence for the application path.",
+      "Permit decision preserved, but a non-local/generic filing URL was removed; use building department-specific source evidence for the application path."
+    ]
+  },
+  "requested_model": "gpt-5.6-luna",
+  "requested_provider": "openai-codex",
+  "requested_runtime": "engine_luna",
+  "response_id": "resp_0f1c046a2ca7f4c7016a677a54134c8195ae8bcd63d4dcc8ee",
+  "runtime": "openai-codex responses SSE + api.server real local finalize/customer path"
+}

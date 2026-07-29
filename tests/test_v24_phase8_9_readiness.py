@@ -18,6 +18,7 @@ from api.v24_decision_cells import (  # noqa: E402
     resolve_v24_cell,
     validate_v24_cell,
 )
+from api import v24_decision_cells as v24  # noqa: E402
 
 PKG = ROOT / "knowledge" / "v24"
 INDEX = PKG / "permitassist_decision_cell_index_v24.json"
@@ -34,6 +35,24 @@ def _sha256(path: Path) -> str:
 
 
 def test_phase8_active_staging_mode_is_explicit_and_off_shadow_do_not_publish_v24(monkeypatch):
+    for setting in (
+        "PERMITASSIST_V24_INDEX_PATH",
+        "PERMITASSIST_V24_MANIFEST_PATH",
+        "PERMITASSIST_V24_MANIFEST_SHA256",
+    ):
+        monkeypatch.delenv(setting, raising=False)
+    cache_defaults = {
+        "_V24_INDEX_CACHE": {},
+        "_V24_INDEX_CACHE_SOURCE": None,
+        "_V24_INDEX_CACHE_MTIME_NS": None,
+        "_V24_INDEX_CACHE_MANIFEST_SOURCE": None,
+        "_V24_INDEX_CACHE_MANIFEST_MTIME_NS": None,
+        "_V24_INDEX_CACHE_EXPECTED_MANIFEST_SHA256": None,
+        "_V24_INDEX_CACHE_LOAD_FAILED": False,
+    }
+    for name, value in cache_defaults.items():
+        monkeypatch.setattr(v24, name, value)
+    assert load_v24_index() is not None
     monkeypatch.delenv("PERMITASSIST_V24_MODE", raising=False)
     assert get_v24_mode() == "off"
     off = resolve_v24_cell("Anchorage", "AK", "commercial tenant improvement", "commercial")

@@ -1,0 +1,78 @@
+{
+  "observed_model": "x-ai/grok-4.5",
+  "observed_provider": "openrouter",
+  "path_proof": {
+    "adapter": "grok",
+    "engine_called": false,
+    "engine_result_supplied_to_model": false,
+    "model_call_count": 1
+  },
+  "provider": "openrouter",
+  "provider_response": {
+    "choices": [
+      {
+        "finish_reason": "stop",
+        "index": 0,
+        "logprobs": null,
+        "message": {
+          "content": "{\"permit_decision\":\"VERIFY\",\"jurisdiction\":{\"jurisdiction_id\":\"us-mo-arnold\",\"name\":\"Arnold\",\"state\":\"MO\",\"type\":\"city_or_local_authority\"},\"project_family\":\"commercial_tenant_improvement\",\"primary_permit_family\":\"BUILDING\",\"companion_permits\":[{\"family\":\"ELECTRICAL\",\"status\":\"VERIFY\"},{\"family\":\"PLUMBING\",\"status\":\"VERIFY\"},{\"family\":\"MECHANICAL\",\"status\":\"VERIFY\"},{\"family\":\"FIRE_LIFE_SAFETY\",\"status\":\"VERIFY\"},{\"family\":\"OCCUPANCY\",\"status\":\"VERIFY\"},{\"family\":\"PLANNING_ZONING\",\"status\":\"VERIFY\"}],\"filing\":{\"authority_id\":\"us-mo-arnold\",\"destination_url\":\"https://www.arnoldmo.org/government/departments/community-development/building/building-permits-inspections\",\"office\":\"Building Permits & Inspections\",\"url_role\":\"INFORMATIONAL_OFFICE\"},\"source_support\":{\"state\":\"OFFICIAL_SOURCE_SUPPORTED\",\"strength\":\"WEAK\",\"evidence\":[{\"url\":\"https://www.arnoldmo.org/government/departments/community-development/building/building-permits-inspections\",\"role\":\"INFORMATIONAL_OFFICE\"},{\"url\":\"https://www.arnoldmo.org/government/departments/community-development/building/building-permits-inspections/\",\"role\":\"APPLICATION_START\"}]},\"contradictions\":[]}",
+          "reasoning": "The user wants me to return exactly one JSON object conforming to MODEL_SCHEMA based on the evidence packet. No markdown fences, commentary, etc. Output JSON only.\n",
+          "reasoning_details": [
+            {
+              "format": "xai-responses-v1",
+              "index": 0,
+              "summary": "The user wants me to return exactly one JSON object conforming to MODEL_SCHEMA based on the evidence packet. No markdown fences, commentary, etc. Output JSON only.\n",
+              "type": "reasoning.summary"
+            },
+            {
+              "data": "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",
+              "format": "xai-responses-v1",
+              "id": "rs_9659ec06-67ca-9333-acf0-510c07ceae1c",
+              "index": 1,
+              "type": "reasoning.encrypted"
+            }
+          ],
+          "refusal": null,
+          "role": "assistant"
+        },
+        "native_finish_reason": "completed"
+      }
+    ],
+    "created": 1785166512,
+    "id": "gen-1785166512-VhXNvnYjDAJ5E2hzdmSe",
+    "model": "x-ai/grok-4.5",
+    "object": "chat.completion",
+    "provider": "xAI",
+    "service_tier": "default",
+    "system_fingerprint": null,
+    "usage": {
+      "completion_tokens": 1103,
+      "completion_tokens_details": {
+        "audio_tokens": 0,
+        "image_tokens": 0,
+        "reasoning_tokens": 771
+      },
+      "cost": 0.0077232,
+      "cost_details": {
+        "upstream_inference_completions_cost": 0.006618,
+        "upstream_inference_cost": 0.0077232,
+        "upstream_inference_prompt_cost": 0.0011052
+      },
+      "is_byok": false,
+      "prompt_tokens": 1423,
+      "prompt_tokens_details": {
+        "audio_tokens": 0,
+        "cache_write_tokens": 0,
+        "cached_tokens": 1024,
+        "video_tokens": 0
+      },
+      "total_tokens": 2526
+    }
+  },
+  "raw_text": "{\"permit_decision\":\"VERIFY\",\"jurisdiction\":{\"jurisdiction_id\":\"us-mo-arnold\",\"name\":\"Arnold\",\"state\":\"MO\",\"type\":\"city_or_local_authority\"},\"project_family\":\"commercial_tenant_improvement\",\"primary_permit_family\":\"BUILDING\",\"companion_permits\":[{\"family\":\"ELECTRICAL\",\"status\":\"VERIFY\"},{\"family\":\"PLUMBING\",\"status\":\"VERIFY\"},{\"family\":\"MECHANICAL\",\"status\":\"VERIFY\"},{\"family\":\"FIRE_LIFE_SAFETY\",\"status\":\"VERIFY\"},{\"family\":\"OCCUPANCY\",\"status\":\"VERIFY\"},{\"family\":\"PLANNING_ZONING\",\"status\":\"VERIFY\"}],\"filing\":{\"authority_id\":\"us-mo-arnold\",\"destination_url\":\"https://www.arnoldmo.org/government/departments/community-development/building/building-permits-inspections\",\"office\":\"Building Permits & Inspections\",\"url_role\":\"INFORMATIONAL_OFFICE\"},\"source_support\":{\"state\":\"OFFICIAL_SOURCE_SUPPORTED\",\"strength\":\"WEAK\",\"evidence\":[{\"url\":\"https://www.arnoldmo.org/government/departments/community-development/building/building-permits-inspections\",\"role\":\"INFORMATIONAL_OFFICE\"},{\"url\":\"https://www.arnoldmo.org/government/departments/community-development/building/building-permits-inspections/\",\"role\":\"APPLICATION_START\"}]},\"contradictions\":[]}",
+  "requested_model": "x-ai/grok-4.5",
+  "requested_provider": "openrouter",
+  "requested_runtime": "grok",
+  "response_id": "gen-1785166512-VhXNvnYjDAJ5E2hzdmSe",
+  "runtime": "OpenRouter chat/completions; upstream_provider=xAI"
+}

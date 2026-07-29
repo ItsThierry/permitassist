@@ -293,6 +293,64 @@ def test_cache_legacy_unknown_check_ignores_internal_scope_contract():
     assert contains_legacy_unknown_state(cached) is False
 
 
+def test_cache_legacy_unknown_check_preserves_valid_nonbinary_states():
+    from api.decision_resolver import contains_legacy_unknown_state
+
+    for decision in ("CONDITIONAL", "VERIFY"):
+        cached = {
+            "permit_decision": decision,
+            "permit_required": None,
+            "permit_verdict": "VERIFY",
+        }
+        assert contains_legacy_unknown_state(cached) is False
+
+    assert contains_legacy_unknown_state({
+        "permit_decision": "UNKNOWN",
+        "permit_required": None,
+        "permit_verdict": "VERIFY",
+    }) is True
+
+
+def test_cache_read_preserves_valid_nonbinary_rows(monkeypatch, tmp_path):
+    from api import research_engine
+
+    monkeypatch.setattr(research_engine, "CACHE_DB", str(tmp_path / "nonbinary-cache.db"))
+    monkeypatch.setattr(research_engine, "_capture_validators", lambda *_args, **_kwargs: ("", ""))
+    research_engine.init_cache()
+
+    for decision in ("CONDITIONAL", "VERIFY"):
+        key = f"valid-nonbinary-{decision.lower()}"
+        payload = {
+            "permit_decision": decision,
+            "permit_required": None,
+            "permit_verdict": "VERIFY",
+        }
+        research_engine.save_cache(
+            key,
+            "residential remodel",
+            "residential",
+            "Exampleville",
+            "EX",
+            "",
+            payload,
+        )
+        cached = research_engine.get_cached(key)
+        assert cached is not None
+        assert cached["permit_decision"] == decision
+        assert cached["permit_required"] is None
+
+    research_engine.save_cache(
+        "schema-only-empty",
+        "residential remodel",
+        "residential",
+        "Exampleville",
+        "EX",
+        "",
+        {},
+    )
+    assert research_engine.get_cached("schema-only-empty") is None
+
+
 def test_v24_delmar_repaired_cell_is_publishable_and_source_backed(monkeypatch):
     monkeypatch.setenv("PERMITASSIST_V24_MODE", "active")
     resolution = resolve_v24_cell("Delmar", "DE", "residential reroof", "residential")
@@ -348,8 +406,13 @@ def test_generic_icc_apply_url_demoted_not_decision_neutered(monkeypatch):
     public = build_customer_permit_view_model(finalized, "residential reroof", "Delmar", "DE", job_category="residential")
     assert public["permit_required"] is True
     assert public["permit_verdict"] == "YES"
-    assert "townofdelmar.us" in (public.get("apply_url") or "")
+    # The verified Delmar page is an informational office page, not an
+    # application start. Preserve the local source and decision while exposing
+    # an honest contact-AHJ filing path rather than mislabeling it as apply_url.
+    assert public.get("apply_url") is None
     assert "iccsafe.org" not in (public.get("apply_url") or "")
+    assert "townofdelmar.us" in json.dumps(public.get("sources") or []).lower()
+    assert (public.get("apply_path") or {}).get("channel") == "contact_ahj"
 
 
 def test_v24_crook_county_exact_cell_uses_official_not_required_authority(monkeypatch):

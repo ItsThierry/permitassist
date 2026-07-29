@@ -1,0 +1,78 @@
+{
+  "observed_model": "x-ai/grok-4.5",
+  "observed_provider": "openrouter",
+  "path_proof": {
+    "adapter": "grok",
+    "engine_called": false,
+    "engine_result_supplied_to_model": false,
+    "model_call_count": 1
+  },
+  "provider": "openrouter",
+  "provider_response": {
+    "choices": [
+      {
+        "finish_reason": "stop",
+        "index": 0,
+        "logprobs": null,
+        "message": {
+          "content": "{\"permit_decision\":\"VERIFY\",\"jurisdiction\":{\"jurisdiction_id\":\"us-fl-brevard_county\",\"name\":\"Brevard County\",\"state\":\"FL\",\"type\":\"county\"},\"project_family\":\"commercial_tenant_improvement\",\"primary_permit_family\":\"BUILDING\",\"companion_permits\":[{\"family\":\"ELECTRICAL\",\"status\":\"VERIFY\"},{\"family\":\"PLUMBING\",\"status\":\"VERIFY\"},{\"family\":\"MECHANICAL\",\"status\":\"VERIFY\"},{\"family\":\"FIRE_LIFE_SAFETY\",\"status\":\"VERIFY\"},{\"family\":\"OCCUPANCY\",\"status\":\"VERIFY\"},{\"family\":\"PLANNING_ZONING\",\"status\":\"VERIFY\"}],\"filing\":{\"authority_id\":\"us-fl-brevard_county\",\"destination_url\":\"https://aca-prod.accela.com/brevard/Default.aspx\",\"office\":\"Brevard County\",\"url_role\":\"APPLICATION_START\"},\"source_support\":{\"state\":\"OFFICIAL_SOURCE_SUPPORTED\",\"strength\":\"WEAK\",\"evidence\":[{\"url\":\"https://aca-prod.accela.com/brevard/Default.aspx\",\"role\":\"APPLICATION_START\"},{\"url\":\"https://www.flsenate.gov/Laws/Statutes/2025/553.79\",\"role\":\"REQUIREMENT_EVIDENCE\"}]},\"contradictions\":[]}",
+          "reasoning": "The user wants me to evaluate one permit lookup using ONLY the supplied official-source evidence packet and return exactly one JSON object conforming to MODEL_SCHEMA.\n",
+          "reasoning_details": [
+            {
+              "format": "xai-responses-v1",
+              "index": 0,
+              "summary": "The user wants me to evaluate one permit lookup using ONLY the supplied official-source evidence packet and return exactly one JSON object conforming to MODEL_SCHEMA.\n",
+              "type": "reasoning.summary"
+            },
+            {
+              "data": "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",
+              "format": "xai-responses-v1",
+              "id": "rs_2bac804d-4393-9d21-a470-1f4a3d8fe082",
+              "index": 1,
+              "type": "reasoning.encrypted"
+            }
+          ],
+          "refusal": null,
+          "role": "assistant"
+        },
+        "native_finish_reason": "completed"
+      }
+    ],
+    "created": 1785164834,
+    "id": "gen-1785164834-xppmXIYwoXjavbJAaXoO",
+    "model": "x-ai/grok-4.5",
+    "object": "chat.completion",
+    "provider": "xAI",
+    "service_tier": "default",
+    "system_fingerprint": null,
+    "usage": {
+      "completion_tokens": 1322,
+      "completion_tokens_details": {
+        "audio_tokens": 0,
+        "image_tokens": 0,
+        "reasoning_tokens": 1016
+      },
+      "cost": 0.0105704,
+      "cost_details": {
+        "upstream_inference_completions_cost": 0.007932,
+        "upstream_inference_cost": 0.0105704,
+        "upstream_inference_prompt_cost": 0.0026384
+      },
+      "is_byok": false,
+      "prompt_tokens": 1428,
+      "prompt_tokens_details": {
+        "audio_tokens": 0,
+        "cache_write_tokens": 0,
+        "cached_tokens": 128,
+        "video_tokens": 0
+      },
+      "total_tokens": 2750
+    }
+  },
+  "raw_text": "{\"permit_decision\":\"VERIFY\",\"jurisdiction\":{\"jurisdiction_id\":\"us-fl-brevard_county\",\"name\":\"Brevard County\",\"state\":\"FL\",\"type\":\"county\"},\"project_family\":\"commercial_tenant_improvement\",\"primary_permit_family\":\"BUILDING\",\"companion_permits\":[{\"family\":\"ELECTRICAL\",\"status\":\"VERIFY\"},{\"family\":\"PLUMBING\",\"status\":\"VERIFY\"},{\"family\":\"MECHANICAL\",\"status\":\"VERIFY\"},{\"family\":\"FIRE_LIFE_SAFETY\",\"status\":\"VERIFY\"},{\"family\":\"OCCUPANCY\",\"status\":\"VERIFY\"},{\"family\":\"PLANNING_ZONING\",\"status\":\"VERIFY\"}],\"filing\":{\"authority_id\":\"us-fl-brevard_county\",\"destination_url\":\"https://aca-prod.accela.com/brevard/Default.aspx\",\"office\":\"Brevard County\",\"url_role\":\"APPLICATION_START\"},\"source_support\":{\"state\":\"OFFICIAL_SOURCE_SUPPORTED\",\"strength\":\"WEAK\",\"evidence\":[{\"url\":\"https://aca-prod.accela.com/brevard/Default.aspx\",\"role\":\"APPLICATION_START\"},{\"url\":\"https://www.flsenate.gov/Laws/Statutes/2025/553.79\",\"role\":\"REQUIREMENT_EVIDENCE\"}]},\"contradictions\":[]}",
+  "requested_model": "x-ai/grok-4.5",
+  "requested_provider": "openrouter",
+  "requested_runtime": "grok",
+  "response_id": "gen-1785164834-xppmXIYwoXjavbJAaXoO",
+  "runtime": "OpenRouter chat/completions; upstream_provider=xAI"
+}

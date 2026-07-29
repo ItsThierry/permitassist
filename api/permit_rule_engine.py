@@ -18,6 +18,7 @@ from dataclasses import asdict, dataclass
 from enum import Enum
 from pathlib import Path
 from typing import Any, Iterable, Mapping
+from urllib.parse import urlparse
 
 try:
     from .v24_decision_cells import (
@@ -1501,8 +1502,22 @@ _CORE_FACT_KEYS = frozenset(
 _WORK_ONTOLOGY: tuple[tuple[str, str, tuple[str, ...]], ...] = (
     ("roof_covering_replacement", "reroof", (r"\breroof\b", r"\bre-?roof\b", r"\broof replacement\b", r"\breplace (?:asphalt )?shingles?\b")),
     ("structural_alteration", "residential_remodel", (r"\bstructural (?:alteration|change|framing)\b", r"\bload[- ]bearing\b")),
-    ("electrical_work", "residential_remodel", (r"\belectrical\b", r"\bpanel (?:replacement|upgrade|change)\b", r"\bwiring\b")),
-    ("plumbing_work", "residential_remodel", (r"\bplumbing\b", r"\brepipe\b", r"\bwater heater\b")),
+    ("electrical_work", "residential_remodel", (
+        r"\belectrical\b",
+        r"\bpanel (?:replacement|upgrade|change)\b",
+        r"\bwiring\b",
+        r"\bbranch circuits?\b",
+        r"\b(?:wired )?receptacles?\b",
+        r"\blighting (?:installation|relocation|work)\b",
+    )),
+    ("plumbing_work", "residential_remodel", (
+        r"\bplumbing\b",
+        r"\brepipe\b",
+        r"\bwater heater\b",
+        r"\b(?:install|replace|relocate)(?:ing|ed)? (?:a |the )?(?:new )?sink\b",
+        r"\b(?:water[- ]supply|drain) piping\b",
+        r"\bplumbing fixtures?\b",
+    )),
     ("mechanical_work", "residential_remodel", (r"\bmechanical\b", r"\bhvac\b", r"\bfurnace\b", r"\bair conditioner\b")),
     ("gas_work", "residential_remodel", (r"\bgas (?:line|piping|work|permit)\b", r"\bfuel gas\b")),
     ("demolition_work", "residential_remodel", (r"\bdemolition\b", r"\bdemolish\b")),
@@ -1511,12 +1526,22 @@ _WORK_ONTOLOGY: tuple[tuple[str, str, tuple[str, ...]], ...] = (
     ("structure_moving", "residential_remodel", (r"\bmov(?:e|ing) (?:a )?(?:building|structure)\b",)),
     ("manufactured_structure_installation", "residential_remodel", (r"\bmanufactured (?:home|housing|structure)\b",)),
     ("septic_oss_work", "residential_remodel", (r"\bseptic\b", r"\bonsite sew(?:age|er)\b", r"\boss\b")),
-    ("fire_life_safety_work", "commercial_tenant_improvement", (r"\bfire (?:alarm|sprinkler|suppression|life safety)\b",)),
+    ("fire_life_safety_work", "commercial_tenant_improvement", (
+        r"\bfire[- ](?:alarm|sprinkler|suppression|life safety)\b",
+        r"\bsprinkler heads?\b",
+        r"\balarm notification devices?\b",
+    )),
     ("food_health_work", "commercial_tenant_improvement", (r"\bcommercial kitchen\b", r"\bfood service\b", r"\bhealth permit\b")),
     ("liquor_service_work", "commercial_tenant_improvement", (r"\bliquor\b", r"\balcohol service\b")),
     ("wastewater_work", "commercial_tenant_improvement", (r"\bwastewater\b", r"\bgrease interceptor\b")),
     ("occupancy_change", "commercial_tenant_improvement", (r"\bchange of (?:use|occupancy)\b", r"\boccupancy change\b", r"\boccupancy\b")),
-    ("zoning_review", "commercial_tenant_improvement", (r"\bzoning\b", r"\bplanning review\b")),
+    ("zoning_review", "commercial_tenant_improvement", (
+        r"\bzoning\b",
+        r"\bplanning review\b",
+        r"\bregulated land use\b",
+        r"\bexterior site configuration\b",
+        r"\bsite (?:plan|development|review)\b",
+    )),
     ("commercial_tenant_improvement", "commercial_tenant_improvement", (r"\bcommercial tenant improvement\b", r"\btenant improvement\b", r"\bcommercial build[- ]?out\b")),
     ("residential_remodel", "residential_remodel", (r"\bresidential remodel\b", r"\bkitchen remodel\b", r"\bbath(?:room)? remodel\b")),
 )
@@ -1733,8 +1758,29 @@ def resolve_jurisdiction_identity(
 
 
 def _match_is_negated(text: str, start: int) -> bool:
-    prefix = text[max(0, start - 32):start]
-    return bool(re.search(r"(?:\bno\b|\bwithout\b|\bnot\b|does not include)\s+(?:\w+\s+){0,3}$", prefix))
+    prefix = text[:start]
+    local_prefix = prefix[-128:]
+    if re.search(r"(?:\bno\b|\bwithout\b|\bnot\b|does not include)\s+(?:\w+\s+){0,3}$", local_prefix):
+        return True
+    if re.search(r"\bnon[- ]$", local_prefix):
+        return True
+
+    # Carry a leading ``no``/``without`` across a comma-separated noun list,
+    # e.g. "no electrical, plumbing, HVAC, or fire alarm".  Do not carry it
+    # across a sentence/clause boundary or an affirmative action verb such as
+    # "install", which starts a new positive scope statement.
+    clause = re.split(r"[;.!?]", prefix)[-1]
+    markers = list(re.finditer(r"\b(?:no|without)\b", clause))
+    if not markers:
+        return False
+    between = clause[markers[-1].end():]
+    affirmative_action = re.search(
+        r"\b(?:add|alter|construct|extend|install|modify|move|new|provide|relocate|replace|upgrade)\b",
+        between,
+    )
+    return affirmative_action is None and bool(
+        re.fullmatch(r"[\s,/&()\-\w]*(?:(?:\band\b|\bor\b)\s*)?", between)
+    )
 
 
 def _scope_thresholds(text: str) -> tuple[WorkThreshold, ...]:
@@ -1867,6 +1913,99 @@ def normalize_work_atoms(
     )
 
 
+_SCOPE_FAMILY_BY_WORK_NODE: dict[str, frozenset[str]] = {
+    "commercial_tenant_improvement": frozenset({"building"}),
+    "residential_remodel": frozenset({"building"}),
+    "roof_covering_replacement": frozenset({"building"}),
+    "structural_alteration": frozenset({"building"}),
+    "electrical_work": frozenset({"electrical"}),
+    "plumbing_work": frozenset({"plumbing"}),
+    "mechanical_work": frozenset({"mechanical"}),
+    "gas_work": frozenset({"mechanical", "gas"}),
+    "fire_life_safety_work": frozenset({"fire"}),
+    "food_health_work": frozenset({"health"}),
+    "liquor_service_work": frozenset({"liquor"}),
+    "wastewater_work": frozenset({"wastewater"}),
+    "occupancy_change": frozenset({"occupancy"}),
+    "zoning_review": frozenset({"zoning"}),
+    "demolition_work": frozenset({"demolition"}),
+    "pool_work": frozenset({"pool"}),
+    "sign_work": frozenset({"sign"}),
+    "structure_moving": frozenset({"moving"}),
+    "manufactured_structure_installation": frozenset({"manufactured_structure_installation"}),
+    "septic_oss_work": frozenset({"septic_oss_health"}),
+}
+
+_SCOPE_FAMILY_BY_TRUE_FACT: dict[str, frozenset[str]] = {
+    "structural_change": frozenset({"building"}),
+    "electrical_scope": frozenset({"electrical"}),
+    "plumbing_scope": frozenset({"plumbing"}),
+    "mechanical_scope": frozenset({"mechanical"}),
+    "gas_scope": frozenset({"mechanical", "gas"}),
+    "fire_life_safety_scope": frozenset({"fire"}),
+    "food_service_scope": frozenset({"health"}),
+    "liquor_service_scope": frozenset({"liquor"}),
+    "wastewater_scope": frozenset({"wastewater"}),
+    "occupancy_change": frozenset({"occupancy"}),
+    "zoning_trigger": frozenset({"zoning"}),
+    "demolition_scope": frozenset({"demolition"}),
+    "pool_scope": frozenset({"pool"}),
+    "sign_scope": frozenset({"sign"}),
+    "structure_moving_scope": frozenset({"moving"}),
+    "manufactured_structure_scope": frozenset({"manufactured_structure_installation"}),
+    "septic_oss_scope": frozenset({"septic_oss_health"}),
+}
+
+
+def _scope_gate_family_decisions(
+    decisions: tuple[CoreFamilyDecision, ...],
+    *,
+    work: NormalizedWorkAtoms,
+    project_family: str,
+) -> tuple[CoreFamilyDecision, ...]:
+    """Keep source truth visible without applying it to undescribed work.
+
+    A Decision Cell states the jurisdiction's rule for a family.  It does not by
+    itself establish that the customer's project includes that family's work.
+    Binary companion verdicts therefore require a positive normalized work atom
+    or an explicit closed-world true fact.  Unactivated rows remain visible with
+    their family-specific provenance and routes, but are conservatively VERIFY.
+    """
+
+    activated: set[str] = set()
+    if project_family in FAMILY_CLOSURE_REQUIREMENTS:
+        activated.add("building")
+    for atom in work.positive_atoms:
+        activated.update(_SCOPE_FAMILY_BY_WORK_NODE.get(atom.ontology_node, ()))
+    for fact_key, fact_value in work.known_facts:
+        if fact_value is True:
+            activated.update(_SCOPE_FAMILY_BY_TRUE_FACT.get(fact_key, ()))
+
+    gated: list[CoreFamilyDecision] = []
+    for decision in decisions:
+        if decision.family == "building" or decision.verdict not in {
+            FamilyVerdict.REQUIRED,
+            FamilyVerdict.CONDITIONAL,
+        } or decision.family in activated:
+            gated.append(decision)
+            continue
+        gated.append(
+            CoreFamilyDecision(
+                family=decision.family,
+                verdict=FamilyVerdict.VERIFY,
+                trigger=decision.trigger,
+                provenance=decision.provenance,
+                validation_issue_codes=tuple(
+                    sorted(
+                        set(decision.validation_issue_codes)
+                        | {"family_scope_not_positively_established"}
+                    )
+                ),
+            )
+        )
+    return tuple(gated)
+
+
 def _provenance_records(value: Any) -> tuple[ProvenanceRecord, ...]:
     values = value if isinstance(value, list) else [value]
     return _dedupe_sorted_provenance(_provenance_from_dict(item) for item in values)
@@ -1953,13 +2092,161 @@ def _coerce_route(row: Mapping[str, Any]) -> ApplicationRoute:
 
 
 def _route_matches_family(route: ApplicationRoute, family: str, authority: AuthorityRef) -> bool:
-    permit_slug = _slug(route.permit_name)
+    del authority  # Office equality does not prove a family-specific filing route.
+    permit_tokens = tuple(token for token in _slug(route.permit_name).split("_") if token)
     family_aliases = {family}
     if family == "mechanical":
-        family_aliases |= {"hvac", "gas"}
-    return any(alias in permit_slug for alias in family_aliases) or (
-        bool(authority.application_authority)
-        and authority.application_authority.lower() == route.office_name.lower()
+        family_aliases.add("hvac")
+    for alias in family_aliases:
+        alias_tokens = tuple(token for token in _slug(alias).split("_") if token)
+        if not alias_tokens or len(alias_tokens) > len(permit_tokens):
+            continue
+        if any(
+            permit_tokens[index : index + len(alias_tokens)] == alias_tokens
+            for index in range(len(permit_tokens) - len(alias_tokens) + 1)
+        ):
+            return True
+    return False
+
+
+_FORBIDDEN_APPLICATION_ROUTE_HOSTS = frozenset(
+    {
+        "bing.com",
+        "facebook.com",
+        "google.com",
+        "instagram.com",
+        "linkedin.com",
+        "maps.apple.com",
+        "twitter.com",
+        "x.com",
+        "yahoo.com",
+        "youtube.com",
+    }
+)
+_ROUTE_FAMILY_PATTERNS: dict[str, tuple[str, ...]] = {
+    "building": (r"\bbuilding\b", r"\bconstruction\b", r"\btenant improvement\b"),
+    "electrical": (r"\belectrical\b", r"\bwiring\b"),
+    "plumbing": (r"\bplumbing\b",),
+    "mechanical": (r"\bmechanical\b", r"\bhvac\b", r"\bfuel gas\b"),
+    "fire": (r"\bfire[- ](?:alarm|sprinkler|suppression|life safety)\b",),
+    "health": (r"\bhealth\b", r"\bfood service\b"),
+    "liquor": (r"\bliquor\b", r"\balcohol\b"),
+    "wastewater": (r"\bwastewater\b", r"\bgrease interceptor\b"),
+    "occupancy": (r"\boccupancy\b", r"\bchange of use\b"),
+    "zoning": (r"\bzoning\b", r"\bland use\b", r"\bplanning\b"),
+}
+
+
+def _application_route_issue_codes(route: ApplicationRoute, family: str) -> tuple[str, ...]:
+    issues: set[str] = set()
+    parsed = urlparse(route.apply_url)
+    host = (parsed.hostname or "").lower().removeprefix("www.")
+    if parsed.scheme not in {"http", "https"} or not host:
+        issues.add("application_route_role_not_proven")
+        return tuple(sorted(issues))
+    if any(host == blocked or host.endswith(f".{blocked}") for blocked in _FORBIDDEN_APPLICATION_ROUTE_HOSTS):
+        issues.add("application_route_host_forbidden")
+
+    publishable = tuple(record for record in route.provenance if _publishable_provenance(record))
+    evidence_text = " ".join(
+        f"{record.source_url} {record.source_quote}" for record in publishable
+    ).lower()
+    route_identity_text = " ".join(
+        [route.apply_url]
+        + [f"{record.source_url} {record.source_quote[:240]}" for record in publishable]
+    ).lower()
+    explicit_families = {
+        candidate
+        for candidate, patterns in {
+            "building": (
+                r"building[-_/ ]permit[-_/ ]application",
+                r"application for (?:a )?(?:commercial )?building permit",
+            ),
+            "electrical": (
+                r"electrical[-_/ ]permit[-_/ ]application",
+                r"application for (?:an )?electrical(?: installation)? permit",
+                r"office of electrical inspections",
+            ),
+            "plumbing": (
+                r"plumbing[-_/ ]permit[-_/ ]application",
+                r"application for (?:a )?plumbing permit",
+            ),
+            "mechanical": (
+                r"(?:mechanical|hvac)[-_/ ]permit[-_/ ]application",
+                r"application for (?:a )?(?:mechanical|hvac) permit",
+            ),
+            "fire": (
+                r"fire[-_/ ](?:alarm|sprinkler|suppression)[-_/ ]permit[-_/ ]application",
+                r"application for (?:a )?fire (?:alarm|sprinkler|suppression) permit",
+            ),
+            "occupancy": (
+                r"certificate[-_/ ]of[-_/ ]occupancy[-_/ ]application",
+                r"application for (?:a )?certificate of occupancy",
+            ),
+            "zoning": (
+                r"zoning[-_/ ]permit[-_/ ]application",
+                r"application for (?:a )?zoning permit",
+            ),
+        }.items()
+        if any(re.search(pattern, route_identity_text) for pattern in patterns)
+    }
+    if explicit_families and family not in explicit_families:
+        issues.add("application_route_family_mismatch")
+
+    path_text = f"{host}{parsed.path}".lower()
+    legal_reference_path = bool(
+        re.search(r"(?:^|/)(?:statutes?|ordinances?|municipal[-_]?code|code)(?:/|$)", parsed.path.lower())
+        or host.startswith(("legislature.", "law."))
+        or "library.municode.com" in host
+        or "codes.iccsafe.org" in host
+    )
+    action_evidence = bool(
+        re.search(
+            r"\b(?:apply online|apply for|online application|permit application|application form|"
+            r"create new application|access (?:your )?permits online|accela citizen access|"
+            r"submit (?:the |this |a )?(?:(?:complete|completed) )?(?:application|form)|"
+            r"applications? can be (?:emailed|submitted)|permit portal|"
+            r"online permit system|download (?:the |a )?(?:permit )?application)\b",
+            evidence_text,
+        )
+    )
+    portal_shaped = bool(
+        re.search(r"(?:^|[./_-])(?:apply|application|portal|permits?|selfservice)(?:[./_?-]|$)", path_text)
+        or any(
+            marker in host
+            for marker in (
+                "accela.com",
+                "aspgov.com",
+                "citizenserve.com",
+                "cityworksonline.com",
+                "cloudpermit.com",
+                "energov",
+                "mgoconnect.org",
+                "opengov.com",
+                "permitlinkonline.com",
+                "viewpointcloud.com",
+            )
+        )
+    )
+    form_shaped = parsed.path.lower().endswith(".pdf") and bool(
+        re.search(r"\b(?:application for|permit application|application form)\b", evidence_text)
+    )
+    if legal_reference_path or not publishable or not (action_evidence or portal_shaped or form_shaped):
+        issues.add("application_route_role_not_proven")
+    return tuple(sorted(issues))
+
+
+def _validate_application_route_role(route: ApplicationRoute, family: str) -> ApplicationRoute:
+    issues = _application_route_issue_codes(route, family)
+    if not issues:
+        return route
+    return ApplicationRoute(
+        permit_name=route.permit_name,
+        office_name=route.office_name,
+        apply_url="",
+        channel="verify",
+        provenance=(),
+        validation_issue_codes=tuple(sorted(set(route.validation_issue_codes) | set(issues))),
     )
 
 
@@ -2060,18 +2347,38 @@ def build_family_authority_routes(cell: Mapping[str, Any]) -> tuple[FamilyAuthor
             provenance=(),
         )
         if _route_scope_mismatch(route, project_family):
-            # Keep the official destination actionable, but do not let a
-            # residential evidence record prove a commercial route dimension.
+            # A route without project-scope-compatible provenance is context,
+            # not a customer action. Preserve its identity for verification but
+            # never publish the URL as an official filing destination.
             route = ApplicationRoute(
                 permit_name=route.permit_name,
                 office_name=route.office_name,
-                apply_url=route.apply_url,
+                apply_url="",
                 channel="verify",
                 provenance=(),
                 validation_issue_codes=("route_provenance_scope_mismatch",),
             )
+        route = _validate_application_route_role(route, authority.family)
         output.append(FamilyAuthorityRoute(authority.family, authority, route))
     return tuple(output)
+
+
+def _families_missing_actionable_routes(
+    decisions: Iterable[CoreFamilyDecision],
+    routes: Iterable[FamilyAuthorityRoute],
+) -> tuple[str, ...]:
+    actionable = {
+        route.family
+        for route in routes
+        if route.application_route.apply_url
+        and not route.application_route.validation_issue_codes
+    }
+    expected = {
+        decision.family
+        for decision in decisions
+        if decision.verdict in {FamilyVerdict.REQUIRED, FamilyVerdict.CONDITIONAL}
+    }
+    return tuple(sorted(expected - actionable))
 
 
 def select_precedence_stage(
@@ -2187,13 +2494,22 @@ def build_sealed_projection_payload(
     permit_required = True if main_decision.verdict is FamilyVerdict.REQUIRED else False if main_decision.verdict is FamilyVerdict.NOT_REQUIRED else None
     route_by_family = {route.family: route for route in family_routes}
     main_route = route_by_family.get(main_decision.family)
-    if main_route is None and family_routes:
-        main_route = family_routes[0]
+
+    def decision_source_refs(decision: CoreFamilyDecision) -> list[str]:
+        """Expose only provenance that already passed the binary source floor."""
+        refs: list[str] = []
+        for record in decision.provenance:
+            if _publishable_provenance(record) and record.source_url not in refs:
+                refs.append(record.source_url)
+        return refs
+
     family_rows = [
         {
             "family": decision.family,
             "verdict": decision.verdict.value,
             "trigger": decision.trigger,
+            "source_ref": (decision_source_refs(decision) or [None])[0],
+            "source_refs": decision_source_refs(decision),
             "authority": (
                 route_by_family[decision.family].authority.application_authority
                 if decision.family in route_by_family
@@ -2247,6 +2563,8 @@ def build_sealed_projection_payload(
             "required": True if decision.verdict is FamilyVerdict.REQUIRED else False if decision.verdict is FamilyVerdict.NOT_REQUIRED else "maybe",
             "required_status": decision.verdict.value,
             "trigger": decision.trigger,
+            "source_ref": (decision_source_refs(decision) or [None])[0],
+            "source_refs": decision_source_refs(decision),
             "applying_office": route_by_family[decision.family].authority.application_authority if decision.family in route_by_family else "",
             "apply_url": route_by_family[decision.family].application_route.apply_url if decision.family in route_by_family else "",
         }
@@ -2512,6 +2830,13 @@ def build_core_decision_envelope(
             seed.classification,
         )
     )
+    decisions = list(
+        _scope_gate_family_decisions(
+            tuple(decisions),
+            work=work,
+            project_family=project_family,
+        )
+    )
     routes = (
         build_family_authority_routes(cell)
         if cell
@@ -2522,11 +2847,19 @@ def build_core_decision_envelope(
         and identity.status is JurisdictionResolutionStatus.EXACT
         else ()
     )
+    missing_route_families = _families_missing_actionable_routes(decisions, routes)
+    coverage_reason = legacy_envelope.coverage_reason
+    if missing_route_families:
+        if stage is PrecedenceStage.VALIDATED_EXACT_COMPLETE:
+            stage = PrecedenceStage.VALIDATED_EXACT_PARTIAL
+        if coverage == "complete":
+            coverage = "partial"
+        route_reason = "action route unresolved=" + ",".join(missing_route_families)
+        coverage_reason = "; ".join(part for part in (coverage_reason, route_reason) if part)
     selected = identity.selected
     jurisdiction_id = selected.jurisdiction_id if selected else ""
     jurisdiction_name = selected.ahj_name if selected else _normalize_text(city)
     jurisdiction_state = selected.state if selected else _normalize_text(state).upper()
-    coverage_reason = legacy_envelope.coverage_reason
     payload = build_sealed_projection_payload(
         jurisdiction_id=jurisdiction_id,
         jurisdiction_name=jurisdiction_name,
@@ -2877,12 +3210,27 @@ def build_active_core_first_result(
     if get_rule_engine_core_mode() != "active":
         return None
     try:
+        identity = None
         if not _request_targets_active_core(city, state):
-            return None
-        try:
-            identity = resolve_jurisdiction_identity(city, state)
-        except Exception as exc:
-            raise ActiveCorePackageUnavailableError("jurisdiction_identity_unavailable") from exc
+            # Display names are not stable jurisdiction IDs. Permit an exact,
+            # indexed identity to activate only when its stable ID is itself
+            # allowlisted; genuinely unallowlisted traffic keeps legacy behavior.
+            try:
+                candidate_identity = resolve_jurisdiction_identity(city, state)
+            except Exception:
+                return None
+            if (
+                candidate_identity.status is not JurisdictionResolutionStatus.EXACT
+                or candidate_identity.selected is None
+                or not core_activation_allowed(candidate_identity.selected.jurisdiction_id)
+            ):
+                return None
+            identity = candidate_identity
+        if identity is None:
+            try:
+                identity = resolve_jurisdiction_identity(city, state)
+            except Exception as exc:
+                raise ActiveCorePackageUnavailableError("jurisdiction_identity_unavailable") from exc
         if identity.status is JurisdictionResolutionStatus.INDEX_UNAVAILABLE:
             health = active_core_runtime_health()
             raise ActiveCorePackageUnavailableError(str(health.get("code") or "index_unavailable"))

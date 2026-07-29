@@ -1,0 +1,242 @@
+{
+  "observed_model": "gpt-5.6-luna",
+  "observed_provider": "openai-codex",
+  "path_proof": {
+    "adapter": "engine_luna",
+    "authority_recovery": null,
+    "decision_cell_reference": null,
+    "engine_called": true,
+    "engine_result_supplied_to_model": false,
+    "engine_stdout": "[url_check] Dead URL detected: https://www.sarasotafl.gov/Department-Pages/Development-Services/Building-Permitting\n",
+    "local_merge_customer_path_called": true,
+    "model_call_count": 1
+  },
+  "provider": "openai-codex",
+  "provider_terminal_event": {
+    "response": {
+      "background": false,
+      "completed_at": 1785165206,
+      "created_at": 1785165198,
+      "error": null,
+      "frequency_penalty": 0.0,
+      "id": "resp_0ced8d5a34d8144a016a67758e457081a384d61127650c21ae",
+      "incomplete_details": null,
+      "instructions": "Follow the user request exactly. Do not call tools.",
+      "max_output_tokens": null,
+      "max_tool_calls": null,
+      "metadata": {},
+      "model": "gpt-5.6-luna",
+      "moderation": null,
+      "object": "response",
+      "output": [],
+      "parallel_tool_calls": true,
+      "presence_penalty": 0.0,
+      "previous_response_id": null,
+      "prompt_cache_key": "17a16f58-ce7f-4299-a6de-d8ecd1617f7d",
+      "prompt_cache_retention": "24h",
+      "reasoning": {
+        "context": "all_turns",
+        "effort": "medium",
+        "mode": "standard",
+        "summary": null
+      },
+      "safety_identifier": "user-FQ7sI0yp0Qqn6wWdqzy9mZic",
+      "service_tier": "default",
+      "status": "completed",
+      "store": false,
+      "temperature": 1.0,
+      "text": {
+        "format": {
+          "type": "text"
+        },
+        "verbosity": "medium"
+      },
+      "tool_choice": "auto",
+      "tool_usage": {
+        "image_gen": {
+          "input_tokens": 0,
+          "input_tokens_details": {
+            "image_tokens": 0,
+            "text_tokens": 0
+          },
+          "output_tokens": 0,
+          "output_tokens_details": {
+            "image_tokens": 0,
+            "text_tokens": 0
+          },
+          "total_tokens": 0
+        },
+        "web_search": {
+          "num_requests": 0
+        }
+      },
+      "tools": [],
+      "top_logprobs": 0,
+      "top_p": 0.98,
+      "truncation": "disabled",
+      "usage": {
+        "input_tokens": 1158,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 0
+        },
+        "output_tokens": 415,
+        "output_tokens_details": {
+          "reasoning_tokens": 228
+        },
+        "total_tokens": 1573
+      },
+      "user": null
+    },
+    "sequence_number": 190,
+    "type": "response.completed"
+  },
+  "raw_model_text": "{\"permit_decision\":\"VERIFY\",\"jurisdiction\":{\"jurisdiction_id\":\"us-fl-sarasota\",\"name\":\"City of Sarasota Building & Permitting\",\"state\":\"FL\",\"type\":\"city_or_local_authority\"},\"project_family\":\"reroof\",\"primary_permit_family\":\"VERIFY\",\"companion_permits\":[],\"filing\":{\"authority_id\":\"us-fl-sarasota\",\"office\":\"City of Sarasota Building & Permitting\",\"destination_url\":\"https://www.sarasotafl.gov/Department-Pages/Development-Services/Building-Permitting\",\"url_role\":\"INFORMATIONAL_OFFICE\"},\"source_support\":{\"state\":\"OFFICIAL_SOURCE_SUPPORTED\",\"strength\":\"MODERATE\",\"evidence\":[{\"url\":\"https://www.sarasotafl.gov/Department-Pages/Development-Services/Building-Permitting\",\"role\":\"REQUIREMENT_EVIDENCE\"}]},\"contradictions\":[]}",
+  "raw_response": {
+    "apply_path": {
+      "channel": "contact_ahj",
+      "documents_to_prepare": [
+        "scope of work",
+        "plans/drawings if required",
+        "contractor license",
+        "valuation",
+        "owner authorization"
+      ],
+      "office_name": "City of Sarasota Building & Permitting",
+      "permit_category": "Building",
+      "permit_type": "Building Permit",
+      "primary_filing_source_tier": "none",
+      "primary_requirement_source_tier": "none",
+      "state": "HONEST_FALLBACK",
+      "steps": [
+        "Open the listed permit portal or contact the permit office",
+        "Select the closest category to: Building Permit",
+        "Confirm exact portal subcategories before final submission"
+      ],
+      "support_level": "not available",
+      "verification_note": "Confirm the exact portal category with the listed permit office before filing"
+    },
+    "apply_url": "https://www.sarasotafl.gov/Department-Pages/Development-Services/Building-Permitting",
+    "apply_url_known": false,
+    "applying_office": "City of Sarasota Building & Permitting",
+    "customer_first_screen_summary": {
+      "ahj_department": "City of Sarasota Building & Permitting",
+      "decision": "REQUIRED",
+      "kind_category": "Building",
+      "next_action": "File the required permit categories with City of Sarasota Building & Permitting: Building Permit. Confirm exact portal subcategories before final submission.",
+      "source_cue": "Official source: Official building department source"
+    },
+    "customer_headline": "Permit required: Building Permit.",
+    "customer_next_step": "File the required permit categories with City of Sarasota Building & Permitting: Building Permit. Confirm exact portal subcategories before final submission.",
+    "customer_result_summary": {
+      "ahj_department": "City of Sarasota Building & Permitting",
+      "fee_cost_caveat": "Fees depend on valuation, trade scope, plan-review fees, and the current local fee schedule; verify before quoting.",
+      "freshness_label": "Source date not published; verify current requirements before filing",
+      "jurisdiction": "City of Sarasota Building & Permitting, FL",
+      "next_step": "File the required permit categories with City of Sarasota Building & Permitting: Building Permit. Confirm exact portal subcategories before final submission.",
+      "permit_decision": "REQUIRED",
+      "permit_kind": "Building",
+      "permit_name": "Building Permit",
+      "source_cue": "Official source: Official building department source"
+    },
+    "degraded_sources": true,
+    "job_summary": "Permit required: Building Permit.",
+    "local_form_known": true,
+    "online_application_url": null,
+    "permit_decision": "REQUIRED",
+    "permit_kind": "Building",
+    "permit_name": "Building Permit",
+    "permit_required": true,
+    "permit_type": "Building Permit",
+    "permit_verdict": "YES",
+    "permits_required": [
+      {
+        "approval_type": "Building Permit",
+        "decision": "REQUIRED",
+        "display_family": "Building",
+        "family": "building",
+        "filing_family": "building",
+        "kind": "Building",
+        "permit_kind": "building",
+        "permit_name": "Building Permit",
+        "permit_type": "Building Permit",
+        "portal_selection": "Building Permit",
+        "required": true,
+        "segment": "residential",
+        "status": "REQUIRED"
+      }
+    ],
+    "permits_required_logic": [
+      {
+        "filing_family": "building",
+        "included_because": "Official permit rule: Required because the described scope triggers Building review.",
+        "permit_type": "Building Permit",
+        "scope_trigger": "building_scope",
+        "segment": "residential"
+      }
+    ],
+    "required_permit_families": [
+      "Building"
+    ],
+    "required_permit_names": [
+      "Building Permit"
+    ],
+    "required_permit_segments": [
+      "residential"
+    ],
+    "required_permit_summary": "Permit required: Building Permit.",
+    "source_confidence": "SCOPE_DEFAULT",
+    "source_support": {
+      "apply_url_known": false,
+      "apply_url_source_confidence": "NEEDS_AHJ_SOURCE",
+      "context_source_count": 0,
+      "decision_mutation_allowed": false,
+      "degraded_sources": true,
+      "demoted_nonlocal_apply_urls": [
+        "https://www.sarasotafl.gov/Department-Pages/Development-Services/Building-Permitting"
+      ],
+      "display_source_count": 0,
+      "evidence": [
+        {
+          "role": "REQUIREMENT_EVIDENCE"
+        }
+      ],
+      "filing_path_state": "HONEST_FALLBACK",
+      "filing_source_count": 0,
+      "has_source_backed_evidence": false,
+      "local_form_known": true,
+      "primary_filing_source_tier": "none",
+      "primary_requirement_source_tier": "none",
+      "requirement_source_count": 0,
+      "source_confidence": "SCOPE_DEFAULT",
+      "state": "OFFICIAL_SOURCE_SUPPORTED",
+      "strength": "MODERATE"
+    },
+    "source_urls": [
+      "https://www.sarasotafl.gov/Department-Pages/Development-Services/Building-Permitting"
+    ],
+    "sources": [
+      {
+        "publisher": "City of Sarasota Building & Permitting",
+        "snippet": "Online Permit Submission for Building and Engineering Building Permit Lookup New Online Permit Submissions Online Plans Upload Instructions (PDF, 132KB) Sarasota County Property Appraiser (Property Look-up) Building Permit Forms & Applications General Forms Permit types include Residential and Commercial New Construction, Demolition, and Renovation. Single trades can qualify for Over the Counter permits, such as AC Changeouts, Plumbing, Electrical, Roofing, Windows, and some Fire System replacem",
+        "title": "Official building department source",
+        "url": "https://www.sarasotafl.gov/Department-Pages/Development-Services/Building-Permitting"
+      }
+    ],
+    "summary": "Permit required: Building Permit.",
+    "warnings": [
+      "Permit decision preserved, but a non-local/generic filing URL was removed; use building department-specific source evidence for the application path.",
+      "Permit decision preserved, but a non-local/generic filing URL was removed; use building department-specific source evidence for the application path.",
+      "Exact local source support is degraded; the customer permit decision remains resolved.",
+      "Filing path degraded: exact local online filing portal was not verified; permit decision preserved.",
+      "Permit decision preserved, but a non-local/generic filing URL was removed; use building department-specific source evidence for the application path.",
+      "Permit decision preserved, but a non-local/generic filing URL was removed; use building department-specific source evidence for the application path.",
+      "Permit decision preserved, but a non-local/generic filing URL was removed; use building department-specific source evidence for the application path."
+    ]
+  },
+  "requested_model": "gpt-5.6-luna",
+  "requested_provider": "openai-codex",
+  "requested_runtime": "engine_luna",
+  "response_id": "resp_0ced8d5a34d8144a016a67758e457081a384d61127650c21ae",
+  "runtime": "openai-codex responses SSE + api.server real local finalize/customer path"
+}

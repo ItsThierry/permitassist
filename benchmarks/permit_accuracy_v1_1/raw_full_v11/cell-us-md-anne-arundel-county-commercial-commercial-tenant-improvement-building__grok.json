@@ -1,0 +1,78 @@
+{
+  "observed_model": "x-ai/grok-4.5",
+  "observed_provider": "openrouter",
+  "path_proof": {
+    "adapter": "grok",
+    "engine_called": false,
+    "engine_result_supplied_to_model": false,
+    "model_call_count": 1
+  },
+  "provider": "openrouter",
+  "provider_response": {
+    "choices": [
+      {
+        "finish_reason": "stop",
+        "index": 0,
+        "logprobs": null,
+        "message": {
+          "content": "{\"permit_decision\":\"REQUIRED\",\"jurisdiction\":{\"jurisdiction_id\":\"us-md-anne_arundel_county\",\"name\":\"Anne Arundel County\",\"state\":\"MD\",\"type\":\"county\"},\"project_family\":\"commercial_tenant_improvement\",\"primary_permit_family\":\"BUILDING\",\"companion_permits\":[{\"family\":\"ELECTRICAL\",\"status\":\"REQUIRED\"},{\"family\":\"PLUMBING\",\"status\":\"REQUIRED\"},{\"family\":\"MECHANICAL\",\"status\":\"REQUIRED\"},{\"family\":\"FIRE_LIFE_SAFETY\",\"status\":\"REQUIRED\"},{\"family\":\"OCCUPANCY\",\"status\":\"REQUIRED\"},{\"family\":\"PLANNING_ZONING\",\"status\":\"VERIFY\"}],\"filing\":{\"authority_id\":\"us-md-anne_arundel_county\",\"destination_url\":\"https://www.aacounty.org/inspections-and-permits/permits\",\"office\":\"Department of Inspections and Permits\",\"url_role\":\"INFORMATIONAL_OFFICE\"},\"source_support\":{\"state\":\"OFFICIAL_SOURCE_SUPPORTED\",\"strength\":\"MODERATE\",\"evidence\":[{\"url\":\"https://www.aacounty.org/inspections-and-permits/permits\",\"role\":\"INFORMATIONAL_OFFICE\"},{\"url\":\"https://mgaleg.maryland.gov/mgawebsite/Laws/StatuteText?article=gps&section=12-505&enactments=false\",\"role\":\"REQUIREMENT_EVIDENCE\"},{\"url\":\"https://www.aacounty.org/inspections-and-permits/permits/do-i-need-permit\",\"role\":\"REQUIREMENT_EVIDENCE\"}]},\"contradictions\":[]}",
+          "reasoning": "The user wants me to evaluate one permit lookup using ONLY the supplied official-source evidence packet and return exactly one JSON object conforming to MODEL_SCHEMA.\n{\n  \"permit_decision\": \"REQUIRED\",\n  \"jurisdiction\": {\n    \"jurisdiction_id\": \"us-md-anne_arundel_county\",\n    \"name\": \"Anne Arundel County\",\n    \"state\": \"MD\",\n    \"type\": \"county\"\n  },\n  \"project_family \": \"commercial_tenant_improvement\",\n  \"primary_permit_family\": \"BUILDING\",\n  \"companion_permits\": [\n    {\n      \"family\": \"ELECTRICAL\",\n      \"status\": \"REQUIRED\"\n    },\n    {\n      \"family\": \"PLUMBING\",\n      \"status\": \"REQUIRED \"\n    },\n    {\n      \"family\": \"MECHANICAL\",\n      \"status\": \"REQUIRED\"\n    },\n    {\n      \"family\": \"FIRE_LIFE_SAFETY\",\n      \"status\": \"REQUIRED\"\n    },\n    {\n      \"family\": \"OCCUPANCY\",\n      \"status\": \"REQUIRED \"\n    },\n    {\n      \"family\": \"PLANNING_ZONING\",\n      \"status\": \"VERIFY\"\n    }\n  ],\n  \"filing\": {\n    \"authority_id\": \"us-md-anne_arundel_county\",\n    \"destination_url\": \"https://www.aacounty.",
+          "reasoning_details": [
+            {
+              "format": "xai-responses-v1",
+              "index": 0,
+              "summary": "The user wants me to evaluate one permit lookup using ONLY the supplied official-source evidence packet and return exactly one JSON object conforming to MODEL_SCHEMA.\n{\n  \"permit_decision\": \"REQUIRED\",\n  \"jurisdiction\": {\n    \"jurisdiction_id\": \"us-md-anne_arundel_county\",\n    \"name\": \"Anne Arundel County\",\n    \"state\": \"MD\",\n    \"type\": \"county\"\n  },\n  \"project_family \": \"commercial_tenant_improvement\",\n  \"primary_permit_family\": \"BUILDING\",\n  \"companion_permits\": [\n    {\n      \"family\": \"ELECTRICAL\",\n      \"status\": \"REQUIRED\"\n    },\n    {\n      \"family\": \"PLUMBING\",\n      \"status\": \"REQUIRED \"\n    },\n    {\n      \"family\": \"MECHANICAL\",\n      \"status\": \"REQUIRED\"\n    },\n    {\n      \"family\": \"FIRE_LIFE_SAFETY\",\n      \"status\": \"REQUIRED\"\n    },\n    {\n      \"family\": \"OCCUPANCY\",\n      \"status\": \"REQUIRED \"\n    },\n    {\n      \"family\": \"PLANNING_ZONING\",\n      \"status\": \"VERIFY\"\n    }\n  ],\n  \"filing\": {\n    \"authority_id\": \"us-md-anne_arundel_county\",\n    \"destination_url\": \"https://www.aacounty.",
+              "type": "reasoning.summary"
+            },
+            {
+              "data": "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",
+              "format": "xai-responses-v1",
+              "id": "rs_0b3afe3d-ea3c-91a8-9cd9-c2335b87fe0f",
+              "index": 1,
+              "type": "reasoning.encrypted"
+            }
+          ],
+          "refusal": null,
+          "role": "assistant"
+        },
+        "native_finish_reason": "completed"
+      }
+    ],
+    "created": 1785166198,
+    "id": "gen-1785166198-KL9slTTscnVEGONOCK3z",
+    "model": "x-ai/grok-4.5",
+    "object": "chat.completion",
+    "provider": "xAI",
+    "service_tier": "default",
+    "system_fingerprint": null,
+    "usage": {
+      "completion_tokens": 1700,
+      "completion_tokens_details": {
+        "audio_tokens": 0,
+        "image_tokens": 0,
+        "reasoning_tokens": 1325
+      },
+      "cost": 0.0134464,
+      "cost_details": {
+        "upstream_inference_completions_cost": 0.0102,
+        "upstream_inference_cost": 0.0134464,
+        "upstream_inference_prompt_cost": 0.0032464
+      },
+      "is_byok": false,
+      "prompt_tokens": 1732,
+      "prompt_tokens_details": {
+        "audio_tokens": 0,
+        "cache_write_tokens": 0,
+        "cached_tokens": 128,
+        "video_tokens": 0
+      },
+      "total_tokens": 3432
+    }
+  },
+  "raw_text": "{\"permit_decision\":\"REQUIRED\",\"jurisdiction\":{\"jurisdiction_id\":\"us-md-anne_arundel_county\",\"name\":\"Anne Arundel County\",\"state\":\"MD\",\"type\":\"county\"},\"project_family\":\"commercial_tenant_improvement\",\"primary_permit_family\":\"BUILDING\",\"companion_permits\":[{\"family\":\"ELECTRICAL\",\"status\":\"REQUIRED\"},{\"family\":\"PLUMBING\",\"status\":\"REQUIRED\"},{\"family\":\"MECHANICAL\",\"status\":\"REQUIRED\"},{\"family\":\"FIRE_LIFE_SAFETY\",\"status\":\"REQUIRED\"},{\"family\":\"OCCUPANCY\",\"status\":\"REQUIRED\"},{\"family\":\"PLANNING_ZONING\",\"status\":\"VERIFY\"}],\"filing\":{\"authority_id\":\"us-md-anne_arundel_county\",\"destination_url\":\"https://www.aacounty.org/inspections-and-permits/permits\",\"office\":\"Department of Inspections and Permits\",\"url_role\":\"INFORMATIONAL_OFFICE\"},\"source_support\":{\"state\":\"OFFICIAL_SOURCE_SUPPORTED\",\"strength\":\"MODERATE\",\"evidence\":[{\"url\":\"https://www.aacounty.org/inspections-and-permits/permits\",\"role\":\"INFORMATIONAL_OFFICE\"},{\"url\":\"https://mgaleg.maryland.gov/mgawebsite/Laws/StatuteText?article=gps&section=12-505&enactments=false\",\"role\":\"REQUIREMENT_EVIDENCE\"},{\"url\":\"https://www.aacounty.org/inspections-and-permits/permits/do-i-need-permit\",\"role\":\"REQUIREMENT_EVIDENCE\"}]},\"contradictions\":[]}",
+  "requested_model": "x-ai/grok-4.5",
+  "requested_provider": "openrouter",
+  "requested_runtime": "grok",
+  "response_id": "gen-1785166198-KL9slTTscnVEGONOCK3z",
+  "runtime": "OpenRouter chat/completions; upstream_provider=xAI"
+}

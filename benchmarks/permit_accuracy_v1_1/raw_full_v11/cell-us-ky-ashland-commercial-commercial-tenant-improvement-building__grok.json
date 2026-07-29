@@ -1,0 +1,78 @@
+{
+  "observed_model": "x-ai/grok-4.5",
+  "observed_provider": "openrouter",
+  "path_proof": {
+    "adapter": "grok",
+    "engine_called": false,
+    "engine_result_supplied_to_model": false,
+    "model_call_count": 1
+  },
+  "provider": "openrouter",
+  "provider_response": {
+    "choices": [
+      {
+        "finish_reason": "stop",
+        "index": 0,
+        "logprobs": null,
+        "message": {
+          "content": "{\"permit_decision\":\"VERIFY\",\"jurisdiction\":{\"jurisdiction_id\":\"us-ky-ashland\",\"name\":\"Ashland\",\"state\":\"KY\",\"type\":\"city_or_local_authority\"},\"project_family\":\"commercial_tenant_improvement\",\"primary_permit_family\":\"BUILDING\",\"companion_permits\":[{\"family\":\"ELECTRICAL\",\"status\":\"VERIFY\"},{\"family\":\"PLUMBING\",\"status\":\"VERIFY\"},{\"family\":\"MECHANICAL\",\"status\":\"VERIFY\"},{\"family\":\"FIRE_LIFE_SAFETY\",\"status\":\"VERIFY\"},{\"family\":\"OCCUPANCY\",\"status\":\"VERIFY\"},{\"family\":\"PLANNING_ZONING\",\"status\":\"VERIFY\"}],\"filing\":{\"authority_id\":\"us-ky-ashland\",\"destination_url\":\"https://www.ashlandky.gov/departments/community___economic_development/code_enforcement/building_inspection.php\",\"office\":\"Building Permits & Inspections\",\"url_role\":\"INFORMATIONAL_OFFICE\"},\"source_support\":{\"state\":\"OFFICIAL_SOURCE_SUPPORTED\",\"strength\":\"WEAK\",\"evidence\":[{\"url\":\"https://www.ashlandky.gov/departments/community___economic_development/code_enforcement/building_inspection.php\",\"role\":\"INFORMATIONAL_OFFICE\"}]},\"contradictions\":[]}",
+          "reasoning": "The user wants me to evaluate one permit lookup using ONLY the supplied official-source evidence packet and return exactly one JSON object conforming to MODEL_SCHEMA.\n",
+          "reasoning_details": [
+            {
+              "format": "xai-responses-v1",
+              "index": 0,
+              "summary": "The user wants me to evaluate one permit lookup using ONLY the supplied official-source evidence packet and return exactly one JSON object conforming to MODEL_SCHEMA.\n",
+              "type": "reasoning.summary"
+            },
+            {
+              "data": "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",
+              "format": "xai-responses-v1",
+              "id": "rs_3aa4fc9b-80e5-9c55-9772-5e9aebad2f34",
+              "index": 1,
+              "type": "reasoning.encrypted"
+            }
+          ],
+          "refusal": null,
+          "role": "assistant"
+        },
+        "native_finish_reason": "completed"
+      }
+    ],
+    "created": 1785165885,
+    "id": "gen-1785165885-SM4iPmcIGJM4iZaTwAJB",
+    "model": "x-ai/grok-4.5",
+    "object": "chat.completion",
+    "provider": "xAI",
+    "service_tier": "default",
+    "system_fingerprint": null,
+    "usage": {
+      "completion_tokens": 1083,
+      "completion_tokens_details": {
+        "audio_tokens": 0,
+        "image_tokens": 0,
+        "reasoning_tokens": 782
+      },
+      "cost": 0.0075332,
+      "cost_details": {
+        "upstream_inference_completions_cost": 0.006498,
+        "upstream_inference_cost": 0.0075332,
+        "upstream_inference_prompt_cost": 0.0010352
+      },
+      "is_byok": false,
+      "prompt_tokens": 1388,
+      "prompt_tokens_details": {
+        "audio_tokens": 0,
+        "cache_write_tokens": 0,
+        "cached_tokens": 1024,
+        "video_tokens": 0
+      },
+      "total_tokens": 2471
+    }
+  },
+  "raw_text": "{\"permit_decision\":\"VERIFY\",\"jurisdiction\":{\"jurisdiction_id\":\"us-ky-ashland\",\"name\":\"Ashland\",\"state\":\"KY\",\"type\":\"city_or_local_authority\"},\"project_family\":\"commercial_tenant_improvement\",\"primary_permit_family\":\"BUILDING\",\"companion_permits\":[{\"family\":\"ELECTRICAL\",\"status\":\"VERIFY\"},{\"family\":\"PLUMBING\",\"status\":\"VERIFY\"},{\"family\":\"MECHANICAL\",\"status\":\"VERIFY\"},{\"family\":\"FIRE_LIFE_SAFETY\",\"status\":\"VERIFY\"},{\"family\":\"OCCUPANCY\",\"status\":\"VERIFY\"},{\"family\":\"PLANNING_ZONING\",\"status\":\"VERIFY\"}],\"filing\":{\"authority_id\":\"us-ky-ashland\",\"destination_url\":\"https://www.ashlandky.gov/departments/community___economic_development/code_enforcement/building_inspection.php\",\"office\":\"Building Permits & Inspections\",\"url_role\":\"INFORMATIONAL_OFFICE\"},\"source_support\":{\"state\":\"OFFICIAL_SOURCE_SUPPORTED\",\"strength\":\"WEAK\",\"evidence\":[{\"url\":\"https://www.ashlandky.gov/departments/community___economic_development/code_enforcement/building_inspection.php\",\"role\":\"INFORMATIONAL_OFFICE\"}]},\"contradictions\":[]}",
+  "requested_model": "x-ai/grok-4.5",
+  "requested_provider": "openrouter",
+  "requested_runtime": "grok",
+  "response_id": "gen-1785165885-SM4iPmcIGJM4iZaTwAJB",
+  "runtime": "OpenRouter chat/completions; upstream_provider=xAI"
+}

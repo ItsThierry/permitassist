@@ -1,0 +1,97 @@
+{
+  "observed_model": "gpt-5.6-luna",
+  "observed_provider": "openai-codex",
+  "path_proof": {
+    "adapter": "luna",
+    "engine_called": false,
+    "engine_result_supplied_to_model": false,
+    "model_call_count": 1
+  },
+  "provider": "openai-codex",
+  "provider_event_count": 228,
+  "provider_terminal_event": {
+    "response": {
+      "background": false,
+      "completed_at": 1785167886,
+      "created_at": 1785167876,
+      "error": null,
+      "frequency_penalty": 0.0,
+      "id": "resp_03292b15ec5e1dad016a67800450e88194a801409eb945ed88",
+      "incomplete_details": null,
+      "instructions": "Follow the user request exactly. Do not call tools.",
+      "max_output_tokens": null,
+      "max_tool_calls": null,
+      "metadata": {},
+      "model": "gpt-5.6-luna",
+      "moderation": null,
+      "object": "response",
+      "output": [],
+      "parallel_tool_calls": true,
+      "presence_penalty": 0.0,
+      "previous_response_id": null,
+      "prompt_cache_key": "3c37cfd9-1924-467d-a92c-a0203822c205",
+      "prompt_cache_retention": "24h",
+      "reasoning": {
+        "context": "all_turns",
+        "effort": "medium",
+        "mode": "standard",
+        "summary": null
+      },
+      "safety_identifier": "user-FQ7sI0yp0Qqn6wWdqzy9mZic",
+      "service_tier": "default",
+      "status": "completed",
+      "store": false,
+      "temperature": 1.0,
+      "text": {
+        "format": {
+          "type": "text"
+        },
+        "verbosity": "medium"
+      },
+      "tool_choice": "auto",
+      "tool_usage": {
+        "image_gen": {
+          "input_tokens": 0,
+          "input_tokens_details": {
+            "image_tokens": 0,
+            "text_tokens": 0
+          },
+          "output_tokens": 0,
+          "output_tokens_details": {
+            "image_tokens": 0,
+            "text_tokens": 0
+          },
+          "total_tokens": 0
+        },
+        "web_search": {
+          "num_requests": 0
+        }
+      },
+      "tools": [],
+      "top_logprobs": 0,
+      "top_p": 0.98,
+      "truncation": "disabled",
+      "usage": {
+        "input_tokens": 1153,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 0
+        },
+        "output_tokens": 494,
+        "output_tokens_details": {
+          "reasoning_tokens": 271
+        },
+        "total_tokens": 1647
+      },
+      "user": null
+    },
+    "sequence_number": 227,
+    "type": "response.completed"
+  },
+  "raw_text": "{\"permit_decision\":\"REQUIRED\",\"jurisdiction\":{\"jurisdiction_id\":\"us-sd-north_sioux_city\",\"name\":\"North Sioux City\",\"state\":\"SD\",\"type\":\"city_or_local_authority\"},\"project_family\":\"residential_remodel\",\"primary_permit_family\":\"BUILDING\",\"companion_permits\":[{\"family\":\"ELECTRICAL\",\"status\":\"VERIFY\"},{\"family\":\"PLUMBING\",\"status\":\"VERIFY\"},{\"family\":\"MECHANICAL\",\"status\":\"VERIFY\"},{\"family\":\"OTHER\",\"status\":\"VERIFY\"}],\"filing\":{\"authority_id\":\"us-sd-north_sioux_city\",\"office\":\"North Sioux City Planning and Zoning\",\"destination_url\":\"https://northsiouxcity-sd.gov/departments/planning-zoning/\",\"url_role\":\"REQUIREMENT_EVIDENCE\"},\"source_support\":{\"state\":\"OFFICIAL_SOURCE_SUPPORTED\",\"strength\":\"STRONG\",\"evidence\":[{\"url\":\"https://northsiouxcity-sd.gov/departments/planning-zoning/\",\"role\":\"REQUIREMENT_EVIDENCE\"}]},\"contradictions\":[]}",
+  "requested_model": "gpt-5.6-luna",
+  "requested_provider": "openai-codex",
+  "requested_runtime": "luna",
+  "response_id": "resp_03292b15ec5e1dad016a67800450e88194a801409eb945ed88",
+  "runtime": "openai-codex responses SSE"
+}

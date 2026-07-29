@@ -4,7 +4,7 @@
   "baseline_red_checkpoint": "118116a61a1f6aed9c5c55cbbbe0ea8aa403deb9",
   "discovery_context": "The Wisconsin separator-alias repair correctly promotes ten customer projections while Part 3 migration seeds remain raw and auditable; the historical generator incorrectly treated those bounded positive reconciliations as generic seed-classification mismatches and reused a now-repaired false ambiguity as its ambiguity counterfactual.",
   "files": {
-    "tests/test_permit_rule_engine_part3_alias_reconciliation.py": "11cb36577ad0d3993193638af55cb2bdef107c49d28e0467050ffc7a7cdf9379"
+    "tests/test_permit_rule_engine_part3_alias_reconciliation.py": "36b90a1d7cbe8b89dd3bacdd6b8e9487d12735b56f9e5c3363b0b9e7a88775f9"
   },
   "invariants": [
     "Exactly ten frozen Wisconsin alias-cell projections may reconcile from raw jurisdiction_hold seeds to source-backed exact customer projections.",

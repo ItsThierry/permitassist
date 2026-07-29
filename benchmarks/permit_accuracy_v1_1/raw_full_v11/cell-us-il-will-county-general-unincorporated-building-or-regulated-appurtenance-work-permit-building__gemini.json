@@ -1,0 +1,20 @@
+{
+  "observed_model": "Gemini 3.6 Flash (High)",
+  "observed_provider": "google-antigravity-oauth",
+  "path_proof": {
+    "adapter": "gemini",
+    "capture_created_by_model": true,
+    "engine_called": false,
+    "engine_result_supplied_to_model": false,
+    "model_call_count": 1
+  },
+  "provider": "google-antigravity-oauth",
+  "provider_stderr": "",
+  "provider_stdout": "DONE\n",
+  "raw_text": "{\n  \"companion_permits\": [],\n  \"contradictions\": [],\n  \"filing\": {\n    \"authority_id\": \"us-il-will_county\",\n    \"destination_url\": \"https://willcounty.gov/County-Offices/Economic-Development/Will-County-Land-Use-Department/Development-Services-Division/Building/FileId/1989\",\n    \"office\": \"Will County Land Use Department Building Division\",\n    \"url_role\": \"REQUIREMENT_EVIDENCE\"\n  },\n  \"jurisdiction\": {\n    \"jurisdiction_id\": \"us-il-will_county\",\n    \"name\": \"Will County Land Use Department Building Division\",\n    \"state\": \"IL\",\n    \"type\": \"county\"\n  },\n  \"permit_decision\": \"REQUIRED\",\n  \"primary_permit_family\": \"BUILDING\",\n  \"project_family\": \"reroof\",\n  \"source_support\": {\n    \"evidence\": [\n      {\n        \"role\": \"REQUIREMENT_EVIDENCE\",\n        \"url\": \"https://willcounty.gov/County-Offices/Economic-Development/Will-County-Land-Use-Department/Development-Services-Division/Building/FileId/1989\"\n      }\n    ],\n    \"state\": \"OFFICIAL_SOURCE_SUPPORTED\",\n    \"strength\": \"STRONG\"\n  }\n}\n",
+  "requested_model": "Gemini 3.6 Flash (High)",
+  "requested_provider": "google-antigravity-oauth",
+  "requested_runtime": "gemini",
+  "response_id": null,
+  "runtime": "agy.exe 1.0.2 / language-server 1.1.7"
+}

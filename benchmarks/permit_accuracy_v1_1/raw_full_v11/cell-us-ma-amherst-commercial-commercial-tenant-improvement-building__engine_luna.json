@@ -1,0 +1,438 @@
+{
+  "observed_model": "gpt-5.6-luna",
+  "observed_provider": "openai-codex",
+  "path_proof": {
+    "adapter": "engine_luna",
+    "authority_recovery": null,
+    "decision_cell_reference": null,
+    "engine_called": true,
+    "engine_result_supplied_to_model": false,
+    "engine_stdout": "[url_check] URL verified: https://www.amherstma.gov/544/Building-Permit-Fee-Schedule\n",
+    "local_merge_customer_path_called": true,
+    "model_call_count": 1
+  },
+  "provider": "openai-codex",
+  "provider_terminal_event": {
+    "response": {
+      "background": false,
+      "completed_at": 1785166122,
+      "created_at": 1785166112,
+      "error": null,
+      "frequency_penalty": 0.0,
+      "id": "resp_0fa4ec0bfd51adec016a677920088c8194983e9e5b69db86fb",
+      "incomplete_details": null,
+      "instructions": "Follow the user request exactly. Do not call tools.",
+      "max_output_tokens": null,
+      "max_tool_calls": null,
+      "metadata": {},
+      "model": "gpt-5.6-luna",
+      "moderation": null,
+      "object": "response",
+      "output": [],
+      "parallel_tool_calls": true,
+      "presence_penalty": 0.0,
+      "previous_response_id": null,
+      "prompt_cache_key": "88511c29-f5c5-47fa-a3aa-342ab4dc165f",
+      "prompt_cache_retention": "24h",
+      "reasoning": {
+        "context": "all_turns",
+        "effort": "medium",
+        "mode": "standard",
+        "summary": null
+      },
+      "safety_identifier": "user-FQ7sI0yp0Qqn6wWdqzy9mZic",
+      "service_tier": "default",
+      "status": "completed",
+      "store": false,
+      "temperature": 1.0,
+      "text": {
+        "format": {
+          "type": "text"
+        },
+        "verbosity": "medium"
+      },
+      "tool_choice": "auto",
+      "tool_usage": {
+        "image_gen": {
+          "input_tokens": 0,
+          "input_tokens_details": {
+            "image_tokens": 0,
+            "text_tokens": 0
+          },
+          "output_tokens": 0,
+          "output_tokens_details": {
+            "image_tokens": 0,
+            "text_tokens": 0
+          },
+          "total_tokens": 0
+        },
+        "web_search": {
+          "num_requests": 0
+        }
+      },
+      "tools": [],
+      "top_logprobs": 0,
+      "top_p": 0.98,
+      "truncation": "disabled",
+      "usage": {
+        "input_tokens": 1341,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 0
+        },
+        "output_tokens": 571,
+        "output_tokens_details": {
+          "reasoning_tokens": 312
+        },
+        "total_tokens": 1912
+      },
+      "user": null
+    },
+    "sequence_number": 263,
+    "type": "response.completed"
+  },
+  "raw_model_text": "{\"permit_decision\":\"VERIFY\",\"jurisdiction\":{\"jurisdiction_id\":\"us-ma-amherst\",\"name\":\"Amherst\",\"state\":\"MA\",\"type\":\"city_or_local_authority\"},\"project_family\":\"commercial_tenant_improvement\",\"primary_permit_family\":\"VERIFY\",\"companion_permits\":[{\"family\":\"ELECTRICAL\",\"status\":\"VERIFY\"},{\"family\":\"PLUMBING\",\"status\":\"VERIFY\"},{\"family\":\"MECHANICAL\",\"status\":\"VERIFY\"},{\"family\":\"FIRE_LIFE_SAFETY\",\"status\":\"VERIFY\"},{\"family\":\"OCCUPANCY\",\"status\":\"VERIFY\"},{\"family\":\"PLANNING_ZONING\",\"status\":\"VERIFY\"}],\"filing\":{\"authority_id\":\"us-ma-amherst\",\"office\":\"Amherst Inspection Services\",\"destination_url\":\"https://www.amherstma.gov/231/Inspection-Services\",\"url_role\":\"INFORMATIONAL_OFFICE\"},\"source_support\":{\"state\":\"OFFICIAL_SOURCE_SUPPORTED\",\"strength\":\"VERIFY\",\"evidence\":[{\"url\":\"https://www.amherstma.gov/231/Inspection-Services\",\"role\":\"INFORMATIONAL_OFFICE\"},{\"url\":\"https://www.amherstma.gov/544/Building-Permit-Fee-Schedule\",\"role\":\"REQUIREMENT_EVIDENCE\"}]},\"contradictions\":[]}",
+  "raw_response": {
+    "apply_path": {
+      "channel": "contact_ahj",
+      "documents_to_prepare": [
+        "scope of work",
+        "plans/drawings if required",
+        "contractor license",
+        "valuation",
+        "owner authorization"
+      ],
+      "office_name": "Town of Amherst Building Department",
+      "permit_category": "Permit package",
+      "permit_type": "Required permit package — Commercial Building Permit",
+      "primary_filing_source_tier": "none",
+      "primary_requirement_source_tier": "none",
+      "state": "HONEST_FALLBACK",
+      "steps": [
+        "Open the listed permit portal or contact the permit office",
+        "Select the closest category to: Required permit package — Commercial Building Permit",
+        "Confirm exact portal subcategories before final submission"
+      ],
+      "support_level": "not available",
+      "verification_note": "Confirm the exact portal category with the listed permit office before filing"
+    },
+    "apply_url": "https://www.amherstma.gov/544/Building-Permit-Fee-Schedule",
+    "apply_url_known": false,
+    "applying_office": "Town of Amherst Building Department",
+    "companion_permits": [
+      {
+        "certainty": "likely",
+        "condition_text": "Verify whether Accessibility / ADA path-of-travel verification is triggered for this project when the building department confirms the relevant accessibility / ada path-of-travel verification scope condition.",
+        "permit_type": "Accessibility / ADA path-of-travel verification",
+        "rationale": "Commercial tenant improvements commonly trigger accessible route, restroom, door/hardware, counter, parking, or 20% disproportionality review.",
+        "reason": "Commercial tenant improvements commonly trigger accessible route, restroom, door/hardware, counter, parking, or 20% disproportionality review.",
+        "trigger_condition": "Verify whether Accessibility / ADA path-of-travel verification is triggered for this project when the building department confirms the relevant accessibility / ada path-of-travel verification scope condition."
+      }
+    ],
+    "customer_first_screen_summary": {
+      "ahj_department": "Town of Amherst Building Department",
+      "decision": "REQUIRED",
+      "kind_category": "Commercial Building / Tenant Improvement",
+      "next_action": "File the required permit categories with Town of Amherst Building Department: Commercial Building Permit, Plumbing Permit, Mechanical Permit, Electrical Permit, Zoning / Land Use Permit. Confirm exact portal subcategories before final submission.",
+      "source_cue": "Official sources attached for 5 required permit categories."
+    },
+    "customer_headline": "Permit required: Required permit package — Commercial Building Permit.",
+    "customer_next_step": "File the required permit categories with Town of Amherst Building Department: Commercial Building Permit, Plumbing Permit, Mechanical Permit, Electrical Permit, Zoning / Land Use Permit. Confirm exact portal subcategories before final submission.",
+    "customer_result_summary": {
+      "ahj_department": "Town of Amherst Building Department",
+      "fee_cost_caveat": "Fees depend on valuation, trade scope, plan-review fees, and the current local fee schedule; verify before quoting.",
+      "freshness_label": "Source date not published; verify current requirements before filing",
+      "jurisdiction": "Amherst, MA",
+      "next_step": "File the required permit categories with Town of Amherst Building Department: Commercial Building Permit, Plumbing Permit, Mechanical Permit, Electrical Permit, Zoning / Land Use Permit. Confirm exact portal subcategories before final submission.",
+      "permit_decision": "REQUIRED",
+      "permit_kind": "Commercial Building / Tenant Improvement",
+      "permit_name": "Required permit package — Commercial Building Permit",
+      "source_cue": "Official sources attached for 5 required permit categories."
+    },
+    "degraded_sources": true,
+    "inspection_booking": "Schedule online at Confirm the inspection advance-notice window when booking.",
+    "job_summary": "Required permit package: Commercial Building Permit; Plumbing Permit; Mechanical Permit; Electrical Permit; Zoning / Land Use Permit.",
+    "local_form_known": true,
+    "online_application_url": null,
+    "permit_decision": "REQUIRED",
+    "permit_kind": "Commercial Building / Tenant Improvement",
+    "permit_name": "Required permit package — Commercial Building Permit",
+    "permit_required": true,
+    "permit_type": "Required permit package — Commercial Building Permit",
+    "permit_verdict": "YES",
+    "permits_required": [
+      {
+        "approval_type": "Commercial Building Permit",
+        "decision": "REQUIRED",
+        "display_family": "Building",
+        "family": "building",
+        "filing_family": "building",
+        "kind": "Building",
+        "permit_kind": "building",
+        "permit_name": "Commercial Building Permit",
+        "permit_type": "Commercial Building Permit",
+        "portal_selection": "Commercial Building Permit",
+        "required": true,
+        "segment": "commercial",
+        "status": "REQUIRED"
+      },
+      {
+        "ahj_name": "Amherst permit office",
+        "application_authority_name": "Amherst permit office",
+        "approval_type": "Plumbing Permit",
+        "decision": "REQUIRED",
+        "display_family": "Plumbing",
+        "family": "plumbing",
+        "filing_family": "plumbing",
+        "kind": "Plumbing",
+        "notes": "Required because the described scope triggers Plumbing Permit. Confirm the exact portal category with the listed permit office before filing.",
+        "permit_name": "Plumbing Permit",
+        "permit_type": "Plumbing Permit",
+        "rationale": "Required because the described scope triggers Plumbing Permit. Confirm the exact portal category with the listed permit office before filing.",
+        "required": true,
+        "scope_trigger": "plumbing_explicit_scope",
+        "segment": "commercial",
+        "status": "REQUIRED"
+      },
+      {
+        "ahj_name": "Amherst permit office",
+        "application_authority_name": "Amherst permit office",
+        "approval_type": "Mechanical Permit",
+        "decision": "REQUIRED",
+        "display_family": "Mechanical",
+        "family": "mechanical",
+        "filing_family": "mechanical",
+        "kind": "Mechanical",
+        "notes": "Required because the described scope triggers Mechanical Permit. Confirm the exact portal category with the listed permit office before filing.",
+        "permit_name": "Mechanical Permit",
+        "permit_type": "Mechanical Permit",
+        "rationale": "Required because the described scope triggers Mechanical Permit. Confirm the exact portal category with the listed permit office before filing.",
+        "required": true,
+        "scope_trigger": "mechanical_explicit_scope",
+        "segment": "commercial",
+        "status": "REQUIRED"
+      },
+      {
+        "ahj_name": "Amherst permit office",
+        "application_authority_name": "Amherst permit office",
+        "approval_type": "Electrical Permit",
+        "decision": "REQUIRED",
+        "display_family": "Electrical",
+        "family": "electrical",
+        "filing_family": "electrical",
+        "kind": "Electrical",
+        "notes": "Required because the described scope triggers Electrical Permit. Confirm the exact portal category with the listed permit office before filing.",
+        "permit_name": "Electrical Permit",
+        "permit_type": "Electrical Permit",
+        "rationale": "Required because the described scope triggers Electrical Permit. Confirm the exact portal category with the listed permit office before filing.",
+        "required": true,
+        "scope_trigger": "electrical_explicit_scope",
+        "segment": "commercial",
+        "status": "REQUIRED"
+      },
+      {
+        "ahj_name": "Amherst permit office",
+        "application_authority_name": "Amherst permit office",
+        "approval_type": "Planning / Zoning Use Clearance",
+        "decision": "REQUIRED",
+        "display_family": "Planning/Zoning",
+        "family": "planning",
+        "filing_family": "planning",
+        "kind": "Planning/Zoning",
+        "notes": "Required because the described scope triggers Planning / Zoning Use Clearance. Confirm the exact portal category with the listed permit office before filing.",
+        "permit_name": "Zoning / Land Use Permit",
+        "permit_type": "Zoning / Land Use Permit",
+        "rationale": "Required because the described scope triggers Planning / Zoning Use Clearance. Confirm the exact portal category with the listed permit office before filing.",
+        "required": true,
+        "scope_trigger": "planning_explicit_scope",
+        "segment": "commercial",
+        "status": "REQUIRED"
+      }
+    ],
+    "permits_required_logic": [
+      {
+        "filing_family": "building",
+        "included_because": "Official permit rule: Required because the described scope triggers Building review.",
+        "permit_type": "Commercial Building Permit",
+        "scope_trigger": "building_scope",
+        "segment": "commercial"
+      },
+      {
+        "filing_family": "plumbing",
+        "included_because": "Official permit rule: Required because the described scope triggers Plumbing Permit. Confirm the exact portal category with the listed permit office before filing.",
+        "permit_type": "Plumbing Permit",
+        "scope_trigger": "plumbing_explicit_scope",
+        "segment": "commercial"
+      },
+      {
+        "filing_family": "mechanical",
+        "included_because": "Official permit rule: Required because the described scope triggers Mechanical Permit. Confirm the exact portal category with the listed permit office before filing.",
+        "permit_type": "Mechanical Permit",
+        "scope_trigger": "mechanical_explicit_scope",
+        "segment": "commercial"
+      },
+      {
+        "filing_family": "electrical",
+        "included_because": "Official permit rule: Required because the described scope triggers Electrical Permit. Confirm the exact portal category with the listed permit office before filing.",
+        "permit_type": "Electrical Permit",
+        "scope_trigger": "electrical_explicit_scope",
+        "segment": "commercial"
+      },
+      {
+        "filing_family": "planning",
+        "included_because": "Official permit rule: Required because the described scope triggers Planning / Zoning Use Clearance. Confirm the exact portal category with the listed permit office before filing.",
+        "permit_type": "Zoning / Land Use Permit",
+        "scope_trigger": "planning_explicit_scope",
+        "segment": "commercial"
+      }
+    ],
+    "related_permit_families": [
+      "Electrical",
+      "Certificate of Occupancy",
+      "Other"
+    ],
+    "related_permit_names": [
+      "Electrical Permit",
+      "Certificate of Occupancy / Change-of-Occupancy Verification",
+      "Accessibility / ADA path-of-travel verification"
+    ],
+    "related_permit_segments": [
+      "commercial"
+    ],
+    "related_permits": [
+      {
+        "approval_type": "Electrical Permit",
+        "condition_text": "Verify whether permit is triggered for this project when the building department confirms the relevant permit scope condition.",
+        "decision": "VERIFY",
+        "display_family": "Electrical",
+        "family": "electrical",
+        "filing_family": "electrical",
+        "kind": "Electrical",
+        "permit_name": "Electrical Permit",
+        "permit_type": "Electrical Permit",
+        "rationale": "permit may apply to this scope",
+        "required": false,
+        "segment": "commercial",
+        "status": "VERIFY",
+        "trigger_condition": "Verify whether permit is triggered for this project when the building department confirms the relevant permit scope condition."
+      },
+      {
+        "approval_type": "Certificate of Occupancy / Change-of-Occupancy Verification",
+        "condition_text": "Verify certificate-of-occupancy/change-of-occupancy review if the TI changes use, occupant load, occupancy group, or business operation.",
+        "decision": "CONDITIONAL",
+        "display_family": "Certificate of Occupancy",
+        "family": "co",
+        "filing_family": "co",
+        "kind": "Certificate of Occupancy",
+        "permit_name": "Certificate of Occupancy / Change-of-Occupancy Verification",
+        "permit_type": "Certificate of Occupancy / Change-of-Occupancy Verification",
+        "rationale": "Verify certificate-of-occupancy/change-of-occupancy review if the TI changes use, occupant load, occupancy group, or business operation.",
+        "required": false,
+        "required_if": "Verify certificate-of-occupancy/change-of-occupancy review if the TI changes use, occupant load, occupancy group, or business operation.",
+        "segment": "commercial",
+        "source_url": "https://www.amherstma.gov/544/Building-Permit-Fee-Schedule",
+        "status": "CONDITIONAL"
+      },
+      {
+        "approval_type": "Accessibility / ADA path-of-travel verification",
+        "condition_text": "Verify whether Accessibility / ADA path-of-travel verification is triggered for this project when the building department confirms the relevant accessibility / ada path-of-travel verification scope condition.",
+        "decision": "VERIFY",
+        "display_family": "Other",
+        "family": "other",
+        "filing_family": "other",
+        "kind": "Other",
+        "permit_name": "Accessibility / ADA path-of-travel verification",
+        "permit_type": "Accessibility / ADA path-of-travel verification",
+        "rationale": "Commercial tenant improvements commonly trigger accessible route, restroom, door/hardware, counter, parking, or 20% disproportionality review.",
+        "reason": "Commercial tenant improvements commonly trigger accessible route, restroom, door/hardware, counter, parking, or 20% disproportionality review.",
+        "required": false,
+        "segment": "commercial",
+        "status": "VERIFY",
+        "trigger_condition": "Verify whether Accessibility / ADA path-of-travel verification is triggered for this project when the building department confirms the relevant accessibility / ada path-of-travel verification scope condition."
+      }
+    ],
+    "required_permit_families": [
+      "Building",
+      "Plumbing",
+      "Mechanical",
+      "Electrical",
+      "Planning/Zoning"
+    ],
+    "required_permit_names": [
+      "Commercial Building Permit",
+      "Plumbing Permit",
+      "Mechanical Permit",
+      "Electrical Permit",
+      "Zoning / Land Use Permit"
+    ],
+    "required_permit_segments": [
+      "commercial"
+    ],
+    "required_permit_summary": "Required permit package: Commercial Building Permit; Plumbing Permit; Mechanical Permit; Electrical Permit; Zoning / Land Use Permit.",
+    "source_confidence": "SCOPE_DEFAULT",
+    "source_support": {
+      "apply_url_known": false,
+      "apply_url_source_confidence": "NEEDS_AHJ_SOURCE",
+      "context_source_count": 0,
+      "decision_mutation_allowed": false,
+      "degraded_sources": true,
+      "demoted_nonlocal_apply_urls": [
+        "https://www.amherstma.gov/544/Building-Permit-Fee-Schedule"
+      ],
+      "display_source_count": 0,
+      "evidence": [
+        {
+          "role": "INFORMATIONAL_OFFICE"
+        },
+        {
+          "role": "REQUIREMENT_EVIDENCE"
+        }
+      ],
+      "filing_path_state": "HONEST_FALLBACK",
+      "filing_source_count": 0,
+      "has_source_backed_evidence": false,
+      "local_form_known": true,
+      "primary_filing_source_tier": "none",
+      "primary_requirement_source_tier": "none",
+      "requirement_source_count": 0,
+      "source_confidence": "SCOPE_DEFAULT",
+      "state": "OFFICIAL_SOURCE_SUPPORTED",
+      "strength": "VERIFY"
+    },
+    "source_urls": [
+      "https://www.amherstma.gov/544/Building-Permit-Fee-Schedule",
+      "https://www.amherstma.gov/231/Inspection-Services"
+    ],
+    "sources": [
+      {
+        "publisher": "Town of Amherst Building Department",
+        "snippet": "Our Community\nBusiness\nHow Do I... Police Fire CRESS Search Home\nDepartments\nConservation & Development\nInspection Services\nFee Schedules\nBuilding Permit Fee Schedule Building Permit Fee Schedule Fee Schedule Type of Building Fee Alterations, Renovations, Additions, Decks, and Canopies Permit application minimum of $30, plus $10 per $1,000 (or fraction thereof) of the estimated cost of construction (includes all structures) Cancelled Permits Basic Permit fee is $20 More Involved Pe",
+        "title": "Official building department source",
+        "url": "https://www.amherstma.gov/544/Building-Permit-Fee-Schedule"
+      },
+      {
+        "publisher": "Town of Amherst Building Department",
+        "snippet": "4 Boltwood Ave.\nAmherst, MA 01002 Ph: 413-259-3030\nFx: 413-259-2402 Hours Monday - Friday\n8 a.m. - 4:30 p.m. Staff Directory Get Information About: New Guidance Issued for Construction Sites in Amherst\nOutdoor Dining Application Form\nNew Online Permitting Portal Residential Rental Property Rental Property Home Parking Plan Information Resources and FAQs Documents & Resources Fee Schedules Inspection Services Home Building Permit Fee Schedule Electrical Permit Fee Schedule Fee Sch",
+        "title": "Official building department source",
+        "url": "https://www.amherstma.gov/231/Inspection-Services"
+      }
+    ],
+    "summary": "Required permit package: Commercial Building Permit; Plumbing Permit; Mechanical Permit; Electrical Permit; Zoning / Land Use Permit.",
+    "warnings": [
+      "Permit decision preserved, but a non-local/generic filing URL was removed; use building department-specific source evidence for the application path.",
+      "Commercial scope detected; primary permit was repaired or forced away from residential/trade-only leakage. confirm the exact permit name and form title with the building department before filing.",
+      "Commercial scope may require companion reviews/permits not fully proven here: mechanical, plumbing.",
+      "Permit decision preserved, but a non-local/generic filing URL was removed; use building department-specific source evidence for the application path.",
+      "Exact local source support is degraded; the customer permit decision remains resolved.",
+      "Filing path degraded: exact local online filing portal was not verified; permit decision preserved.",
+      "Permit decision preserved, but a non-local/generic filing URL was removed; use building department-specific source evidence for the application path.",
+      "Permit decision preserved, but a non-local/generic filing URL was removed; use building department-specific source evidence for the application path.",
+      "Permit decision preserved, but a non-local/generic filing URL was removed; use building department-specific source evidence for the application path."
+    ]
+  },
+  "requested_model": "gpt-5.6-luna",
+  "requested_provider": "openai-codex",
+  "requested_runtime": "engine_luna",
+  "response_id": "resp_0fa4ec0bfd51adec016a677920088c8194983e9e5b69db86fb",
+  "runtime": "openai-codex responses SSE + api.server real local finalize/customer path"
+}

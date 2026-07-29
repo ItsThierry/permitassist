@@ -1,0 +1,277 @@
+{
+  "observed_model": "NONE",
+  "observed_provider": "permitassist-local-engine",
+  "path_proof": {
+    "adapter": "engine",
+    "authority_recovery": null,
+    "decision_cell_reference": null,
+    "engine_called": true,
+    "engine_result_supplied_to_model": false,
+    "engine_stdout": "[url_check] URL verified: https://www.phoenix.gov/business/construction-permits-planning.html\n",
+    "model_call_count": 0
+  },
+  "provider": "permitassist-local-engine",
+  "raw_response": {
+    "apply_path": {
+      "channel": "contact_ahj",
+      "documents_to_prepare": [
+        "scope of work",
+        "plans/drawings if required",
+        "contractor license",
+        "valuation",
+        "owner authorization"
+      ],
+      "office_name": "City of Phoenix Planning and Development Department",
+      "permit_category": "Permit package",
+      "permit_type": "Required permit package — Commercial Building Permit",
+      "portal_url": "https://www.phoenix.gov/business/construction-permits-planning.html",
+      "primary_filing_source_tier": "none",
+      "primary_requirement_source_tier": "local_ahj",
+      "state": "HONEST_FALLBACK",
+      "steps": [
+        "Open the listed permit portal or contact the permit office",
+        "Select the closest category to: Required permit package — Commercial Building Permit",
+        "Confirm exact portal subcategories before final submission"
+      ],
+      "support_level": "not available",
+      "verification_note": "Confirm the exact portal category with the listed permit office before filing"
+    },
+    "apply_url": "https://www.phoenix.gov/business/construction-permits-planning.html",
+    "apply_url_known": true,
+    "applying_office": "City of Phoenix Planning and Development Department",
+    "companion_permits": [
+      {
+        "certainty": "likely",
+        "condition_text": "Verify whether Accessibility / ADA path-of-travel verification is triggered for this project when the building department confirms the relevant accessibility / ada path-of-travel verification scope condition.",
+        "permit_type": "Accessibility / ADA path-of-travel verification",
+        "rationale": "Commercial tenant improvements commonly trigger accessible route, restroom, door/hardware, counter, parking, or 20% disproportionality review.",
+        "reason": "Commercial tenant improvements commonly trigger accessible route, restroom, door/hardware, counter, parking, or 20% disproportionality review.",
+        "trigger_condition": "Verify whether Accessibility / ADA path-of-travel verification is triggered for this project when the building department confirms the relevant accessibility / ada path-of-travel verification scope condition."
+      }
+    ],
+    "confidence": "high",
+    "confidence_reason": "Official building department official-source permit decision for this exact jurisdiction and project type.",
+    "customer_first_screen_summary": {
+      "ahj_department": "City of Phoenix Planning and Development Department",
+      "decision": "REQUIRED",
+      "kind_category": "Commercial Building / Tenant Improvement",
+      "next_action": "File the required permit categories with City of Phoenix Planning and Development Department: Commercial Building Permit, Plumbing Permit. Confirm exact portal subcategories before final submission.",
+      "source_cue": "Official sources attached for 2 required permit categories."
+    },
+    "customer_headline": "Permit required: Required permit package — Commercial Building Permit.",
+    "customer_next_step": "File the required permit categories with City of Phoenix Planning and Development Department: Commercial Building Permit, Plumbing Permit. Confirm exact portal subcategories before final submission.",
+    "customer_result_summary": {
+      "ahj_department": "City of Phoenix Planning and Development Department",
+      "fee_cost_caveat": "Fees depend on valuation, trade scope, plan-review fees, and the current local fee schedule; verify before quoting.",
+      "freshness_label": "Checked 2026-07-27",
+      "jurisdiction": "Phoenix, AZ",
+      "next_step": "File the required permit categories with City of Phoenix Planning and Development Department: Commercial Building Permit, Plumbing Permit. Confirm exact portal subcategories before final submission.",
+      "permit_decision": "REQUIRED",
+      "permit_kind": "Commercial Building / Tenant Improvement",
+      "permit_name": "Required permit package — Commercial Building Permit",
+      "source_cue": "Official sources attached for 2 required permit categories."
+    },
+    "degraded_sources": false,
+    "inspection_booking": "Schedule online at Confirm the inspection advance-notice window when booking.",
+    "job_summary": "Required permit package: Commercial Building Permit; Plumbing Permit.",
+    "local_form_known": true,
+    "online_application_url": null,
+    "permit_decision": "REQUIRED",
+    "permit_kind": "Commercial Building / Tenant Improvement",
+    "permit_name": "Required permit package — Commercial Building Permit",
+    "permit_required": true,
+    "permit_type": "Required permit package — Commercial Building Permit",
+    "permit_verdict": "YES",
+    "permits_required": [
+      {
+        "approval_type": "Commercial Building Permit",
+        "decision": "REQUIRED",
+        "display_family": "Building",
+        "family": "building",
+        "filing_family": "building",
+        "kind": "Building",
+        "permit_kind": "building",
+        "permit_name": "Commercial Building Permit",
+        "permit_type": "Commercial Building Permit",
+        "portal_selection": "Commercial Building Permit",
+        "required": true,
+        "segment": "commercial",
+        "status": "REQUIRED"
+      },
+      {
+        "ahj_name": "City of Phoenix Planning & Development Department",
+        "application_authority_name": "City of Phoenix Planning & Development Department",
+        "approval_type": "Plumbing Permit",
+        "decision": "REQUIRED",
+        "department_url": "https://www.phoenix.gov/pdd",
+        "display_family": "Plumbing",
+        "family": "plumbing",
+        "filing_family": "plumbing",
+        "kind": "Plumbing",
+        "notes": "Required because the described scope triggers Plumbing Permit. Confirm the exact portal category with the listed permit office before filing.",
+        "permit_name": "Plumbing Permit",
+        "permit_type": "Plumbing Permit",
+        "rationale": "Required because the described scope triggers Plumbing Permit. Confirm the exact portal category with the listed permit office before filing.",
+        "required": true,
+        "scope_trigger": "plumbing_explicit_scope",
+        "segment": "commercial",
+        "source_url": "https://www.phoenix.gov/pdd",
+        "status": "REQUIRED"
+      }
+    ],
+    "permits_required_logic": [
+      {
+        "filing_family": "building",
+        "included_because": "Official permit rule: Required because the described scope triggers Building review.",
+        "permit_type": "Commercial Building Permit",
+        "scope_trigger": "building_scope",
+        "segment": "commercial"
+      },
+      {
+        "filing_family": "plumbing",
+        "included_because": "Official permit rule: Required because the described scope triggers Plumbing Permit. Confirm the exact portal category with the listed permit office before filing.",
+        "permit_type": "Plumbing Permit",
+        "scope_trigger": "plumbing_explicit_scope",
+        "segment": "commercial"
+      }
+    ],
+    "related_permit_families": [
+      "Planning/Zoning",
+      "Certificate of Occupancy",
+      "Other"
+    ],
+    "related_permit_names": [
+      "Planning/Zoning Use Verification",
+      "Certificate of Occupancy / Change-of-Occupancy Verification",
+      "Accessibility / ADA path-of-travel verification"
+    ],
+    "related_permit_segments": [
+      "commercial"
+    ],
+    "related_permits": [
+      {
+        "approval_type": "Planning/Zoning Use Verification",
+        "condition_text": "Verify planning/zoning only if the TI changes use, signage, parking, exterior conditions, or zoning-sensitive operations.",
+        "decision": "CONDITIONAL",
+        "display_family": "Planning/Zoning",
+        "family": "planning",
+        "filing_family": "planning",
+        "kind": "Planning/Zoning",
+        "permit_name": "Planning/Zoning Use Verification",
+        "permit_type": "Planning/Zoning Use Verification",
+        "rationale": "Verify planning/zoning only if the TI changes use, signage, parking, exterior conditions, or zoning-sensitive operations.",
+        "required": false,
+        "required_if": "Verify planning/zoning only if the TI changes use, signage, parking, exterior conditions, or zoning-sensitive operations.",
+        "segment": "commercial",
+        "source_url": "https://www.phoenix.gov/pdd/development/permits/commercial",
+        "status": "CONDITIONAL"
+      },
+      {
+        "approval_type": "Certificate of Occupancy / Change-of-Occupancy Verification",
+        "condition_text": "Verify certificate-of-occupancy/change-of-occupancy review if the TI changes use, occupant load, occupancy group, or business operation.",
+        "decision": "CONDITIONAL",
+        "display_family": "Certificate of Occupancy",
+        "family": "co",
+        "filing_family": "co",
+        "kind": "Certificate of Occupancy",
+        "permit_name": "Certificate of Occupancy / Change-of-Occupancy Verification",
+        "permit_type": "Certificate of Occupancy / Change-of-Occupancy Verification",
+        "rationale": "Verify certificate-of-occupancy/change-of-occupancy review if the TI changes use, occupant load, occupancy group, or business operation.",
+        "required": false,
+        "required_if": "Verify certificate-of-occupancy/change-of-occupancy review if the TI changes use, occupant load, occupancy group, or business operation.",
+        "segment": "commercial",
+        "source_url": "https://www.phoenix.gov/pdd/development/permits/commercial",
+        "status": "CONDITIONAL"
+      },
+      {
+        "approval_type": "Accessibility / ADA path-of-travel verification",
+        "condition_text": "Verify whether Accessibility / ADA path-of-travel verification is triggered for this project when the building department confirms the relevant accessibility / ada path-of-travel verification scope condition.",
+        "decision": "VERIFY",
+        "display_family": "Other",
+        "family": "other",
+        "filing_family": "other",
+        "kind": "Other",
+        "permit_name": "Accessibility / ADA path-of-travel verification",
+        "permit_type": "Accessibility / ADA path-of-travel verification",
+        "rationale": "Commercial tenant improvements commonly trigger accessible route, restroom, door/hardware, counter, parking, or 20% disproportionality review.",
+        "reason": "Commercial tenant improvements commonly trigger accessible route, restroom, door/hardware, counter, parking, or 20% disproportionality review.",
+        "required": false,
+        "segment": "commercial",
+        "status": "VERIFY",
+        "trigger_condition": "Verify whether Accessibility / ADA path-of-travel verification is triggered for this project when the building department confirms the relevant accessibility / ada path-of-travel verification scope condition."
+      }
+    ],
+    "required_permit_families": [
+      "Building",
+      "Plumbing"
+    ],
+    "required_permit_names": [
+      "Commercial Building Permit",
+      "Plumbing Permit"
+    ],
+    "required_permit_segments": [
+      "commercial"
+    ],
+    "required_permit_summary": "Required permit package: Commercial Building Permit; Plumbing Permit.",
+    "source_confidence": "AHJ_DIRECT",
+    "source_support": {
+      "apply_url_known": true,
+      "apply_url_source_confidence": "FILING_PATH_DEGRADED",
+      "confidence_tier": "AHJ_DIRECT",
+      "context_source_count": 0,
+      "decision_mutation_allowed": false,
+      "degraded_sources": false,
+      "display_source_count": 3,
+      "exact_form_known": true,
+      "filing_path_state": "HONEST_FALLBACK",
+      "filing_source_count": 0,
+      "has_official_source": true,
+      "has_source_backed_evidence": true,
+      "local_decision_evidence_urls": [
+        "https://www.phoenix.gov/pdd/development/permits/commercial",
+        "https://www.phoenix.gov/business/construction-permits-planning.html",
+        "https://www.phoenix.gov/pdd"
+      ],
+      "local_form_known": true,
+      "primary_filing_source_tier": "none",
+      "primary_requirement_source_tier": "local_ahj",
+      "requirement_source_count": 3,
+      "source_confidence": "AHJ_DIRECT"
+    },
+    "source_urls": [
+      "https://www.phoenix.gov/pdd/development/permits/commercial",
+      "https://www.phoenix.gov/business/construction-permits-planning.html",
+      "https://www.phoenix.gov/pdd"
+    ],
+    "sources": [
+      {
+        "publisher": "City of Phoenix Planning and Development Department",
+        "snippet": "A commercial building permit is required for residential construction involving multi-family projects of three or more units, condominiums, and apartment buildings as well as non-residential construction including new construction, remodels, additions, tenant improvements and changes of use. The permit is issued when structures are designed in accordance with the building codes and all other applicable codes and ordinances, to ensure the safety of the building and its inhabitants. The links in t",
+        "title": "Official building department source",
+        "url": "https://www.phoenix.gov/pdd/development/permits/commercial"
+      },
+      {
+        "publisher": "City of Phoenix Planning and Development Department",
+        "title": "City of Phoenix Planning and Development Department official permit page",
+        "url": "https://www.phoenix.gov/business/construction-permits-planning.html"
+      },
+      {
+        "publisher": "City of Phoenix Planning and Development Department",
+        "snippet": "Local official URL discovered in customer-facing permit guidance and accepted by source-locality checks.",
+        "title": "City of Phoenix Planning and Development Department",
+        "url": "https://www.phoenix.gov/pdd"
+      }
+    ],
+    "summary": "Required permit package: Commercial Building Permit; Plumbing Permit.",
+    "warnings": [
+      "Commercial scope detected; primary permit was repaired or forced away from residential/trade-only leakage. confirm the exact permit name and form title with the building department before filing.",
+      "Commercial scope may require companion reviews/permits not fully proven here: electrical, mechanical, plumbing.",
+      "Filing path degraded: exact local online filing portal was not verified; permit decision preserved."
+    ]
+  },
+  "requested_model": "NONE",
+  "requested_provider": "permitassist-local-engine",
+  "requested_runtime": "engine",
+  "response_id": null,
+  "runtime": "api.server Decision Cell + finalize + customer egress"
+}

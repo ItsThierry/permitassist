@@ -1,0 +1,78 @@
+{
+  "observed_model": "x-ai/grok-4.5",
+  "observed_provider": "openrouter",
+  "path_proof": {
+    "adapter": "grok",
+    "engine_called": false,
+    "engine_result_supplied_to_model": false,
+    "model_call_count": 1
+  },
+  "provider": "openrouter",
+  "provider_response": {
+    "choices": [
+      {
+        "finish_reason": "stop",
+        "index": 0,
+        "logprobs": null,
+        "message": {
+          "content": "{\"permit_decision\":\"REQUIRED\",\"jurisdiction\":{\"jurisdiction_id\":\"us-al-albertville\",\"name\":\"Albertville\",\"state\":\"AL\",\"type\":\"city_or_local_authority\"},\"project_family\":\"residential_remodel\",\"primary_permit_family\":\"BUILDING\",\"companion_permits\":[{\"family\":\"ELECTRICAL\",\"status\":\"CONDITIONAL\"},{\"family\":\"PLUMBING\",\"status\":\"CONDITIONAL\"},{\"family\":\"MECHANICAL\",\"status\":\"CONDITIONAL\"},{\"family\":\"GAS\",\"status\":\"CONDITIONAL\"}],\"filing\":{\"authority_id\":\"us-al-albertville\",\"destination_url\":\"https://www.cityofalbertville.com/161/Building-Permit-Information\",\"office\":\"Building Services\",\"url_role\":\"REQUIREMENT_EVIDENCE\"},\"source_support\":{\"state\":\"OFFICIAL_SOURCE_SUPPORTED\",\"strength\":\"STRONG\",\"evidence\":[{\"url\":\"https://www.cityofalbertville.com/161/Building-Permit-Information\",\"role\":\"REQUIREMENT_EVIDENCE\"}]},\"contradictions\":[]}",
+          "reasoning": "The user wants me to evaluate one permit lookup using ONLY the supplied official-source evidence packet and return exactly one JSON object conforming to MODEL_SCHEMA.\n",
+          "reasoning_details": [
+            {
+              "format": "xai-responses-v1",
+              "index": 0,
+              "summary": "The user wants me to evaluate one permit lookup using ONLY the supplied official-source evidence packet and return exactly one JSON object conforming to MODEL_SCHEMA.\n",
+              "type": "reasoning.summary"
+            },
+            {
+              "data": "geDwfhpM3dtG8+T+90GXWXc+9tKsAOBhGYFJDeV1HDMJRJkpdAZYxAPW7A5EaS4R7VKLsjvlmUfrYUTPmTlIz7cnFACgRoQuHMTgT43DNUaPbV34yrx4xvPGfYc3FsKghCPJdWpkgG8HWf/6HiYi9t6756eB/l82tNK4DIdYZAfnFjd4upAo5JoYs+W0XglRruDrcTCLexBZBkIZuzst30yY9oGWDF99yXldjbwAoUzW5iECUsbDAMo4SabxzkbVP69bFUpJI53S68cHkXFVXBZ2dI94R5RJdhzHWcQa22ajJlRsQY6TwiiWYGBWTm1Wr7hKqOwxO2h24g2gHQ3QpBH3clEcu+fom+A4bvfbSh9oRNpIDlvbjTNCTCGf+hl5/Of5lwE+Rg0fq+GB468oTz3VW/6NuqrfGzaz1LwnW4pz79ZKFIYniMkvkM0GBeFFHl+icV6/UJy74YmRz6zQfXQEmdb5UHmMVReKdwkUg+7xAQbRrQVhfDyOwdkjzRbRJmw9hYKUrUvp2ZI7pDxNIkYk72Jezla3An3e6eJ81tF6RTz6LITPIiyKa2YZ9rmQmP92HCs9XDlNf2a3+n/JHwDwUeoQskE0IuLscbAHzo6aXysEzw0PuJn21jMkpaSNdkP27y9/XkDKI+aOQ6SKijqCND0lPc1kUCVQ3LF3EY6W9YPeGfGmXBCuJWi6HDEVUWziOUgn4LQlGne8MJ+T6hMa07nt7yhsgDGGQXD33YG4HKUmuRuy8XRx9bXcPGwi9RzuWawkJ41khga5KzMI6dBXXWRgpApnT2bSVWdx1P523L0V3L6ziothUY+cELPzHUe7xGTHMAzv1v4Dyxj6fPFDZKeEASdzo4ztni1VD/7HKwZ+n3XTQTKNOb+X2JmLcpp9D62A0wlYAUt2VFeVON8zbGjvsVxmJqcUh6R76cm1XClrGVtcNKsoqX4ogrVI53eEUaujmvPQtIMoBZSNS4blZwY4APBdYSFf0KkfGH98PMh0jp9CWhEHOLmDDJQvW1s3fbwN194Fth8xW+e9NoiI1s6WbKNL1ejiF1gFSWZfd6gR+HsT5/87gXgY1QMWg9koKUgA0/XTl0XZdAeBFX3nhuTl5P1wUGXTK5GklnYrwYxSXK8Vasm+iJC5cSNs0+cXoJKLydBz2OXvucrz08/qwxq169K34EQ11TMXseNCgytOn9tTRmgKvKCEl0TE2FiBWTkOw2l5cvGH6Hz/XH++ORBG9iPyQvKSZ+oZn8/q1ni+IFrEfDbsxoEi/J8iamYEQLWLB1aV3u+9trtNC5amdDT1qyCwo2vVP+zgHvVl9uQFiRLgczp62j74MQsCkgSfGDayXVYW2irO13jyIaIswOVvhEGRm/CNT9S/kb8UttpaYdaCs7MlcQn6GhbIPNSoaZTrMqTscrWTOcq6SbKnj8nUIKHQ6qaLaBA1vOIxdnFjVQ/0Y/UCq9K+YaF3CJshdadWXp5wHbbU3Z26BCfEaPf1rZLidKX82omF6mqVzz8utLMvybR6h7C2jOUvQlagbnGY0VqXdrgrR30nKe4EX8jZQsFNyVnP+K2d10bc4f+qcDwlNy5Rpc3KHKBDQ07RHBpuVv23QvKe64tnEtwYeZFb5FRxMpPNAg2cgf5FpXpwx7VLu7905VEeRX6LJOC9iXaTsnMVpWKUZ3ZP8hgpRkBqgnpMAtbS8HH5/EFvxC0Hhu8N2yItQbM8Py405dyxauPj42yiee+N7x5qT8SuDwBYTmnvuAaKGlqMNAOcammI38ZUNgAGwCXeU5+EFULV+4w9pxAyXIYK2n8Dzm02bHn/3HVOXYNKLsIapSXL/E0e1CTqKKReTmBV4YDQHEUG",
+              "format": "xai-responses-v1",
+              "id": "rs_034b98e2-2622-9614-bc2c-f8ae406f922b",
+              "index": 1,
+              "type": "reasoning.encrypted"
+            }
+          ],
+          "refusal": null,
+          "role": "assistant"
+        },
+        "native_finish_reason": "completed"
+      }
+    ],
+    "created": 1785163592,
+    "id": "gen-1785163592-M1HWGuMz7KTkPeGNeAOa",
+    "model": "x-ai/grok-4.5",
+    "object": "chat.completion",
+    "provider": "xAI",
+    "service_tier": "default",
+    "system_fingerprint": null,
+    "usage": {
+      "completion_tokens": 569,
+      "completion_tokens_details": {
+        "audio_tokens": 0,
+        "image_tokens": 0,
+        "reasoning_tokens": 326
+      },
+      "cost": 0.003914,
+      "cost_details": {
+        "upstream_inference_completions_cost": 0.003414,
+        "upstream_inference_cost": 0.003914,
+        "upstream_inference_prompt_cost": 0.0005
+      },
+      "is_byok": false,
+      "prompt_tokens": 1338,
+      "prompt_tokens_details": {
+        "audio_tokens": 0,
+        "cache_write_tokens": 0,
+        "cached_tokens": 1280,
+        "video_tokens": 0
+      },
+      "total_tokens": 1907
+    }
+  },
+  "raw_text": "{\"permit_decision\":\"REQUIRED\",\"jurisdiction\":{\"jurisdiction_id\":\"us-al-albertville\",\"name\":\"Albertville\",\"state\":\"AL\",\"type\":\"city_or_local_authority\"},\"project_family\":\"residential_remodel\",\"primary_permit_family\":\"BUILDING\",\"companion_permits\":[{\"family\":\"ELECTRICAL\",\"status\":\"CONDITIONAL\"},{\"family\":\"PLUMBING\",\"status\":\"CONDITIONAL\"},{\"family\":\"MECHANICAL\",\"status\":\"CONDITIONAL\"},{\"family\":\"GAS\",\"status\":\"CONDITIONAL\"}],\"filing\":{\"authority_id\":\"us-al-albertville\",\"destination_url\":\"https://www.cityofalbertville.com/161/Building-Permit-Information\",\"office\":\"Building Services\",\"url_role\":\"REQUIREMENT_EVIDENCE\"},\"source_support\":{\"state\":\"OFFICIAL_SOURCE_SUPPORTED\",\"strength\":\"STRONG\",\"evidence\":[{\"url\":\"https://www.cityofalbertville.com/161/Building-Permit-Information\",\"role\":\"REQUIREMENT_EVIDENCE\"}]},\"contradictions\":[]}",
+  "requested_model": "x-ai/grok-4.5",
+  "requested_provider": "openrouter",
+  "requested_runtime": "grok",
+  "response_id": "gen-1785163592-M1HWGuMz7KTkPeGNeAOa",
+  "runtime": "OpenRouter chat/completions; upstream_provider=xAI"
+}

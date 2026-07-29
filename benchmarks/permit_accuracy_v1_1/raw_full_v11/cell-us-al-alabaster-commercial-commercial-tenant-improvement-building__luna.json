@@ -1,0 +1,97 @@
+{
+  "observed_model": "gpt-5.6-luna",
+  "observed_provider": "openai-codex",
+  "path_proof": {
+    "adapter": "luna",
+    "engine_called": false,
+    "engine_result_supplied_to_model": false,
+    "model_call_count": 1
+  },
+  "provider": "openai-codex",
+  "provider_event_count": 299,
+  "provider_terminal_event": {
+    "response": {
+      "background": false,
+      "completed_at": 1785164053,
+      "created_at": 1785164041,
+      "error": null,
+      "frequency_penalty": 0.0,
+      "id": "resp_02994680625abc21016a677108f17481969463f6f4d6baafb6",
+      "incomplete_details": null,
+      "instructions": "Follow the user request exactly. Do not call tools.",
+      "max_output_tokens": null,
+      "max_tool_calls": null,
+      "metadata": {},
+      "model": "gpt-5.6-luna",
+      "moderation": null,
+      "object": "response",
+      "output": [],
+      "parallel_tool_calls": true,
+      "presence_penalty": 0.0,
+      "previous_response_id": null,
+      "prompt_cache_key": "ff7c8042-dbe9-4a70-99bd-0b53d4a82c4a",
+      "prompt_cache_retention": "24h",
+      "reasoning": {
+        "context": "all_turns",
+        "effort": "medium",
+        "mode": "standard",
+        "summary": null
+      },
+      "safety_identifier": "user-FQ7sI0yp0Qqn6wWdqzy9mZic",
+      "service_tier": "default",
+      "status": "completed",
+      "store": false,
+      "temperature": 1.0,
+      "text": {
+        "format": {
+          "type": "text"
+        },
+        "verbosity": "medium"
+      },
+      "tool_choice": "auto",
+      "tool_usage": {
+        "image_gen": {
+          "input_tokens": 0,
+          "input_tokens_details": {
+            "image_tokens": 0,
+            "text_tokens": 0
+          },
+          "output_tokens": 0,
+          "output_tokens_details": {
+            "image_tokens": 0,
+            "text_tokens": 0
+          },
+          "total_tokens": 0
+        },
+        "web_search": {
+          "num_requests": 0
+        }
+      },
+      "tools": [],
+      "top_logprobs": 0,
+      "top_p": 0.98,
+      "truncation": "disabled",
+      "usage": {
+        "input_tokens": 1244,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 0
+        },
+        "output_tokens": 597,
+        "output_tokens_details": {
+          "reasoning_tokens": 302
+        },
+        "total_tokens": 1841
+      },
+      "user": null
+    },
+    "sequence_number": 298,
+    "type": "response.completed"
+  },
+  "raw_text": "{\"permit_decision\":\"REQUIRED\",\"jurisdiction\":{\"jurisdiction_id\":\"us-al-alabaster\",\"name\":\"Alabaster\",\"state\":\"AL\",\"type\":\"city_or_local_authority\"},\"project_family\":\"commercial_tenant_improvement\",\"primary_permit_family\":\"BUILDING\",\"companion_permits\":[{\"family\":\"ELECTRICAL\",\"status\":\"REQUIRED\"},{\"family\":\"PLUMBING\",\"status\":\"REQUIRED\"},{\"family\":\"MECHANICAL\",\"status\":\"REQUIRED\"},{\"family\":\"FIRE_LIFE_SAFETY\",\"status\":\"VERIFY\"},{\"family\":\"OCCUPANCY\",\"status\":\"VERIFY\"},{\"family\":\"PLANNING_ZONING\",\"status\":\"VERIFY\"}],\"filing\":{\"authority_id\":\"us-al-alabaster\",\"office\":\"City of Alabaster Building and Engineering Services\",\"destination_url\":\"https://alabaster.onlama.com/\",\"url_role\":\"APPLICATION_START\"},\"source_support\":{\"state\":\"OFFICIAL_SOURCE_SUPPORTED\",\"strength\":\"STRONG\",\"evidence\":[{\"url\":\"https://www.cityofalabaster.com/DocumentCenter/View/5686/Permitting-Procedure-Handbook-v22-PDF\",\"role\":\"REQUIREMENT_EVIDENCE\"},{\"url\":\"https://www.cityofalabaster.com/178/Building-and-Engineering-Services\",\"role\":\"APPLICATION_START\"},{\"url\":\"https://alabaster.onlama.com/\",\"role\":\"APPLICATION_START\"}]},\"contradictions\":[]}",
+  "requested_model": "gpt-5.6-luna",
+  "requested_provider": "openai-codex",
+  "requested_runtime": "luna",
+  "response_id": "resp_02994680625abc21016a677108f17481969463f6f4d6baafb6",
+  "runtime": "openai-codex responses SSE"
+}

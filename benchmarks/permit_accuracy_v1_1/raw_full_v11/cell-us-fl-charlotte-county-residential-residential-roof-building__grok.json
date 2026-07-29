@@ -1,0 +1,78 @@
+{
+  "observed_model": "x-ai/grok-4.5",
+  "observed_provider": "openrouter",
+  "path_proof": {
+    "adapter": "grok",
+    "engine_called": false,
+    "engine_result_supplied_to_model": false,
+    "model_call_count": 1
+  },
+  "provider": "openrouter",
+  "provider_response": {
+    "choices": [
+      {
+        "finish_reason": "stop",
+        "index": 0,
+        "logprobs": null,
+        "message": {
+          "content": "{\"permit_decision\":\"REQUIRED\",\"jurisdiction\":{\"jurisdiction_id\":\"us-fl-charlotte_county\",\"name\":\"Charlotte County\",\"state\":\"FL\",\"type\":\"county\"},\"project_family\":\"reroof\",\"primary_permit_family\":\"BUILDING\",\"companion_permits\":[],\"filing\":{\"authority_id\":null,\"office\":\"Charlotte County Building Construction\",\"destination_url\":\"https://www.charlottecountyfl.gov/departments/community-development/building-construction/permits/residential-permits/residential-roof.stml\",\"url_role\":\"REQUIREMENT_EVIDENCE\"},\"source_support\":{\"state\":\"OFFICIAL_SOURCE_SUPPORTED\",\"strength\":\"STRONG\",\"evidence\":[{\"url\":\"https://www.charlottecountyfl.gov/departments/community-development/building-construction/permits/residential-permits/residential-roof.stml\",\"role\":\"REQUIREMENT_EVIDENCE\"}]},\"contradictions\":[]}",
+          "reasoning": "The user wants me to evaluate one permit lookup using ONLY the supplied official-source evidence packet and return exactly one JSON object conforming to MODEL_SCHEMA.\n",
+          "reasoning_details": [
+            {
+              "format": "xai-responses-v1",
+              "index": 0,
+              "summary": "The user wants me to evaluate one permit lookup using ONLY the supplied official-source evidence packet and return exactly one JSON object conforming to MODEL_SCHEMA.\n",
+              "type": "reasoning.summary"
+            },
+            {
+              "data": "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",
+              "format": "xai-responses-v1",
+              "id": "rs_2322e332-4934-99b7-96c8-a0d4c2a0a186",
+              "index": 1,
+              "type": "reasoning.encrypted"
+            }
+          ],
+          "refusal": null,
+          "role": "assistant"
+        },
+        "native_finish_reason": "completed"
+      }
+    ],
+    "created": 1785164891,
+    "id": "gen-1785164891-OTLS1kvku0UN97fDo3GX",
+    "model": "x-ai/grok-4.5",
+    "object": "chat.completion",
+    "provider": "xAI",
+    "service_tier": "default",
+    "system_fingerprint": null,
+    "usage": {
+      "completion_tokens": 789,
+      "completion_tokens_details": {
+        "audio_tokens": 0,
+        "image_tokens": 0,
+        "reasoning_tokens": 578
+      },
+      "cost": 0.0071944,
+      "cost_details": {
+        "upstream_inference_completions_cost": 0.004734,
+        "upstream_inference_cost": 0.0071944,
+        "upstream_inference_prompt_cost": 0.0024604
+      },
+      "is_byok": false,
+      "prompt_tokens": 1339,
+      "prompt_tokens_details": {
+        "audio_tokens": 0,
+        "cache_write_tokens": 0,
+        "cached_tokens": 128,
+        "video_tokens": 0
+      },
+      "total_tokens": 2128
+    }
+  },
+  "raw_text": "{\"permit_decision\":\"REQUIRED\",\"jurisdiction\":{\"jurisdiction_id\":\"us-fl-charlotte_county\",\"name\":\"Charlotte County\",\"state\":\"FL\",\"type\":\"county\"},\"project_family\":\"reroof\",\"primary_permit_family\":\"BUILDING\",\"companion_permits\":[],\"filing\":{\"authority_id\":null,\"office\":\"Charlotte County Building Construction\",\"destination_url\":\"https://www.charlottecountyfl.gov/departments/community-development/building-construction/permits/residential-permits/residential-roof.stml\",\"url_role\":\"REQUIREMENT_EVIDENCE\"},\"source_support\":{\"state\":\"OFFICIAL_SOURCE_SUPPORTED\",\"strength\":\"STRONG\",\"evidence\":[{\"url\":\"https://www.charlottecountyfl.gov/departments/community-development/building-construction/permits/residential-permits/residential-roof.stml\",\"role\":\"REQUIREMENT_EVIDENCE\"}]},\"contradictions\":[]}",
+  "requested_model": "x-ai/grok-4.5",
+  "requested_provider": "openrouter",
+  "requested_runtime": "grok",
+  "response_id": "gen-1785164891-OTLS1kvku0UN97fDo3GX",
+  "runtime": "OpenRouter chat/completions; upstream_provider=xAI"
+}

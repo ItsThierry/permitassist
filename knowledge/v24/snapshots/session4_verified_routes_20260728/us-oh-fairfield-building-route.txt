@@ -1,0 +1,6 @@
+PermitAssist independently adjudicated official filing route
+Official source URL: https://www.fairfield-city.org/167/Building-Permits
+Official filing URL: https://fairfieldoh.viewpointcloud.com/
+Verification boundary: OFFICIAL_PAGE_LINK_VERIFIED_20260728
+Exact official quote:
+To obtain a City of Fairfield commercial building permit, register for an account and complete a Building Permit Application using the city's Online Permit Center.

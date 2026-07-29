@@ -1,0 +1,78 @@
+{
+  "observed_model": "x-ai/grok-4.5",
+  "observed_provider": "openrouter",
+  "path_proof": {
+    "adapter": "grok",
+    "engine_called": false,
+    "engine_result_supplied_to_model": false,
+    "model_call_count": 1
+  },
+  "provider": "openrouter",
+  "provider_response": {
+    "choices": [
+      {
+        "finish_reason": "stop",
+        "index": 0,
+        "logprobs": null,
+        "message": {
+          "content": "{\"permit_decision\":\"VERIFY\",\"jurisdiction\":{\"jurisdiction_id\":\"us-sc-anderson_county\",\"name\":\"Anderson County\",\"state\":\"SC\",\"type\":\"county\"},\"project_family\":\"residential_remodel\",\"primary_permit_family\":\"BUILDING\",\"companion_permits\":[{\"family\":\"ELECTRICAL\",\"status\":\"VERIFY\"},{\"family\":\"PLUMBING\",\"status\":\"VERIFY\"},{\"family\":\"MECHANICAL\",\"status\":\"VERIFY\"}],\"filing\":{\"authority_id\":\"us-sc-anderson_county\",\"office\":\"Anderson County Building & Codes\",\"destination_url\":\"https://www.andersoncountysc.org/work-live/for-businesses/building-codes/\",\"url_role\":\"INFORMATIONAL_OFFICE\"},\"source_support\":{\"state\":\"OFFICIAL_SOURCE_SUPPORTED\",\"strength\":\"MODERATE\",\"evidence\":[{\"url\":\"https://www.andersoncountysc.org/work-live/for-businesses/building-codes/\",\"role\":\"REQUIREMENT_EVIDENCE\"}]},\"contradictions\":[]}",
+          "reasoning": "The user wants me to evaluate one permit lookup using ONLY the supplied official-source evidence packet and return exactly one JSON object conforming to MODEL_SCHEMA. No markdown fences, commentary, e...{\n  \"companion_permits\": [\n    {\n      \"family\": \"BUILDING\",\n      \"status\": \"REQUIRED\"\n    },\n    {\n      \"family\": \"ELECTRICAL\",\n      \"status\": \"REQUIRED\"\n    },\n    {\n      \"family\": \"MECHANICAL\",\n      \"status\": \" REQUIRED\"\n    },\n    {\n      \"family\": \"PLUMBING\",\n      \"status\": \"REQUIRED\"\n    }\n  ],\n  \"contradictions\": [],\n  \"filing\": {\n    \"authority_id\": \"us-sc-anderson_county\",\n    \"destination_url\": \"https://www.andersoncountysc .",
+          "reasoning_details": [
+            {
+              "format": "xai-responses-v1",
+              "index": 0,
+              "summary": "The user wants me to evaluate one permit lookup using ONLY the supplied official-source evidence packet and return exactly one JSON object conforming to MODEL_SCHEMA. No markdown fences, commentary, e...{\n  \"companion_permits\": [\n    {\n      \"family\": \"BUILDING\",\n      \"status\": \"REQUIRED\"\n    },\n    {\n      \"family\": \"ELECTRICAL\",\n      \"status\": \"REQUIRED\"\n    },\n    {\n      \"family\": \"MECHANICAL\",\n      \"status\": \" REQUIRED\"\n    },\n    {\n      \"family\": \"PLUMBING\",\n      \"status\": \"REQUIRED\"\n    }\n  ],\n  \"contradictions\": [],\n  \"filing\": {\n    \"authority_id\": \"us-sc-anderson_county\",\n    \"destination_url\": \"https://www.andersoncountysc .",
+              "type": "reasoning.summary"
+            },
+            {
+              "data": "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",
+              "format": "xai-responses-v1",
+              "id": "rs_3f9b5b8b-ed39-99f5-b08e-51111f0497a2",
+              "index": 1,
+              "type": "reasoning.encrypted"
+            }
+          ],
+          "refusal": null,
+          "role": "assistant"
+        },
+        "native_finish_reason": "completed"
+      }
+    ],
+    "created": 1785167691,
+    "id": "gen-1785167691-ihToRKMzmiUMdbUDjsa7",
+    "model": "x-ai/grok-4.5",
+    "object": "chat.completion",
+    "provider": "xAI",
+    "service_tier": "default",
+    "system_fingerprint": null,
+    "usage": {
+      "completion_tokens": 1651,
+      "completion_tokens_details": {
+        "audio_tokens": 0,
+        "image_tokens": 0,
+        "reasoning_tokens": 1412
+      },
+      "cost": 0.0122344,
+      "cost_details": {
+        "upstream_inference_completions_cost": 0.009906,
+        "upstream_inference_cost": 0.0122344,
+        "upstream_inference_prompt_cost": 0.0023284
+      },
+      "is_byok": false,
+      "prompt_tokens": 1273,
+      "prompt_tokens_details": {
+        "audio_tokens": 0,
+        "cache_write_tokens": 0,
+        "cached_tokens": 128,
+        "video_tokens": 0
+      },
+      "total_tokens": 2924
+    }
+  },
+  "raw_text": "{\"permit_decision\":\"VERIFY\",\"jurisdiction\":{\"jurisdiction_id\":\"us-sc-anderson_county\",\"name\":\"Anderson County\",\"state\":\"SC\",\"type\":\"county\"},\"project_family\":\"residential_remodel\",\"primary_permit_family\":\"BUILDING\",\"companion_permits\":[{\"family\":\"ELECTRICAL\",\"status\":\"VERIFY\"},{\"family\":\"PLUMBING\",\"status\":\"VERIFY\"},{\"family\":\"MECHANICAL\",\"status\":\"VERIFY\"}],\"filing\":{\"authority_id\":\"us-sc-anderson_county\",\"office\":\"Anderson County Building & Codes\",\"destination_url\":\"https://www.andersoncountysc.org/work-live/for-businesses/building-codes/\",\"url_role\":\"INFORMATIONAL_OFFICE\"},\"source_support\":{\"state\":\"OFFICIAL_SOURCE_SUPPORTED\",\"strength\":\"MODERATE\",\"evidence\":[{\"url\":\"https://www.andersoncountysc.org/work-live/for-businesses/building-codes/\",\"role\":\"REQUIREMENT_EVIDENCE\"}]},\"contradictions\":[]}",
+  "requested_model": "x-ai/grok-4.5",
+  "requested_provider": "openrouter",
+  "requested_runtime": "grok",
+  "response_id": "gen-1785167691-ihToRKMzmiUMdbUDjsa7",
+  "runtime": "OpenRouter chat/completions; upstream_provider=xAI"
+}

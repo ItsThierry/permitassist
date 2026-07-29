@@ -1,0 +1,6 @@
+PermitAssist independently adjudicated official filing route
+Official source URL: https://aca.accela.com/tacoma/
+Official filing URL: https://aca.accela.com/tacoma/
+Verification boundary: PASS_WEB_EXTRACT_20260728
+Exact official quote:
+Customer Access Portal

@@ -312,6 +312,24 @@ def test_actual_share_report_http_path_fails_closed_for_untrusted_payload(
 ):
     server = _import_server(tmp_path, monkeypatch)
 
+    submitted_result = _base_result(
+        permit_kind,
+        marker=XSS_MARKER,
+        source_url=_local_source_url(city, state),
+    )
+    submitted_result["apply_path"] = {
+        "url": "https://evil.invalid/path",
+        "source_url": "https://evil.invalid/source",
+    }
+    submitted_result["permit_manifest"] = {
+        "filing_destination": {
+            "apply_path": {
+                "url": "https://evil.invalid/manifest-path",
+                "source_url": "https://evil.invalid/manifest-source",
+            }
+        }
+    }
+
     with _LiveServer(server.Handler) as live:
         status, body = _post_json(
             f"{live.base}/api/share",
@@ -319,7 +337,7 @@ def test_actual_share_report_http_path_fails_closed_for_untrusted_payload(
                 "job_type": job_type,
                 "city": city,
                 "state": state,
-                "result": _base_result(permit_kind, marker=XSS_MARKER, source_url=_local_source_url(city, state)),
+                "result": submitted_result,
             },
         )
         assert status == 200
@@ -331,6 +349,25 @@ def test_actual_share_report_http_path_fails_closed_for_untrusted_payload(
     _assert_public_payload_has_no_internal_keys(payload)
     assert payload["share"]["data"]["permit_decision"] == "UNKNOWN"
     assert payload["share"]["data"]["permit_required"] is None
+    actionable_urls = []
+    stack = [payload["share"]["data"]]
+    while stack:
+        item = stack.pop()
+        if isinstance(item, dict):
+            actionable_urls.extend(
+                value
+                for key, value in item.items()
+                if key in {"apply_url", "online_application_url", "portal_url", "url", "source_url"} and value
+                and (
+                    key not in {"url", "source_url"}
+                    or item is payload["share"]["data"].get("apply_path")
+                    or item is ((payload["share"]["data"].get("permit_manifest") or {}).get("filing_destination") or {}).get("apply_path")
+                )
+            )
+            stack.extend(item.values())
+        elif isinstance(item, list):
+            stack.extend(item)
+    assert actionable_urls == []
     assert payload["share"]["data"]["permit_kind"] == permit_kind
     soup = BeautifulSoup(html, "html.parser")
     assert len(soup.find_all("script")) == 2

@@ -1,0 +1,78 @@
+{
+  "observed_model": "x-ai/grok-4.5",
+  "observed_provider": "openrouter",
+  "path_proof": {
+    "adapter": "grok",
+    "engine_called": false,
+    "engine_result_supplied_to_model": false,
+    "model_call_count": 1
+  },
+  "provider": "openrouter",
+  "provider_response": {
+    "choices": [
+      {
+        "finish_reason": "stop",
+        "index": 0,
+        "logprobs": null,
+        "message": {
+          "content": "{\"permit_decision\":\"VERIFY\",\"jurisdiction\":{\"jurisdiction_id\":\"us-de-arden\",\"name\":\"Arden\",\"state\":\"DE\",\"type\":\"city_or_local_authority\"},\"project_family\":\"residential_remodel\",\"primary_permit_family\":\"BUILDING\",\"companion_permits\":[{\"family\":\"ELECTRICAL\",\"status\":\"VERIFY\"},{\"family\":\"PLUMBING\",\"status\":\"VERIFY\"},{\"family\":\"MECHANICAL\",\"status\":\"VERIFY\"},{\"family\":\"FIRE_LIFE_SAFETY\",\"status\":\"VERIFY\"}],\"filing\":{\"authority_id\":null,\"office\":\"New Castle County Residential Addition Renovation\",\"destination_url\":\"https://www.newcastlede.gov/208/Residential-Addition-Renovation\",\"url_role\":\"APPLICATION_START\"},\"source_support\":{\"state\":\"OFFICIAL_SOURCE_SUPPORTED\",\"strength\":\"WEAK\",\"evidence\":[{\"url\":\"https://arden.delaware.gov/wp-content/uploads/2020/01/RevBdgPer6-14AddLarson.pdf\",\"role\":\"REQUIREMENT_EVIDENCE\"},{\"url\":\"https://www.newcastlede.gov/208/Residential-Addition-Renovation\",\"role\":\"APPLICATION_START\"}]},\"contradictions\":[\"Arden municipal building-permit PDF is cited alongside a New Castle County residential renovation application destination without clarifying which authority issues interior remodel permits for Arden.\"]}",
+          "reasoning": "The user wants me to evaluate one permit lookup using ONLY the supplied official-source evidence packet and return exactly one JSON object conforming to MODEL_SCHEMA. No markdown fences, commentary, e...{\n  \"permit_decision\": \"VERIFY\",\n  \"jurisdiction\": {\n    \"jurisdiction_id\": \"us-de-arden\",\n    \"name\": \"Arden\",\n    \"state\": \"DE\",\n    \"type\": \"city_or_local_authority\"\n  },\n  \"project_family\": \"residential_rem ol\",\n  \"primary_permit_family\": \"BUILDING\",\n  \"companion_permits\": [\n    {\n      \"family\": \"ELECTRICAL\",\n      \"status\": \"VERIFY\"\n    },\n    {\n      \"family\": \"PLUMBING\",\n      \"status\": \"VERIFY\"\n    },\n    {\n      \"family\": \"MECHANICAL\",\n      \"status\": \"VERIFY\"\n    }\n  ],\n  \"filing\": {\n    \"authority_id\": null,\n    \"destination_url\": \"https://www.newcastlede.",
+          "reasoning_details": [
+            {
+              "format": "xai-responses-v1",
+              "index": 0,
+              "summary": "The user wants me to evaluate one permit lookup using ONLY the supplied official-source evidence packet and return exactly one JSON object conforming to MODEL_SCHEMA. No markdown fences, commentary, e...{\n  \"permit_decision\": \"VERIFY\",\n  \"jurisdiction\": {\n    \"jurisdiction_id\": \"us-de-arden\",\n    \"name\": \"Arden\",\n    \"state\": \"DE\",\n    \"type\": \"city_or_local_authority\"\n  },\n  \"project_family\": \"residential_rem ol\",\n  \"primary_permit_family\": \"BUILDING\",\n  \"companion_permits\": [\n    {\n      \"family\": \"ELECTRICAL\",\n      \"status\": \"VERIFY\"\n    },\n    {\n      \"family\": \"PLUMBING\",\n      \"status\": \"VERIFY\"\n    },\n    {\n      \"family\": \"MECHANICAL\",\n      \"status\": \"VERIFY\"\n    }\n  ],\n  \"filing\": {\n    \"authority_id\": null,\n    \"destination_url\": \"https://www.newcastlede.",
+              "type": "reasoning.summary"
+            },
+            {
+              "data": "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",
+              "format": "xai-responses-v1",
+              "id": "rs_585bef51-c816-9ec4-b6d7-5fe5da447f11",
+              "index": 1,
+              "type": "reasoning.encrypted"
+            }
+          ],
+          "refusal": null,
+          "role": "assistant"
+        },
+        "native_finish_reason": "completed"
+      }
+    ],
+    "created": 1785164664,
+    "id": "gen-1785164664-XSGIGKafMr3NDB3MQkfe",
+    "model": "x-ai/grok-4.5",
+    "object": "chat.completion",
+    "provider": "xAI",
+    "service_tier": "default",
+    "system_fingerprint": null,
+    "usage": {
+      "completion_tokens": 1511,
+      "completion_tokens_details": {
+        "audio_tokens": 0,
+        "image_tokens": 0,
+        "reasoning_tokens": 1203
+      },
+      "cost": 0.0120944,
+      "cost_details": {
+        "upstream_inference_completions_cost": 0.009066,
+        "upstream_inference_cost": 0.0120944,
+        "upstream_inference_prompt_cost": 0.0030284
+      },
+      "is_byok": false,
+      "prompt_tokens": 1623,
+      "prompt_tokens_details": {
+        "audio_tokens": 0,
+        "cache_write_tokens": 0,
+        "cached_tokens": 128,
+        "video_tokens": 0
+      },
+      "total_tokens": 3134
+    }
+  },
+  "raw_text": "{\"permit_decision\":\"VERIFY\",\"jurisdiction\":{\"jurisdiction_id\":\"us-de-arden\",\"name\":\"Arden\",\"state\":\"DE\",\"type\":\"city_or_local_authority\"},\"project_family\":\"residential_remodel\",\"primary_permit_family\":\"BUILDING\",\"companion_permits\":[{\"family\":\"ELECTRICAL\",\"status\":\"VERIFY\"},{\"family\":\"PLUMBING\",\"status\":\"VERIFY\"},{\"family\":\"MECHANICAL\",\"status\":\"VERIFY\"},{\"family\":\"FIRE_LIFE_SAFETY\",\"status\":\"VERIFY\"}],\"filing\":{\"authority_id\":null,\"office\":\"New Castle County Residential Addition Renovation\",\"destination_url\":\"https://www.newcastlede.gov/208/Residential-Addition-Renovation\",\"url_role\":\"APPLICATION_START\"},\"source_support\":{\"state\":\"OFFICIAL_SOURCE_SUPPORTED\",\"strength\":\"WEAK\",\"evidence\":[{\"url\":\"https://arden.delaware.gov/wp-content/uploads/2020/01/RevBdgPer6-14AddLarson.pdf\",\"role\":\"REQUIREMENT_EVIDENCE\"},{\"url\":\"https://www.newcastlede.gov/208/Residential-Addition-Renovation\",\"role\":\"APPLICATION_START\"}]},\"contradictions\":[\"Arden municipal building-permit PDF is cited alongside a New Castle County residential renovation application destination without clarifying which authority issues interior remodel permits for Arden.\"]}",
+  "requested_model": "x-ai/grok-4.5",
+  "requested_provider": "openrouter",
+  "requested_runtime": "grok",
+  "response_id": "gen-1785164664-XSGIGKafMr3NDB3MQkfe",
+  "runtime": "OpenRouter chat/completions; upstream_provider=xAI"
+}

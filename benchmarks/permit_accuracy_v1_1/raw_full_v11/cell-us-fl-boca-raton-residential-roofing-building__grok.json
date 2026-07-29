@@ -1,0 +1,78 @@
+{
+  "observed_model": "x-ai/grok-4.5",
+  "observed_provider": "openrouter",
+  "path_proof": {
+    "adapter": "grok",
+    "engine_called": false,
+    "engine_result_supplied_to_model": false,
+    "model_call_count": 1
+  },
+  "provider": "openrouter",
+  "provider_response": {
+    "choices": [
+      {
+        "finish_reason": "stop",
+        "index": 0,
+        "logprobs": null,
+        "message": {
+          "content": "{\"permit_decision\":\"REQUIRED\",\"jurisdiction\":{\"jurisdiction_id\":\"us-fl-boca_raton\",\"name\":\"Boca Raton\",\"state\":\"FL\",\"type\":\"city_or_local_authority\"},\"project_family\":\"reroof\",\"primary_permit_family\":\"BUILDING\",\"companion_permits\":[],\"filing\":{\"authority_id\":\"us-fl-boca_raton\",\"destination_url\":\"https://myboca.us/DocumentCenter/View/34430/Re-Roof-PDF\",\"office\":\"City of Boca Raton\",\"url_role\":\"REQUIREMENT_EVIDENCE\"},\"source_support\":{\"evidence\":[{\"role\":\"REQUIREMENT_EVIDENCE\",\"url\":\"https://myboca.us/DocumentCenter/View/34430/Re-Roof-PDF\"}],\"state\":\"OFFICIAL_SOURCE_SUPPORTED\",\"strength\":\"STRONG\"},\"contradictions\":[]}",
+          "reasoning": "The user wants me to return exactly one JSON object conforming to MODEL_SCHEMA based on the evidence packet. No markdown fences, commentary, etc. Output JSON only.\n{\n  \"companion_permits\": [],\n  \"contradictions\": [],\n  \"filing\": {\n    \"authority_id\": \"us-fl-boca_raton\",\n    \"destination_url\": \"https://myboca.",
+          "reasoning_details": [
+            {
+              "format": "xai-responses-v1",
+              "index": 0,
+              "summary": "The user wants me to return exactly one JSON object conforming to MODEL_SCHEMA based on the evidence packet. No markdown fences, commentary, etc. Output JSON only.\n{\n  \"companion_permits\": [],\n  \"contradictions\": [],\n  \"filing\": {\n    \"authority_id\": \"us-fl-boca_raton\",\n    \"destination_url\": \"https://myboca.",
+              "type": "reasoning.summary"
+            },
+            {
+              "data": "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",
+              "format": "xai-responses-v1",
+              "id": "rs_56cd749f-c493-9b1b-a6f0-1fad4a0e2506",
+              "index": 1,
+              "type": "reasoning.encrypted"
+            }
+          ],
+          "refusal": null,
+          "role": "assistant"
+        },
+        "native_finish_reason": "completed"
+      }
+    ],
+    "created": 1785164786,
+    "id": "gen-1785164786-WbAvdE1o1zxhXdDRKEE5",
+    "model": "x-ai/grok-4.5",
+    "object": "chat.completion",
+    "provider": "xAI",
+    "service_tier": "default",
+    "system_fingerprint": null,
+    "usage": {
+      "completion_tokens": 789,
+      "completion_tokens_details": {
+        "audio_tokens": 0,
+        "image_tokens": 0,
+        "reasoning_tokens": 582
+      },
+      "cost": 0.0072104,
+      "cost_details": {
+        "upstream_inference_completions_cost": 0.004734,
+        "upstream_inference_cost": 0.0072104,
+        "upstream_inference_prompt_cost": 0.0024764
+      },
+      "is_byok": false,
+      "prompt_tokens": 1347,
+      "prompt_tokens_details": {
+        "audio_tokens": 0,
+        "cache_write_tokens": 0,
+        "cached_tokens": 128,
+        "video_tokens": 0
+      },
+      "total_tokens": 2136
+    }
+  },
+  "raw_text": "{\"permit_decision\":\"REQUIRED\",\"jurisdiction\":{\"jurisdiction_id\":\"us-fl-boca_raton\",\"name\":\"Boca Raton\",\"state\":\"FL\",\"type\":\"city_or_local_authority\"},\"project_family\":\"reroof\",\"primary_permit_family\":\"BUILDING\",\"companion_permits\":[],\"filing\":{\"authority_id\":\"us-fl-boca_raton\",\"destination_url\":\"https://myboca.us/DocumentCenter/View/34430/Re-Roof-PDF\",\"office\":\"City of Boca Raton\",\"url_role\":\"REQUIREMENT_EVIDENCE\"},\"source_support\":{\"evidence\":[{\"role\":\"REQUIREMENT_EVIDENCE\",\"url\":\"https://myboca.us/DocumentCenter/View/34430/Re-Roof-PDF\"}],\"state\":\"OFFICIAL_SOURCE_SUPPORTED\",\"strength\":\"STRONG\"},\"contradictions\":[]}",
+  "requested_model": "x-ai/grok-4.5",
+  "requested_provider": "openrouter",
+  "requested_runtime": "grok",
+  "response_id": "gen-1785164786-WbAvdE1o1zxhXdDRKEE5",
+  "runtime": "OpenRouter chat/completions; upstream_provider=xAI"
+}

@@ -142,6 +142,8 @@ def classify_project_candidates(job_type: str, job_category: str = "") -> list[s
         "re-roof",
         "roof replacement",
         "replace roof",
+        "replace existing roof covering",
+        "roof covering replacement",
         "roof tear-off",
         "tear off roof",
         "tear-off roof",
@@ -240,7 +242,10 @@ def classify_project_candidates(job_type: str, job_category: str = "") -> list[s
         "kitchen renovation",
         "bathroom renovation",
     )
-    if _has_any_unnegated(combined, residential_remodel_terms) and (category == "residential" or "residential" in combined or "home" in combined or "kitchen" in combined or "bath" in combined):
+    if _has_any_unnegated(combined, residential_remodel_terms) and (
+        category == "residential"
+        or _has_any(combined, ("residential", "home", "kitchen", "bath", "bathroom"))
+    ):
         candidates.append("residential_remodel")
 
     unique_candidates = list(dict.fromkeys(candidates))
@@ -484,7 +489,7 @@ def _cell_authority_fields(cell: dict[str, Any]) -> tuple[str, str, str, str, st
     authority_obj = cell.get("authority_model")
     authority: dict[str, Any] = authority_obj if isinstance(authority_obj, dict) else {}
     source = _primary_source(cell)
-    apply_url = authority.get("application_url") or source.get("final_url") or source.get("url") or ""
+    apply_url = authority.get("application_url") or ""
     office = authority.get("application_authority") or authority.get("issuing_authority") or cell.get("ahj_name") or ""
     permit_name = cell.get("permit_name") or "Building Permit"
     source_url = source.get("final_url") or source.get("source_url") or source.get("url") or apply_url
@@ -492,10 +497,21 @@ def _cell_authority_fields(cell: dict[str, Any]) -> tuple[str, str, str, str, st
     return permit_name, office, apply_url, source_url, quote
 
 
+def _contains_token_phrase(text: Any, phrase: Any) -> bool:
+    text_tokens = tuple(re.findall(r"[a-z0-9]+", str(text or "").lower()))
+    phrase_tokens = tuple(re.findall(r"[a-z0-9]+", str(phrase or "").lower()))
+    if not phrase_tokens or len(phrase_tokens) > len(text_tokens):
+        return False
+    return any(
+        text_tokens[index : index + len(phrase_tokens)] == phrase_tokens
+        for index in range(len(text_tokens) - len(phrase_tokens) + 1)
+    )
+
+
 def _normalize_permit_type(value: Any) -> str:
     text = re.sub(r"[^a-z0-9]+", " ", str(value or "").lower()).strip()
     text = text.replace(" permit", "").replace("permit ", "")
-    if "building" in text or "construction" in text:
+    if _contains_token_phrase(text, "building") or _contains_token_phrase(text, "construction"):
         return "building"
     return text
 
@@ -518,7 +534,7 @@ def _existing_specialty_primary_permit(result: dict[str, Any]) -> dict[str, Any]
         simple_label = re.sub(r"[^a-z0-9]+", " ", label).strip()
         if not simple_label or simple_label in {"permit", "required permit", "building permit", "construction permit"}:
             continue
-        if any(term in label for term in _SPECIALTY_PRIMARY_TERMS):
+        if any(_contains_token_phrase(label, term) for term in _SPECIALTY_PRIMARY_TERMS):
             return copy.deepcopy(permit)
     return None
 

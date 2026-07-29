@@ -1,0 +1,78 @@
+{
+  "observed_model": "x-ai/grok-4.5",
+  "observed_provider": "openrouter",
+  "path_proof": {
+    "adapter": "grok",
+    "engine_called": false,
+    "engine_result_supplied_to_model": false,
+    "model_call_count": 1
+  },
+  "provider": "openrouter",
+  "provider_response": {
+    "choices": [
+      {
+        "finish_reason": "stop",
+        "index": 0,
+        "logprobs": null,
+        "message": {
+          "content": "{\"permit_decision\":\"VERIFY\",\"jurisdiction\":{\"jurisdiction_id\":\"us-sd-belle_fourche\",\"name\":\"Belle Fourche\",\"state\":\"SD\",\"type\":\"city_or_local_authority\"},\"project_family\":\"commercial_tenant_improvement\",\"primary_permit_family\":\"VERIFY\",\"companion_permits\":[{\"family\":\"BUILDING\",\"status\":\"VERIFY\"},{\"family\":\"ELECTRICAL\",\"status\":\"VERIFY\"},{\"family\":\"PLUMBING\",\"status\":\"VERIFY\"},{\"family\":\"MECHANICAL\",\"status\":\"VERIFY\"},{\"family\":\"FIRE_LIFE_SAFETY\",\"status\":\"VERIFY\"},{\"family\":\"OCCUPANCY\",\"status\":\"VERIFY\"},{\"family\":\"PLANNING_ZONING\",\"status\":\"VERIFY\"}],\"filing\":{\"authority_id\":\"us-sd-belle_fourche\",\"destination_url\":\"https://www.bellefourche.org/index.asp?SEC=881905A9-4CCA-4F06-9CEE-E20D70E532F0\",\"office\":\"Belle Fourche City Engineer\",\"url_role\":\"INFORMATIONAL_OFFICE\"},\"source_support\":{\"state\":\"OFFICIAL_SOURCE_SUPPORTED\",\"strength\":\"WEAK\",\"evidence\":[{\"url\":\"https://www.bellefourche.org/index.asp?SEC=453A98E5-1613-476B-9FD9-D9B4A0F78CF3&DE=49B31FD0-5FB5-48C0-BC57-495D7A4E30DB\",\"role\":\"REQUIREMENT_EVIDENCE\"},{\"url\":\"https://www.bellefourche.org/index.asp?SEC=881905A9-4CCA-4F06-9CEE-E20D70E532F0\",\"role\":\"INFORMATIONAL_OFFICE\"}]},\"contradictions\":[]}",
+          "reasoning": "The user wants me to return exactly one JSON object conforming to MODEL_SCHEMA based on the evidence packet. No markdown fences, commentary, or JSON repair conventions. Output JSON only.\n",
+          "reasoning_details": [
+            {
+              "format": "xai-responses-v1",
+              "index": 0,
+              "summary": "The user wants me to return exactly one JSON object conforming to MODEL_SCHEMA based on the evidence packet. No markdown fences, commentary, or JSON repair conventions. Output JSON only.\n",
+              "type": "reasoning.summary"
+            },
+            {
+              "data": "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",
+              "format": "xai-responses-v1",
+              "id": "rs_ce573b35-e810-940f-8f9c-53ff5e18bf2e",
+              "index": 1,
+              "type": "reasoning.encrypted"
+            }
+          ],
+          "refusal": null,
+          "role": "assistant"
+        },
+        "native_finish_reason": "completed"
+      }
+    ],
+    "created": 1785167753,
+    "id": "gen-1785167753-hPrfVBeBdQ7PH8n3H0pt",
+    "model": "x-ai/grok-4.5",
+    "object": "chat.completion",
+    "provider": "xAI",
+    "service_tier": "default",
+    "system_fingerprint": null,
+    "usage": {
+      "completion_tokens": 1437,
+      "completion_tokens_details": {
+        "audio_tokens": 0,
+        "image_tokens": 0,
+        "reasoning_tokens": 1015
+      },
+      "cost": 0.0096992,
+      "cost_details": {
+        "upstream_inference_completions_cost": 0.008622,
+        "upstream_inference_cost": 0.0096992,
+        "upstream_inference_prompt_cost": 0.0010772
+      },
+      "is_byok": false,
+      "prompt_tokens": 1409,
+      "prompt_tokens_details": {
+        "audio_tokens": 0,
+        "cache_write_tokens": 0,
+        "cached_tokens": 1024,
+        "video_tokens": 0
+      },
+      "total_tokens": 2846
+    }
+  },
+  "raw_text": "{\"permit_decision\":\"VERIFY\",\"jurisdiction\":{\"jurisdiction_id\":\"us-sd-belle_fourche\",\"name\":\"Belle Fourche\",\"state\":\"SD\",\"type\":\"city_or_local_authority\"},\"project_family\":\"commercial_tenant_improvement\",\"primary_permit_family\":\"VERIFY\",\"companion_permits\":[{\"family\":\"BUILDING\",\"status\":\"VERIFY\"},{\"family\":\"ELECTRICAL\",\"status\":\"VERIFY\"},{\"family\":\"PLUMBING\",\"status\":\"VERIFY\"},{\"family\":\"MECHANICAL\",\"status\":\"VERIFY\"},{\"family\":\"FIRE_LIFE_SAFETY\",\"status\":\"VERIFY\"},{\"family\":\"OCCUPANCY\",\"status\":\"VERIFY\"},{\"family\":\"PLANNING_ZONING\",\"status\":\"VERIFY\"}],\"filing\":{\"authority_id\":\"us-sd-belle_fourche\",\"destination_url\":\"https://www.bellefourche.org/index.asp?SEC=881905A9-4CCA-4F06-9CEE-E20D70E532F0\",\"office\":\"Belle Fourche City Engineer\",\"url_role\":\"INFORMATIONAL_OFFICE\"},\"source_support\":{\"state\":\"OFFICIAL_SOURCE_SUPPORTED\",\"strength\":\"WEAK\",\"evidence\":[{\"url\":\"https://www.bellefourche.org/index.asp?SEC=453A98E5-1613-476B-9FD9-D9B4A0F78CF3&DE=49B31FD0-5FB5-48C0-BC57-495D7A4E30DB\",\"role\":\"REQUIREMENT_EVIDENCE\"},{\"url\":\"https://www.bellefourche.org/index.asp?SEC=881905A9-4CCA-4F06-9CEE-E20D70E532F0\",\"role\":\"INFORMATIONAL_OFFICE\"}]},\"contradictions\":[]}",
+  "requested_model": "x-ai/grok-4.5",
+  "requested_provider": "openrouter",
+  "requested_runtime": "grok",
+  "response_id": "gen-1785167753-hPrfVBeBdQ7PH8n3H0pt",
+  "runtime": "OpenRouter chat/completions; upstream_provider=xAI"
+}

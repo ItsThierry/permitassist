@@ -1,0 +1,78 @@
+{
+  "observed_model": "x-ai/grok-4.5",
+  "observed_provider": "openrouter",
+  "path_proof": {
+    "adapter": "grok",
+    "engine_called": false,
+    "engine_result_supplied_to_model": false,
+    "model_call_count": 1
+  },
+  "provider": "openrouter",
+  "provider_response": {
+    "choices": [
+      {
+        "finish_reason": "stop",
+        "index": 0,
+        "logprobs": null,
+        "message": {
+          "content": "{\"permit_decision\":\"REQUIRED\",\"jurisdiction\":{\"jurisdiction_id\":\"us-tx-amarillo\",\"name\":\"Amarillo\",\"state\":\"TX\",\"type\":\"city_or_local_authority\"},\"project_family\":\"commercial_tenant_improvement\",\"primary_permit_family\":\"BUILDING\",\"companion_permits\":[{\"family\":\"ELECTRICAL\",\"status\":\"VERIFY\"},{\"family\":\"PLUMBING\",\"status\":\"VERIFY\"},{\"family\":\"MECHANICAL\",\"status\":\"VERIFY\"},{\"family\":\"FIRE_LIFE_SAFETY\",\"status\":\"VERIFY\"},{\"family\":\"OCCUPANCY\",\"status\":\"REQUIRED\"},{\"family\":\"PLANNING_ZONING\",\"status\":\"VERIFY\"}],\"filing\":{\"authority_id\":null,\"office\":\"Building Safety\",\"destination_url\":\"https://www.amarillo.gov/building-safety/\",\"url_role\":\"INFORMATIONAL_OFFICE\"},\"source_support\":{\"state\":\"OFFICIAL_SOURCE_SUPPORTED\",\"strength\":\"MODERATE\",\"evidence\":[{\"url\":\"https://www.amarillo.gov/building-safety/certificate-of-occupancy\",\"role\":\"REQUIREMENT_EVIDENCE\"},{\"url\":\"https://www.amarillo.gov/building-safety/\",\"role\":\"INFORMATIONAL_OFFICE\"}]},\"contradictions\":[]}",
+          "reasoning": "I need to produce a JSON object conforming to the MODEL_SCHEMA based on the evidence packet.\n",
+          "reasoning_details": [
+            {
+              "format": "xai-responses-v1",
+              "index": 0,
+              "summary": "I need to produce a JSON object conforming to the MODEL_SCHEMA based on the evidence packet.\n",
+              "type": "reasoning.summary"
+            },
+            {
+              "data": "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",
+              "format": "xai-responses-v1",
+              "id": "rs_ae7f57e0-db51-91ba-8b22-5fcff007874c",
+              "index": 1,
+              "type": "reasoning.encrypted"
+            }
+          ],
+          "refusal": null,
+          "role": "assistant"
+        },
+        "native_finish_reason": "completed"
+      }
+    ],
+    "created": 1785168139,
+    "id": "gen-1785168139-VNW6k0apnpe4ceWJ2g0Z",
+    "model": "x-ai/grok-4.5",
+    "object": "chat.completion",
+    "provider": "xAI",
+    "service_tier": "default",
+    "system_fingerprint": null,
+    "usage": {
+      "completion_tokens": 1369,
+      "completion_tokens_details": {
+        "audio_tokens": 0,
+        "image_tokens": 0,
+        "reasoning_tokens": 1073
+      },
+      "cost": 0.0095912,
+      "cost_details": {
+        "upstream_inference_completions_cost": 0.008214,
+        "upstream_inference_cost": 0.0095912,
+        "upstream_inference_prompt_cost": 0.0013772
+      },
+      "is_byok": false,
+      "prompt_tokens": 1559,
+      "prompt_tokens_details": {
+        "audio_tokens": 0,
+        "cache_write_tokens": 0,
+        "cached_tokens": 1024,
+        "video_tokens": 0
+      },
+      "total_tokens": 2928
+    }
+  },
+  "raw_text": "{\"permit_decision\":\"REQUIRED\",\"jurisdiction\":{\"jurisdiction_id\":\"us-tx-amarillo\",\"name\":\"Amarillo\",\"state\":\"TX\",\"type\":\"city_or_local_authority\"},\"project_family\":\"commercial_tenant_improvement\",\"primary_permit_family\":\"BUILDING\",\"companion_permits\":[{\"family\":\"ELECTRICAL\",\"status\":\"VERIFY\"},{\"family\":\"PLUMBING\",\"status\":\"VERIFY\"},{\"family\":\"MECHANICAL\",\"status\":\"VERIFY\"},{\"family\":\"FIRE_LIFE_SAFETY\",\"status\":\"VERIFY\"},{\"family\":\"OCCUPANCY\",\"status\":\"REQUIRED\"},{\"family\":\"PLANNING_ZONING\",\"status\":\"VERIFY\"}],\"filing\":{\"authority_id\":null,\"office\":\"Building Safety\",\"destination_url\":\"https://www.amarillo.gov/building-safety/\",\"url_role\":\"INFORMATIONAL_OFFICE\"},\"source_support\":{\"state\":\"OFFICIAL_SOURCE_SUPPORTED\",\"strength\":\"MODERATE\",\"evidence\":[{\"url\":\"https://www.amarillo.gov/building-safety/certificate-of-occupancy\",\"role\":\"REQUIREMENT_EVIDENCE\"},{\"url\":\"https://www.amarillo.gov/building-safety/\",\"role\":\"INFORMATIONAL_OFFICE\"}]},\"contradictions\":[]}",
+  "requested_model": "x-ai/grok-4.5",
+  "requested_provider": "openrouter",
+  "requested_runtime": "grok",
+  "response_id": "gen-1785168139-VNW6k0apnpe4ceWJ2g0Z",
+  "runtime": "OpenRouter chat/completions; upstream_provider=xAI"
+}

@@ -1,0 +1,78 @@
+{
+  "observed_model": "x-ai/grok-4.5",
+  "observed_provider": "openrouter",
+  "path_proof": {
+    "adapter": "grok",
+    "engine_called": false,
+    "engine_result_supplied_to_model": false,
+    "model_call_count": 1
+  },
+  "provider": "openrouter",
+  "provider_response": {
+    "choices": [
+      {
+        "finish_reason": "stop",
+        "index": 0,
+        "logprobs": null,
+        "message": {
+          "content": "{\"permit_decision\":\"REQUIRED\",\"jurisdiction\":{\"jurisdiction_id\":\"us-oh-akron\",\"name\":\"Akron\",\"state\":\"OH\",\"type\":\"city_or_local_authority\"},\"project_family\":\"commercial_tenant_improvement\",\"primary_permit_family\":\"BUILDING\",\"companion_permits\":[{\"family\":\"ELECTRICAL\",\"status\":\"REQUIRED\"},{\"family\":\"PLUMBING\",\"status\":\"REQUIRED\"},{\"family\":\"MECHANICAL\",\"status\":\"REQUIRED\"},{\"family\":\"FIRE_LIFE_SAFETY\",\"status\":\"REQUIRED\"},{\"family\":\"OCCUPANCY\",\"status\":\"REQUIRED\"},{\"family\":\"PLANNING_ZONING\",\"status\":\"CONDITIONAL\"}],\"filing\":{\"authority_id\":\"us-oh-akron\",\"office\":\"City of Akron Engineering Bureau Plans and Permits\",\"destination_url\":\"https://co.summitoh.net/departments/Building-Standards.html\",\"url_role\":\"APPLICATION_START\"},\"source_support\":{\"state\":\"OFFICIAL_SOURCE_SUPPORTED\",\"strength\":\"MODERATE\",\"evidence\":[{\"url\":\"https://www.akronohio.gov/departments/service/engineering_bureau/plans_permits.php\",\"role\":\"REQUIREMENT_EVIDENCE\"},{\"url\":\"https://co.summitoh.net/departments/Building-Standards.html\",\"role\":\"APPLICATION_START\"}]},\"contradictions\":[]}",
+          "reasoning": "The user wants me to return exactly one JSON object conforming to MODEL_SCHEMA based on the evidence packet. No markdown fences, commentary, etc. Output JSON only.\n",
+          "reasoning_details": [
+            {
+              "format": "xai-responses-v1",
+              "index": 0,
+              "summary": "The user wants me to return exactly one JSON object conforming to MODEL_SCHEMA based on the evidence packet. No markdown fences, commentary, etc. Output JSON only.\n",
+              "type": "reasoning.summary"
+            },
+            {
+              "data": "MDaLZlgBhE0cLuZN/WYsVTHmuC5P0LfE081cmC3GbtMO7RzluZJkpxZnspxNXlcV0EEXTGVKPWTMbxQT5t3UjhsEFV4M7+3SnR4FBYRPkLsDTLy92NzRDTs0fO6OVkqWQgcKO93R1118a/ELZRrPo0BNmEkdv8omGT6R3+X0El5Q2jOQWtiPdY74eqDBQHnVoun2Q/gX4mjseycTx6kBtDhg1fHLsspQtHWBl7bw1mh+w+VDUfXubbzzptKNn/H7JLyDiy3AQa5czS76iA9BjyrUpDkW60zke0GyiMmtu/KPiYrF9q6uDKczIw+JGnUCaQoHaI+AjqQhHeiNDWv344RTIoRklqguSUUvOqf5kdeQMTSz1hPNp0ThVQMlszjnnHAH4l6Y4LhigZ1pUW3vnfX5D9QpAQaQpJLf+zq4DiA6pEmJLATHYbpl+eF6LOuB529F785bzr2BOEaOIaiO8ODoQsb0sxKquqU9lPkQNop9H66vUUVkQDFO1RTlO7zVQzIuC885J9ehdpsWynzdOsfdrUvUGjVqSI+I4qIPU0zOL4NfinHr4KF9sYCk3uzyhWj+kzh02kqy8VW2DBvgJiuDLQv+ysrTWNL2VWTqwh/kyE+Nr2EZA6xWmpLpPqsOoPqfbhD0M0FZkXukqnqfN4DOUypmBMGJfIPDtCNeTZdJnqZ59+QXCTDMFpxhkeS21g+cXSO4laa9WZoooi9RR9OmoIvfDFWQWcFMx+Jxw+mFmwdn1LMjfhHMkJkyU7dyVXKcwhvX7v+ap22F1s27jqgFC9YTo0DOO5NFt7UKelqkSBqXYYDkWRoVoNDm1EUi3OF9U3OyeJ4VSxdoLsim1b6i2oQJ6EHg8rN+1dq262wtE5wsVYtKZqPERoW2+XxfJXJGbSB54HPY8FgnqlWnz6N8Nd8ochnsqt6LNUNG42k8yo9RPDOILPwHXA4uzD3Wfmi7qw4V91aRcxFWDqvImOWQQzPL28+VGLES2EtkRWnV3WdhIPltTEPSwhyXtmdPYGXqMBxMOeC1yIiuLu2S7orER3yI6BnH9g8aT+PmLtM9u9o1nfXM28+x9pM7D/1wq725qr2ZelwQRMcgZYOYnXCvE3gPIZmbMbhRPr/hM/Cz3aMTJ4+q0HlUlHax4U0z5dC2FGrM+shY5t9A71HSEcSDea1yyHLpY1YgbWCxp7NXaCQshtmLOp7JBflZEgeXJSD837Pc30/4/WSi0xOMffXT1V2bnvIJcnAJzM/Bu/f3gU9UEoCY3u2efvVuTKDC3mCE5du/Ql6a0syPVUyZ1R9bM/IX3Z29kLz1+y/3LYkwotBowBcpmB9Tk5VokULQrgK89NABBCbof1jKZFLhqOrjOoBkGAbJqsRWsgoSBJGvp94htFnbwfVhZCDyOLBVCA1k/iZAQpYIzyM0smNuqXS84O6zBXgaxM0XKdbs+AF/mmDZqmwtTBHVdElHDxnPZRkQc0hYea1FfdRAPDvc4xpc8OWEfB98aCprhokSkaKqi2Zuf8SS+CbUUJAQpqv1bEyu6ROCgc11qQU1KelrRRZj0eEYR/ZPz/lKbvdQRNyP4aOs3nRn9uugOuN5i/qD88dnRyPL5lQU0dX7eijDcg9yOOAfNy1MBg+Rd+Q/vgQvAxPaJGnXKMho45d+qZjD4JYMDazdNtbDOupZDKWAY3h+2pd8tyaHqqquhR+iqyq98PbV4ofv8YokhJ0yy7as4RAl1TiQmRr+hIQEK7lDNp9oRdQZ3+pq4vWnSmqkrSUJ27pdDXE8281Th+kwxkO1KEDTIOYX48yMZmufZnaqGJg9mR7zeG4Fp9o78YmdxdkCTcL4EtC7n6mbczkaqvu9wEO0ZzLL7OyAPHNZyu6FsX7mMyj0gwdMJKScAaeRNEj4hKSZwraktifaRjvBdSKSGcQN5WxJtZGRGvdUhuborhW96uEitE+LOUWgaOJ73Iq1bkAmGA0OnHXtNu2OtPBtMVy+Ptl2KcXliupcBgoj8+lOhi7VMH8OSSwOtfo22LbtNk5FxHnNlA0J+GtmPxp9CFHlNQI7HUEqo2t17LHc9tckEsUBe3oEPoh2NC/HjFL/bObrmonjkrtCj4rF133Ek/uQ4SGEBtB2febWpNQGzNhrt1243ynOSpTdd68r6/rxYt5Wzs4GXGkd0X4VHCm3YGTkvaWzLpCr2Y8qlKTzCVDCg2fS5rVAyKj4Cc0ifHuh4UVKg0RxEJnwyZ/92ye1IVf1QbpO4B1kl0tdveH2Uwdi5Y2wDBw1P3tGTeRsQb0BdvxoxGwMugB7Az8OsB0xYgx1o7sOchytsOqf46Vo5j4oYu8Tc3EPQUQkQk2ho4GXp4vMSrzIqAX+gVH+zvl95ygtcwnrSWYrfAeNxquV75U6bu5NI6iJrWz8FuT2B/39rl//Bos2ymNgP10W0z9bmUkdUEJu47SdWIjySoSTI9FEXNJS0kCdYn2um1kVfAkkIfJjCbGKmMdREdQKKUSXuNXmDtK08iNaRnbIhxEM9EnqOJA3iQSlowXRVAsah8+rFl0f+vubY2LxY7uu1Ue7DuKdbolbkWtyAhH2YseWGD2DnzDfnfbRSWMdUHuKp6UwS6rYt+pxqcNsIxtai/P6tkwgkm94eI8WIlRTkGtQPwPfbVhpvbFzzLY88BJoNdCJGpOyK9zgjQm7DdrchM12fJMptmWYp7XHcYzx+DgeG45tGX9uDQ5ryHATxLmwNYFEthweOZgcXmNint7T2sRuXu6BYn7iWqvFW9FbmuOUggU2dYgb1HqIr+ZPMz1vipBCvxVdJD19Rpgq0KBBsRN0eKfpB7s03FMyq/QhQio8FA65eHNmHMHwpgB1qg48JRYfVvVDJzLtqxXmTGMR2QRCbJHwERe/8hhvFs+fPw7s5Kwb5WPXKC1/HXP8UCGgFojjsmNNkZn2sSEg4UedXq8LU56qZVmFfPnqjjfJDuHFDLVC8B23hTk18WfljtGJ4OtlVURGzTg4LeMJKRStjvCS9xyisytad2oGm209j8vCCsyEyZbBuLFo3YjlDlBh/QH4GLxJH+YVkuir4Xp97nBxP+vVm5wSyeNzztb91tSXfulS2WSH/1YkEzEa0L0x51ysMG2ArbzoV5tSL7kPbBFZy/960KsGaPt1qduk/U4jWz6JBMU3PnBHsZjNg2VNIHwv9Pl6wl2mq69VCo7lRI6npyDg4yY2pgzPMJbYgQhTCIsS1Jx8xPaNtB0/Luu7iPXJcl7UVisU392o01odKj0BboRAuSlAvlI6QAcILX6JQNukynooSqISZPXRaTVu9CvUBeBOx/a8Ez3Spk3dIhQJQlfxSuudf4HWCko1lZGnJ9iS6ptlpZhYMhE0IwMW/a3wUjeZp7PxUhzWWE6XdX6xo1BrxK2X4Jlbu6no4GoMJrcsT/jp+iWFMGz4YFhAcbNOTOgspKmc8UkT8/OTbF5QUwf3o2e3g+FQHD/brqnWoIR1De6j1/7kf21v9sNx3lOSgPK4s0qIjfCaN3EMSF0nmr5Kr6nfVpHL9ar5/zCJBdADXBAGEw5Xqtp2R3r3xrjW9nNJqt6Y0AHvZXL3G/ncOsRd2Z9jkDXoqD1FtuUh4+XE14Dqjh8YQPe93RWnSgBc8yfQhLRcbFViXSvvxcB0SCdjnkd7mhPzVRPMcqUv63r7z9hB3ei1l0fd8VydQ65OvYVfgjCeXQP1uJqt6BNJHhATcC7sO/FLCeYss4NP+jc/t3HweF+ywDsg9MDLD1UL55XedTHGnORxG9HbE3ju3JwPBewJ/hLVdsme8NQGqT7fszXqF+6ocJBGHiBMEC4E4UfruVQJUZwC/C48kqx3NsuSbiRrbKYLJtIZ7fNmVHfMZciVXC6OklLHtkPzfUG4tBcY6mpUnYneoxyrm+krU+mVvl9yltMVTNKFLeq1s2nwfuMkO6OL7Twt/fW7sBzE2kv58vpig1c33Ov02lDWQJgtY+E/PLEyxxn4TD2jigNf06UaPmn+bapHi4Pt0YvEwjkV3nCBRxdHjiz83Q7BS4X6xOHcLu6faxGH2h3Qj1KIG2kHzjTevh7L/bVt8NObTuX7trjoGgHWZhK8Rqe9g63MBe8vZi21HPHDsFshWQBR+PqKgs8cJtfvXeDVw9jbJBDm17Cu8dQLD/hB3YTyDJMbWkw9mkM7FhxAKvyXOKy6hnk027Feo002K6Som08Zj/PaEOCITgqRwDVsKq9r63jEo3IwDfhBEPlbIG8RikygXHuOTn7CL9llZkMmFh2EQH/voG7zkLnjzwkpbpBMK5OfXoi0t3E1Izaow12k6Nf3d3cANCwJOybwVsCUaxPblXn7jUfx5e5sZU0xx4VnLoRv9lKQSacWO/YGYSPDIQAOY7w5nmvXvQSzSwPcEx5vXQkKMtFBLB4lrsYMXhJEUmQDsWXR82v7DOTaXlYuRBmWnWGz9UX3t+jhmsNOf6nUYM0eWoA2/o8G/IupSiFqY8B5MmHeyAlmGj6P+abcAN2n+5k9BTipezy0Ib6UPzYDzZzd7nCddW3YlWQ1knMWd5saNVuxFSpOzO/9poebcLH2BesQrRvOleoiVsCaz/CXHYo4fHYoxyftYcce4g+4rO/pI5C8rjmH7BkDYoTY710R/ZUxVtNku5naLRJKU1TW6ADgHiO3OpFNLaQWskxO/E2VNgCKXWKYziVYyiBsxfsIcbZzgjCZ+O+boXGdShNreBKiyP6riaPvZXfB+xPYw1FakhmF1VHulmninJFDW7HTwCC0xEqbmJsiB6JFkdDaYf3pyoGUdb9Z9BKimt8TDg7pTyvWFBE7jJXZijaxUVRAVYvzh4fhfUJxYe5OprsPIa/aM5g2Y1UMSN61UdQl3aaWRN1zESjrTghIKL1Y+LghyPBxObA3dTORet40eX2GCBfhDx8degk7N42m64dl6NbKz87xma67qnJHJQ0nbO2nvk6znIXKQKhWC9q5k5TuxYMLxO0JDqS//WOqF5tAb2zHSm8B5gJibb20zaZ1Fm9aLdrhsy/RThKN/MkYoInEQeqjFdlK5vMt70apyTdMOzE",
+              "format": "xai-responses-v1",
+              "id": "rs_b8eac904-e423-9ac0-b034-ed0968219400",
+              "index": 1,
+              "type": "reasoning.encrypted"
+            }
+          ],
+          "refusal": null,
+          "role": "assistant"
+        },
+        "native_finish_reason": "completed"
+      }
+    ],
+    "created": 1785167225,
+    "id": "gen-1785167225-1QwEp8wkA338PR1yxIJ9",
+    "model": "x-ai/grok-4.5",
+    "object": "chat.completion",
+    "provider": "xAI",
+    "service_tier": "default",
+    "system_fingerprint": null,
+    "usage": {
+      "completion_tokens": 1266,
+      "completion_tokens_details": {
+        "audio_tokens": 0,
+        "image_tokens": 0,
+        "reasoning_tokens": 951
+      },
+      "cost": 0.0086872,
+      "cost_details": {
+        "upstream_inference_completions_cost": 0.007596,
+        "upstream_inference_cost": 0.0086872,
+        "upstream_inference_prompt_cost": 0.0010912
+      },
+      "is_byok": false,
+      "prompt_tokens": 1416,
+      "prompt_tokens_details": {
+        "audio_tokens": 0,
+        "cache_write_tokens": 0,
+        "cached_tokens": 1024,
+        "video_tokens": 0
+      },
+      "total_tokens": 2682
+    }
+  },
+  "raw_text": "{\"permit_decision\":\"REQUIRED\",\"jurisdiction\":{\"jurisdiction_id\":\"us-oh-akron\",\"name\":\"Akron\",\"state\":\"OH\",\"type\":\"city_or_local_authority\"},\"project_family\":\"commercial_tenant_improvement\",\"primary_permit_family\":\"BUILDING\",\"companion_permits\":[{\"family\":\"ELECTRICAL\",\"status\":\"REQUIRED\"},{\"family\":\"PLUMBING\",\"status\":\"REQUIRED\"},{\"family\":\"MECHANICAL\",\"status\":\"REQUIRED\"},{\"family\":\"FIRE_LIFE_SAFETY\",\"status\":\"REQUIRED\"},{\"family\":\"OCCUPANCY\",\"status\":\"REQUIRED\"},{\"family\":\"PLANNING_ZONING\",\"status\":\"CONDITIONAL\"}],\"filing\":{\"authority_id\":\"us-oh-akron\",\"office\":\"City of Akron Engineering Bureau Plans and Permits\",\"destination_url\":\"https://co.summitoh.net/departments/Building-Standards.html\",\"url_role\":\"APPLICATION_START\"},\"source_support\":{\"state\":\"OFFICIAL_SOURCE_SUPPORTED\",\"strength\":\"MODERATE\",\"evidence\":[{\"url\":\"https://www.akronohio.gov/departments/service/engineering_bureau/plans_permits.php\",\"role\":\"REQUIREMENT_EVIDENCE\"},{\"url\":\"https://co.summitoh.net/departments/Building-Standards.html\",\"role\":\"APPLICATION_START\"}]},\"contradictions\":[]}",
+  "requested_model": "x-ai/grok-4.5",
+  "requested_provider": "openrouter",
+  "requested_runtime": "grok",
+  "response_id": "gen-1785167225-1QwEp8wkA338PR1yxIJ9",
+  "runtime": "OpenRouter chat/completions; upstream_provider=xAI"
+}

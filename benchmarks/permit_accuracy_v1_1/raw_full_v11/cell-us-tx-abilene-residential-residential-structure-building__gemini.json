@@ -1,0 +1,20 @@
+{
+  "observed_model": "Gemini 3.6 Flash (High)",
+  "observed_provider": "google-antigravity-oauth",
+  "path_proof": {
+    "adapter": "gemini",
+    "capture_created_by_model": true,
+    "engine_called": false,
+    "engine_result_supplied_to_model": false,
+    "model_call_count": 1
+  },
+  "provider": "google-antigravity-oauth",
+  "provider_stderr": "",
+  "provider_stdout": "DONE\n",
+  "raw_text": "{\n  \"permit_decision\": \"VERIFY\",\n  \"jurisdiction\": {\n    \"jurisdiction_id\": \"us-tx-abilene\",\n    \"name\": \"Abilene\",\n    \"state\": \"TX\",\n    \"type\": \"city_or_local_authority\"\n  },\n  \"project_family\": \"residential_remodel\",\n  \"primary_permit_family\": \"VERIFY\",\n  \"companion_permits\": [],\n  \"filing\": {\n    \"authority_id\": \"us-tx-abilene\",\n    \"office\": \"VERIFY\",\n    \"destination_url\": \"https://www.abilenetx.gov/FAQ.aspx?QID=430\",\n    \"url_role\": \"VERIFY\"\n  },\n  \"source_support\": {\n    \"state\": \"VERIFY\",\n    \"strength\": \"VERIFY\",\n    \"evidence\": [\n      {\n        \"url\": \"https://www.abilenetx.gov/FAQ.aspx?QID=430\",\n        \"role\": \"VERIFY\"\n      }\n    ]\n  },\n  \"contradictions\": []\n}\n",
+  "requested_model": "Gemini 3.6 Flash (High)",
+  "requested_provider": "google-antigravity-oauth",
+  "requested_runtime": "gemini",
+  "response_id": null,
+  "runtime": "agy.exe 1.0.2 / language-server 1.1.7"
+}

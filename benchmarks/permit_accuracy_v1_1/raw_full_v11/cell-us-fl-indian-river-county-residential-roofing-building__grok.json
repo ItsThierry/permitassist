@@ -1,0 +1,78 @@
+{
+  "observed_model": "x-ai/grok-4.5",
+  "observed_provider": "openrouter",
+  "path_proof": {
+    "adapter": "grok",
+    "engine_called": false,
+    "engine_result_supplied_to_model": false,
+    "model_call_count": 1
+  },
+  "provider": "openrouter",
+  "provider_response": {
+    "choices": [
+      {
+        "finish_reason": "stop",
+        "index": 0,
+        "logprobs": null,
+        "message": {
+          "content": "{\"permit_decision\":\"REQUIRED\",\"jurisdiction\":{\"jurisdiction_id\":\"us-fl-indian_river_county\",\"name\":\"Indian River County\",\"state\":\"FL\",\"type\":\"county\"},\"project_family\":\"reroof\",\"primary_permit_family\":\"BUILDING\",\"companion_permits\":[{\"family\":\"VERIFY\",\"status\":\"VERIFY\"}],\"filing\":{\"authority_id\":null,\"destination_url\":\"https://indianriver.gov/services/community_development/building_division/index.php\",\"office\":\"Indian River County Building Division\",\"url_role\":\"APPLICATION_START\"},\"source_support\":{\"state\":\"OFFICIAL_SOURCE_SUPPORTED\",\"strength\":\"MODERATE\",\"evidence\":[{\"url\":\"https://indianriver.gov/services/community_development/building_division/index.php\",\"role\":\"APPLICATION_START\"}]},\"contradictions\":[]}",
+          "reasoning": "I need to produce a JSON object conforming to the MODEL_SCHEMA based on the evidence packet.\n{\n  \"permit_decision\": \"REQUIRED\",\n  \"jurisdiction\": {\n    \"jurisdiction_id\": \"us-fl-indian_river_county\",\n    \"name\": \"Indian River County\",\n    \"state\": \"FL\",\n    \"type\": \"county\"\n  },\n  \"project_family\": \"r oof\",\n  \"primary_permit_family\": \"BUILDING\",\n  \"companion_permits\": [],\n  \"contradictions\": [],\n  \"filing\": {\n    \"authority_id\": null,\n    \"destination_url\": \"https://indianriver.gov/services/community_development/building_division/index.",
+          "reasoning_details": [
+            {
+              "format": "xai-responses-v1",
+              "index": 0,
+              "summary": "I need to produce a JSON object conforming to the MODEL_SCHEMA based on the evidence packet.\n{\n  \"permit_decision\": \"REQUIRED\",\n  \"jurisdiction\": {\n    \"jurisdiction_id\": \"us-fl-indian_river_county\",\n    \"name\": \"Indian River County\",\n    \"state\": \"FL\",\n    \"type\": \"county\"\n  },\n  \"project_family\": \"r oof\",\n  \"primary_permit_family\": \"BUILDING\",\n  \"companion_permits\": [],\n  \"contradictions\": [],\n  \"filing\": {\n    \"authority_id\": null,\n    \"destination_url\": \"https://indianriver.gov/services/community_development/building_division/index.",
+              "type": "reasoning.summary"
+            },
+            {
+              "data": "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",
+              "format": "xai-responses-v1",
+              "id": "rs_9bdf6134-028a-96b9-a537-3421284c1429",
+              "index": 1,
+              "type": "reasoning.encrypted"
+            }
+          ],
+          "refusal": null,
+          "role": "assistant"
+        },
+        "native_finish_reason": "completed"
+      }
+    ],
+    "created": 1785165072,
+    "id": "gen-1785165072-xVw6qUJS7orWqDHL8but",
+    "model": "x-ai/grok-4.5",
+    "object": "chat.completion",
+    "provider": "xAI",
+    "service_tier": "default",
+    "system_fingerprint": null,
+    "usage": {
+      "completion_tokens": 1043,
+      "completion_tokens_details": {
+        "audio_tokens": 0,
+        "image_tokens": 0,
+        "reasoning_tokens": 850
+      },
+      "cost": 0.0087304,
+      "cost_details": {
+        "upstream_inference_completions_cost": 0.006258,
+        "upstream_inference_cost": 0.0087304,
+        "upstream_inference_prompt_cost": 0.0024724
+      },
+      "is_byok": false,
+      "prompt_tokens": 1345,
+      "prompt_tokens_details": {
+        "audio_tokens": 0,
+        "cache_write_tokens": 0,
+        "cached_tokens": 128,
+        "video_tokens": 0
+      },
+      "total_tokens": 2388
+    }
+  },
+  "raw_text": "{\"permit_decision\":\"REQUIRED\",\"jurisdiction\":{\"jurisdiction_id\":\"us-fl-indian_river_county\",\"name\":\"Indian River County\",\"state\":\"FL\",\"type\":\"county\"},\"project_family\":\"reroof\",\"primary_permit_family\":\"BUILDING\",\"companion_permits\":[{\"family\":\"VERIFY\",\"status\":\"VERIFY\"}],\"filing\":{\"authority_id\":null,\"destination_url\":\"https://indianriver.gov/services/community_development/building_division/index.php\",\"office\":\"Indian River County Building Division\",\"url_role\":\"APPLICATION_START\"},\"source_support\":{\"state\":\"OFFICIAL_SOURCE_SUPPORTED\",\"strength\":\"MODERATE\",\"evidence\":[{\"url\":\"https://indianriver.gov/services/community_development/building_division/index.php\",\"role\":\"APPLICATION_START\"}]},\"contradictions\":[]}",
+  "requested_model": "x-ai/grok-4.5",
+  "requested_provider": "openrouter",
+  "requested_runtime": "grok",
+  "response_id": "gen-1785165072-xVw6qUJS7orWqDHL8but",
+  "runtime": "OpenRouter chat/completions; upstream_provider=xAI"
+}

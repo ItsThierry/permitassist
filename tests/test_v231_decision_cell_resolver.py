@@ -37,6 +37,38 @@ def test_index_contract_and_golden_cells_present():
         assert index[key]["publish_status"] == "PUBLISHABLE"
 
 
+def test_existing_specialty_primary_uses_token_phrases_not_substrings():
+    from api import v231_decision_cells as v231
+
+    for label in ("Design Review Permit", "Assignment Review Permit"):
+        assert v231._existing_specialty_primary_permit({
+            "permits_required": [{"permit_type": label, "required": True}]
+        }) is None
+
+    for label in ("Sign Permit", "Mechanical Permit"):
+        matched = v231._existing_specialty_primary_permit({
+            "permits_required": [{"permit_type": label, "required": True}]
+        })
+        assert matched is not None
+        assert matched["permit_type"] == label
+
+
+def test_project_candidate_classifiers_reject_embedded_word_collisions():
+    from api import v231_decision_cells as v231
+    from api import v24_decision_cells
+
+    collision_text = "homeownership bathymetry proof documentation"
+    assert v231.classify_project_candidates(collision_text, "") == []
+    assert v24_decision_cells._classify_project_candidates(collision_text, "") == []
+
+    assert v231.classify_project_candidates(
+        "residential bathroom remodel", "residential"
+    ) == ["residential_remodel"]
+    assert "residential_remodel" in v24_decision_cells._classify_project_candidates(
+        "residential roof replacement", "residential"
+    )
+
+
 def test_golden_exact_resolutions_and_project_classifier():
     from api.v231_decision_cells import ResolutionStatus, classify_project_candidates, resolve_v231_cell
 
@@ -565,3 +597,45 @@ def test_internal_cell_lock_never_escapes_public_view_model():
 
     for forbidden in ("v2.3.1", "_v231_", "permitassist_v231_decision_cell", "_decision_cell_primary_lock", "decision_cell", "cell_id", "resolver", "source metadata"):
         assert forbidden not in serialized
+
+
+def test_evidence_page_is_not_promoted_to_v231_application_route() -> None:
+    from api.v231_decision_cells import (
+        ResolutionStatus,
+        V231Resolution,
+        reconcile_v231_result,
+    )
+
+    source_url = "https://example.gov/municipal-code/building-rule.pdf"
+    cell = {
+        "cell_id": "synthetic-v231-source-only",
+        "jurisdiction_id": "us-ex-exampleville",
+        "ahj_name": "Exampleville",
+        "project_type_slug": "commercial_tenant_improvement",
+        "publish_status": "PUBLISHABLE",
+        "main_decision": "REQUIRED",
+        "permit_name": "Building Permit",
+        "permit_kind": "building",
+        "authority_model": {
+            "issuing_authority": "Exampleville Building Department",
+            "application_authority": "Exampleville Building Department",
+        },
+        "source_evidence": [
+            {
+                "final_url": source_url,
+                "title": "Building code requirement",
+                "quote": "A building permit is required for alterations.",
+            }
+        ],
+    }
+    resolution = V231Resolution(
+        ResolutionStatus.EXACT_CELL_COVERED,
+        cell=cell,
+        key="EX|exampleville|commercial_tenant_improvement",
+    )
+
+    out = reconcile_v231_result({}, resolution)
+
+    assert out["permit_decision"] == "REQUIRED"
+    assert not out.get("apply_url")
+    assert any(source.get("url") == source_url for source in out["sources"])

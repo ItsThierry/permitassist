@@ -1,0 +1,78 @@
+{
+  "observed_model": "x-ai/grok-4.5",
+  "observed_provider": "openrouter",
+  "path_proof": {
+    "adapter": "grok",
+    "engine_called": false,
+    "engine_result_supplied_to_model": false,
+    "model_call_count": 1
+  },
+  "provider": "openrouter",
+  "provider_response": {
+    "choices": [
+      {
+        "finish_reason": "stop",
+        "index": 0,
+        "logprobs": null,
+        "message": {
+          "content": "{\"permit_decision\":\"VERIFY\",\"jurisdiction\":{\"jurisdiction_id\":\"us-me-auburn\",\"name\":\"Auburn\",\"state\":\"ME\",\"type\":\"city_or_local_authority\"},\"project_family\":\"commercial_tenant_improvement\",\"primary_permit_family\":\"BUILDING\",\"companion_permits\":[{\"family\":\"ELECTRICAL\",\"status\":\"VERIFY\"},{\"family\":\"PLUMBING\",\"status\":\"VERIFY\"},{\"family\":\"MECHANICAL\",\"status\":\"VERIFY\"},{\"family\":\"FIRE_LIFE_SAFETY\",\"status\":\"VERIFY\"},{\"family\":\"OCCUPANCY\",\"status\":\"VERIFY\"},{\"family\":\"PLANNING_ZONING\",\"status\":\"VERIFY\"}],\"filing\":{\"authority_id\":\"us-me-auburn\",\"office\":\"Planning Permitting Code\",\"destination_url\":\"https://www.auburnmaine.gov/services/permits.php\",\"url_role\":\"APPLICATION_START\"},\"source_support\":{\"state\":\"OFFICIAL_SOURCE_SUPPORTED\",\"strength\":\"WEAK\",\"evidence\":[{\"url\":\"https://www.auburnmaine.gov/services/permits.php\",\"role\":\"APPLICATION_START\"},{\"url\":\"https://www.auburnmaine.gov/pages/government/planning-permitting-code-faqs\",\"role\":\"INFORMATIONAL_OFFICE\"}]},\"contradictions\":[]}",
+          "reasoning": "The user wants me to return exactly one JSON object conforming to MODEL_SCHEMA based on the evidence packet. No markdown fences, commentary, etc. Output JSON only.\n{\n  \"companion_permits\": [\n    {\n      \"family\": \"BUILDING\",\n      \"status\": \"REQUIRED\"\n    },\n    {\n      \"family\": \"ELECTRICAL\",\n      \"status\": \"REQUIRED\"\n    },\n    {\n      \"family\": \"FIRE_LIFE_SAFETY\",\n      \" status\": \"REQUIRED\"\n    },\n    {\n      \"family\": \"GAS\",\n      \"status\": \"REQUIRED\"\n    },\n    {\n      \"family\": \"MECHANICAL\",\n      \"status\": \"REQUIRED\"\n    },\n    {\n      \"family\": \"OCCUPANCY\",\n      \"status\": \"REQUIRED\"\n },\n    {\n      \"family\": \"PLANNING_ZONING\",\n      \"status\": \"REQUIRED\"\n    },\n    {\n      \"family\": \"PLUMBING\",\n      \"status\": \"REQUIRED\"\n    }\n  ],\n  \"contradictions\": [],\n  \"filing\": {\n    \"authority_id\": \"us -me-auburn\",\n    \"destination_url\": \"https://www.auburnmaine.gov/services/permits.",
+          "reasoning_details": [
+            {
+              "format": "xai-responses-v1",
+              "index": 0,
+              "summary": "The user wants me to return exactly one JSON object conforming to MODEL_SCHEMA based on the evidence packet. No markdown fences, commentary, etc. Output JSON only.\n{\n  \"companion_permits\": [\n    {\n      \"family\": \"BUILDING\",\n      \"status\": \"REQUIRED\"\n    },\n    {\n      \"family\": \"ELECTRICAL\",\n      \"status\": \"REQUIRED\"\n    },\n    {\n      \"family\": \"FIRE_LIFE_SAFETY\",\n      \" status\": \"REQUIRED\"\n    },\n    {\n      \"family\": \"GAS\",\n      \"status\": \"REQUIRED\"\n    },\n    {\n      \"family\": \"MECHANICAL\",\n      \"status\": \"REQUIRED\"\n    },\n    {\n      \"family\": \"OCCUPANCY\",\n      \"status\": \"REQUIRED\"\n },\n    {\n      \"family\": \"PLANNING_ZONING\",\n      \"status\": \"REQUIRED\"\n    },\n    {\n      \"family\": \"PLUMBING\",\n      \"status\": \"REQUIRED\"\n    }\n  ],\n  \"contradictions\": [],\n  \"filing\": {\n    \"authority_id\": \"us -me-auburn\",\n    \"destination_url\": \"https://www.auburnmaine.gov/services/permits.",
+              "type": "reasoning.summary"
+            },
+            {
+              "data": "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",
+              "format": "xai-responses-v1",
+              "id": "rs_cae40abe-c0c4-9d99-8b54-91adcf159e4a",
+              "index": 1,
+              "type": "reasoning.encrypted"
+            }
+          ],
+          "refusal": null,
+          "role": "assistant"
+        },
+        "native_finish_reason": "completed"
+      }
+    ],
+    "created": 1785166265,
+    "id": "gen-1785166265-fjfwLYl6sdLVRJJ2hGQF",
+    "model": "x-ai/grok-4.5",
+    "object": "chat.completion",
+    "provider": "xAI",
+    "service_tier": "default",
+    "system_fingerprint": null,
+    "usage": {
+      "completion_tokens": 1765,
+      "completion_tokens_details": {
+        "audio_tokens": 0,
+        "image_tokens": 0,
+        "reasoning_tokens": 1470
+      },
+      "cost": 0.0118552,
+      "cost_details": {
+        "upstream_inference_completions_cost": 0.01059,
+        "upstream_inference_cost": 0.0118552,
+        "upstream_inference_prompt_cost": 0.0012652
+      },
+      "is_byok": false,
+      "prompt_tokens": 1503,
+      "prompt_tokens_details": {
+        "audio_tokens": 0,
+        "cache_write_tokens": 0,
+        "cached_tokens": 1024,
+        "video_tokens": 0
+      },
+      "total_tokens": 3268
+    }
+  },
+  "raw_text": "{\"permit_decision\":\"VERIFY\",\"jurisdiction\":{\"jurisdiction_id\":\"us-me-auburn\",\"name\":\"Auburn\",\"state\":\"ME\",\"type\":\"city_or_local_authority\"},\"project_family\":\"commercial_tenant_improvement\",\"primary_permit_family\":\"BUILDING\",\"companion_permits\":[{\"family\":\"ELECTRICAL\",\"status\":\"VERIFY\"},{\"family\":\"PLUMBING\",\"status\":\"VERIFY\"},{\"family\":\"MECHANICAL\",\"status\":\"VERIFY\"},{\"family\":\"FIRE_LIFE_SAFETY\",\"status\":\"VERIFY\"},{\"family\":\"OCCUPANCY\",\"status\":\"VERIFY\"},{\"family\":\"PLANNING_ZONING\",\"status\":\"VERIFY\"}],\"filing\":{\"authority_id\":\"us-me-auburn\",\"office\":\"Planning Permitting Code\",\"destination_url\":\"https://www.auburnmaine.gov/services/permits.php\",\"url_role\":\"APPLICATION_START\"},\"source_support\":{\"state\":\"OFFICIAL_SOURCE_SUPPORTED\",\"strength\":\"WEAK\",\"evidence\":[{\"url\":\"https://www.auburnmaine.gov/services/permits.php\",\"role\":\"APPLICATION_START\"},{\"url\":\"https://www.auburnmaine.gov/pages/government/planning-permitting-code-faqs\",\"role\":\"INFORMATIONAL_OFFICE\"}]},\"contradictions\":[]}",
+  "requested_model": "x-ai/grok-4.5",
+  "requested_provider": "openrouter",
+  "requested_runtime": "grok",
+  "response_id": "gen-1785166265-fjfwLYl6sdLVRJJ2hGQF",
+  "runtime": "OpenRouter chat/completions; upstream_provider=xAI"
+}

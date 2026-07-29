@@ -1,0 +1,78 @@
+{
+  "observed_model": "x-ai/grok-4.5",
+  "observed_provider": "openrouter",
+  "path_proof": {
+    "adapter": "grok",
+    "engine_called": false,
+    "engine_result_supplied_to_model": false,
+    "model_call_count": 1
+  },
+  "provider": "openrouter",
+  "provider_response": {
+    "choices": [
+      {
+        "finish_reason": "stop",
+        "index": 0,
+        "logprobs": null,
+        "message": {
+          "content": "{\"permit_decision\":\"REQUIRED\",\"jurisdiction\":{\"jurisdiction_id\":\"us-tn-anderson_county\",\"name\":\"Anderson County\",\"state\":\"TN\",\"type\":\"county\"},\"project_family\":\"commercial_tenant_improvement\",\"primary_permit_family\":\"BUILDING\",\"companion_permits\":[{\"family\":\"ELECTRICAL\",\"status\":\"VERIFY\"},{\"family\":\"PLUMBING\",\"status\":\"VERIFY\"},{\"family\":\"MECHANICAL\",\"status\":\"VERIFY\"},{\"family\":\"FIRE_LIFE_SAFETY\",\"status\":\"VERIFY\"},{\"family\":\"OCCUPANCY\",\"status\":\"VERIFY\"},{\"family\":\"PLANNING_ZONING\",\"status\":\"VERIFY\"}],\"filing\":{\"authority_id\":\"us-tn-anderson_county\",\"destination_url\":\"https://andersoncountyplanning.com/building-and-codes/\",\"office\":\"Anderson County Building and Codes Enforcement Department\",\"url_role\":\"INFORMATIONAL_OFFICE\"},\"source_support\":{\"evidence\":[{\"url\":\"https://andersoncountyplanning.com/building-and-codes/\",\"role\":\"INFORMATIONAL_OFFICE\"},{\"url\":\"https://andersoncountyplanning.com/building-and-codes/\",\"role\":\"REQUIREMENT_EVIDENCE\"}],\"state\":\"OFFICIAL_SOURCE_SUPPORTED\",\"strength\":\"MODERATE\"},\"contradictions\":[]}",
+          "reasoning": "The user wants me to evaluate one permit lookup using ONLY the supplied official-source evidence packet and return exactly one JSON object conforming to MODEL_SCHEMA.\n",
+          "reasoning_details": [
+            {
+              "format": "xai-responses-v1",
+              "index": 0,
+              "summary": "The user wants me to evaluate one permit lookup using ONLY the supplied official-source evidence packet and return exactly one JSON object conforming to MODEL_SCHEMA.\n",
+              "type": "reasoning.summary"
+            },
+            {
+              "data": "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",
+              "format": "xai-responses-v1",
+              "id": "rs_24b4f04b-3564-9f11-aca3-35b40ef2423d",
+              "index": 1,
+              "type": "reasoning.encrypted"
+            }
+          ],
+          "refusal": null,
+          "role": "assistant"
+        },
+        "native_finish_reason": "completed"
+      }
+    ],
+    "created": 1785168016,
+    "id": "gen-1785168016-QjQhxWrerSvisX8t3hjj",
+    "model": "x-ai/grok-4.5",
+    "object": "chat.completion",
+    "provider": "xAI",
+    "service_tier": "default",
+    "system_fingerprint": null,
+    "usage": {
+      "completion_tokens": 875,
+      "completion_tokens_details": {
+        "audio_tokens": 0,
+        "image_tokens": 0,
+        "reasoning_tokens": 575
+      },
+      "cost": 0.0078304,
+      "cost_details": {
+        "upstream_inference_completions_cost": 0.00525,
+        "upstream_inference_cost": 0.0078304,
+        "upstream_inference_prompt_cost": 0.0025804
+      },
+      "is_byok": false,
+      "prompt_tokens": 1399,
+      "prompt_tokens_details": {
+        "audio_tokens": 0,
+        "cache_write_tokens": 0,
+        "cached_tokens": 128,
+        "video_tokens": 0
+      },
+      "total_tokens": 2274
+    }
+  },
+  "raw_text": "{\"permit_decision\":\"REQUIRED\",\"jurisdiction\":{\"jurisdiction_id\":\"us-tn-anderson_county\",\"name\":\"Anderson County\",\"state\":\"TN\",\"type\":\"county\"},\"project_family\":\"commercial_tenant_improvement\",\"primary_permit_family\":\"BUILDING\",\"companion_permits\":[{\"family\":\"ELECTRICAL\",\"status\":\"VERIFY\"},{\"family\":\"PLUMBING\",\"status\":\"VERIFY\"},{\"family\":\"MECHANICAL\",\"status\":\"VERIFY\"},{\"family\":\"FIRE_LIFE_SAFETY\",\"status\":\"VERIFY\"},{\"family\":\"OCCUPANCY\",\"status\":\"VERIFY\"},{\"family\":\"PLANNING_ZONING\",\"status\":\"VERIFY\"}],\"filing\":{\"authority_id\":\"us-tn-anderson_county\",\"destination_url\":\"https://andersoncountyplanning.com/building-and-codes/\",\"office\":\"Anderson County Building and Codes Enforcement Department\",\"url_role\":\"INFORMATIONAL_OFFICE\"},\"source_support\":{\"evidence\":[{\"url\":\"https://andersoncountyplanning.com/building-and-codes/\",\"role\":\"INFORMATIONAL_OFFICE\"},{\"url\":\"https://andersoncountyplanning.com/building-and-codes/\",\"role\":\"REQUIREMENT_EVIDENCE\"}],\"state\":\"OFFICIAL_SOURCE_SUPPORTED\",\"strength\":\"MODERATE\"},\"contradictions\":[]}",
+  "requested_model": "x-ai/grok-4.5",
+  "requested_provider": "openrouter",
+  "requested_runtime": "grok",
+  "response_id": "gen-1785168016-QjQhxWrerSvisX8t3hjj",
+  "runtime": "OpenRouter chat/completions; upstream_provider=xAI"
+}

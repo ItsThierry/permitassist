@@ -1,0 +1,78 @@
+{
+  "observed_model": "x-ai/grok-4.5",
+  "observed_provider": "openrouter",
+  "path_proof": {
+    "adapter": "grok",
+    "engine_called": false,
+    "engine_result_supplied_to_model": false,
+    "model_call_count": 1
+  },
+  "provider": "openrouter",
+  "provider_response": {
+    "choices": [
+      {
+        "finish_reason": "stop",
+        "index": 0,
+        "logprobs": null,
+        "message": {
+          "content": "{\"permit_decision\":\"VERIFY\",\"jurisdiction\":{\"jurisdiction_id\":\"us-wv-barboursville\",\"name\":\"Barboursville\",\"state\":\"WV\",\"type\":\"city_or_local_authority\"},\"project_family\":\"commercial_tenant_improvement\",\"primary_permit_family\":\"BUILDING\",\"companion_permits\":[{\"family\":\"ELECTRICAL\",\"status\":\"VERIFY\"},{\"family\":\"PLUMBING\",\"status\":\"VERIFY\"},{\"family\":\"MECHANICAL\",\"status\":\"VERIFY\"},{\"family\":\"FIRE_LIFE_SAFETY\",\"status\":\"VERIFY\"},{\"family\":\"OCCUPANCY\",\"status\":\"VERIFY\"},{\"family\":\"PLANNING_ZONING\",\"status\":\"VERIFY\"}],\"filing\":{\"authority_id\":\"us-wv-barboursville\",\"destination_url\":\"https://www.barboursville.org/government/departments/building/plan_review_process.php\",\"office\":\"Barboursville Building Department\",\"url_role\":\"APPLICATION_START\"},\"source_support\":{\"state\":\"OFFICIAL_SOURCE_SUPPORTED\",\"strength\":\"WEAK\",\"evidence\":[{\"url\":\"https://www.barboursville.org/government/departments/building/plan_review_process.php\",\"role\":\"APPLICATION_START\"},{\"url\":\"https://www.barboursville.org/how_do_i/learn_about/home_rule_application.php\",\"role\":\"INFORMATIONAL_OFFICE\"}]},\"contradictions\":[]}",
+          "reasoning": "The user wants me to evaluate one permit lookup using ONLY the supplied official-source evidence packet and return exactly one JSON object conforming to MODEL_SCHEMA.\n",
+          "reasoning_details": [
+            {
+              "format": "xai-responses-v1",
+              "index": 0,
+              "summary": "The user wants me to evaluate one permit lookup using ONLY the supplied official-source evidence packet and return exactly one JSON object conforming to MODEL_SCHEMA.\n",
+              "type": "reasoning.summary"
+            },
+            {
+              "data": "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",
+              "format": "xai-responses-v1",
+              "id": "rs_a0dceea5-52a1-98ca-a8d6-f4431f6c14fb",
+              "index": 1,
+              "type": "reasoning.encrypted"
+            }
+          ],
+          "refusal": null,
+          "role": "assistant"
+        },
+        "native_finish_reason": "completed"
+      }
+    ],
+    "created": 1785168668,
+    "id": "gen-1785168668-oocheVspCdgQQFtg1KI5",
+    "model": "x-ai/grok-4.5",
+    "object": "chat.completion",
+    "provider": "xAI",
+    "service_tier": "default",
+    "system_fingerprint": null,
+    "usage": {
+      "completion_tokens": 884,
+      "completion_tokens_details": {
+        "audio_tokens": 0,
+        "image_tokens": 0,
+        "reasoning_tokens": 557
+      },
+      "cost": 0.0079464,
+      "cost_details": {
+        "upstream_inference_completions_cost": 0.005304,
+        "upstream_inference_cost": 0.0079464,
+        "upstream_inference_prompt_cost": 0.0026424
+      },
+      "is_byok": false,
+      "prompt_tokens": 1430,
+      "prompt_tokens_details": {
+        "audio_tokens": 0,
+        "cache_write_tokens": 0,
+        "cached_tokens": 128,
+        "video_tokens": 0
+      },
+      "total_tokens": 2314
+    }
+  },
+  "raw_text": "{\"permit_decision\":\"VERIFY\",\"jurisdiction\":{\"jurisdiction_id\":\"us-wv-barboursville\",\"name\":\"Barboursville\",\"state\":\"WV\",\"type\":\"city_or_local_authority\"},\"project_family\":\"commercial_tenant_improvement\",\"primary_permit_family\":\"BUILDING\",\"companion_permits\":[{\"family\":\"ELECTRICAL\",\"status\":\"VERIFY\"},{\"family\":\"PLUMBING\",\"status\":\"VERIFY\"},{\"family\":\"MECHANICAL\",\"status\":\"VERIFY\"},{\"family\":\"FIRE_LIFE_SAFETY\",\"status\":\"VERIFY\"},{\"family\":\"OCCUPANCY\",\"status\":\"VERIFY\"},{\"family\":\"PLANNING_ZONING\",\"status\":\"VERIFY\"}],\"filing\":{\"authority_id\":\"us-wv-barboursville\",\"destination_url\":\"https://www.barboursville.org/government/departments/building/plan_review_process.php\",\"office\":\"Barboursville Building Department\",\"url_role\":\"APPLICATION_START\"},\"source_support\":{\"state\":\"OFFICIAL_SOURCE_SUPPORTED\",\"strength\":\"WEAK\",\"evidence\":[{\"url\":\"https://www.barboursville.org/government/departments/building/plan_review_process.php\",\"role\":\"APPLICATION_START\"},{\"url\":\"https://www.barboursville.org/how_do_i/learn_about/home_rule_application.php\",\"role\":\"INFORMATIONAL_OFFICE\"}]},\"contradictions\":[]}",
+  "requested_model": "x-ai/grok-4.5",
+  "requested_provider": "openrouter",
+  "requested_runtime": "grok",
+  "response_id": "gen-1785168668-oocheVspCdgQQFtg1KI5",
+  "runtime": "OpenRouter chat/completions; upstream_provider=xAI"
+}

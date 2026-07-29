@@ -1,0 +1,78 @@
+{
+  "observed_model": "x-ai/grok-4.5",
+  "observed_provider": "openrouter",
+  "path_proof": {
+    "adapter": "grok",
+    "engine_called": false,
+    "engine_result_supplied_to_model": false,
+    "model_call_count": 1
+  },
+  "provider": "openrouter",
+  "provider_response": {
+    "choices": [
+      {
+        "finish_reason": "stop",
+        "index": 0,
+        "logprobs": null,
+        "message": {
+          "content": "{\"permit_decision\":\"REQUIRED\",\"jurisdiction\":{\"jurisdiction_id\":\"us-fl-lake_county\",\"name\":\"Lake County\",\"state\":\"FL\",\"type\":\"county\"},\"project_family\":\"reroof\",\"primary_permit_family\":\"BUILDING\",\"companion_permits\":[],\"filing\":{\"authority_id\":\"us-fl-lake_county\",\"destination_url\":\"https://cdn.lakecountyfl.gov/media/lwgowl4d/cl16-re-roof-permit-checklist-ada.pdf\",\"office\":\"Lake County\",\"url_role\":\"REQUIREMENT_EVIDENCE\"},\"source_support\":{\"state\":\"OFFICIAL_SOURCE_SUPPORTED\",\"strength\":\"STRONG\",\"evidence\":[{\"url\":\"https://cdn.lakecountyfl.gov/media/lwgowl4d/cl16-re-roof-permit-checklist-ada.pdf\",\"role\":\"REQUIREMENT_EVIDENCE\"}]},\"contradictions\":[]}",
+          "reasoning": "The user wants me to evaluate a permit lookup using only the supplied evidence packet and return exactly one JSON object conforming to MODEL_SCHEMA. No markdown fences, commentary, etc. Output JSON on...{\n  \"permit_decision\": \"REQUIRED\",\n  \"jurisdiction\": {\n    \"jurisdiction_id\": \"us-fl-lake_county\",\n    \"name\": \"Lake County\",\n    \"state\": \"FL\",\n    \"type\": \"county\"\n  },\n  \"project_family\": \"reroof\",\n \"primary_permit_family\": \"BUILDING\",\n  \"companion_permits\": [],\n  \"filing\": {\n    \"authority_id\": null,\n    \"destination_url\": \"https://cdn.lakecountyfl.gov/media/lwgowl4d/cl16-re-roof-permit-checklist-ada.",
+          "reasoning_details": [
+            {
+              "format": "xai-responses-v1",
+              "index": 0,
+              "summary": "The user wants me to evaluate a permit lookup using only the supplied evidence packet and return exactly one JSON object conforming to MODEL_SCHEMA. No markdown fences, commentary, etc. Output JSON on...{\n  \"permit_decision\": \"REQUIRED\",\n  \"jurisdiction\": {\n    \"jurisdiction_id\": \"us-fl-lake_county\",\n    \"name\": \"Lake County\",\n    \"state\": \"FL\",\n    \"type\": \"county\"\n  },\n  \"project_family\": \"reroof\",\n \"primary_permit_family\": \"BUILDING\",\n  \"companion_permits\": [],\n  \"filing\": {\n    \"authority_id\": null,\n    \"destination_url\": \"https://cdn.lakecountyfl.gov/media/lwgowl4d/cl16-re-roof-permit-checklist-ada.",
+              "type": "reasoning.summary"
+            },
+            {
+              "data": "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",
+              "format": "xai-responses-v1",
+              "id": "rs_18f8dc03-7157-90c6-adda-4a23690c691f",
+              "index": 1,
+              "type": "reasoning.encrypted"
+            }
+          ],
+          "refusal": null,
+          "role": "assistant"
+        },
+        "native_finish_reason": "completed"
+      }
+    ],
+    "created": 1785165122,
+    "id": "gen-1785165122-PiIOqu66J4JeulN1vjkk",
+    "model": "x-ai/grok-4.5",
+    "object": "chat.completion",
+    "provider": "xAI",
+    "service_tier": "default",
+    "system_fingerprint": null,
+    "usage": {
+      "completion_tokens": 1100,
+      "completion_tokens_details": {
+        "audio_tokens": 0,
+        "image_tokens": 0,
+        "reasoning_tokens": 886
+      },
+      "cost": 0.0090164,
+      "cost_details": {
+        "upstream_inference_completions_cost": 0.0066,
+        "upstream_inference_cost": 0.0090164,
+        "upstream_inference_prompt_cost": 0.0024164
+      },
+      "is_byok": false,
+      "prompt_tokens": 1317,
+      "prompt_tokens_details": {
+        "audio_tokens": 0,
+        "cache_write_tokens": 0,
+        "cached_tokens": 128,
+        "video_tokens": 0
+      },
+      "total_tokens": 2417
+    }
+  },
+  "raw_text": "{\"permit_decision\":\"REQUIRED\",\"jurisdiction\":{\"jurisdiction_id\":\"us-fl-lake_county\",\"name\":\"Lake County\",\"state\":\"FL\",\"type\":\"county\"},\"project_family\":\"reroof\",\"primary_permit_family\":\"BUILDING\",\"companion_permits\":[],\"filing\":{\"authority_id\":\"us-fl-lake_county\",\"destination_url\":\"https://cdn.lakecountyfl.gov/media/lwgowl4d/cl16-re-roof-permit-checklist-ada.pdf\",\"office\":\"Lake County\",\"url_role\":\"REQUIREMENT_EVIDENCE\"},\"source_support\":{\"state\":\"OFFICIAL_SOURCE_SUPPORTED\",\"strength\":\"STRONG\",\"evidence\":[{\"url\":\"https://cdn.lakecountyfl.gov/media/lwgowl4d/cl16-re-roof-permit-checklist-ada.pdf\",\"role\":\"REQUIREMENT_EVIDENCE\"}]},\"contradictions\":[]}",
+  "requested_model": "x-ai/grok-4.5",
+  "requested_provider": "openrouter",
+  "requested_runtime": "grok",
+  "response_id": "gen-1785165122-PiIOqu66J4JeulN1vjkk",
+  "runtime": "OpenRouter chat/completions; upstream_provider=xAI"
+}

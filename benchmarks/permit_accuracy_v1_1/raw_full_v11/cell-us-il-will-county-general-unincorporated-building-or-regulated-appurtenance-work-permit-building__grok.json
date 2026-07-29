@@ -1,0 +1,78 @@
+{
+  "observed_model": "x-ai/grok-4.5",
+  "observed_provider": "openrouter",
+  "path_proof": {
+    "adapter": "grok",
+    "engine_called": false,
+    "engine_result_supplied_to_model": false,
+    "model_call_count": 1
+  },
+  "provider": "openrouter",
+  "provider_response": {
+    "choices": [
+      {
+        "finish_reason": "stop",
+        "index": 0,
+        "logprobs": null,
+        "message": {
+          "content": "{\"permit_decision\":\"REQUIRED\",\"jurisdiction\":{\"jurisdiction_id\":\"us-il-will_county\",\"name\":\"Will County Land Use Department Building Division\",\"state\":\"IL\",\"type\":\"county\"},\"project_family\":\"reroof\",\"primary_permit_family\":\"BUILDING\",\"companion_permits\":[],\"filing\":{\"authority_id\":\"us-il-will_county\",\"destination_url\":\"https://willcounty.gov/County-Offices/Economic-Development/Will-County-Land-Use-Department/Development-Services-Division/Building/FileId/1989\",\"office\":\"Will County Land Use Department Building Division\",\"url_role\":\"REQUIREMENT_EVIDENCE\"},\"source_support\":{\"state\":\"OFFICIAL_SOURCE_SUPPORTED\",\"strength\":\"STRONG\",\"evidence\":[{\"url\":\"https://willcounty.gov/County-Offices/Economic-Development/Will-County-Land-Use-Department/Development-Services-Division/Building/FileId/1989\",\"role\":\"REQUIREMENT_EVIDENCE\"}]},\"contradictions\":[]}",
+          "reasoning": "The user wants me to return exactly one JSON object conforming to MODEL_SCHEMA based on the evidence packet. No markdown fences, commentary, etc. Output JSON only.\n",
+          "reasoning_details": [
+            {
+              "format": "xai-responses-v1",
+              "index": 0,
+              "summary": "The user wants me to return exactly one JSON object conforming to MODEL_SCHEMA based on the evidence packet. No markdown fences, commentary, etc. Output JSON only.\n",
+              "type": "reasoning.summary"
+            },
+            {
+              "data": "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",
+              "format": "xai-responses-v1",
+              "id": "rs_636057e9-1d7f-9432-8e98-134ba334f606",
+              "index": 1,
+              "type": "reasoning.encrypted"
+            }
+          ],
+          "refusal": null,
+          "role": "assistant"
+        },
+        "native_finish_reason": "completed"
+      }
+    ],
+    "created": 1785165670,
+    "id": "gen-1785165670-Gi6mdFwM5ZsCcNzs7oId",
+    "model": "x-ai/grok-4.5",
+    "object": "chat.completion",
+    "provider": "xAI",
+    "service_tier": "default",
+    "system_fingerprint": null,
+    "usage": {
+      "completion_tokens": 812,
+      "completion_tokens_details": {
+        "audio_tokens": 0,
+        "image_tokens": 0,
+        "reasoning_tokens": 574
+      },
+      "cost": 0.0073844,
+      "cost_details": {
+        "upstream_inference_completions_cost": 0.004872,
+        "upstream_inference_cost": 0.0073844,
+        "upstream_inference_prompt_cost": 0.0025124
+      },
+      "is_byok": false,
+      "prompt_tokens": 1365,
+      "prompt_tokens_details": {
+        "audio_tokens": 0,
+        "cache_write_tokens": 0,
+        "cached_tokens": 128,
+        "video_tokens": 0
+      },
+      "total_tokens": 2177
+    }
+  },
+  "raw_text": "{\"permit_decision\":\"REQUIRED\",\"jurisdiction\":{\"jurisdiction_id\":\"us-il-will_county\",\"name\":\"Will County Land Use Department Building Division\",\"state\":\"IL\",\"type\":\"county\"},\"project_family\":\"reroof\",\"primary_permit_family\":\"BUILDING\",\"companion_permits\":[],\"filing\":{\"authority_id\":\"us-il-will_county\",\"destination_url\":\"https://willcounty.gov/County-Offices/Economic-Development/Will-County-Land-Use-Department/Development-Services-Division/Building/FileId/1989\",\"office\":\"Will County Land Use Department Building Division\",\"url_role\":\"REQUIREMENT_EVIDENCE\"},\"source_support\":{\"state\":\"OFFICIAL_SOURCE_SUPPORTED\",\"strength\":\"STRONG\",\"evidence\":[{\"url\":\"https://willcounty.gov/County-Offices/Economic-Development/Will-County-Land-Use-Department/Development-Services-Division/Building/FileId/1989\",\"role\":\"REQUIREMENT_EVIDENCE\"}]},\"contradictions\":[]}",
+  "requested_model": "x-ai/grok-4.5",
+  "requested_provider": "openrouter",
+  "requested_runtime": "grok",
+  "response_id": "gen-1785165670-Gi6mdFwM5ZsCcNzs7oId",
+  "runtime": "OpenRouter chat/completions; upstream_provider=xAI"
+}

@@ -1,0 +1,6 @@
+PermitAssist independently adjudicated official filing route
+Official source URL: https://firesafety.vermont.gov/sites/firesafety/files/files/forms/dfs_construction_application.pdf
+Official filing URL: https://firesafety.vermont.gov/sites/firesafety/files/files/forms/dfs_construction_application.pdf
+Verification boundary: PASS_WEB_EXTRACT_20260728
+Exact official quote:
+Please fill out this permit application as completely as possible based on the scope of this project.

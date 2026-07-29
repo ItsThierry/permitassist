@@ -1,0 +1,78 @@
+{
+  "observed_model": "x-ai/grok-4.5",
+  "observed_provider": "openrouter",
+  "path_proof": {
+    "adapter": "grok",
+    "engine_called": false,
+    "engine_result_supplied_to_model": false,
+    "model_call_count": 1
+  },
+  "provider": "openrouter",
+  "provider_response": {
+    "choices": [
+      {
+        "finish_reason": "stop",
+        "index": 0,
+        "logprobs": null,
+        "message": {
+          "content": "{\"permit_decision\":\"REQUIRED\",\"jurisdiction\":{\"jurisdiction_id\":\"us-ut-cache_county\",\"name\":\"Cache County\",\"state\":\"UT\",\"type\":\"county\"},\"project_family\":\"residential_remodel\",\"primary_permit_family\":\"BUILDING\",\"companion_permits\":[{\"family\":\"PLANNING_ZONING\",\"status\":\"REQUIRED\"},{\"family\":\"ELECTRICAL\",\"status\":\"VERIFY\"},{\"family\":\"PLUMBING\",\"status\":\"VERIFY\"},{\"family\":\"MECHANICAL\",\"status\":\"VERIFY\"}],\"filing\":{\"authority_id\":\"us-ut-cache_county\",\"destination_url\":\"https://www.cachecounty.gov/building/\",\"office\":\"Cache County Building Division\",\"url_role\":\"REQUIREMENT_EVIDENCE\"},\"source_support\":{\"state\":\"OFFICIAL_SOURCE_SUPPORTED\",\"strength\":\"MODERATE\",\"evidence\":[{\"url\":\"https://www.cachecounty.gov/building/\",\"role\":\"REQUIREMENT_EVIDENCE\"}]},\"contradictions\":[]}",
+          "reasoning": "The user wants me to evaluate one permit lookup using ONLY the supplied official-source evidence packet and return exactly one JSON object conforming to MODEL_SCHEMA. No Markdown fences, commentary, e...",
+          "reasoning_details": [
+            {
+              "format": "xai-responses-v1",
+              "index": 0,
+              "summary": "The user wants me to evaluate one permit lookup using ONLY the supplied official-source evidence packet and return exactly one JSON object conforming to MODEL_SCHEMA. No Markdown fences, commentary, e...",
+              "type": "reasoning.summary"
+            },
+            {
+              "data": "Dbrb5F8hMD+T5BAfS7Mt4LWpaVXWo55n0hNjC/3e60w4r02P/SA7EiSdDndQ7kPt5Cxgo0kSzUfvPRGZyYtnSVRVFsanrL6EnzCPGG/jVYkfftzV3d3TVkpthRw2JqG/tK7wsBXKRssAaHRx9aSviupbyPX6faSHrWNGZbF0nafrb8lxdDGqfm9y3FN0GgD69dCtzzOCyUm3dZIiWu78qVlbIQfI1LkwvqFnrSXxaw7saKjbYO823Yq9g4YGzrvYhrRuWyCERIUnandj2bPwryUBrH5HT9vmQjIk7LFhRO8RFa+46cg+qHeKdtzs6+rN9rAK1sQydN9jwuBualsTtdsMWGIcx84hznc0tjgxNPjgx+4DERkMh/AbKZmn80iTSQLoU2qcKCmXQ1nwp2LbszvleN7uDZL4Fnmtk8fdj/UjaI9TsLs88WPy/3jIOepjuellwi/bLGd2WdhxjOt33Xucu/VhmqYFNCmqdPR2BICS5CBkG8axYt+y22ojRLfhjzwx4vLh8TfgvSSCwF63/9bvWrO7dXRWBdZEqwYwcU2QwM9HA86ac0AEeavEkVcY4TpPyrH5A++LFTAMwL4GmNDbyyqDi5Ur7BJzZwSl1d7sb9JEe6xAdn6S6G6v5AgmXH+ePPiLWlwyuZU/dRKCs/PqeyfM63UnhYEgOCvEEhsn422aVZN8sHJ6lNbzCK3um+WFnQ0wjvfPSa2UgFiGwOBfmtpW3SiU3oD338f6ZNPo3C+9uVhbw99c+Nq2/t7uRPYQlWtQ+KfU+PzVRGmOcgr+YskENICfT+X6AaPwjxUj8QQzlHc7N2zeMhmMdQHra8ZM/nFxWRQtFaP6KEckEO5OhZ3SoqI4wL5/Tssv0kdPC3lTa96y6sXxRvg86kOGBy6nXq4sB6HlHkmarL/YIWUAAWJMuZ8HepXq2uWraq+mU8fqIoyLB4QOF1C2oMj2S/tYG2mRz+NRawZAtQyIxh/H4buiOCX+QaHLyBFm95O2RPVOWjxo3Olc8qmDFPXnYi38zAviGxq/Mirg0ecRhz17dsUssaH/oe61xc3WM8uyB/U7Q/Q9buRjGufKFPU8Rq10wkpt8Ft7gh1a5AVP6ibGAQmdtevSiKup8JulegoPGZVz46obEHZyZB3yPwsxzP3kY2RHFxpesz7LLnmQj1GM6kMRJSSxCXBjgzK4i8F0L3t1GhuuMg0Km5lHdBcWeFmImvgxLeQ53j1kS90UrjANLkYmHG4m7WhRuYYKoMyxzFaWxOy6utrD0ywi6gXGCQO6CoyPRN/DlF9k5UuQUfsLaX02cl16TRVR3+6/MEzMmxVT5l+NY0mCQc2uqEh/Jg7tAx12jEoeMFkYi/g4eCZ35DxIK7t36LdURqlkyD/j2IcXJ4b27A5O63vxrXDcssjgLa0y4ANYHdlc/rBf6LeYPiisbXmYgjZnOLb5oMWnMel0u+zcyRduceDjw3Ln3xNIB8X5iHR06xo2g7nbvtM3S7c3eOmgA3Uxr9zgE9h/msCDrCcP2/lrzWQ6VwdeNK1Qr2chTbzMnukCcsI7SJ6W++knu78FxC1ojKYnU4eXabgYw+dhJLrsXvubX26+I1OyguiPwyYYvZGW8EJxVINgeRvELkfzPFq8SUts0BSClJ+cfsnxli3mRdwhv7QUpiBIsH0Dfp46e8/e2Fpz/pXl2cGNtcgfBcSBwe9EOjfFtjhkHS7PRwZG699+7YkqSSMdwUcZHT9EGVkX48DjOZuPamEKy9H9k6naYM7UCDNu6gySUfZ01Hba+DIh8ve+hJpHVXzK4XX62zD542hIK2idOX9a2HH/9SiVoAGxPTcHtUn1lIeeetZpmdURnPFeU56gkF+mXvBMVtSPQl47AqFx8LKa6vs9voD13USMZ8Z23IvUXnecNAyhTlj4OtTIJW/BsbXCIxq4N+OrOCQ6nFh0dN3+YxBjuCyVrsDFm7S9q7zXDx/pnL4u3nWFBQ4WHgMkGgcgF2sm7m2+U8WZ1kuIN7ZS9jCyo83c2e+OrZiDcwEKPiX0gQ2ZW0+83iOFKrQ8gHpnwBaBbyAo7szB9TAjr51ubkySvtEZ+ZtahhRDvMIvns5bVA62+xqwTZZWLhJ0SafBmIM+eh5Qa+U7K/xh0Jo6x8qLpp0zw98aMOXMz8DrvmHtr6LEtnXxx0wL4lYIcY41dhG/vLdpTF1OG8gj8XCsXpHebVDIoDJKNQPnpT6mT4gwoQKAMGaaF7chV6x4psupS25OAaxYageNgAe8yD/iC+Vn9F8jXO61QsbDezz/xN/N242552mclctdTlowOW3dt5fTHg2Yh95zdWgr4tAK/hCMxLGZWqZdqhx859qm/7FmbZnsd0i0F+HHNdSKsXNmlRFSyHMLTODV4QOWc4L/u7HqnVqQsE0LUySu9+DDzWMKtgK8/9uyA07MB0/FeRDU+9P4RmKWCyhnkWk4UTKA6stM7XFLHohJNU98FzZXgbfI7NF9RCVOsQ2Oz3BqehAwESxL7ypO1rn3SGLMPU0vzOiOsqYusvMWe9Kwrs2ZXzCj6fQ7xLT/5w+pm2UyNUqA3ueGgqBLRc0edV+agcwAt1AMNJuNgxPxPdHl3KTZjkTZ2ltFs+TFnDlWWWbCKBxED8Rby7HzaiGLZXx1dEnmeTUr+V7J57u3nMt0pqNRTBBwgqov5hgWgQD4lRr9/7s8rw7DhwAJ+cf6Y4SNuHmeNSD4Cn3jWXQI08q4+zgbPDVgFZ9Z/TocxVVc6XlVxFMP04bKV9OTkwXM8FxHCoumX3UFwpwIh9QS4OcxDT5Qg0WPba19dM0EpEuW7XTtRUPUPnOkhPMaZeH5Ya6nP5Bo2dg4I90zYteWAHGGU5EKI1icKvTe+Zfn2E6Vm3ADU6GhJMRuDFJTYF2i4ETa58A7nTRJb/32ndVIrjK364ICEwhuQvlsrLIe+3lVIZc+Yq8WLQfBhf7ujMW9Xx80i32sqZh6rW0nA/DngONB2ijmUM4qIVqQ+T6L6YEoGv5qhWRBcCBP78E0LJpyNbXfbBlUAX1iY6/v64d+cvcuYifmU/4PC+bxkTJphM3Ti20SJvGqDW+1hZFGcm202jfooLVrG+g3l441DO3XA/E",
+              "format": "xai-responses-v1",
+              "id": "rs_4962faf6-4bf6-95bf-8611-4ca427bf1c73",
+              "index": 1,
+              "type": "reasoning.encrypted"
+            }
+          ],
+          "refusal": null,
+          "role": "assistant"
+        },
+        "native_finish_reason": "completed"
+      }
+    ],
+    "created": 1785168257,
+    "id": "gen-1785168257-TqYVjUYf1ffoOl43rl4P",
+    "model": "x-ai/grok-4.5",
+    "object": "chat.completion",
+    "provider": "xAI",
+    "service_tier": "default",
+    "system_fingerprint": null,
+    "usage": {
+      "completion_tokens": 731,
+      "completion_tokens_details": {
+        "audio_tokens": 0,
+        "image_tokens": 0,
+        "reasoning_tokens": 501
+      },
+      "cost": 0.0067344,
+      "cost_details": {
+        "upstream_inference_completions_cost": 0.004386,
+        "upstream_inference_cost": 0.0067344,
+        "upstream_inference_prompt_cost": 0.0023484
+      },
+      "is_byok": false,
+      "prompt_tokens": 1283,
+      "prompt_tokens_details": {
+        "audio_tokens": 0,
+        "cache_write_tokens": 0,
+        "cached_tokens": 128,
+        "video_tokens": 0
+      },
+      "total_tokens": 2014
+    }
+  },
+  "raw_text": "{\"permit_decision\":\"REQUIRED\",\"jurisdiction\":{\"jurisdiction_id\":\"us-ut-cache_county\",\"name\":\"Cache County\",\"state\":\"UT\",\"type\":\"county\"},\"project_family\":\"residential_remodel\",\"primary_permit_family\":\"BUILDING\",\"companion_permits\":[{\"family\":\"PLANNING_ZONING\",\"status\":\"REQUIRED\"},{\"family\":\"ELECTRICAL\",\"status\":\"VERIFY\"},{\"family\":\"PLUMBING\",\"status\":\"VERIFY\"},{\"family\":\"MECHANICAL\",\"status\":\"VERIFY\"}],\"filing\":{\"authority_id\":\"us-ut-cache_county\",\"destination_url\":\"https://www.cachecounty.gov/building/\",\"office\":\"Cache County Building Division\",\"url_role\":\"REQUIREMENT_EVIDENCE\"},\"source_support\":{\"state\":\"OFFICIAL_SOURCE_SUPPORTED\",\"strength\":\"MODERATE\",\"evidence\":[{\"url\":\"https://www.cachecounty.gov/building/\",\"role\":\"REQUIREMENT_EVIDENCE\"}]},\"contradictions\":[]}",
+  "requested_model": "x-ai/grok-4.5",
+  "requested_provider": "openrouter",
+  "requested_runtime": "grok",
+  "response_id": "gen-1785168257-TqYVjUYf1ffoOl43rl4P",
+  "runtime": "OpenRouter chat/completions; upstream_provider=xAI"
+}

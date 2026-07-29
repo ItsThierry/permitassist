@@ -1,0 +1,78 @@
+{
+  "observed_model": "x-ai/grok-4.5",
+  "observed_provider": "openrouter",
+  "path_proof": {
+    "adapter": "grok",
+    "engine_called": false,
+    "engine_result_supplied_to_model": false,
+    "model_call_count": 1
+  },
+  "provider": "openrouter",
+  "provider_response": {
+    "choices": [
+      {
+        "finish_reason": "stop",
+        "index": 0,
+        "logprobs": null,
+        "message": {
+          "content": "{\"permit_decision\":\"REQUIRED\",\"jurisdiction\":{\"jurisdiction_id\":\"us-ri-barrington\",\"name\":\"Barrington\",\"state\":\"RI\",\"type\":\"city_or_local_authority\"},\"project_family\":\"commercial_tenant_improvement\",\"primary_permit_family\":\"BUILDING\",\"companion_permits\":[{\"family\":\"ELECTRICAL\",\"status\":\"REQUIRED\"},{\"family\":\"MECHANICAL\",\"status\":\"REQUIRED\"},{\"family\":\"PLUMBING\",\"status\":\"REQUIRED\"},{\"family\":\"FIRE_LIFE_SAFETY\",\"status\":\"CONDITIONAL\"},{\"family\":\"OCCUPANCY\",\"status\":\"VERIFY\"},{\"family\":\"PLANNING_ZONING\",\"status\":\"VERIFY\"}],\"filing\":{\"authority_id\":\"us-ri-barrington\",\"destination_url\":\"https://rhodeisland.portal.opengov.com/\",\"office\":\"Building and Zoning Office\",\"url_role\":\"APPLICATION_START\"},\"source_support\":{\"state\":\"OFFICIAL_SOURCE_SUPPORTED\",\"strength\":\"MODERATE\",\"evidence\":[{\"url\":\"https://www.barrington.ri.gov/207/Building-and-Zoning-Office\",\"role\":\"REQUIREMENT_EVIDENCE\"},{\"url\":\"https://rhodeisland.portal.opengov.com/\",\"role\":\"APPLICATION_START\"}]},\"contradictions\":[]}",
+          "reasoning": "The user wants me to evaluate one permit lookup using ONLY the supplied official-source evidence packet and return exactly one JSON object conforming to MODEL_SCHEMA. No Markdown fences, commentary, o...",
+          "reasoning_details": [
+            {
+              "format": "xai-responses-v1",
+              "index": 0,
+              "summary": "The user wants me to evaluate one permit lookup using ONLY the supplied official-source evidence packet and return exactly one JSON object conforming to MODEL_SCHEMA. No Markdown fences, commentary, o...",
+              "type": "reasoning.summary"
+            },
+            {
+              "data": "73uxQBES23ZGL9TqqgzFK3dkmd82cxaYdHuTnyKKnjOHjss1o0vKQDdvOsIKV4NjNFFp6v4wsJCjqlUmrzaOC9+Clu6TMNjwe6IqOGemIgXcmqiGx7eX/71OHJt2TBVtQhYN5xlsX6PbvEZKS3US/fP1gXn/RF3iGHFDT3VCbbvORpQj8sgNWBB7EYPriJJDW0lnYQvzphiuYAMRy/KMtpFzrWGr/RZFHFKxKLHr77y510ec4gWBJ0WSG06IILSunSw3F7jrQja/mP0peu/s/I1U62xmUraGIkbyedBx8VJl1c4pZMmG+Yzs97Rzzc7ZxB5Q2a1LeUzEGKuLPZBGpgUJijRJ7YBexXg5l59jteY+oofhIexaO7bglKC7910+4Gkjy067gTqeif2lt5TGeH0xF0GDTJ4a4lXbnGJcueMFv7gAnbJueIOZ2G6oe8ua9twpK2KM8WkJmiP8ZN4E9RBlCYFcfjFB5ffCE/GetFwCJ9eMMIfifFQtPMYlU+hmGwlpvpcr+o9MFHTtoD+HtSJWswUEvim5+Kv9pzDAFr06/Ot4W2AhQZ23MzZfx2tBDMngkIErcp1f05ehK1E+9ufju6jbTjj/fEoO/1c1HiV4bv5a/IWy49gquhQ1VkV/z+G0zG2dNRERcrjCrAeDPS3JRL5EzXyB6PSrnSVeiZt046nuSe+sCACUIr2vd85RR4gir4zvLA5fsE16LnANkBHSdplmpo3bITF/wq2t7i+4TSmuciNaUX9rin+VWTDqBnVE1m/XG8vDNzZszqrP5Fi12fscNIhd653xEeupNYlxsPHO+WsqKeaZejKzNijHpYu7ECckufx1/7i4mRe1ne8WpmGQLdOaDES5gzuLm5BJhgleRDOUYe7XHooqFupgrZzJag2khN7lFw6T9mI9eU+EZp2cYgHaIVDX8uflurrfgZ1Z/ZdIEQokC1xTtDcM/unL+uilE/an2tv5/t3VnuMiW3PnM3F7yP72/IrsKUOicTetrX8zopM/Tf0lcHFHOFCU01plsMveh9ocpdHe0ASR3C2kgS3XdALEuNRAzry1nG17BDCSCkE8XmtfPhCya4zhTgzMB8G28RJWhRARFI8Y2uXznodmWj68JYOJvBw32fBRhx/nz1CR24wEXQVeGeEIyYnNMNiQ09cRb4qxWXmxtHayP0fXRBiINpSk+FKN+EeJikmO92VHx9BEQW7ET/P6kDi2df1Qtff8t+mN7j6+JXSpiMLLHmkHujSZ35DtEE1ouj8oxEdNMfrPkKjfUIifIaxfm5vAgXLKMCv6jWGb/73MxkCv+4qhv8Jqh1Q0aDeQSG7HWCJawOohaELWnIMzlJKzgwPRCiFL9YD2ZOG2KPdR9L3zLblYebp6NEaGfe48aVpxGpq+LQ+1ikw2pIlU8v8sXEEMKCYw7GEP0ubOiEvtvothoc7i3ylo2vIa46zkXmuuEkwbJX6w8HKRaZ0P2U5uLayPxs3hr+RfpaGjDaS1OI9FZ1hzQa5m5ZnM9iE+72WZ++mJfbFOcf12cNJwiByUKytMN9D3bfm97svdXrzJG3rcGnimkAnFmQ54NEWAFlu6x1JoB+YPhFqbG+A5PbGqlWujvbJVQR7V1VZIF2cyxA8csZgLjUZVmjzRVeu991yRY+ZudwSCJrkzbS45kZarKVsB9QFCkMOSS3SJz6ZvwyO+QekPcFh7RUYgyd5aAVPf9kZEm7EU4aSwFQE2RmsVQBV5PV8+8IyIUaShXwfrgOTFt1sJzwedOcU/kygfQEjW9G7/TUSu1WYNlboNZvvd4/3L/jqBNEuzFJiCDTL0HO0dLFYZrero4Tpy/w3AMsjo/yI7S8q8q+pJFkE8t3o+S+8ouIwkOhicUUyA4tl34zMor0XD3KI2eZDUwzGHCMlxGU3O/UPUoiYP3NX7SMTezXCofFd6kzcvmLq+kJI1rtQeqdXwDttLOudrYqAQuVcJZTmYUiYriQ8nCe05drkVFIjv1kOkJ9HXK6KD2jp35crSzXPwaygxoxnYfD/uUkUxZvE+ZKinxphT0izyH3GOPNUjxcb7yN/sDb3U31KveSpn7lKxN86tFYmFntg5330MFiGqeyvBSNtt6/pvXJGVH9IjFjvEzXBQZ6BRoKd2/9xbb+xzJzFKBCwrza53D/37ShvFE6rRX1hK0Qzm5PCPWN1VyfxPPqJwRDQ0QO3P324+aoBVkzgICNFVfST0Pi2eRWVrHwK2yopeIVwyCBCm3MDlKOTqcwtQAt+QpcvKmjUT2tyQPGAr55AP8RFSkDBl2LDtGKcTksURk8RdS+o1aA67p6FOpff8tCN7fsxPPao3mBRtUjSrJaSrfi7Eil+IVeRI9EJ8tGCEpRxTlGi6E8cUtTTL3uR51mYt6hDzoOJ7q0ULPXcpVX0gkhX4F3OsyYOuCTgu743HY3vdX1yPlMJUEPZ+NJ/vGVnss0ogr8LqULMtB7q249pkh/hppNiIgorWNylyodXeO2b38JemEVW0unQuVbD9dgQi1/A7snmM9LA9I5XN2mMj3Vkgb8jXh8nF58VGPkNRvsPoHj4VO/Z0xxSNdwNBhj+1cX0vpG5hGgZV8KVFG8AeoUNYzSQBPwxwxO/SpAwcWNBOhQzgLEL5UnzZkFy15LmjvU4woKQcsyX4cK1Z51R/AXpQIabB3w8HwU1vtggMg740uDVPt7jTkODp9LggiwetbnnOK6XdudDZmpfKTMEN2As47Lgg6XLGcFWYLVNgH/Me/8QBmil0DyjRivzTz5GzJkCxtQC6CyUd2e27xitfgFaJnXUmVBJB1H4fmfzLpi4GW1r30fLR4GsQCsIeUL6lKbFjUJucY6E3IBYyJdUXSnEY+xRe9tKaNXiJ8JBOHxPEBLYtQYyUUtsc5dSSaFOiiQ7HZdgP110apiR1g/q8GsnEpxAIY6Lh0PiVOJ6wdKfIsM254Ou/rSMCyWcVGk/jfVyhGnNIpL3FB/fesRQb1sWK+Jr2ON3HgF1jXKKWBimjqSunAXVsZ/BJMJ434m8G/zlEjLdr+6vDvQdcgRBo2Ko7j/C/A9OvFZHbs6REN78szNeEtfyk",
+              "format": "xai-responses-v1",
+              "id": "rs_ab18399f-2b33-9936-bf1d-b50808b50a7b",
+              "index": 1,
+              "type": "reasoning.encrypted"
+            }
+          ],
+          "refusal": null,
+          "role": "assistant"
+        },
+        "native_finish_reason": "completed"
+      }
+    ],
+    "created": 1785167590,
+    "id": "gen-1785167590-kSwO0AqLZiNvBlCO6OGe",
+    "model": "x-ai/grok-4.5",
+    "object": "chat.completion",
+    "provider": "xAI",
+    "service_tier": "default",
+    "system_fingerprint": null,
+    "usage": {
+      "completion_tokens": 825,
+      "completion_tokens_details": {
+        "audio_tokens": 0,
+        "image_tokens": 0,
+        "reasoning_tokens": 527
+      },
+      "cost": 0.0060552,
+      "cost_details": {
+        "upstream_inference_completions_cost": 0.00495,
+        "upstream_inference_cost": 0.0060552,
+        "upstream_inference_prompt_cost": 0.0011052
+      },
+      "is_byok": false,
+      "prompt_tokens": 1423,
+      "prompt_tokens_details": {
+        "audio_tokens": 0,
+        "cache_write_tokens": 0,
+        "cached_tokens": 1024,
+        "video_tokens": 0
+      },
+      "total_tokens": 2248
+    }
+  },
+  "raw_text": "{\"permit_decision\":\"REQUIRED\",\"jurisdiction\":{\"jurisdiction_id\":\"us-ri-barrington\",\"name\":\"Barrington\",\"state\":\"RI\",\"type\":\"city_or_local_authority\"},\"project_family\":\"commercial_tenant_improvement\",\"primary_permit_family\":\"BUILDING\",\"companion_permits\":[{\"family\":\"ELECTRICAL\",\"status\":\"REQUIRED\"},{\"family\":\"MECHANICAL\",\"status\":\"REQUIRED\"},{\"family\":\"PLUMBING\",\"status\":\"REQUIRED\"},{\"family\":\"FIRE_LIFE_SAFETY\",\"status\":\"CONDITIONAL\"},{\"family\":\"OCCUPANCY\",\"status\":\"VERIFY\"},{\"family\":\"PLANNING_ZONING\",\"status\":\"VERIFY\"}],\"filing\":{\"authority_id\":\"us-ri-barrington\",\"destination_url\":\"https://rhodeisland.portal.opengov.com/\",\"office\":\"Building and Zoning Office\",\"url_role\":\"APPLICATION_START\"},\"source_support\":{\"state\":\"OFFICIAL_SOURCE_SUPPORTED\",\"strength\":\"MODERATE\",\"evidence\":[{\"url\":\"https://www.barrington.ri.gov/207/Building-and-Zoning-Office\",\"role\":\"REQUIREMENT_EVIDENCE\"},{\"url\":\"https://rhodeisland.portal.opengov.com/\",\"role\":\"APPLICATION_START\"}]},\"contradictions\":[]}",
+  "requested_model": "x-ai/grok-4.5",
+  "requested_provider": "openrouter",
+  "requested_runtime": "grok",
+  "response_id": "gen-1785167590-kSwO0AqLZiNvBlCO6OGe",
+  "runtime": "OpenRouter chat/completions; upstream_provider=xAI"
+}

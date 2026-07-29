@@ -1,0 +1,78 @@
+{
+  "observed_model": "x-ai/grok-4.5",
+  "observed_provider": "openrouter",
+  "path_proof": {
+    "adapter": "grok",
+    "engine_called": false,
+    "engine_result_supplied_to_model": false,
+    "model_call_count": 1
+  },
+  "provider": "openrouter",
+  "provider_response": {
+    "choices": [
+      {
+        "finish_reason": "stop",
+        "index": 0,
+        "logprobs": null,
+        "message": {
+          "content": "{\"permit_decision\":\"REQUIRED\",\"jurisdiction\":{\"jurisdiction_id\":\"us-mi-sterling_heights\",\"name\":\"City of Sterling Heights, Office of Building\",\"state\":\"MI\",\"type\":\"city_or_local_authority\"},\"project_family\":\"reroof\",\"primary_permit_family\":\"BUILDING\",\"companion_permits\":[{\"family\":\"ELECTRICAL\",\"status\":\"VERIFY\"},{\"family\":\"MECHANICAL\",\"status\":\"VERIFY\"},{\"family\":\"PLUMBING\",\"status\":\"VERIFY\"}],\"filing\":{\"authority_id\":\"us-mi-sterling_heights\",\"destination_url\":\"https://sterlingheights.gov/150/Building\",\"office\":\"City of Sterling Heights, Office of Building\",\"url_role\":\"APPLICATION_START\"},\"source_support\":{\"state\":\"OFFICIAL_SOURCE_SUPPORTED\",\"strength\":\"MODERATE\",\"evidence\":[{\"url\":\"https://www.legislature.mi.gov/Laws/MCL?objectName=mcl-125-1510\",\"role\":\"REQUIREMENT_EVIDENCE\"},{\"url\":\"https://sterlingheights.gov/1902/Permit-Applications\",\"role\":\"DIRECT_FORM\"},{\"url\":\"https://sterlingheights.gov/150/Building\",\"role\":\"APPLICATION_START\"}]},\"contradictions\":[]}",
+          "reasoning": "The user wants me to return exactly one JSON object conforming to MODEL_SCHEMA based on the evidence packet. No markdown fences, commentary, etc. Just JSON.\n{\n  \"permit_decision\": \"REQUIRED\",\n  \"jurisdiction\": {\n    \"jurisdiction_id\": \"us-mi-sterling_heights\",\n    \"name\": \"City of Sterling Heights, Office of Building\",\n    \"state\": \"MI\",\n    \"type\": \"city_or_local_authority\"\n  },\n \"project_family\": \"reroof\",\n  \"primary_permit_family\": \"BUILDING\",\n  \"companion_permits\": [],\n  \"filing\": {\n    \"authority_id\": \"us-mi-sterling_heights\",\n    \"destination_url\": \"https://sterlingheights.",
+          "reasoning_details": [
+            {
+              "format": "xai-responses-v1",
+              "index": 0,
+              "summary": "The user wants me to return exactly one JSON object conforming to MODEL_SCHEMA based on the evidence packet. No markdown fences, commentary, etc. Just JSON.\n{\n  \"permit_decision\": \"REQUIRED\",\n  \"jurisdiction\": {\n    \"jurisdiction_id\": \"us-mi-sterling_heights\",\n    \"name\": \"City of Sterling Heights, Office of Building\",\n    \"state\": \"MI\",\n    \"type\": \"city_or_local_authority\"\n  },\n \"project_family\": \"reroof\",\n  \"primary_permit_family\": \"BUILDING\",\n  \"companion_permits\": [],\n  \"filing\": {\n    \"authority_id\": \"us-mi-sterling_heights\",\n    \"destination_url\": \"https://sterlingheights.",
+              "type": "reasoning.summary"
+            },
+            {
+              "data": "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",
+              "format": "xai-responses-v1",
+              "id": "rs_2d465490-7f80-93d8-8841-41ad77b57eeb",
+              "index": 1,
+              "type": "reasoning.encrypted"
+            }
+          ],
+          "refusal": null,
+          "role": "assistant"
+        },
+        "native_finish_reason": "completed"
+      }
+    ],
+    "created": 1785166390,
+    "id": "gen-1785166390-tEifyr0cWPk5mjOouE0u",
+    "model": "x-ai/grok-4.5",
+    "object": "chat.completion",
+    "provider": "xAI",
+    "service_tier": "default",
+    "system_fingerprint": null,
+    "usage": {
+      "completion_tokens": 1158,
+      "completion_tokens_details": {
+        "audio_tokens": 0,
+        "image_tokens": 0,
+        "reasoning_tokens": 873
+      },
+      "cost": 0.0094824,
+      "cost_details": {
+        "upstream_inference_completions_cost": 0.006948,
+        "upstream_inference_cost": 0.0094824,
+        "upstream_inference_prompt_cost": 0.0025344
+      },
+      "is_byok": false,
+      "prompt_tokens": 1376,
+      "prompt_tokens_details": {
+        "audio_tokens": 0,
+        "cache_write_tokens": 0,
+        "cached_tokens": 128,
+        "video_tokens": 0
+      },
+      "total_tokens": 2534
+    }
+  },
+  "raw_text": "{\"permit_decision\":\"REQUIRED\",\"jurisdiction\":{\"jurisdiction_id\":\"us-mi-sterling_heights\",\"name\":\"City of Sterling Heights, Office of Building\",\"state\":\"MI\",\"type\":\"city_or_local_authority\"},\"project_family\":\"reroof\",\"primary_permit_family\":\"BUILDING\",\"companion_permits\":[{\"family\":\"ELECTRICAL\",\"status\":\"VERIFY\"},{\"family\":\"MECHANICAL\",\"status\":\"VERIFY\"},{\"family\":\"PLUMBING\",\"status\":\"VERIFY\"}],\"filing\":{\"authority_id\":\"us-mi-sterling_heights\",\"destination_url\":\"https://sterlingheights.gov/150/Building\",\"office\":\"City of Sterling Heights, Office of Building\",\"url_role\":\"APPLICATION_START\"},\"source_support\":{\"state\":\"OFFICIAL_SOURCE_SUPPORTED\",\"strength\":\"MODERATE\",\"evidence\":[{\"url\":\"https://www.legislature.mi.gov/Laws/MCL?objectName=mcl-125-1510\",\"role\":\"REQUIREMENT_EVIDENCE\"},{\"url\":\"https://sterlingheights.gov/1902/Permit-Applications\",\"role\":\"DIRECT_FORM\"},{\"url\":\"https://sterlingheights.gov/150/Building\",\"role\":\"APPLICATION_START\"}]},\"contradictions\":[]}",
+  "requested_model": "x-ai/grok-4.5",
+  "requested_provider": "openrouter",
+  "requested_runtime": "grok",
+  "response_id": "gen-1785166390-tEifyr0cWPk5mjOouE0u",
+  "runtime": "OpenRouter chat/completions; upstream_provider=xAI"
+}

@@ -1,0 +1,375 @@
+{
+  "observed_model": "gpt-5.6-luna",
+  "observed_provider": "openai-codex",
+  "path_proof": {
+    "adapter": "engine_luna",
+    "authority_recovery": null,
+    "decision_cell_reference": null,
+    "engine_called": true,
+    "engine_result_supplied_to_model": false,
+    "engine_stdout": "[url_check] URL verified: https://northsiouxcity-sd.gov/departments/planning-zoning/\n",
+    "local_merge_customer_path_called": true,
+    "model_call_count": 1
+  },
+  "provider": "openai-codex",
+  "provider_terminal_event": {
+    "response": {
+      "background": false,
+      "completed_at": 1785167931,
+      "created_at": 1785167922,
+      "error": null,
+      "frequency_penalty": 0.0,
+      "id": "resp_034e9236e4ac1916016a678032e2f48196b5738a8b4409ca00",
+      "incomplete_details": null,
+      "instructions": "Follow the user request exactly. Do not call tools.",
+      "max_output_tokens": null,
+      "max_tool_calls": null,
+      "metadata": {},
+      "model": "gpt-5.6-luna",
+      "moderation": null,
+      "object": "response",
+      "output": [],
+      "parallel_tool_calls": true,
+      "presence_penalty": 0.0,
+      "previous_response_id": null,
+      "prompt_cache_key": "d6a6f158-7104-453a-b1c7-4f1ed762dce1",
+      "prompt_cache_retention": "24h",
+      "reasoning": {
+        "context": "all_turns",
+        "effort": "medium",
+        "mode": "standard",
+        "summary": null
+      },
+      "safety_identifier": "user-FQ7sI0yp0Qqn6wWdqzy9mZic",
+      "service_tier": "default",
+      "status": "completed",
+      "store": false,
+      "temperature": 1.0,
+      "text": {
+        "format": {
+          "type": "text"
+        },
+        "verbosity": "medium"
+      },
+      "tool_choice": "auto",
+      "tool_usage": {
+        "image_gen": {
+          "input_tokens": 0,
+          "input_tokens_details": {
+            "image_tokens": 0,
+            "text_tokens": 0
+          },
+          "output_tokens": 0,
+          "output_tokens_details": {
+            "image_tokens": 0,
+            "text_tokens": 0
+          },
+          "total_tokens": 0
+        },
+        "web_search": {
+          "num_requests": 0
+        }
+      },
+      "tools": [],
+      "top_logprobs": 0,
+      "top_p": 0.98,
+      "truncation": "disabled",
+      "usage": {
+        "input_tokens": 1153,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 0
+        },
+        "output_tokens": 434,
+        "output_tokens_details": {
+          "reasoning_tokens": 218
+        },
+        "total_tokens": 1587
+      },
+      "user": null
+    },
+    "sequence_number": 220,
+    "type": "response.completed"
+  },
+  "raw_model_text": "{\"permit_decision\":\"REQUIRED\",\"jurisdiction\":{\"jurisdiction_id\":\"us-sd-north_sioux_city\",\"name\":\"North Sioux City\",\"state\":\"SD\",\"type\":\"city_or_local_authority\"},\"project_family\":\"residential_remodel\",\"primary_permit_family\":\"BUILDING\",\"companion_permits\":[{\"family\":\"ELECTRICAL\",\"status\":\"VERIFY\"},{\"family\":\"PLUMBING\",\"status\":\"VERIFY\"},{\"family\":\"MECHANICAL\",\"status\":\"VERIFY\"}],\"filing\":{\"authority_id\":\"us-sd-north_sioux_city\",\"office\":\"North Sioux City Planning & Zoning\",\"destination_url\":\"https://northsiouxcity-sd.gov/departments/planning-zoning/\",\"url_role\":\"REQUIREMENT_EVIDENCE\"},\"source_support\":{\"state\":\"OFFICIAL_SOURCE_SUPPORTED\",\"strength\":\"MODERATE\",\"evidence\":[{\"url\":\"https://northsiouxcity-sd.gov/departments/planning-zoning/\",\"role\":\"REQUIREMENT_EVIDENCE\"}]},\"contradictions\":[]}",
+  "raw_response": {
+    "apply_path": {
+      "channel": "contact_ahj",
+      "documents_to_prepare": [
+        "scope of work",
+        "plans/drawings if required",
+        "contractor license",
+        "valuation",
+        "owner authorization"
+      ],
+      "office_name": "Permit office",
+      "permit_category": "Permit package",
+      "permit_type": "Required permit package — Residential Building Permit — Remodel / Alteration",
+      "primary_filing_source_tier": "none",
+      "primary_requirement_source_tier": "none",
+      "state": "HONEST_FALLBACK",
+      "steps": [
+        "Open the listed permit portal or contact the permit office",
+        "Select the closest category to: Required permit package — Residential Building Permit — Remodel / Alteration",
+        "Confirm exact portal subcategories before final submission"
+      ],
+      "support_level": "not available",
+      "verification_note": "Confirm the exact portal category with the listed permit office before filing"
+    },
+    "apply_url": "https://northsiouxcity-sd.gov/departments/planning-zoning/",
+    "apply_url_known": false,
+    "applying_office": "Permit office",
+    "customer_first_screen_summary": {
+      "ahj_department": "Permit office",
+      "decision": "REQUIRED",
+      "kind_category": "Building",
+      "next_action": "File the required permit categories with Permit office: Residential Building Permit — Remodel / Alteration, Residential Plumbing Permit — Water Heater Replacement, Plumbing / FOG Permit, Mechanical Permit — Residential Remodel / Addition, Electrical Permit — Residential Remodel / Addition. Confirm exact portal subcategories before final submission.",
+      "source_cue": "Official sources attached for 4 required permit categories."
+    },
+    "customer_headline": "Permit required: Required permit package — Residential Building Permit — Remodel / Alteration.",
+    "customer_next_step": "File the required permit categories with Permit office: Residential Building Permit — Remodel / Alteration, Residential Plumbing Permit — Water Heater Replacement, Plumbing / FOG Permit, Mechanical Permit — Residential Remodel / Addition, Electrical Permit — Residential Remodel / Addition. Confirm exact portal subcategories before final submission.",
+    "customer_result_summary": {
+      "ahj_department": "Permit office",
+      "fee_cost_caveat": "Fees depend on valuation, trade scope, plan-review fees, and the current local fee schedule; verify before quoting.",
+      "freshness_label": "Source date not published; verify current requirements before filing",
+      "jurisdiction": "North Sioux City, SD",
+      "next_step": "File the required permit categories with Permit office: Residential Building Permit — Remodel / Alteration, Residential Plumbing Permit — Water Heater Replacement, Plumbing / FOG Permit, Mechanical Permit — Residential Remodel / Addition, Electrical Permit — Residential Remodel / Addition. Confirm exact portal subcategories before final submission.",
+      "permit_decision": "REQUIRED",
+      "permit_kind": "Building",
+      "permit_name": "Required permit package — Residential Building Permit — Remodel / Alteration",
+      "source_cue": "Official sources attached for 4 required permit categories."
+    },
+    "degraded_sources": true,
+    "inspection_booking": "Schedule online at Confirm the inspection advance-notice window when booking.",
+    "job_summary": "Required permit package: Residential Building Permit — Remodel / Alteration; Residential Plumbing Permit — Water Heater Replacement; Plumbing / FOG Permit; Mechanical Permit — Residential Remodel / Addition; Electrical Permit — Residential Remodel / Addition.",
+    "local_form_known": true,
+    "online_application_url": null,
+    "permit_decision": "REQUIRED",
+    "permit_kind": "Building",
+    "permit_name": "Required permit package — Residential Building Permit — Remodel / Alteration",
+    "permit_required": true,
+    "permit_type": "Required permit package — Residential Building Permit — Remodel / Alteration",
+    "permit_verdict": "YES",
+    "permits_required": [
+      {
+        "approval_type": "Residential Building Permit — Remodel / Alteration",
+        "decision": "REQUIRED",
+        "display_family": "Building",
+        "family": "building",
+        "filing_family": "building",
+        "kind": "Building",
+        "notes": "Primary permit for residential addition/remodel plan review, structural scope, life-safety, energy compliance, and final building inspection.",
+        "permit_name": "Residential Building Permit — Remodel / Alteration",
+        "permit_type": "Residential Building Permit — Remodel / Alteration",
+        "portal_selection": "Building - Residential Alteration / Remodel",
+        "rationale": "Primary permit for residential addition/remodel plan review, structural scope, life-safety, energy compliance, and final building inspection.",
+        "required": true,
+        "scope_trigger": "building_explicit_scope",
+        "segment": "residential",
+        "status": "REQUIRED"
+      },
+      {
+        "approval_type": "Residential Plumbing Permit — Water Heater Replacement",
+        "decision": "REQUIRED",
+        "display_family": "Building",
+        "family": "building",
+        "filing_family": "building",
+        "kind": "Building",
+        "permit_kind": "building",
+        "permit_name": "Residential Plumbing Permit — Water Heater Replacement",
+        "permit_type": "Residential Plumbing Permit — Water Heater Replacement",
+        "portal_selection": "Residential Plumbing Permit — Water Heater Replacement",
+        "required": true,
+        "segment": "residential",
+        "status": "REQUIRED"
+      },
+      {
+        "approval_type": "Plumbing / FOG Permit",
+        "decision": "REQUIRED",
+        "display_family": "Plumbing",
+        "family": "plumbing",
+        "filing_family": "plumbing",
+        "kind": "Plumbing",
+        "permit_name": "Plumbing / FOG Permit",
+        "permit_type": "Plumbing / FOG Permit",
+        "rationale": "Plumbing, fixture, drain, water-heater, or grease-interceptor work in the request triggers plumbing/FOG review.",
+        "required": true,
+        "segment": "residential",
+        "source_url": "https://northsiouxcity-sd.gov/departments/planning-zoning/",
+        "status": "REQUIRED"
+      },
+      {
+        "ahj_name": "North Sioux City permit office",
+        "application_authority_name": "North Sioux City permit office",
+        "approval_type": "Mechanical Permit",
+        "decision": "REQUIRED",
+        "display_family": "Mechanical",
+        "family": "mechanical",
+        "filing_family": "mechanical",
+        "kind": "Mechanical",
+        "notes": "Related mechanical permit for HVAC, duct relocation, ventilation, or rough/final mechanical work included in the remodel/addition. Required because the described scope triggers Mechanical Permit.",
+        "permit_name": "Mechanical Permit — Residential Remodel / Addition",
+        "permit_type": "Mechanical Permit — Residential Remodel / Addition",
+        "portal_selection": "Mechanical - Residential Alteration",
+        "rationale": "Related mechanical permit for HVAC, duct relocation, ventilation, or rough/final mechanical work included in the remodel/addition. Required because the described scope triggers Mechanical Permit.",
+        "required": true,
+        "scope_trigger": "mechanical_explicit_scope",
+        "segment": "residential",
+        "status": "REQUIRED"
+      },
+      {
+        "ahj_name": "North Sioux City permit office",
+        "application_authority_name": "North Sioux City permit office",
+        "approval_type": "Electrical Permit",
+        "decision": "REQUIRED",
+        "display_family": "Electrical",
+        "family": "electrical",
+        "filing_family": "electrical",
+        "kind": "Electrical",
+        "notes": "Related electrical permit for circuits, lighting, receptacles, panel work, or rough/final electrical inspections included in the remodel/addition. Required because the described scope triggers Electrical Permit.",
+        "permit_name": "Electrical Permit — Residential Remodel / Addition",
+        "permit_type": "Electrical Permit — Residential Remodel / Addition",
+        "portal_selection": "Electrical - Residential Alteration",
+        "rationale": "Related electrical permit for circuits, lighting, receptacles, panel work, or rough/final electrical inspections included in the remodel/addition. Required because the described scope triggers Electrical Permit.",
+        "required": true,
+        "scope_trigger": "electrical_explicit_scope",
+        "segment": "residential",
+        "status": "REQUIRED"
+      }
+    ],
+    "permits_required_logic": [
+      {
+        "filing_family": "building",
+        "included_because": "Official permit rule: Primary permit for residential addition/remodel plan review, structural scope, life-safety, energy compliance, and final building inspection.",
+        "permit_type": "Residential Building Permit — Remodel / Alteration",
+        "scope_trigger": "building_explicit_scope",
+        "segment": "residential"
+      },
+      {
+        "filing_family": "building",
+        "included_because": "Official permit rule: Required because the described scope triggers Building review.",
+        "permit_type": "Residential Plumbing Permit — Water Heater Replacement",
+        "scope_trigger": "building_scope",
+        "segment": "residential"
+      },
+      {
+        "filing_family": "plumbing",
+        "included_because": "Official permit rule: Plumbing, fixture, drain, water-heater, or grease-interceptor work in the request triggers plumbing/FOG review.",
+        "permit_type": "Plumbing / FOG Permit",
+        "scope_trigger": "plumbing_scope",
+        "segment": "residential"
+      },
+      {
+        "filing_family": "mechanical",
+        "included_because": "Official permit rule: Related mechanical permit for HVAC, duct relocation, ventilation, or rough/final mechanical work included in the remodel/addition. Required because the described scope triggers Mechanical Permit.",
+        "permit_type": "Mechanical Permit — Residential Remodel / Addition",
+        "scope_trigger": "mechanical_explicit_scope",
+        "segment": "residential"
+      },
+      {
+        "filing_family": "electrical",
+        "included_because": "Official permit rule: Related electrical permit for circuits, lighting, receptacles, panel work, or rough/final electrical inspections included in the remodel/addition. Required because the described scope triggers Electrical Permit.",
+        "permit_type": "Electrical Permit — Residential Remodel / Addition",
+        "scope_trigger": "electrical_explicit_scope",
+        "segment": "residential"
+      }
+    ],
+    "related_permit_families": [
+      "Electrical"
+    ],
+    "related_permit_names": [
+      "Electrical Permit"
+    ],
+    "related_permit_segments": [
+      "residential"
+    ],
+    "related_permits": [
+      {
+        "approval_type": "Electrical Permit",
+        "condition_text": "Verify whether permit is triggered for this project when the building department confirms the relevant permit scope condition.",
+        "decision": "VERIFY",
+        "display_family": "Electrical",
+        "family": "electrical",
+        "filing_family": "electrical",
+        "kind": "Electrical",
+        "permit_name": "Electrical Permit",
+        "permit_type": "Electrical Permit",
+        "rationale": "permit may apply to this scope",
+        "required": false,
+        "segment": "residential",
+        "status": "VERIFY",
+        "trigger_condition": "Verify whether permit is triggered for this project when the building department confirms the relevant permit scope condition."
+      }
+    ],
+    "required_permit_families": [
+      "Building",
+      "Plumbing",
+      "Mechanical",
+      "Electrical"
+    ],
+    "required_permit_names": [
+      "Residential Building Permit — Remodel / Alteration",
+      "Residential Plumbing Permit — Water Heater Replacement",
+      "Plumbing / FOG Permit",
+      "Mechanical Permit — Residential Remodel / Addition",
+      "Electrical Permit — Residential Remodel / Addition"
+    ],
+    "required_permit_segments": [
+      "residential"
+    ],
+    "required_permit_summary": "Required permit package: Residential Building Permit — Remodel / Alteration; Residential Plumbing Permit — Water Heater Replacement; Plumbing / FOG Permit; Mechanical Permit — Residential Remodel / Addition; Electrical Permit — Residential Remodel / Addition.",
+    "source_confidence": "SCOPE_DEFAULT",
+    "source_support": {
+      "apply_url_known": false,
+      "apply_url_source_confidence": "NEEDS_AHJ_SOURCE",
+      "context_source_count": 0,
+      "decision_mutation_allowed": false,
+      "degraded_sources": true,
+      "demoted_nonlocal_apply_urls": [
+        "https://northsiouxcity-sd.gov/departments/planning-zoning/"
+      ],
+      "display_source_count": 0,
+      "evidence": [
+        {
+          "role": "REQUIREMENT_EVIDENCE"
+        }
+      ],
+      "filing_path_state": "HONEST_FALLBACK",
+      "filing_source_count": 0,
+      "has_source_backed_evidence": false,
+      "local_form_known": true,
+      "primary_filing_source_tier": "none",
+      "primary_requirement_source_tier": "none",
+      "requirement_source_count": 0,
+      "source_confidence": "SCOPE_DEFAULT",
+      "state": "OFFICIAL_SOURCE_SUPPORTED",
+      "strength": "MODERATE"
+    },
+    "source_urls": [
+      "https://northsiouxcity-sd.gov/departments/planning-zoning/"
+    ],
+    "sources": [
+      {
+        "publisher": "Permit office",
+        "snippet": "An approved building permit gives you legal permission to start a building project per North Sioux City ordinances, in accordance with approved drawings and specifications. New construction (i.e., building, carport, garage, shed, deck, pool, etc.) Additions (i.e., bedrooms, bathrooms, family rooms, etc.) Renovations to existing structures (i.e., garage conversions, basement furnishings, kitchen expansions, etc.) Residential work (i.e., fences, fireplaces, decks, garages, pools, water heaters, et",
+        "title": "Official building department source",
+        "url": "https://northsiouxcity-sd.gov/departments/planning-zoning/"
+      }
+    ],
+    "summary": "Required permit package: Residential Building Permit — Remodel / Alteration; Residential Plumbing Permit — Water Heater Replacement; Plumbing / FOG Permit; Mechanical Permit — Residential Remodel / Addition; Electrical Permit — Residential Remodel / Addition.",
+    "warnings": [
+      "Permit decision preserved, but a non-local/generic filing URL was removed; use building department-specific source evidence for the application path.",
+      "Permit decision preserved, but a non-local/generic filing URL was removed; use building department-specific source evidence for the application path.",
+      "Exact local source support is degraded; the customer permit decision remains resolved.",
+      "Filing path degraded: exact local online filing portal was not verified; permit decision preserved.",
+      "Permit decision preserved, but a non-local/generic filing URL was removed; use building department-specific source evidence for the application path.",
+      "Permit decision preserved, but a non-local/generic filing URL was removed; use building department-specific source evidence for the application path.",
+      "Permit decision preserved, but a non-local/generic filing URL was removed; use building department-specific source evidence for the application path."
+    ]
+  },
+  "requested_model": "gpt-5.6-luna",
+  "requested_provider": "openai-codex",
+  "requested_runtime": "engine_luna",
+  "response_id": "resp_034e9236e4ac1916016a678032e2f48196b5738a8b4409ca00",
+  "runtime": "openai-codex responses SSE + api.server real local finalize/customer path"
+}

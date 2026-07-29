@@ -203,6 +203,7 @@ def normalize_family(value: PermitFamily | str | None, row: dict[str, Any] | Non
         return exact_aliases[raw]
     row = row or {}
     text = _text(raw, row.get("filing_family"), row.get("family"), row.get("display_family"), row.get("kind"), row.get("category"), row.get("permit_kind"), row.get("permit_type"), row.get("permit_name"), row.get("approval_type"), row.get("portal_selection")).lower()
+    text_tokens = tuple(re.findall(r"[a-z0-9]+", text))
     checks: list[tuple[PermitFamily, tuple[str, ...]]] = [
         (PermitFamily.WASTEWATER, ("wastewater", "pretreatment", "fog", "grease interceptor")),
         (PermitFamily.ENVIRONMENTAL, ("environmental", "fuel system", "fuel dispenser", "ust", "underground storage tank")),
@@ -221,8 +222,13 @@ def normalize_family(value: PermitFamily | str | None, row: dict[str, Any] | Non
         (PermitFamily.BUILDING, ("building", "tenant improvement", "garage", "deck", "window", "roof", "structural", "construction", "porch", "stairs")),
     ]
     for family, needles in checks:
-        if any(needle in text for needle in needles):
-            return family
+        for needle in needles:
+            needle_tokens = tuple(re.findall(r"[a-z0-9]+", needle.lower()))
+            if needle_tokens and len(needle_tokens) <= len(text_tokens) and any(
+                text_tokens[index : index + len(needle_tokens)] == needle_tokens
+                for index in range(len(text_tokens) - len(needle_tokens) + 1)
+            ):
+                return family
     return PermitFamily.OTHER
 
 

@@ -1,0 +1,6 @@
+PermitAssist independently adjudicated official filing route
+Official source URL: https://rrnm.gov/77/Building-Division
+Official filing URL: https://rior-egov.aspgov.com/Click2GovBP/index.html
+Verification boundary: DOSSIER_VERIFIED_DYNAMIC_PORTAL_WEB_EXTRACT_BLOCKED_20260728
+Exact official quote:
+You can now submit permits online at Click2Gov.

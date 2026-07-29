@@ -231,7 +231,22 @@ def test_r9_bentonville_commercial_route_does_not_publish_residential_provenance
     assert not any("/183/Residential-Applications" in url for url in provenance_urls)
     assert route["channel"] == "verify"
     assert "route_provenance_scope_mismatch" in route["validation_issue_codes"]
-    assert route["apply_url"].startswith("https://www.bentonville.ar.gov/")
+    assert route["apply_url"] == ""
+
+    actionable_urls = []
+    stack = [projection]
+    while stack:
+        item = stack.pop()
+        if isinstance(item, dict):
+            actionable_urls.extend(
+                str(value)
+                for key, value in item.items()
+                if key == "apply_url" and value
+            )
+            stack.extend(item.values())
+        elif isinstance(item, list):
+            stack.extend(item)
+    assert actionable_urls == []
 
 
 def test_r9_antibot_or_challenge_page_is_unknown_not_unreachable() -> None:

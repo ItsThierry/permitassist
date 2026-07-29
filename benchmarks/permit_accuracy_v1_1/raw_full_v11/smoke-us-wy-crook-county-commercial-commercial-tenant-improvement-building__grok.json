@@ -1,0 +1,78 @@
+{
+  "observed_model": "x-ai/grok-4.5",
+  "observed_provider": "openrouter",
+  "path_proof": {
+    "adapter": "grok",
+    "engine_called": false,
+    "engine_result_supplied_to_model": false,
+    "model_call_count": 1
+  },
+  "provider": "openrouter",
+  "provider_response": {
+    "choices": [
+      {
+        "finish_reason": "stop",
+        "index": 0,
+        "logprobs": null,
+        "message": {
+          "content": "{\"permit_decision\":\"NOT_REQUIRED\",\"jurisdiction\":{\"jurisdiction_id\":\"us-wy-crook_county\",\"name\":\"Crook County\",\"state\":\"WY\",\"type\":\"county\"},\"project_family\":\"commercial_tenant_improvement\",\"primary_permit_family\":\"BUILDING\",\"companion_permits\":[],\"filing\":{\"authority_id\":null,\"destination_url\":\"https://www.crookcounty.wy.gov/departments/growth_and_development/docs/2024/Land%20Use%20Zoning%20Building%20Permit%20Information.pdf?t=202412022024060\",\"office\":\"Crook County\",\"url_role\":\"REQUIREMENT_EVIDENCE\"},\"source_support\":{\"evidence\":[{\"url\":\"https://www.crookcounty.wy.gov/departments/growth_and_development/docs/2024/Land%20Use%20Zoning%20Building%20Permit%20Information.pdf?t=202412022024060\",\"role\":\"REQUIREMENT_EVIDENCE\"}],\"state\":\"OFFICIAL_SOURCE_SUPPORTED\",\"strength\":\"STRONG\"},\"contradictions\":[]}",
+          "reasoning": "The user wants me to evaluate a permit lookup using ONLY the supplied official-source evidence packet and return exactly one JSON object conforming to MODEL_SCHEMA.\n{\n  \"permit_decision\": \"NOT_REQUIRED\",\n  \"jurisdiction\": {\n    \"jurisdiction_id\": \"us-wy-crook_county\",\n    \"name\": \"Crook County\",\n    \"state\": \"WY\",\n    \"type\": \"county\"\n  },\n  \"project_family\": \"commercial tenant improvement\",\n  \"primary_permit_family\": \"BUILDING\",\n  \"companion_permits\": [],\n  \"filing\": {\n    \"authority_id\": null,\n    \"destination_url\": \"https://www.crookcounty.wy.",
+          "reasoning_details": [
+            {
+              "format": "xai-responses-v1",
+              "index": 0,
+              "summary": "The user wants me to evaluate a permit lookup using ONLY the supplied official-source evidence packet and return exactly one JSON object conforming to MODEL_SCHEMA.\n{\n  \"permit_decision\": \"NOT_REQUIRED\",\n  \"jurisdiction\": {\n    \"jurisdiction_id\": \"us-wy-crook_county\",\n    \"name\": \"Crook County\",\n    \"state\": \"WY\",\n    \"type\": \"county\"\n  },\n  \"project_family\": \"commercial tenant improvement\",\n  \"primary_permit_family\": \"BUILDING\",\n  \"companion_permits\": [],\n  \"filing\": {\n    \"authority_id\": null,\n    \"destination_url\": \"https://www.crookcounty.wy.",
+              "type": "reasoning.summary"
+            },
+            {
+              "data": "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",
+              "format": "xai-responses-v1",
+              "id": "rs_c01c5b85-1101-9217-999f-b4da905a70ba",
+              "index": 1,
+              "type": "reasoning.encrypted"
+            }
+          ],
+          "refusal": null,
+          "role": "assistant"
+        },
+        "native_finish_reason": "completed"
+      }
+    ],
+    "created": 1785163806,
+    "id": "gen-1785163806-Oi83Xw6B9dmDfUzRhlGf",
+    "model": "x-ai/grok-4.5",
+    "object": "chat.completion",
+    "provider": "xAI",
+    "service_tier": "default",
+    "system_fingerprint": null,
+    "usage": {
+      "completion_tokens": 1103,
+      "completion_tokens_details": {
+        "audio_tokens": 0,
+        "image_tokens": 0,
+        "reasoning_tokens": 851
+      },
+      "cost": 0.0091664,
+      "cost_details": {
+        "upstream_inference_completions_cost": 0.006618,
+        "upstream_inference_cost": 0.0091664,
+        "upstream_inference_prompt_cost": 0.0025484
+      },
+      "is_byok": false,
+      "prompt_tokens": 1383,
+      "prompt_tokens_details": {
+        "audio_tokens": 0,
+        "cache_write_tokens": 0,
+        "cached_tokens": 128,
+        "video_tokens": 0
+      },
+      "total_tokens": 2486
+    }
+  },
+  "raw_text": "{\"permit_decision\":\"NOT_REQUIRED\",\"jurisdiction\":{\"jurisdiction_id\":\"us-wy-crook_county\",\"name\":\"Crook County\",\"state\":\"WY\",\"type\":\"county\"},\"project_family\":\"commercial_tenant_improvement\",\"primary_permit_family\":\"BUILDING\",\"companion_permits\":[],\"filing\":{\"authority_id\":null,\"destination_url\":\"https://www.crookcounty.wy.gov/departments/growth_and_development/docs/2024/Land%20Use%20Zoning%20Building%20Permit%20Information.pdf?t=202412022024060\",\"office\":\"Crook County\",\"url_role\":\"REQUIREMENT_EVIDENCE\"},\"source_support\":{\"evidence\":[{\"url\":\"https://www.crookcounty.wy.gov/departments/growth_and_development/docs/2024/Land%20Use%20Zoning%20Building%20Permit%20Information.pdf?t=202412022024060\",\"role\":\"REQUIREMENT_EVIDENCE\"}],\"state\":\"OFFICIAL_SOURCE_SUPPORTED\",\"strength\":\"STRONG\"},\"contradictions\":[]}",
+  "requested_model": "x-ai/grok-4.5",
+  "requested_provider": "openrouter",
+  "requested_runtime": "grok",
+  "response_id": "gen-1785163806-Oi83Xw6B9dmDfUzRhlGf",
+  "runtime": "OpenRouter chat/completions; upstream_provider=xAI"
+}

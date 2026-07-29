@@ -1,0 +1,78 @@
+{
+  "observed_model": "x-ai/grok-4.5",
+  "observed_provider": "openrouter",
+  "path_proof": {
+    "adapter": "grok",
+    "engine_called": false,
+    "engine_result_supplied_to_model": false,
+    "model_call_count": 1
+  },
+  "provider": "openrouter",
+  "provider_response": {
+    "choices": [
+      {
+        "finish_reason": "stop",
+        "index": 0,
+        "logprobs": null,
+        "message": {
+          "content": "{\"permit_decision\":\"REQUIRED\",\"jurisdiction\":{\"jurisdiction_id\":\"us-co-adams_county\",\"name\":\"Adams County\",\"state\":\"CO\",\"type\":\"county\"},\"project_family\":\"commercial_tenant_improvement\",\"primary_permit_family\":\"BUILDING\",\"companion_permits\":[{\"family\":\"ELECTRICAL\",\"status\":\"REQUIRED\"},{\"family\":\"PLUMBING\",\"status\":\"REQUIRED\"},{\"family\":\"MECHANICAL\",\"status\":\"REQUIRED\"},{\"family\":\"FIRE_LIFE_SAFETY\",\"status\":\"VERIFY\"},{\"family\":\"OCCUPANCY\",\"status\":\"VERIFY\"},{\"family\":\"PLANNING_ZONING\",\"status\":\"VERIFY\"},{\"family\":\"GAS\",\"status\":\"VERIFY\"}],\"filing\":{\"authority_id\":\"us-co-adams_county\",\"destination_url\":\"https://aca-prod.accela.com/ADAMSCO/Default.aspx\",\"office\":\"One Stop Permitting Center\",\"url_role\":\"APPLICATION_START\"},\"source_support\":{\"state\":\"OFFICIAL_SOURCE_SUPPORTED\",\"strength\":\"STRONG\",\"evidence\":[{\"url\":\"https://adamscountyco.gov/service/apply-for-a-building-permit/\",\"role\":\"REQUIREMENT_EVIDENCE\"},{\"url\":\"https://aca-prod.accela.com/ADAMSCO/Default.aspx\",\"role\":\"APPLICATION_START\"}]},\"contradictions\":[]}",
+          "reasoning": "The user wants me to return exactly one JSON object conforming to MODEL_SCHEMA based on the evidence packet. No markdown fences, commentary, etc. Output JSON only.\n",
+          "reasoning_details": [
+            {
+              "format": "xai-responses-v1",
+              "index": 0,
+              "summary": "The user wants me to return exactly one JSON object conforming to MODEL_SCHEMA based on the evidence packet. No markdown fences, commentary, etc. Output JSON only.\n",
+              "type": "reasoning.summary"
+            },
+            {
+              "data": "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",
+              "format": "xai-responses-v1",
+              "id": "rs_2ccaea46-a1ac-9e2c-b31d-9cb9eccc74fd",
+              "index": 1,
+              "type": "reasoning.encrypted"
+            }
+          ],
+          "refusal": null,
+          "role": "assistant"
+        },
+        "native_finish_reason": "completed"
+      }
+    ],
+    "created": 1785164558,
+    "id": "gen-1785164558-8PBO0ntgfsaoMFFgtWw3",
+    "model": "x-ai/grok-4.5",
+    "object": "chat.completion",
+    "provider": "xAI",
+    "service_tier": "default",
+    "system_fingerprint": null,
+    "usage": {
+      "completion_tokens": 668,
+      "completion_tokens_details": {
+        "audio_tokens": 0,
+        "image_tokens": 0,
+        "reasoning_tokens": 350
+      },
+      "cost": 0.0066984,
+      "cost_details": {
+        "upstream_inference_completions_cost": 0.004008,
+        "upstream_inference_cost": 0.0066984,
+        "upstream_inference_prompt_cost": 0.0026904
+      },
+      "is_byok": false,
+      "prompt_tokens": 1454,
+      "prompt_tokens_details": {
+        "audio_tokens": 0,
+        "cache_write_tokens": 0,
+        "cached_tokens": 128,
+        "video_tokens": 0
+      },
+      "total_tokens": 2122
+    }
+  },
+  "raw_text": "{\"permit_decision\":\"REQUIRED\",\"jurisdiction\":{\"jurisdiction_id\":\"us-co-adams_county\",\"name\":\"Adams County\",\"state\":\"CO\",\"type\":\"county\"},\"project_family\":\"commercial_tenant_improvement\",\"primary_permit_family\":\"BUILDING\",\"companion_permits\":[{\"family\":\"ELECTRICAL\",\"status\":\"REQUIRED\"},{\"family\":\"PLUMBING\",\"status\":\"REQUIRED\"},{\"family\":\"MECHANICAL\",\"status\":\"REQUIRED\"},{\"family\":\"FIRE_LIFE_SAFETY\",\"status\":\"VERIFY\"},{\"family\":\"OCCUPANCY\",\"status\":\"VERIFY\"},{\"family\":\"PLANNING_ZONING\",\"status\":\"VERIFY\"},{\"family\":\"GAS\",\"status\":\"VERIFY\"}],\"filing\":{\"authority_id\":\"us-co-adams_county\",\"destination_url\":\"https://aca-prod.accela.com/ADAMSCO/Default.aspx\",\"office\":\"One Stop Permitting Center\",\"url_role\":\"APPLICATION_START\"},\"source_support\":{\"state\":\"OFFICIAL_SOURCE_SUPPORTED\",\"strength\":\"STRONG\",\"evidence\":[{\"url\":\"https://adamscountyco.gov/service/apply-for-a-building-permit/\",\"role\":\"REQUIREMENT_EVIDENCE\"},{\"url\":\"https://aca-prod.accela.com/ADAMSCO/Default.aspx\",\"role\":\"APPLICATION_START\"}]},\"contradictions\":[]}",
+  "requested_model": "x-ai/grok-4.5",
+  "requested_provider": "openrouter",
+  "requested_runtime": "grok",
+  "response_id": "gen-1785164558-8PBO0ntgfsaoMFFgtWw3",
+  "runtime": "OpenRouter chat/completions; upstream_provider=xAI"
+}

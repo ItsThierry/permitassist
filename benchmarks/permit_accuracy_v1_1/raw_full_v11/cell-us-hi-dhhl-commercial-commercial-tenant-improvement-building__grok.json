@@ -1,0 +1,78 @@
+{
+  "observed_model": "x-ai/grok-4.5",
+  "observed_provider": "openrouter",
+  "path_proof": {
+    "adapter": "grok",
+    "engine_called": false,
+    "engine_result_supplied_to_model": false,
+    "model_call_count": 1
+  },
+  "provider": "openrouter",
+  "provider_response": {
+    "choices": [
+      {
+        "finish_reason": "stop",
+        "index": 0,
+        "logprobs": null,
+        "message": {
+          "content": "{\"permit_decision\":\"VERIFY\",\"jurisdiction\":{\"jurisdiction_id\":\"us-hi-dhhl\",\"name\":\"Dhhl\",\"state\":\"HI\",\"type\":\"city_or_local_authority\"},\"project_family\":\"commercial_tenant_improvement\",\"primary_permit_family\":\"BUILDING\",\"companion_permits\":[{\"family\":\"ELECTRICAL\",\"status\":\"VERIFY\"},{\"family\":\"PLUMBING\",\"status\":\"VERIFY\"},{\"family\":\"MECHANICAL\",\"status\":\"VERIFY\"},{\"family\":\"FIRE_LIFE_SAFETY\",\"status\":\"VERIFY\"},{\"family\":\"OCCUPANCY\",\"status\":\"VERIFY\"},{\"family\":\"PLANNING_ZONING\",\"status\":\"VERIFY\"}],\"filing\":{\"authority_id\":\"us-hi-dhhl\",\"office\":\"Department of Hawaiian Home Lands in-house permitting\",\"destination_url\":\"https://dhhl.hawaii.gov/2024/10/01/dhhl-launches-first-ever-in-house-permitting-process/\",\"url_role\":\"APPLICATION_START\"},\"source_support\":{\"state\":\"VERIFY\",\"strength\":\"WEAK\",\"evidence\":[{\"url\":\"https://dhhl.hawaii.gov/2024/10/01/dhhl-launches-first-ever-in-house-permitting-process/\",\"role\":\"APPLICATION_START\"},{\"url\":\"https://fire.honolulu.gov/fire-code/permits\",\"role\":\"REQUIREMENT_EVIDENCE\"},{\"url\":\"https://cca.hawaii.gov/wp-content/uploads/2026/01/CLB-190718-Hiring-Electricians-and-Plumbers.pdf\",\"role\":\"REQUIREMENT_EVIDENCE\"}]},\"contradictions\":[\"Evidence cites City and County of Honolulu Fire Department permit rules while jurisdiction_hint and DHHL destination indicate Department of Hawaiian Home Lands authority\",\"State contractor licensing electrical-permit guidance does not confirm DHHL local building permit triggers for this commercial tenant improvement\"]}",
+          "reasoning": "The user wants me to evaluate one permit lookup using ONLY the supplied official-source evidence packet and return exactly one JSON object conforming to MODEL_SCHEMA.\n",
+          "reasoning_details": [
+            {
+              "format": "xai-responses-v1",
+              "index": 0,
+              "summary": "The user wants me to evaluate one permit lookup using ONLY the supplied official-source evidence packet and return exactly one JSON object conforming to MODEL_SCHEMA.\n",
+              "type": "reasoning.summary"
+            },
+            {
+              "data": "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",
+              "format": "xai-responses-v1",
+              "id": "rs_26d9e487-070d-9a01-9377-e21d9f3393b1",
+              "index": 1,
+              "type": "reasoning.encrypted"
+            }
+          ],
+          "refusal": null,
+          "role": "assistant"
+        },
+        "native_finish_reason": "completed"
+      }
+    ],
+    "created": 1785165390,
+    "id": "gen-1785165390-tCzBvTUeFEO6AuYCGUbA",
+    "model": "x-ai/grok-4.5",
+    "object": "chat.completion",
+    "provider": "xAI",
+    "service_tier": "default",
+    "system_fingerprint": null,
+    "usage": {
+      "completion_tokens": 1085,
+      "completion_tokens_details": {
+        "audio_tokens": 0,
+        "image_tokens": 0,
+        "reasoning_tokens": 653
+      },
+      "cost": 0.0095124,
+      "cost_details": {
+        "upstream_inference_completions_cost": 0.00651,
+        "upstream_inference_cost": 0.0095124,
+        "upstream_inference_prompt_cost": 0.0030024
+      },
+      "is_byok": false,
+      "prompt_tokens": 1610,
+      "prompt_tokens_details": {
+        "audio_tokens": 0,
+        "cache_write_tokens": 0,
+        "cached_tokens": 128,
+        "video_tokens": 0
+      },
+      "total_tokens": 2695
+    }
+  },
+  "raw_text": "{\"permit_decision\":\"VERIFY\",\"jurisdiction\":{\"jurisdiction_id\":\"us-hi-dhhl\",\"name\":\"Dhhl\",\"state\":\"HI\",\"type\":\"city_or_local_authority\"},\"project_family\":\"commercial_tenant_improvement\",\"primary_permit_family\":\"BUILDING\",\"companion_permits\":[{\"family\":\"ELECTRICAL\",\"status\":\"VERIFY\"},{\"family\":\"PLUMBING\",\"status\":\"VERIFY\"},{\"family\":\"MECHANICAL\",\"status\":\"VERIFY\"},{\"family\":\"FIRE_LIFE_SAFETY\",\"status\":\"VERIFY\"},{\"family\":\"OCCUPANCY\",\"status\":\"VERIFY\"},{\"family\":\"PLANNING_ZONING\",\"status\":\"VERIFY\"}],\"filing\":{\"authority_id\":\"us-hi-dhhl\",\"office\":\"Department of Hawaiian Home Lands in-house permitting\",\"destination_url\":\"https://dhhl.hawaii.gov/2024/10/01/dhhl-launches-first-ever-in-house-permitting-process/\",\"url_role\":\"APPLICATION_START\"},\"source_support\":{\"state\":\"VERIFY\",\"strength\":\"WEAK\",\"evidence\":[{\"url\":\"https://dhhl.hawaii.gov/2024/10/01/dhhl-launches-first-ever-in-house-permitting-process/\",\"role\":\"APPLICATION_START\"},{\"url\":\"https://fire.honolulu.gov/fire-code/permits\",\"role\":\"REQUIREMENT_EVIDENCE\"},{\"url\":\"https://cca.hawaii.gov/wp-content/uploads/2026/01/CLB-190718-Hiring-Electricians-and-Plumbers.pdf\",\"role\":\"REQUIREMENT_EVIDENCE\"}]},\"contradictions\":[\"Evidence cites City and County of Honolulu Fire Department permit rules while jurisdiction_hint and DHHL destination indicate Department of Hawaiian Home Lands authority\",\"State contractor licensing electrical-permit guidance does not confirm DHHL local building permit triggers for this commercial tenant improvement\"]}",
+  "requested_model": "x-ai/grok-4.5",
+  "requested_provider": "openrouter",
+  "requested_runtime": "grok",
+  "response_id": "gen-1785165390-tCzBvTUeFEO6AuYCGUbA",
+  "runtime": "OpenRouter chat/completions; upstream_provider=xAI"
+}

@@ -1,0 +1,78 @@
+{
+  "observed_model": "x-ai/grok-4.5",
+  "observed_provider": "openrouter",
+  "path_proof": {
+    "adapter": "grok",
+    "engine_called": false,
+    "engine_result_supplied_to_model": false,
+    "model_call_count": 1
+  },
+  "provider": "openrouter",
+  "provider_response": {
+    "choices": [
+      {
+        "finish_reason": "stop",
+        "index": 0,
+        "logprobs": null,
+        "message": {
+          "content": "{\"permit_decision\":\"REQUIRED\",\"jurisdiction\":{\"jurisdiction_id\":\"us-va-albemarle_county\",\"name\":\"Albemarle County\",\"state\":\"VA\",\"type\":\"county\"},\"project_family\":\"commercial_tenant_improvement\",\"primary_permit_family\":\"BUILDING\",\"companion_permits\":[{\"family\":\"ELECTRICAL\",\"status\":\"REQUIRED\"},{\"family\":\"PLUMBING\",\"status\":\"REQUIRED\"},{\"family\":\"MECHANICAL\",\"status\":\"REQUIRED\"},{\"family\":\"FIRE_LIFE_SAFETY\",\"status\":\"VERIFY\"},{\"family\":\"OCCUPANCY\",\"status\":\"VERIFY\"},{\"family\":\"PLANNING_ZONING\",\"status\":\"VERIFY\"}],\"filing\":{\"authority_id\":\"us-va-albemarle_county\",\"destination_url\":\"https://www.albemarle.org/government/community-development/apply-for/building-permit\",\"office\":\"Albemarle County Community Development\",\"url_role\":\"APPLICATION_START\"},\"source_support\":{\"state\":\"OFFICIAL_SOURCE_SUPPORTED\",\"strength\":\"MODERATE\",\"evidence\":[{\"url\":\"https://www.albemarle.org/government/community-development/apply-for/building-permit\",\"role\":\"REQUIREMENT_EVIDENCE\"}]},\"contradictions\":[]}",
+          "reasoning": "The user wants me to return exactly one JSON object conforming to MODEL_SCHEMA based on the evidence packet. No markdown fences, commentary, etc. Output JSON only.\n",
+          "reasoning_details": [
+            {
+              "format": "xai-responses-v1",
+              "index": 0,
+              "summary": "The user wants me to return exactly one JSON object conforming to MODEL_SCHEMA based on the evidence packet. No markdown fences, commentary, etc. Output JSON only.\n",
+              "type": "reasoning.summary"
+            },
+            {
+              "data": "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",
+              "format": "xai-responses-v1",
+              "id": "rs_990fec7a-6a15-9b72-9b05-d37f17502ed3",
+              "index": 1,
+              "type": "reasoning.encrypted"
+            }
+          ],
+          "refusal": null,
+          "role": "assistant"
+        },
+        "native_finish_reason": "completed"
+      }
+    ],
+    "created": 1785168308,
+    "id": "gen-1785168308-KVlzRyvTaiW5Ldlpz52g",
+    "model": "x-ai/grok-4.5",
+    "object": "chat.completion",
+    "provider": "xAI",
+    "service_tier": "default",
+    "system_fingerprint": null,
+    "usage": {
+      "completion_tokens": 962,
+      "completion_tokens_details": {
+        "audio_tokens": 0,
+        "image_tokens": 0,
+        "reasoning_tokens": 670
+      },
+      "cost": 0.0068312,
+      "cost_details": {
+        "upstream_inference_completions_cost": 0.005772,
+        "upstream_inference_cost": 0.0068312,
+        "upstream_inference_prompt_cost": 0.0010592
+      },
+      "is_byok": false,
+      "prompt_tokens": 1400,
+      "prompt_tokens_details": {
+        "audio_tokens": 0,
+        "cache_write_tokens": 0,
+        "cached_tokens": 1024,
+        "video_tokens": 0
+      },
+      "total_tokens": 2362
+    }
+  },
+  "raw_text": "{\"permit_decision\":\"REQUIRED\",\"jurisdiction\":{\"jurisdiction_id\":\"us-va-albemarle_county\",\"name\":\"Albemarle County\",\"state\":\"VA\",\"type\":\"county\"},\"project_family\":\"commercial_tenant_improvement\",\"primary_permit_family\":\"BUILDING\",\"companion_permits\":[{\"family\":\"ELECTRICAL\",\"status\":\"REQUIRED\"},{\"family\":\"PLUMBING\",\"status\":\"REQUIRED\"},{\"family\":\"MECHANICAL\",\"status\":\"REQUIRED\"},{\"family\":\"FIRE_LIFE_SAFETY\",\"status\":\"VERIFY\"},{\"family\":\"OCCUPANCY\",\"status\":\"VERIFY\"},{\"family\":\"PLANNING_ZONING\",\"status\":\"VERIFY\"}],\"filing\":{\"authority_id\":\"us-va-albemarle_county\",\"destination_url\":\"https://www.albemarle.org/government/community-development/apply-for/building-permit\",\"office\":\"Albemarle County Community Development\",\"url_role\":\"APPLICATION_START\"},\"source_support\":{\"state\":\"OFFICIAL_SOURCE_SUPPORTED\",\"strength\":\"MODERATE\",\"evidence\":[{\"url\":\"https://www.albemarle.org/government/community-development/apply-for/building-permit\",\"role\":\"REQUIREMENT_EVIDENCE\"}]},\"contradictions\":[]}",
+  "requested_model": "x-ai/grok-4.5",
+  "requested_provider": "openrouter",
+  "requested_runtime": "grok",
+  "response_id": "gen-1785168308-KVlzRyvTaiW5Ldlpz52g",
+  "runtime": "OpenRouter chat/completions; upstream_provider=xAI"
+}

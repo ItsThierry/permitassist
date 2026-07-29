@@ -1,0 +1,78 @@
+{
+  "observed_model": "x-ai/grok-4.5",
+  "observed_provider": "openrouter",
+  "path_proof": {
+    "adapter": "grok",
+    "engine_called": false,
+    "engine_result_supplied_to_model": false,
+    "model_call_count": 1
+  },
+  "provider": "openrouter",
+  "provider_response": {
+    "choices": [
+      {
+        "finish_reason": "stop",
+        "index": 0,
+        "logprobs": null,
+        "message": {
+          "content": "{\"permit_decision\":\"VERIFY\",\"jurisdiction\":{\"jurisdiction_id\":\"us-ms-biloxi_city\",\"name\":\"Biloxi City\",\"state\":\"MS\",\"type\":\"city_or_local_authority\"},\"project_family\":\"commercial_tenant_improvement\",\"primary_permit_family\":\"VERIFY\",\"companion_permits\":[{\"family\":\"BUILDING\",\"status\":\"VERIFY\"},{\"family\":\"ELECTRICAL\",\"status\":\"VERIFY\"},{\"family\":\"PLUMBING\",\"status\":\"VERIFY\"},{\"family\":\"MECHANICAL\",\"status\":\"VERIFY\"},{\"family\":\"FIRE_LIFE_SAFETY\",\"status\":\"VERIFY\"},{\"family\":\"OCCUPANCY\",\"status\":\"VERIFY\"},{\"family\":\"PLANNING_ZONING\",\"status\":\"VERIFY\"}],\"filing\":{\"authority_id\":\"us-ms-biloxi_city\",\"destination_url\":\"https://biloxi.ms.us/departments/community-development/\",\"office\":\"Biloxi Community Development\",\"url_role\":\"INFORMATIONAL_OFFICE\"},\"source_support\":{\"state\":\"VERIFY\",\"strength\":\"WEAK\",\"evidence\":[{\"url\":\"https://biloxi.ms.us/departments/community-development/\",\"role\":\"INFORMATIONAL_OFFICE\"},{\"url\":\"https://www.biloxi.ms.us/pdf/LDO.pdf\",\"role\":\"REQUIREMENT_EVIDENCE\"}]},\"contradictions\":[]}",
+          "reasoning": "The user wants me to evaluate one permit lookup using ONLY the supplied official-source evidence packet and return exactly one JSON object conforming to MODEL_SCHEMA. I must not use Markdown fences, c...",
+          "reasoning_details": [
+            {
+              "format": "xai-responses-v1",
+              "index": 0,
+              "summary": "The user wants me to evaluate one permit lookup using ONLY the supplied official-source evidence packet and return exactly one JSON object conforming to MODEL_SCHEMA. I must not use Markdown fences, c...",
+              "type": "reasoning.summary"
+            },
+            {
+              "data": "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",
+              "format": "xai-responses-v1",
+              "id": "rs_ad9be103-c36d-91d9-a02e-61f92d259055",
+              "index": 1,
+              "type": "reasoning.encrypted"
+            }
+          ],
+          "refusal": null,
+          "role": "assistant"
+        },
+        "native_finish_reason": "completed"
+      }
+    ],
+    "created": 1785166569,
+    "id": "gen-1785166569-mh2tdipMaKdB1AiX3iFV",
+    "model": "x-ai/grok-4.5",
+    "object": "chat.completion",
+    "provider": "xAI",
+    "service_tier": "default",
+    "system_fingerprint": null,
+    "usage": {
+      "completion_tokens": 766,
+      "completion_tokens_details": {
+        "audio_tokens": 0,
+        "image_tokens": 0,
+        "reasoning_tokens": 443
+      },
+      "cost": 0.0074844,
+      "cost_details": {
+        "upstream_inference_completions_cost": 0.004596,
+        "upstream_inference_cost": 0.0074844,
+        "upstream_inference_prompt_cost": 0.0028884
+      },
+      "is_byok": false,
+      "prompt_tokens": 1553,
+      "prompt_tokens_details": {
+        "audio_tokens": 0,
+        "cache_write_tokens": 0,
+        "cached_tokens": 128,
+        "video_tokens": 0
+      },
+      "total_tokens": 2319
+    }
+  },
+  "raw_text": "{\"permit_decision\":\"VERIFY\",\"jurisdiction\":{\"jurisdiction_id\":\"us-ms-biloxi_city\",\"name\":\"Biloxi City\",\"state\":\"MS\",\"type\":\"city_or_local_authority\"},\"project_family\":\"commercial_tenant_improvement\",\"primary_permit_family\":\"VERIFY\",\"companion_permits\":[{\"family\":\"BUILDING\",\"status\":\"VERIFY\"},{\"family\":\"ELECTRICAL\",\"status\":\"VERIFY\"},{\"family\":\"PLUMBING\",\"status\":\"VERIFY\"},{\"family\":\"MECHANICAL\",\"status\":\"VERIFY\"},{\"family\":\"FIRE_LIFE_SAFETY\",\"status\":\"VERIFY\"},{\"family\":\"OCCUPANCY\",\"status\":\"VERIFY\"},{\"family\":\"PLANNING_ZONING\",\"status\":\"VERIFY\"}],\"filing\":{\"authority_id\":\"us-ms-biloxi_city\",\"destination_url\":\"https://biloxi.ms.us/departments/community-development/\",\"office\":\"Biloxi Community Development\",\"url_role\":\"INFORMATIONAL_OFFICE\"},\"source_support\":{\"state\":\"VERIFY\",\"strength\":\"WEAK\",\"evidence\":[{\"url\":\"https://biloxi.ms.us/departments/community-development/\",\"role\":\"INFORMATIONAL_OFFICE\"},{\"url\":\"https://www.biloxi.ms.us/pdf/LDO.pdf\",\"role\":\"REQUIREMENT_EVIDENCE\"}]},\"contradictions\":[]}",
+  "requested_model": "x-ai/grok-4.5",
+  "requested_provider": "openrouter",
+  "requested_runtime": "grok",
+  "response_id": "gen-1785166569-mh2tdipMaKdB1AiX3iFV",
+  "runtime": "OpenRouter chat/completions; upstream_provider=xAI"
+}

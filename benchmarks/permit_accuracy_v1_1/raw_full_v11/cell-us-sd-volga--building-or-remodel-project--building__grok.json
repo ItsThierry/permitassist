@@ -1,0 +1,78 @@
+{
+  "observed_model": "x-ai/grok-4.5",
+  "observed_provider": "openrouter",
+  "path_proof": {
+    "adapter": "grok",
+    "engine_called": false,
+    "engine_result_supplied_to_model": false,
+    "model_call_count": 1
+  },
+  "provider": "openrouter",
+  "provider_response": {
+    "choices": [
+      {
+        "finish_reason": "stop",
+        "index": 0,
+        "logprobs": null,
+        "message": {
+          "content": "{\"permit_decision\":\"REQUIRED\",\"jurisdiction\":{\"jurisdiction_id\":\"us-sd-volga\",\"name\":\"City of Volga Building Permits\",\"state\":\"SD\",\"type\":\"city_or_local_authority\"},\"project_family\":\"reroof\",\"primary_permit_family\":\"BUILDING\",\"companion_permits\":[],\"filing\":{\"authority_id\":\"us-sd-volga\",\"destination_url\":\"https://www.volgacity.com/departments/building_permits.php\",\"office\":\"City of Volga Building Permits\",\"url_role\":\"REQUIREMENT_EVIDENCE\"},\"source_support\":{\"state\":\"OFFICIAL_SOURCE_SUPPORTED\",\"strength\":\"STRONG\",\"evidence\":[{\"url\":\"https://www.volgacity.com/departments/building_permits.php\",\"role\":\"REQUIREMENT_EVIDENCE\"}]},\"contradictions\":[]}",
+          "reasoning": "The user wants me to return exactly one JSON object conforming to MODEL_SCHEMA based on the evidence packet. No markdown fences, commentary, etc. - JSON only.\n",
+          "reasoning_details": [
+            {
+              "format": "xai-responses-v1",
+              "index": 0,
+              "summary": "The user wants me to return exactly one JSON object conforming to MODEL_SCHEMA based on the evidence packet. No markdown fences, commentary, etc. - JSON only.\n",
+              "type": "reasoning.summary"
+            },
+            {
+              "data": "XYQ7msFaTagK/vnNzz+sbzFYJm7YQVVUqvCiZgPvtVHcPmz175XgmQDvTGisQeOtwvKFY4FseB381gU2J0scS+do69u/8Z5aneFjeHoevp++dyGEgUfGin9o4umsyuEc65fKoF/qoEdmUb/smBLxbb+hahQcH8NGogLloGNwACEn/7SRopBoIsQPf5SLQVl82F7NJzdCd5fzhrApV4Yl34tmxQFJtm0lc/gV7vvp9+Q24UK8BW1U/OCX+6MXp7TpRRMMh5VL9I7xgmSWJ1pUKwlAgCmRFlAc+0rYdLNftpAzNJ+JpOFgcZ3ltGpfFnuxngSKaSeKPp5tgiMVeSJuvOSrBCqlCrfzM2xwythDxldmvLgWYzY9uV67c0TX45+qHXXfIJAtOhmR2gI5U81UwpjGv+oCod18f884Q7xH/2KZIiqJ+GdluGLjNpWUNut8ju/0KqQbhJ79i9ibtLa2o1xikSDotkTErNEmxaN77daraGE3mxuDWPM6wjvJWLfPiUiy+Np7LtLpIyXgykFiCcocpkNYR2fq3TdltS82Yno04EX99plKw17CUV8WHPqYPaAKAN7mgObCrUQiIktzJ72+pzydhFdPz1N8Lc3PNG0Xp9ldR+Z35iGYkYv+n4iAbGLh7DVUMqKvOVrRJoY10HYwU5/7I8LLg7JIWQO5uYRaH3Vnwvxqv4cdGtATh3uerZ2HHLLKyIyjZKPTnm6vWvW+F4fRKA5RsKIS+JYMrfOd8PZHReGfNWCrcqiSr/ZdBUrGU4waghAu9aR6k/354qeIUOcVckWZobp8AiyJy3Hz+vcszS5Fm71Tn6RWBi7xEDTj5AIIVvIbvZAs88FIWZz1jkGjUZz4T/qXiUi1zxqNvVtZCDJiaJwq8rsMhj3nsbwc0Zlchko8mrQlBqLd4m+uuuk1Wkv2lXvjldpPOPfQA1KNW8rq1MzvWaYiyI+cIkyVPAvbLWabwhTRK7C35ESOCZsh0FVoevZPIxJp9ylkwNH55uDpB/RZr823ZUtdIC+WU8g99in8crkvEqBykclJxykT+g8L4wTRxEBm9epf8jAwWtCAS8+bhRtyLM1B50gxN7aaN2tn+0hclGTWhM5bAw89JsWEvGMJ+BovESnVEiD41lrfd7WgP2t/Y78upB7Eh91RxZmSQVXD1Ukkvsr3D3/DSdAAH10WrrfSAz7kLnGWKKji+hlcRMvYmeA52xst7cIfWa2o4i0mN/ZqRI3CTqCeEPqRvzahAsKKn4sPATuF2H93jL2aJ6FNaU0E3iBoK3SFwHPAOsKdg6BxRvidZPgAokjnU/kC83ZDhukeoJsRPDQ9pco+yfU3cpapVBis1nRnpMotNMsIMTtpSzPkCeTsQMbZwA5ffS3Xr9arbwTgQkbsDMi1jmcWaOOCRHMZIZkpeSWntXdYsHB8VivA5dBSC6LJBIDZruUhFKUpySRwEQ7PE4Er9IMK1shXEZedl9xuSGm5HtvGa+ywPh+Ejb1Rao1g0aSrV9xkRkIfZZ8RluwiTd7wOOcwJJPcnLw5tiz8Wg6VRWNSr4i+qTztNVM3FJMnTXpc6eH40iEOQDUOTCxGH1mrAHUuKlSS+MmU7snm28IpZmuOyeylbvsPVXHcLcQ",
+              "format": "xai-responses-v1",
+              "id": "rs_4967f10c-a6ab-9a53-ab71-90fe87e1e557",
+              "index": 1,
+              "type": "reasoning.encrypted"
+            }
+          ],
+          "refusal": null,
+          "role": "assistant"
+        },
+        "native_finish_reason": "completed"
+      }
+    ],
+    "created": 1785167978,
+    "id": "gen-1785167978-sHcoStwuVCsqRxRYBpuR",
+    "model": "x-ai/grok-4.5",
+    "object": "chat.completion",
+    "provider": "xAI",
+    "service_tier": "default",
+    "system_fingerprint": null,
+    "usage": {
+      "completion_tokens": 504,
+      "completion_tokens_details": {
+        "audio_tokens": 0,
+        "image_tokens": 0,
+        "reasoning_tokens": 306
+      },
+      "cost": 0.0054604,
+      "cost_details": {
+        "upstream_inference_completions_cost": 0.003024,
+        "upstream_inference_cost": 0.0054604,
+        "upstream_inference_prompt_cost": 0.0024364
+      },
+      "is_byok": false,
+      "prompt_tokens": 1327,
+      "prompt_tokens_details": {
+        "audio_tokens": 0,
+        "cache_write_tokens": 0,
+        "cached_tokens": 128,
+        "video_tokens": 0
+      },
+      "total_tokens": 1831
+    }
+  },
+  "raw_text": "{\"permit_decision\":\"REQUIRED\",\"jurisdiction\":{\"jurisdiction_id\":\"us-sd-volga\",\"name\":\"City of Volga Building Permits\",\"state\":\"SD\",\"type\":\"city_or_local_authority\"},\"project_family\":\"reroof\",\"primary_permit_family\":\"BUILDING\",\"companion_permits\":[],\"filing\":{\"authority_id\":\"us-sd-volga\",\"destination_url\":\"https://www.volgacity.com/departments/building_permits.php\",\"office\":\"City of Volga Building Permits\",\"url_role\":\"REQUIREMENT_EVIDENCE\"},\"source_support\":{\"state\":\"OFFICIAL_SOURCE_SUPPORTED\",\"strength\":\"STRONG\",\"evidence\":[{\"url\":\"https://www.volgacity.com/departments/building_permits.php\",\"role\":\"REQUIREMENT_EVIDENCE\"}]},\"contradictions\":[]}",
+  "requested_model": "x-ai/grok-4.5",
+  "requested_provider": "openrouter",
+  "requested_runtime": "grok",
+  "response_id": "gen-1785167978-sHcoStwuVCsqRxRYBpuR",
+  "runtime": "OpenRouter chat/completions; upstream_provider=xAI"
+}

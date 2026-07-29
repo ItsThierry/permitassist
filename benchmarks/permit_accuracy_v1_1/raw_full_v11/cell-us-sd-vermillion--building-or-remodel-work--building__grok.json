@@ -1,0 +1,78 @@
+{
+  "observed_model": "x-ai/grok-4.5",
+  "observed_provider": "openrouter",
+  "path_proof": {
+    "adapter": "grok",
+    "engine_called": false,
+    "engine_result_supplied_to_model": false,
+    "model_call_count": 1
+  },
+  "provider": "openrouter",
+  "provider_response": {
+    "choices": [
+      {
+        "finish_reason": "stop",
+        "index": 0,
+        "logprobs": null,
+        "message": {
+          "content": "{\"permit_decision\":\"REQUIRED\",\"jurisdiction\":{\"jurisdiction_id\":\"us-sd-vermillion\",\"name\":\"City of Vermillion Code Enforcement\",\"state\":\"SD\",\"type\":\"city_or_local_authority\"},\"project_family\":\"reroof\",\"primary_permit_family\":\"BUILDING\",\"companion_permits\":[],\"filing\":{\"authority_id\":\"us-sd-vermillion\",\"destination_url\":\"https://www.vermillion.us/157/Building-Signs\",\"office\":\"City of Vermillion Code Enforcement\",\"url_role\":\"REQUIREMENT_EVIDENCE\"},\"source_support\":{\"state\":\"OFFICIAL_SOURCE_SUPPORTED\",\"strength\":\"STRONG\",\"evidence\":[{\"url\":\"https://www.vermillion.us/157/Building-Signs\",\"role\":\"REQUIREMENT_EVIDENCE\"}]},\"contradictions\":[]}",
+          "reasoning": "The user wants me to evaluate one permit lookup using ONLY the supplied official-source evidence packet and return exactly one JSON object conforming to MODEL_SCHEMA.\n",
+          "reasoning_details": [
+            {
+              "format": "xai-responses-v1",
+              "index": 0,
+              "summary": "The user wants me to evaluate one permit lookup using ONLY the supplied official-source evidence packet and return exactly one JSON object conforming to MODEL_SCHEMA.\n",
+              "type": "reasoning.summary"
+            },
+            {
+              "data": "vYpievDd0m5oxIhcyzxc6ivXjdxXfjROaY5ByYeoTIwZ+D5wnWkVkqWWki8vxpMtWOJbImNamUEBgJIlS0/oSxweVK8znNrni6+y75kOE9SkQ9nuyfXLBTk7JXMrZEfoLfxAnT53rQ02r/V/cx0EpRx29GoX12kM3DfDl0Kzm3uFZDjLKcGTODxryfPTuROACzbpKuFSOG44bBSk21+SqxNiF7vooBCeUZhc2XZZL8Dm9RQaoQn7qilKVT0AjDo+z1BMSQf0K2XHjhQS5TWojIwEiZWXdOUtABXg8+o4CWx6YFTkKjcDpHvs8MLKRN3itli5Xke5s6s+Cwsy9iyP3LcgkK3cbfsP6+Cj5u2ao5nnuyiut75LTBN16Wy6jI0zCWBc2kXUMky2rxn2aIl8Oq0/LOqDlowO6DxLjCVqk0qtM/Ur9XkfVxUrvlU993QFCbV0LkHmTLgXlfYCp+0dyGDQtApxC1rFInpuDTNfuucFvLi3AUvHxa4KZu0d+EOqJnFruIOziVtyRdL2WN+TvMs2nGXQ50dzyenkOgPbQNkpMykkp9IsIwQvcXvYlyKsuDg5AApPzbUSQWAsh2SUA8ELXO6EgoVSgYv+ASLKKOW78pWjEoLNjBC/eneriveYFxvCYRouDRATDIjt9r8sjykqcySxHdFG6YNZcrzjMt8pCm8N98YhA6JyF6w3oq2KgLxs5VE6fNBP5jQYyLCc4h9aoY7uKpqJ/2nNjYfK08zBSWANZNA+Bee6Ft2jWiT/4pPOau4nT+q7k5gVIFvDWSTs83ky1FvGkrDdmC4VbujPUqQZnFu6Bbe9nX9V/IEE3e2B2vn8brzQqE83EHp8H4sI21m1NY8U2j4LnGNkx3O66Tond4r57QIVOQfxp7geoxd+1j/LqWsnlxg3LlgbQC91kM/UL8FNFJRNhoCCgfqvsYjXStWq38gAXRwtfyVpskb/+U6k2X7x8M4v4yceCcs2Rsux+hx9LmtanU4Sv5jDFzNa5qiDN95Q6ygpT4qdhTIwd8CcSlszrXoT7pAg4Fgk9IS02+0LsaeQz0wDC++BjlWhnFpZ9p0FMEhRwR9rIZS2ewv4b+f47I1DVBCx+C1te9Ab9GcD0QcBCGTJ2pOIy/Su/KafvwI01923Z/zZRT+QwPbZsDn9GW/HKtQ1p4PdMYkaUdQWqpshIdfeuj0M3f6IEjtk5+Dc21rqFzBTfteTQVUGRvkCNBNCEpj5a134Yxf8+rJH8E1Icqkg3qVXTL/8vRg+SkOH+cevt/+APeGpmmO2PBXbDsvlkJWK0SNd3aoNVDjj2iQEFXjU1F2z1VlUSbgO6cUN/vq507Xu6Kcjtaz9q+5gjTXC6qlqwonc5HqL0dmfrUZdCVO1xm8/8lvfgATIj3BoYGrlDOR46K6u8AyxGa4uG1AHfapb5x5Ga55dEkllfeokHp3OR6VbnKGL+30002lhPDTswskZpoqliasENycT7fQkffhsn37DehGwO1zUB9ber3bOjRkHSwPko/tqLx/d7yi2mP9tV6n36+J0n1zNe2Tk7k988BUZHThm0jzlJNOncjQbQgdTwGMsEypXyZ5zTPLbV+3NJNiudBKASvESjhCRdAzDIf5Z8gz08NepDHdxd5Oa2tQ+2fE4v28BL/zg2wbGDLjQwtBbsJXBgNquXKy17svah1zzbROjisZKgXu0Nm6Y/TgSsxdU4GzLtNajJXq7WZbMhj86vg/vIBe8zea3MA6zLhAkvCZZmhOHeBrBRNwDIQRt/taRXj3SWku+URn7PeJSwkJugjni/K+vRCeIQedVR7POLLP0p09LtVUdEV4M+rVS3txGa7fJcEwe/eEwIQ5g1bruBXHFCHHuxCR0TUjQAYpUWCp9iEL7Cic6WmfFHOsi48NYIlDeGsl4nd42BaXbwRFc1NfpPBm5Vv6fVeK91Hj7t5Ew8BWvv6a5lbdifC4Ki0MYUZTc7CWc/oOYltJUNSGwHP1YbzTQo2OWAsmORqiAsIewrCojmeno1FMdp6l739TshG2mWV/akyqsJQFb1evbzboYIFC3qW6Ei7ugi2Muh49E+goNKKIFG482ng95WGt7IMntRCz4NeCu2g2FamD0sW6cKl1scJH16ggbz34Y9G7HFORKeCdGa901H3yf666W1xhAb5m+Rlva46UzfQQZDxs+A8TrHN+do2YD4PV4nHCKgAUoCKpFzSzBaP2HI8IXk0thzCBYB3z1VlIrb32mUuzbvo/2rg5ewum4dmb2X8x+I6CvJDL1KHEhIXFIuUl0l5+yq5xECx7LAY5bsLWs9fQUAeyKvhNbqFRt6xb4bHsFYu3zGhQcVBYT2irTDko47ROtgiMWOsElLrJDiNXPyRZ4AE/3M7SjuYdP153C6UUn9VkTSK6y55T14L/QoxH5p4Qncwwz6AZJhxsk4ms5D06Y4cgRq30DgZOLM6hIflVsV9hQUGXUHtF6nXc2z98M1cul4C2at5uNQrS2CV4RaUZADBrV9370KKXxgEOJX3Tc+VgCc86P74QSV5FNH1CVXG0XzUe4L39r7uxmUumC6aRUq3EhntpOeiIrvfcwpSDi9+/zwngybatKhjkUhBAd0wU/U/wSq6GcRtGnVQ3iK09CQgHvzDtetF3tPfkbDyWGN7zZmA7huYyraVBklamoh7TYqC1q0owuSdBPST5sJTdioLxgZtEWrEhXMMVk4K+eHK9fVgaD2FPCnK7gXSYTA7ScH1QNu5H+qYsa0gR7aT3+cmmcsHaIGQz1Ye0sKNvXgOO9Cp+4hmk7SlSwjzMQ9YkDo+73iUn9MbluQZcPffo2iw5opy22JGoC2gutC0JTTyd1wlv9x4Lv/3XOOXQmK7bWiCuIl8xznfhl0/jfcROY+NE70UQ0o4GwJ160gJZ3Hs+MPp3Nwvng7U6a+DwzMJc73lcB2GTfmzNW6IPnIgzxC1oauZ+fyk3KwbrW1p4F3s8eUeQ48WUfxovsU0JKDuyCIsv1IfG0ZwR1B35+DpgUds9Xd0j1bCW4k5Wv0LsyCFZiNjqezqKDf3Se8kqVx/6sPYWgsndU2ILoCCSymv6HxhqOre+5/Y5r/qx2D1I1D+wRHwFgc14Yq5D+2Iq3ulcqjEHIdrQ3Z5GZNgI62ToNEWW0KrczeV742hmHLYQBevFjkJfRJPWYstItGa7hERLQ5OhXnT6Jxl+MXxtslFswrcv++P2YGxcTSckI9jCl+i4SskvV4p+TNLGdXw4wjS/1kjXliD0sX65szNu1ODK2yLN+sMlkqVNAt0Fs0myy+t81QhqcX29vAWhfEUH1T/twQXSnyjyCOTeUC64XIhV12pcJBJDPOPA8pbkpyBFK/L5R7ckUYbWc2VXjtUM341ZoHU9qqAxBbUBrDKU+DF8",
+              "format": "xai-responses-v1",
+              "id": "rs_b6fec8ba-13ba-9db9-8900-b9ea5df4c994",
+              "index": 1,
+              "type": "reasoning.encrypted"
+            }
+          ],
+          "refusal": null,
+          "role": "assistant"
+        },
+        "native_finish_reason": "completed"
+      }
+    ],
+    "created": 1785167939,
+    "id": "gen-1785167939-ECUVVRDKmPU2BaUfQPm3",
+    "model": "x-ai/grok-4.5",
+    "object": "chat.completion",
+    "provider": "xAI",
+    "service_tier": "default",
+    "system_fingerprint": null,
+    "usage": {
+      "completion_tokens": 828,
+      "completion_tokens_details": {
+        "audio_tokens": 0,
+        "image_tokens": 0,
+        "reasoning_tokens": 638
+      },
+      "cost": 0.0073024,
+      "cost_details": {
+        "upstream_inference_completions_cost": 0.004968,
+        "upstream_inference_cost": 0.0073024,
+        "upstream_inference_prompt_cost": 0.0023344
+      },
+      "is_byok": false,
+      "prompt_tokens": 1276,
+      "prompt_tokens_details": {
+        "audio_tokens": 0,
+        "cache_write_tokens": 0,
+        "cached_tokens": 128,
+        "video_tokens": 0
+      },
+      "total_tokens": 2104
+    }
+  },
+  "raw_text": "{\"permit_decision\":\"REQUIRED\",\"jurisdiction\":{\"jurisdiction_id\":\"us-sd-vermillion\",\"name\":\"City of Vermillion Code Enforcement\",\"state\":\"SD\",\"type\":\"city_or_local_authority\"},\"project_family\":\"reroof\",\"primary_permit_family\":\"BUILDING\",\"companion_permits\":[],\"filing\":{\"authority_id\":\"us-sd-vermillion\",\"destination_url\":\"https://www.vermillion.us/157/Building-Signs\",\"office\":\"City of Vermillion Code Enforcement\",\"url_role\":\"REQUIREMENT_EVIDENCE\"},\"source_support\":{\"state\":\"OFFICIAL_SOURCE_SUPPORTED\",\"strength\":\"STRONG\",\"evidence\":[{\"url\":\"https://www.vermillion.us/157/Building-Signs\",\"role\":\"REQUIREMENT_EVIDENCE\"}]},\"contradictions\":[]}",
+  "requested_model": "x-ai/grok-4.5",
+  "requested_provider": "openrouter",
+  "requested_runtime": "grok",
+  "response_id": "gen-1785167939-ECUVVRDKmPU2BaUfQPm3",
+  "runtime": "OpenRouter chat/completions; upstream_provider=xAI"
+}

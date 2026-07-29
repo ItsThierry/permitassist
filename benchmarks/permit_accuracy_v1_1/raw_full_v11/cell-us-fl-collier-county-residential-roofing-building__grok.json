@@ -1,0 +1,78 @@
+{
+  "observed_model": "x-ai/grok-4.5",
+  "observed_provider": "openrouter",
+  "path_proof": {
+    "adapter": "grok",
+    "engine_called": false,
+    "engine_result_supplied_to_model": false,
+    "model_call_count": 1
+  },
+  "provider": "openrouter",
+  "provider_response": {
+    "choices": [
+      {
+        "finish_reason": "stop",
+        "index": 0,
+        "logprobs": null,
+        "message": {
+          "content": "{\"permit_decision\":\"REQUIRED\",\"jurisdiction\":{\"jurisdiction_id\":\"us-fl-collier_county\",\"name\":\"Collier County\",\"state\":\"FL\",\"type\":\"county\"},\"project_family\":\"reroof\",\"primary_permit_family\":\"BUILDING\",\"companion_permits\":[{\"family\":\"ELECTRICAL\",\"status\":\"VERIFY\"},{\"family\":\"VERIFY\",\"status\":\"VERIFY\"}],\"filing\":{\"authority_id\":\"us-fl-collier_county\",\"destination_url\":\"https://www.collier.gov/files/assets/county/v/1/building-plan-review/documents/forms/prrf-roo.pdf\",\"office\":\"Collier County Building Plan Review\",\"url_role\":\"REQUIREMENT_EVIDENCE\"},\"source_support\":{\"state\":\"OFFICIAL_SOURCE_SUPPORTED\",\"strength\":\"STRONG\",\"evidence\":[{\"url\":\"https://www.collier.gov/files/assets/county/v/1/building-plan-review/documents/forms/prrf-roo.pdf\",\"role\":\"REQUIREMENT_EVIDENCE\"}]},\"contradictions\":[]}",
+          "reasoning": "The user wants me to evaluate a permit lookup using only the supplied evidence packet and return exactly one JSON object conforming to MODEL_SCHEMA.\n",
+          "reasoning_details": [
+            {
+              "format": "xai-responses-v1",
+              "index": 0,
+              "summary": "The user wants me to evaluate a permit lookup using only the supplied evidence packet and return exactly one JSON object conforming to MODEL_SCHEMA.\n",
+              "type": "reasoning.summary"
+            },
+            {
+              "data": "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",
+              "format": "xai-responses-v1",
+              "id": "rs_0e4cd8a4-bbf8-931f-8df8-3cfcd0818ab5",
+              "index": 1,
+              "type": "reasoning.encrypted"
+            }
+          ],
+          "refusal": null,
+          "role": "assistant"
+        },
+        "native_finish_reason": "completed"
+      }
+    ],
+    "created": 1785164930,
+    "id": "gen-1785164930-XGrU9jksnZpvtB9aiGZ9",
+    "model": "x-ai/grok-4.5",
+    "object": "chat.completion",
+    "provider": "xAI",
+    "service_tier": "default",
+    "system_fingerprint": null,
+    "usage": {
+      "completion_tokens": 653,
+      "completion_tokens_details": {
+        "audio_tokens": 0,
+        "image_tokens": 0,
+        "reasoning_tokens": 405
+      },
+      "cost": 0.0064924,
+      "cost_details": {
+        "upstream_inference_completions_cost": 0.003918,
+        "upstream_inference_cost": 0.0064924,
+        "upstream_inference_prompt_cost": 0.0025744
+      },
+      "is_byok": false,
+      "prompt_tokens": 1396,
+      "prompt_tokens_details": {
+        "audio_tokens": 0,
+        "cache_write_tokens": 0,
+        "cached_tokens": 128,
+        "video_tokens": 0
+      },
+      "total_tokens": 2049
+    }
+  },
+  "raw_text": "{\"permit_decision\":\"REQUIRED\",\"jurisdiction\":{\"jurisdiction_id\":\"us-fl-collier_county\",\"name\":\"Collier County\",\"state\":\"FL\",\"type\":\"county\"},\"project_family\":\"reroof\",\"primary_permit_family\":\"BUILDING\",\"companion_permits\":[{\"family\":\"ELECTRICAL\",\"status\":\"VERIFY\"},{\"family\":\"VERIFY\",\"status\":\"VERIFY\"}],\"filing\":{\"authority_id\":\"us-fl-collier_county\",\"destination_url\":\"https://www.collier.gov/files/assets/county/v/1/building-plan-review/documents/forms/prrf-roo.pdf\",\"office\":\"Collier County Building Plan Review\",\"url_role\":\"REQUIREMENT_EVIDENCE\"},\"source_support\":{\"state\":\"OFFICIAL_SOURCE_SUPPORTED\",\"strength\":\"STRONG\",\"evidence\":[{\"url\":\"https://www.collier.gov/files/assets/county/v/1/building-plan-review/documents/forms/prrf-roo.pdf\",\"role\":\"REQUIREMENT_EVIDENCE\"}]},\"contradictions\":[]}",
+  "requested_model": "x-ai/grok-4.5",
+  "requested_provider": "openrouter",
+  "requested_runtime": "grok",
+  "response_id": "gen-1785164930-XGrU9jksnZpvtB9aiGZ9",
+  "runtime": "OpenRouter chat/completions; upstream_provider=xAI"
+}

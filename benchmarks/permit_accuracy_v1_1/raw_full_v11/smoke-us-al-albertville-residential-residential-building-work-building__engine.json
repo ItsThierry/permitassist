@@ -1,0 +1,446 @@
+{
+  "observed_model": "NONE",
+  "observed_provider": "permitassist-local-engine",
+  "path_proof": {
+    "adapter": "engine",
+    "authority_recovery": null,
+    "decision_cell_reference": null,
+    "engine_called": true,
+    "engine_result_supplied_to_model": false,
+    "engine_stdout": "",
+    "model_call_count": 0
+  },
+  "provider": "permitassist-local-engine",
+  "raw_response": {
+    "apply_url": "https://www.cityofalbertville.com/161/Building-Permit-Information",
+    "applying_office": "City of Albertville Building Services",
+    "city": "Albertville",
+    "companion_permits": [
+      {
+        "permit_kind": "demolition",
+        "permit_type": "Demolition Permit",
+        "required": "maybe",
+        "required_status": "CONDITIONAL",
+        "trigger": ""
+      },
+      {
+        "permit_kind": "electrical",
+        "permit_type": "Electrical Permit",
+        "required": "maybe",
+        "required_status": "CONDITIONAL",
+        "trigger": ""
+      },
+      {
+        "permit_kind": "gas",
+        "permit_type": "Gas Permit",
+        "required": "maybe",
+        "required_status": "CONDITIONAL",
+        "trigger": ""
+      },
+      {
+        "permit_kind": "mechanical",
+        "permit_type": "Mechanical Permit",
+        "required": "maybe",
+        "required_status": "CONDITIONAL",
+        "trigger": ""
+      },
+      {
+        "permit_kind": "plumbing",
+        "permit_type": "Plumbing Permit",
+        "required": "maybe",
+        "required_status": "CONDITIONAL",
+        "trigger": ""
+      }
+    ],
+    "coverage_reason": "source-backed exact AHJ/project row closes family, authority, provenance, and routing requirements",
+    "coverage_status": "validated_exact_complete",
+    "customer_headline": "Permit decision: YES",
+    "customer_next_step": "Apply with City of Albertville Building Services.",
+    "decision_source": "sealed_permit_rule_engine_envelope",
+    "family_authority_routes": [
+      {
+        "application_route": {
+          "apply_url": "https://www.cityofalbertville.com/161/Building-Permit-Information",
+          "channel": "official_online_page_or_portal",
+          "office_name": "City of Albertville Building Services",
+          "permit_name": "Building Permit",
+          "provenance": [
+            {
+              "effective_date": null,
+              "last_verified_at": "2026-06-13T14:15:10.875948+00:00",
+              "quote": "r or authorized agent shall first make application to the building official and obtain the required permit if they intend to: Alter Change the occupancy of Construct Demolish Enlarge Move Repair a building or structure The Permitting Process Before work on a project begins, a permit must be obtained by the property owner or licensed trade professional responsible for the project along with a complete list of subcontractors. Single Permits If the project involves a single licensed trade, such as electrical, plumbing, or heating, ventilation, and air conditioning (HVAC) (mechanical) work, a single permit can be obtained. Contact Building Services for: Electrical Permit Gas Permit Mechanical Permit Plumbing Permit Building Permits If the project involves multiple licensed trades, then a Building Permit can be obtained which will cover all the licensed trades involved in the project. A building permit is also required for projects that involve structural work. Building Permit Application Variance or Conditional Use Permit Application Zoning Amendment Application Specialty Permits Certain commercial projects require special permits instead of or in addition to building permit",
+              "source_quote": "r or authorized agent shall first make application to the building official and obtain the required permit if they intend to: Alter Change the occupancy of Construct Demolish Enlarge Move Repair a building or structure The Permitting Process Before work on a project begins, a permit must be obtained by the property owner or licensed trade professional responsible for the project along with a complete list of subcontractors. Single Permits If the project involves a single licensed trade, such as electrical, plumbing, or heating, ventilation, and air conditioning (HVAC) (mechanical) work, a single permit can be obtained. Contact Building Services for: Electrical Permit Gas Permit Mechanical Permit Plumbing Permit Building Permits If the project involves multiple licensed trades, then a Building Permit can be obtained which will cover all the licensed trades involved in the project. A building permit is also required for projects that involve structural work. Building Permit Application Variance or Conditional Use Permit Application Zoning Amendment Application Specialty Permits Certain commercial projects require special permits instead of or in addition to building permit",
+              "source_url": "https://www.cityofalbertville.com/161/Building-Permit-Information",
+              "title": "Official jurisdiction source",
+              "url": "https://www.cityofalbertville.com/161/Building-Permit-Information"
+            }
+          ],
+          "validation_issue_codes": []
+        },
+        "authority": {
+          "application_authority": "City of Albertville Building Services",
+          "family": "building",
+          "issuing_authority": "City of Albertville Building Services"
+        },
+        "family": "building"
+      },
+      {
+        "application_route": {
+          "apply_url": "https://www.cityofalbertville.com/161/Building-Permit-Information",
+          "channel": "official_online_page_or_portal",
+          "office_name": "City of Albertville Building Services",
+          "permit_name": "Building Permit",
+          "provenance": [
+            {
+              "effective_date": null,
+              "last_verified_at": "2026-06-13T14:15:10.875948+00:00",
+              "quote": "r or authorized agent shall first make application to the building official and obtain the required permit if they intend to: Alter Change the occupancy of Construct Demolish Enlarge Move Repair a building or structure The Permitting Process Before work on a project begins, a permit must be obtained by the property owner or licensed trade professional responsible for the project along with a complete list of subcontractors. Single Permits If the project involves a single licensed trade, such as electrical, plumbing, or heating, ventilation, and air conditioning (HVAC) (mechanical) work, a single permit can be obtained. Contact Building Services for: Electrical Permit Gas Permit Mechanical Permit Plumbing Permit Building Permits If the project involves multiple licensed trades, then a Building Permit can be obtained which will cover all the licensed trades involved in the project. A building permit is also required for projects that involve structural work. Building Permit Application Variance or Conditional Use Permit Application Zoning Amendment Application Specialty Permits Certain commercial projects require special permits instead of or in addition to building permit",
+              "source_quote": "r or authorized agent shall first make application to the building official and obtain the required permit if they intend to: Alter Change the occupancy of Construct Demolish Enlarge Move Repair a building or structure The Permitting Process Before work on a project begins, a permit must be obtained by the property owner or licensed trade professional responsible for the project along with a complete list of subcontractors. Single Permits If the project involves a single licensed trade, such as electrical, plumbing, or heating, ventilation, and air conditioning (HVAC) (mechanical) work, a single permit can be obtained. Contact Building Services for: Electrical Permit Gas Permit Mechanical Permit Plumbing Permit Building Permits If the project involves multiple licensed trades, then a Building Permit can be obtained which will cover all the licensed trades involved in the project. A building permit is also required for projects that involve structural work. Building Permit Application Variance or Conditional Use Permit Application Zoning Amendment Application Specialty Permits Certain commercial projects require special permits instead of or in addition to building permit",
+              "source_url": "https://www.cityofalbertville.com/161/Building-Permit-Information",
+              "title": "Official jurisdiction source",
+              "url": "https://www.cityofalbertville.com/161/Building-Permit-Information"
+            }
+          ],
+          "validation_issue_codes": []
+        },
+        "authority": {
+          "application_authority": "City of Albertville Building Services",
+          "family": "demolition",
+          "issuing_authority": "City of Albertville Building Services"
+        },
+        "family": "demolition"
+      },
+      {
+        "application_route": {
+          "apply_url": "https://www.cityofalbertville.com/161/Building-Permit-Information",
+          "channel": "official_online_page_or_portal",
+          "office_name": "City of Albertville Building Services",
+          "permit_name": "Building Permit",
+          "provenance": [
+            {
+              "effective_date": null,
+              "last_verified_at": "2026-06-13T14:15:10.875948+00:00",
+              "quote": "r or authorized agent shall first make application to the building official and obtain the required permit if they intend to: Alter Change the occupancy of Construct Demolish Enlarge Move Repair a building or structure The Permitting Process Before work on a project begins, a permit must be obtained by the property owner or licensed trade professional responsible for the project along with a complete list of subcontractors. Single Permits If the project involves a single licensed trade, such as electrical, plumbing, or heating, ventilation, and air conditioning (HVAC) (mechanical) work, a single permit can be obtained. Contact Building Services for: Electrical Permit Gas Permit Mechanical Permit Plumbing Permit Building Permits If the project involves multiple licensed trades, then a Building Permit can be obtained which will cover all the licensed trades involved in the project. A building permit is also required for projects that involve structural work. Building Permit Application Variance or Conditional Use Permit Application Zoning Amendment Application Specialty Permits Certain commercial projects require special permits instead of or in addition to building permit",
+              "source_quote": "r or authorized agent shall first make application to the building official and obtain the required permit if they intend to: Alter Change the occupancy of Construct Demolish Enlarge Move Repair a building or structure The Permitting Process Before work on a project begins, a permit must be obtained by the property owner or licensed trade professional responsible for the project along with a complete list of subcontractors. Single Permits If the project involves a single licensed trade, such as electrical, plumbing, or heating, ventilation, and air conditioning (HVAC) (mechanical) work, a single permit can be obtained. Contact Building Services for: Electrical Permit Gas Permit Mechanical Permit Plumbing Permit Building Permits If the project involves multiple licensed trades, then a Building Permit can be obtained which will cover all the licensed trades involved in the project. A building permit is also required for projects that involve structural work. Building Permit Application Variance or Conditional Use Permit Application Zoning Amendment Application Specialty Permits Certain commercial projects require special permits instead of or in addition to building permit",
+              "source_url": "https://www.cityofalbertville.com/161/Building-Permit-Information",
+              "title": "Official jurisdiction source",
+              "url": "https://www.cityofalbertville.com/161/Building-Permit-Information"
+            }
+          ],
+          "validation_issue_codes": []
+        },
+        "authority": {
+          "application_authority": "City of Albertville Building Services",
+          "family": "electrical",
+          "issuing_authority": "City of Albertville Building Services"
+        },
+        "family": "electrical"
+      },
+      {
+        "application_route": {
+          "apply_url": "https://www.cityofalbertville.com/161/Building-Permit-Information",
+          "channel": "official_online_page_or_portal",
+          "office_name": "City of Albertville Building Services",
+          "permit_name": "Building Permit",
+          "provenance": [
+            {
+              "effective_date": null,
+              "last_verified_at": "2026-06-13T14:15:10.875948+00:00",
+              "quote": "r or authorized agent shall first make application to the building official and obtain the required permit if they intend to: Alter Change the occupancy of Construct Demolish Enlarge Move Repair a building or structure The Permitting Process Before work on a project begins, a permit must be obtained by the property owner or licensed trade professional responsible for the project along with a complete list of subcontractors. Single Permits If the project involves a single licensed trade, such as electrical, plumbing, or heating, ventilation, and air conditioning (HVAC) (mechanical) work, a single permit can be obtained. Contact Building Services for: Electrical Permit Gas Permit Mechanical Permit Plumbing Permit Building Permits If the project involves multiple licensed trades, then a Building Permit can be obtained which will cover all the licensed trades involved in the project. A building permit is also required for projects that involve structural work. Building Permit Application Variance or Conditional Use Permit Application Zoning Amendment Application Specialty Permits Certain commercial projects require special permits instead of or in addition to building permit",
+              "source_quote": "r or authorized agent shall first make application to the building official and obtain the required permit if they intend to: Alter Change the occupancy of Construct Demolish Enlarge Move Repair a building or structure The Permitting Process Before work on a project begins, a permit must be obtained by the property owner or licensed trade professional responsible for the project along with a complete list of subcontractors. Single Permits If the project involves a single licensed trade, such as electrical, plumbing, or heating, ventilation, and air conditioning (HVAC) (mechanical) work, a single permit can be obtained. Contact Building Services for: Electrical Permit Gas Permit Mechanical Permit Plumbing Permit Building Permits If the project involves multiple licensed trades, then a Building Permit can be obtained which will cover all the licensed trades involved in the project. A building permit is also required for projects that involve structural work. Building Permit Application Variance or Conditional Use Permit Application Zoning Amendment Application Specialty Permits Certain commercial projects require special permits instead of or in addition to building permit",
+              "source_url": "https://www.cityofalbertville.com/161/Building-Permit-Information",
+              "title": "Official jurisdiction source",
+              "url": "https://www.cityofalbertville.com/161/Building-Permit-Information"
+            }
+          ],
+          "validation_issue_codes": []
+        },
+        "authority": {
+          "application_authority": "City of Albertville Building Services",
+          "family": "gas",
+          "issuing_authority": "City of Albertville Building Services"
+        },
+        "family": "gas"
+      },
+      {
+        "application_route": {
+          "apply_url": "https://www.cityofalbertville.com/161/Building-Permit-Information",
+          "channel": "official_online_page_or_portal",
+          "office_name": "City of Albertville Building Services",
+          "permit_name": "Building Permit",
+          "provenance": [
+            {
+              "effective_date": null,
+              "last_verified_at": "2026-06-13T14:15:10.875948+00:00",
+              "quote": "r or authorized agent shall first make application to the building official and obtain the required permit if they intend to: Alter Change the occupancy of Construct Demolish Enlarge Move Repair a building or structure The Permitting Process Before work on a project begins, a permit must be obtained by the property owner or licensed trade professional responsible for the project along with a complete list of subcontractors. Single Permits If the project involves a single licensed trade, such as electrical, plumbing, or heating, ventilation, and air conditioning (HVAC) (mechanical) work, a single permit can be obtained. Contact Building Services for: Electrical Permit Gas Permit Mechanical Permit Plumbing Permit Building Permits If the project involves multiple licensed trades, then a Building Permit can be obtained which will cover all the licensed trades involved in the project. A building permit is also required for projects that involve structural work. Building Permit Application Variance or Conditional Use Permit Application Zoning Amendment Application Specialty Permits Certain commercial projects require special permits instead of or in addition to building permit",
+              "source_quote": "r or authorized agent shall first make application to the building official and obtain the required permit if they intend to: Alter Change the occupancy of Construct Demolish Enlarge Move Repair a building or structure The Permitting Process Before work on a project begins, a permit must be obtained by the property owner or licensed trade professional responsible for the project along with a complete list of subcontractors. Single Permits If the project involves a single licensed trade, such as electrical, plumbing, or heating, ventilation, and air conditioning (HVAC) (mechanical) work, a single permit can be obtained. Contact Building Services for: Electrical Permit Gas Permit Mechanical Permit Plumbing Permit Building Permits If the project involves multiple licensed trades, then a Building Permit can be obtained which will cover all the licensed trades involved in the project. A building permit is also required for projects that involve structural work. Building Permit Application Variance or Conditional Use Permit Application Zoning Amendment Application Specialty Permits Certain commercial projects require special permits instead of or in addition to building permit",
+              "source_url": "https://www.cityofalbertville.com/161/Building-Permit-Information",
+              "title": "Official jurisdiction source",
+              "url": "https://www.cityofalbertville.com/161/Building-Permit-Information"
+            }
+          ],
+          "validation_issue_codes": []
+        },
+        "authority": {
+          "application_authority": "City of Albertville Building Services",
+          "family": "mechanical",
+          "issuing_authority": "City of Albertville Building Services"
+        },
+        "family": "mechanical"
+      },
+      {
+        "application_route": {
+          "apply_url": "https://www.cityofalbertville.com/161/Building-Permit-Information",
+          "channel": "official_online_page_or_portal",
+          "office_name": "City of Albertville Building Services",
+          "permit_name": "Building Permit",
+          "provenance": [
+            {
+              "effective_date": null,
+              "last_verified_at": "2026-06-13T14:15:10.875948+00:00",
+              "quote": "r or authorized agent shall first make application to the building official and obtain the required permit if they intend to: Alter Change the occupancy of Construct Demolish Enlarge Move Repair a building or structure The Permitting Process Before work on a project begins, a permit must be obtained by the property owner or licensed trade professional responsible for the project along with a complete list of subcontractors. Single Permits If the project involves a single licensed trade, such as electrical, plumbing, or heating, ventilation, and air conditioning (HVAC) (mechanical) work, a single permit can be obtained. Contact Building Services for: Electrical Permit Gas Permit Mechanical Permit Plumbing Permit Building Permits If the project involves multiple licensed trades, then a Building Permit can be obtained which will cover all the licensed trades involved in the project. A building permit is also required for projects that involve structural work. Building Permit Application Variance or Conditional Use Permit Application Zoning Amendment Application Specialty Permits Certain commercial projects require special permits instead of or in addition to building permit",
+              "source_quote": "r or authorized agent shall first make application to the building official and obtain the required permit if they intend to: Alter Change the occupancy of Construct Demolish Enlarge Move Repair a building or structure The Permitting Process Before work on a project begins, a permit must be obtained by the property owner or licensed trade professional responsible for the project along with a complete list of subcontractors. Single Permits If the project involves a single licensed trade, such as electrical, plumbing, or heating, ventilation, and air conditioning (HVAC) (mechanical) work, a single permit can be obtained. Contact Building Services for: Electrical Permit Gas Permit Mechanical Permit Plumbing Permit Building Permits If the project involves multiple licensed trades, then a Building Permit can be obtained which will cover all the licensed trades involved in the project. A building permit is also required for projects that involve structural work. Building Permit Application Variance or Conditional Use Permit Application Zoning Amendment Application Specialty Permits Certain commercial projects require special permits instead of or in addition to building permit",
+              "source_url": "https://www.cityofalbertville.com/161/Building-Permit-Information",
+              "title": "Official jurisdiction source",
+              "url": "https://www.cityofalbertville.com/161/Building-Permit-Information"
+            }
+          ],
+          "validation_issue_codes": []
+        },
+        "authority": {
+          "application_authority": "City of Albertville Building Services",
+          "family": "plumbing",
+          "issuing_authority": "City of Albertville Building Services"
+        },
+        "family": "plumbing"
+      }
+    ],
+    "family_decisions": [
+      {
+        "apply_url": "https://www.cityofalbertville.com/161/Building-Permit-Information",
+        "authority": "City of Albertville Building Services",
+        "family": "building",
+        "trigger": "",
+        "validation_issue_codes": [],
+        "verdict": "REQUIRED"
+      },
+      {
+        "apply_url": "https://www.cityofalbertville.com/161/Building-Permit-Information",
+        "authority": "City of Albertville Building Services",
+        "family": "demolition",
+        "trigger": "",
+        "validation_issue_codes": [],
+        "verdict": "CONDITIONAL"
+      },
+      {
+        "apply_url": "https://www.cityofalbertville.com/161/Building-Permit-Information",
+        "authority": "City of Albertville Building Services",
+        "family": "electrical",
+        "trigger": "",
+        "validation_issue_codes": [],
+        "verdict": "CONDITIONAL"
+      },
+      {
+        "apply_url": "https://www.cityofalbertville.com/161/Building-Permit-Information",
+        "authority": "City of Albertville Building Services",
+        "family": "gas",
+        "trigger": "",
+        "validation_issue_codes": [],
+        "verdict": "CONDITIONAL"
+      },
+      {
+        "apply_url": "https://www.cityofalbertville.com/161/Building-Permit-Information",
+        "authority": "City of Albertville Building Services",
+        "family": "mechanical",
+        "trigger": "",
+        "validation_issue_codes": [],
+        "verdict": "CONDITIONAL"
+      },
+      {
+        "apply_url": "https://www.cityofalbertville.com/161/Building-Permit-Information",
+        "authority": "City of Albertville Building Services",
+        "family": "plumbing",
+        "trigger": "",
+        "validation_issue_codes": [],
+        "verdict": "CONDITIONAL"
+      }
+    ],
+    "jurisdiction_id": "us-al-albertville",
+    "jurisdiction_name": "Albertville",
+    "online_application_url": "https://www.cityofalbertville.com/161/Building-Permit-Information",
+    "permit_decision": "REQUIRED",
+    "permit_kind": "building",
+    "permit_name": "Building Permit",
+    "permit_required": true,
+    "permit_verdict": "YES",
+    "permits_required": [
+      {
+        "apply_url": "https://www.cityofalbertville.com/161/Building-Permit-Information",
+        "applying_office": "City of Albertville Building Services",
+        "permit_kind": "building",
+        "permit_type": "Building Permit",
+        "required": true,
+        "required_status": "REQUIRED",
+        "trigger": ""
+      },
+      {
+        "apply_url": "https://www.cityofalbertville.com/161/Building-Permit-Information",
+        "applying_office": "City of Albertville Building Services",
+        "permit_kind": "demolition",
+        "permit_type": "Demolition Permit",
+        "required": "maybe",
+        "required_status": "CONDITIONAL",
+        "trigger": ""
+      },
+      {
+        "apply_url": "https://www.cityofalbertville.com/161/Building-Permit-Information",
+        "applying_office": "City of Albertville Building Services",
+        "permit_kind": "electrical",
+        "permit_type": "Electrical Permit",
+        "required": "maybe",
+        "required_status": "CONDITIONAL",
+        "trigger": ""
+      },
+      {
+        "apply_url": "https://www.cityofalbertville.com/161/Building-Permit-Information",
+        "applying_office": "City of Albertville Building Services",
+        "permit_kind": "gas",
+        "permit_type": "Gas Permit",
+        "required": "maybe",
+        "required_status": "CONDITIONAL",
+        "trigger": ""
+      },
+      {
+        "apply_url": "https://www.cityofalbertville.com/161/Building-Permit-Information",
+        "applying_office": "City of Albertville Building Services",
+        "permit_kind": "mechanical",
+        "permit_type": "Mechanical Permit",
+        "required": "maybe",
+        "required_status": "CONDITIONAL",
+        "trigger": ""
+      },
+      {
+        "apply_url": "https://www.cityofalbertville.com/161/Building-Permit-Information",
+        "applying_office": "City of Albertville Building Services",
+        "permit_kind": "plumbing",
+        "permit_type": "Plumbing Permit",
+        "required": "maybe",
+        "required_status": "CONDITIONAL",
+        "trigger": ""
+      }
+    ],
+    "project_family": "residential_remodel",
+    "projection_schema_version": "permitassist.customer-decision-projection.v1",
+    "related_permits": [
+      {
+        "permit_kind": "demolition",
+        "permit_type": "Demolition Permit",
+        "required": "maybe",
+        "required_status": "CONDITIONAL",
+        "trigger": ""
+      },
+      {
+        "permit_kind": "electrical",
+        "permit_type": "Electrical Permit",
+        "required": "maybe",
+        "required_status": "CONDITIONAL",
+        "trigger": ""
+      },
+      {
+        "permit_kind": "gas",
+        "permit_type": "Gas Permit",
+        "required": "maybe",
+        "required_status": "CONDITIONAL",
+        "trigger": ""
+      },
+      {
+        "permit_kind": "mechanical",
+        "permit_type": "Mechanical Permit",
+        "required": "maybe",
+        "required_status": "CONDITIONAL",
+        "trigger": ""
+      },
+      {
+        "permit_kind": "plumbing",
+        "permit_type": "Plumbing Permit",
+        "required": "maybe",
+        "required_status": "CONDITIONAL",
+        "trigger": ""
+      }
+    ],
+    "seed_classification": "exact_complete",
+    "source_cell_id": "us-al-albertville__residential__residential_building_work__building",
+    "sources": [
+      {
+        "effective_date": null,
+        "last_verified_at": "2026-06-13T14:15:10.875948+00:00",
+        "quote": "r or authorized agent shall first make application to the building official and obtain the required permit if they intend to: Alter Change the occupancy of Construct Demolish Enlarge Move Repair a building or structure The Permitting Process Before work on a project begins, a permit must be obtained by the property owner or licensed trade professional responsible for the project along with a complete list of subcontractors. Single Permits If the project involves a single licensed trade, such as electrical, plumbing, or heating, ventilation, and air conditioning (HVAC) (mechanical) work, a single permit can be obtained. Contact Building Services for: Electrical Permit Gas Permit Mechanical Permit Plumbing Permit Building Permits If the project involves multiple licensed trades, then a Building Permit can be obtained which will cover all the licensed trades involved in the project. A building permit is also required for projects that involve structural work. Building Permit Application Variance or Conditional Use Permit Application Zoning Amendment Application Specialty Permits Certain commercial projects require special permits instead of or in addition to building permit",
+        "source_quote": "r or authorized agent shall first make application to the building official and obtain the required permit if they intend to: Alter Change the occupancy of Construct Demolish Enlarge Move Repair a building or structure The Permitting Process Before work on a project begins, a permit must be obtained by the property owner or licensed trade professional responsible for the project along with a complete list of subcontractors. Single Permits If the project involves a single licensed trade, such as electrical, plumbing, or heating, ventilation, and air conditioning (HVAC) (mechanical) work, a single permit can be obtained. Contact Building Services for: Electrical Permit Gas Permit Mechanical Permit Plumbing Permit Building Permits If the project involves multiple licensed trades, then a Building Permit can be obtained which will cover all the licensed trades involved in the project. A building permit is also required for projects that involve structural work. Building Permit Application Variance or Conditional Use Permit Application Zoning Amendment Application Specialty Permits Certain commercial projects require special permits instead of or in addition to building permit",
+        "source_url": "https://www.cityofalbertville.com/161/Building-Permit-Information",
+        "title": "Official jurisdiction source",
+        "url": "https://www.cityofalbertville.com/161/Building-Permit-Information"
+      }
+    ],
+    "state": "AL",
+    "summary": "source-backed exact AHJ/project row closes family, authority, provenance, and routing requirements",
+    "verification_tasks": [
+      {
+        "action": "Verify demolition applicability with City of Albertville Building Services before filing.",
+        "apply_url": "https://www.cityofalbertville.com/161/Building-Permit-Information",
+        "authority": "City of Albertville Building Services",
+        "family": "demolition",
+        "unresolved_dimensions": [
+          "applicability"
+        ]
+      },
+      {
+        "action": "Verify electrical applicability with City of Albertville Building Services before filing.",
+        "apply_url": "https://www.cityofalbertville.com/161/Building-Permit-Information",
+        "authority": "City of Albertville Building Services",
+        "family": "electrical",
+        "unresolved_dimensions": [
+          "applicability"
+        ]
+      },
+      {
+        "action": "Verify gas applicability with City of Albertville Building Services before filing.",
+        "apply_url": "https://www.cityofalbertville.com/161/Building-Permit-Information",
+        "authority": "City of Albertville Building Services",
+        "family": "gas",
+        "unresolved_dimensions": [
+          "applicability"
+        ]
+      },
+      {
+        "action": "Verify mechanical applicability with City of Albertville Building Services before filing.",
+        "apply_url": "https://www.cityofalbertville.com/161/Building-Permit-Information",
+        "authority": "City of Albertville Building Services",
+        "family": "mechanical",
+        "unresolved_dimensions": [
+          "applicability"
+        ]
+      },
+      {
+        "action": "Verify plumbing applicability with City of Albertville Building Services before filing.",
+        "apply_url": "https://www.cityofalbertville.com/161/Building-Permit-Information",
+        "authority": "City of Albertville Building Services",
+        "family": "plumbing",
+        "unresolved_dimensions": [
+          "applicability"
+        ]
+      }
+    ],
+    "warnings": [
+      "Demolition: CONDITIONAL — verify before filing.",
+      "Electrical: CONDITIONAL — verify before filing.",
+      "Gas: CONDITIONAL — verify before filing.",
+      "Mechanical: CONDITIONAL — verify before filing.",
+      "Plumbing: CONDITIONAL — verify before filing."
+    ]
+  },
+  "requested_model": "NONE",
+  "requested_provider": "permitassist-local-engine",
+  "requested_runtime": "engine",
+  "response_id": null,
+  "runtime": "api.server Decision Cell + finalize + customer egress"
+}

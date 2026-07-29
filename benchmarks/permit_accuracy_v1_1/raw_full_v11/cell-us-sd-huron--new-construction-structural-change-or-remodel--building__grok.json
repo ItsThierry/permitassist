@@ -1,0 +1,78 @@
+{
+  "observed_model": "x-ai/grok-4.5",
+  "observed_provider": "openrouter",
+  "path_proof": {
+    "adapter": "grok",
+    "engine_called": false,
+    "engine_result_supplied_to_model": false,
+    "model_call_count": 1
+  },
+  "provider": "openrouter",
+  "provider_response": {
+    "choices": [
+      {
+        "finish_reason": "stop",
+        "index": 0,
+        "logprobs": null,
+        "message": {
+          "content": "{\"permit_decision\":\"REQUIRED\",\"jurisdiction\":{\"jurisdiction_id\":\"us-sd-huron\",\"name\":\"City of Huron Inspections Department\",\"state\":\"SD\",\"type\":\"city_or_local_authority\"},\"project_family\":\"reroof\",\"primary_permit_family\":\"BUILDING\",\"companion_permits\":[],\"filing\":{\"authority_id\":\"us-sd-huron\",\"destination_url\":\"https://www.huronsd.gov/165/Inspections-Planning\",\"office\":\"City of Huron Inspections Department\",\"url_role\":\"REQUIREMENT_EVIDENCE\"},\"source_support\":{\"state\":\"OFFICIAL_SOURCE_SUPPORTED\",\"strength\":\"STRONG\",\"evidence\":[{\"url\":\"https://www.huronsd.gov/165/Inspections-Planning\",\"role\":\"REQUIREMENT_EVIDENCE\"}]},\"contradictions\":[]}",
+          "reasoning": "The user wants me to evaluate one permit lookup using ONLY the supplied official-source evidence packet and return exactly one JSON object conforming to MODEL_SCHEMA. No Markdown fences, commentary, o...",
+          "reasoning_details": [
+            {
+              "format": "xai-responses-v1",
+              "index": 0,
+              "summary": "The user wants me to evaluate one permit lookup using ONLY the supplied official-source evidence packet and return exactly one JSON object conforming to MODEL_SCHEMA. No Markdown fences, commentary, o...",
+              "type": "reasoning.summary"
+            },
+            {
+              "data": "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",
+              "format": "xai-responses-v1",
+              "id": "rs_0903aec0-f110-9d53-a749-4ca8a6b01db3",
+              "index": 1,
+              "type": "reasoning.encrypted"
+            }
+          ],
+          "refusal": null,
+          "role": "assistant"
+        },
+        "native_finish_reason": "completed"
+      }
+    ],
+    "created": 1785167814,
+    "id": "gen-1785167814-V9DsR0RQfpatvKz2KYpT",
+    "model": "x-ai/grok-4.5",
+    "object": "chat.completion",
+    "provider": "xAI",
+    "service_tier": "default",
+    "system_fingerprint": null,
+    "usage": {
+      "completion_tokens": 684,
+      "completion_tokens_details": {
+        "audio_tokens": 0,
+        "image_tokens": 0,
+        "reasoning_tokens": 488
+      },
+      "cost": 0.0064864,
+      "cost_details": {
+        "upstream_inference_completions_cost": 0.004104,
+        "upstream_inference_cost": 0.0064864,
+        "upstream_inference_prompt_cost": 0.0023824
+      },
+      "is_byok": false,
+      "prompt_tokens": 1300,
+      "prompt_tokens_details": {
+        "audio_tokens": 0,
+        "cache_write_tokens": 0,
+        "cached_tokens": 128,
+        "video_tokens": 0
+      },
+      "total_tokens": 1984
+    }
+  },
+  "raw_text": "{\"permit_decision\":\"REQUIRED\",\"jurisdiction\":{\"jurisdiction_id\":\"us-sd-huron\",\"name\":\"City of Huron Inspections Department\",\"state\":\"SD\",\"type\":\"city_or_local_authority\"},\"project_family\":\"reroof\",\"primary_permit_family\":\"BUILDING\",\"companion_permits\":[],\"filing\":{\"authority_id\":\"us-sd-huron\",\"destination_url\":\"https://www.huronsd.gov/165/Inspections-Planning\",\"office\":\"City of Huron Inspections Department\",\"url_role\":\"REQUIREMENT_EVIDENCE\"},\"source_support\":{\"state\":\"OFFICIAL_SOURCE_SUPPORTED\",\"strength\":\"STRONG\",\"evidence\":[{\"url\":\"https://www.huronsd.gov/165/Inspections-Planning\",\"role\":\"REQUIREMENT_EVIDENCE\"}]},\"contradictions\":[]}",
+  "requested_model": "x-ai/grok-4.5",
+  "requested_provider": "openrouter",
+  "requested_runtime": "grok",
+  "response_id": "gen-1785167814-V9DsR0RQfpatvKz2KYpT",
+  "runtime": "OpenRouter chat/completions; upstream_provider=xAI"
+}

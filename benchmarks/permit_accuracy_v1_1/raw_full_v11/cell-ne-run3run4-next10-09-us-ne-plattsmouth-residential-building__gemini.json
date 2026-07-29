@@ -1,0 +1,20 @@
+{
+  "observed_model": "Gemini 3.6 Flash (High)",
+  "observed_provider": "google-antigravity-oauth",
+  "path_proof": {
+    "adapter": "gemini",
+    "capture_created_by_model": true,
+    "engine_called": false,
+    "engine_result_supplied_to_model": false,
+    "model_call_count": 1
+  },
+  "provider": "google-antigravity-oauth",
+  "provider_stderr": "",
+  "provider_stdout": "DONE\n",
+  "raw_text": "{\n  \"permit_decision\": \"VERIFY\",\n  \"jurisdiction\": {\n    \"jurisdiction_id\": \"us-ne-plattsmouth\",\n    \"name\": \"Plattsmouth\",\n    \"state\": \"NE\",\n    \"type\": \"city_or_local_authority\"\n  },\n  \"project_family\": \"residential_remodel\",\n  \"primary_permit_family\": \"BUILDING\",\n  \"companion_permits\": [\n    {\n      \"family\": \"ELECTRICAL\",\n      \"status\": \"VERIFY\"\n    },\n    {\n      \"family\": \"MECHANICAL\",\n      \"status\": \"VERIFY\"\n    },\n    {\n      \"family\": \"PLUMBING\",\n      \"status\": \"VERIFY\"\n    }\n  ],\n  \"filing\": {\n    \"authority_id\": \"us-ne-plattsmouth\",\n    \"destination_url\": \"https://plattsmouth.org/index.php/departments/buildingzoning\",\n    \"office\": \"Building & Zoning Department\",\n    \"url_role\": \"INFORMATIONAL_OFFICE\"\n  },\n  \"source_support\": {\n    \"state\": \"OFFICIAL_SOURCE_SUPPORTED\",\n    \"strength\": \"WEAK\",\n    \"evidence\": [\n      {\n        \"role\": \"INFORMATIONAL_OFFICE\",\n        \"url\": \"https://plattsmouth.org/index.php/departments/buildingzoning\"\n      }\n    ]\n  },\n  \"contradictions\": []\n}\n",
+  "requested_model": "Gemini 3.6 Flash (High)",
+  "requested_provider": "google-antigravity-oauth",
+  "requested_runtime": "gemini",
+  "response_id": null,
+  "runtime": "agy.exe 1.0.2 / language-server 1.1.7"
+}

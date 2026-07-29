@@ -1,0 +1,78 @@
+{
+  "observed_model": "x-ai/grok-4.5",
+  "observed_provider": "openrouter",
+  "path_proof": {
+    "adapter": "grok",
+    "engine_called": false,
+    "engine_result_supplied_to_model": false,
+    "model_call_count": 1
+  },
+  "provider": "openrouter",
+  "provider_response": {
+    "choices": [
+      {
+        "finish_reason": "stop",
+        "index": 0,
+        "logprobs": null,
+        "message": {
+          "content": "{\"permit_decision\":\"VERIFY\",\"jurisdiction\":{\"jurisdiction_id\":\"us-ne-plattsmouth\",\"name\":\"Plattsmouth\",\"state\":\"NE\",\"type\":\"city_or_local_authority\"},\"project_family\":\"residential_remodel\",\"primary_permit_family\":\"BUILDING\",\"companion_permits\":[{\"family\":\"ELECTRICAL\",\"status\":\"VERIFY\"},{\"family\":\"PLUMBING\",\"status\":\"VERIFY\"},{\"family\":\"MECHANICAL\",\"status\":\"VERIFY\"},{\"family\":\"FIRE_LIFE_SAFETY\",\"status\":\"VERIFY\"}],\"filing\":{\"authority_id\":\"us-ne-plattsmouth\",\"office\":\"Building and Zoning\",\"destination_url\":\"https://plattsmouth.org/index.php/departments/buildingzoning\",\"url_role\":\"INFORMATIONAL_OFFICE\"},\"source_support\":{\"state\":\"OFFICIAL_SOURCE_SUPPORTED\",\"strength\":\"WEAK\",\"evidence\":[{\"url\":\"https://plattsmouth.org/index.php/departments/buildingzoning\",\"role\":\"INFORMATIONAL_OFFICE\"}]},\"contradictions\":[]}",
+          "reasoning": "The user wants me to return exactly one JSON object conforming to MODEL_SCHEMA based on the evidence packet. No markdown fences, commentary, etc. Just JSON.\n{\n  \"companion_permits\": [\n    {\n      \"family\": \"BUILDING\",\n      \"status\": \"VERIFY\"\n    },\n    {\n      \"family\": \"ELECTRICAL\",\n      \"status\": \"VERIFY\"\n    },\n    {\n      \"family\": \"PLUMBING\",\n      \"status\": \" VERIFY\"\n    },\n    {\n      \"family\": \"MECHANICAL\",\n      \"status\": \"VERIFY\"\n    }\n  ],\n  \"contradictions\": [],\n  \"filing\": {\n    \"authority_id\": \"us-ne-plattsmouth\",\n    \"destination_url\": \"https://plattsmouth.org/index.",
+          "reasoning_details": [
+            {
+              "format": "xai-responses-v1",
+              "index": 0,
+              "summary": "The user wants me to return exactly one JSON object conforming to MODEL_SCHEMA based on the evidence packet. No markdown fences, commentary, etc. Just JSON.\n{\n  \"companion_permits\": [\n    {\n      \"family\": \"BUILDING\",\n      \"status\": \"VERIFY\"\n    },\n    {\n      \"family\": \"ELECTRICAL\",\n      \"status\": \"VERIFY\"\n    },\n    {\n      \"family\": \"PLUMBING\",\n      \"status\": \" VERIFY\"\n    },\n    {\n      \"family\": \"MECHANICAL\",\n      \"status\": \"VERIFY\"\n    }\n  ],\n  \"contradictions\": [],\n  \"filing\": {\n    \"authority_id\": \"us-ne-plattsmouth\",\n    \"destination_url\": \"https://plattsmouth.org/index.",
+              "type": "reasoning.summary"
+            },
+            {
+              "data": "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",
+              "format": "xai-responses-v1",
+              "id": "rs_4c6ae42f-9d36-9d49-9839-0bd48c5874ef",
+              "index": 1,
+              "type": "reasoning.encrypted"
+            }
+          ],
+          "refusal": null,
+          "role": "assistant"
+        },
+        "native_finish_reason": "completed"
+      }
+    ],
+    "created": 1785163858,
+    "id": "gen-1785163858-h8P7cGFv1OuYGhZNxEEh",
+    "model": "x-ai/grok-4.5",
+    "object": "chat.completion",
+    "provider": "xAI",
+    "service_tier": "default",
+    "system_fingerprint": null,
+    "usage": {
+      "completion_tokens": 1230,
+      "completion_tokens_details": {
+        "audio_tokens": 0,
+        "image_tokens": 0,
+        "reasoning_tokens": 985
+      },
+      "cost": 0.0098144,
+      "cost_details": {
+        "upstream_inference_completions_cost": 0.00738,
+        "upstream_inference_cost": 0.0098144,
+        "upstream_inference_prompt_cost": 0.0024344
+      },
+      "is_byok": false,
+      "prompt_tokens": 1326,
+      "prompt_tokens_details": {
+        "audio_tokens": 0,
+        "cache_write_tokens": 0,
+        "cached_tokens": 128,
+        "video_tokens": 0
+      },
+      "total_tokens": 2556
+    }
+  },
+  "raw_text": "{\"permit_decision\":\"VERIFY\",\"jurisdiction\":{\"jurisdiction_id\":\"us-ne-plattsmouth\",\"name\":\"Plattsmouth\",\"state\":\"NE\",\"type\":\"city_or_local_authority\"},\"project_family\":\"residential_remodel\",\"primary_permit_family\":\"BUILDING\",\"companion_permits\":[{\"family\":\"ELECTRICAL\",\"status\":\"VERIFY\"},{\"family\":\"PLUMBING\",\"status\":\"VERIFY\"},{\"family\":\"MECHANICAL\",\"status\":\"VERIFY\"},{\"family\":\"FIRE_LIFE_SAFETY\",\"status\":\"VERIFY\"}],\"filing\":{\"authority_id\":\"us-ne-plattsmouth\",\"office\":\"Building and Zoning\",\"destination_url\":\"https://plattsmouth.org/index.php/departments/buildingzoning\",\"url_role\":\"INFORMATIONAL_OFFICE\"},\"source_support\":{\"state\":\"OFFICIAL_SOURCE_SUPPORTED\",\"strength\":\"WEAK\",\"evidence\":[{\"url\":\"https://plattsmouth.org/index.php/departments/buildingzoning\",\"role\":\"INFORMATIONAL_OFFICE\"}]},\"contradictions\":[]}",
+  "requested_model": "x-ai/grok-4.5",
+  "requested_provider": "openrouter",
+  "requested_runtime": "grok",
+  "response_id": "gen-1785163858-h8P7cGFv1OuYGhZNxEEh",
+  "runtime": "OpenRouter chat/completions; upstream_provider=xAI"
+}

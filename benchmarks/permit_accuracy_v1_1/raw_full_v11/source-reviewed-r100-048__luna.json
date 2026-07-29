@@ -1,0 +1,97 @@
+{
+  "observed_model": "gpt-5.6-luna",
+  "observed_provider": "openai-codex",
+  "path_proof": {
+    "adapter": "luna",
+    "engine_called": false,
+    "engine_result_supplied_to_model": false,
+    "model_call_count": 1
+  },
+  "provider": "openai-codex",
+  "provider_event_count": 200,
+  "provider_terminal_event": {
+    "response": {
+      "background": false,
+      "completed_at": 1785168916,
+      "created_at": 1785168904,
+      "error": null,
+      "frequency_penalty": 0.0,
+      "id": "resp_0730dea583d0f143016a678408e9588194b7eb097fef64de8b",
+      "incomplete_details": null,
+      "instructions": "Follow the user request exactly. Do not call tools.",
+      "max_output_tokens": null,
+      "max_tool_calls": null,
+      "metadata": {},
+      "model": "gpt-5.6-luna",
+      "moderation": null,
+      "object": "response",
+      "output": [],
+      "parallel_tool_calls": true,
+      "presence_penalty": 0.0,
+      "previous_response_id": null,
+      "prompt_cache_key": "8e52fcd2-18b0-43f9-b68d-84b7d720c157",
+      "prompt_cache_retention": "24h",
+      "reasoning": {
+        "context": "all_turns",
+        "effort": "medium",
+        "mode": "standard",
+        "summary": null
+      },
+      "safety_identifier": "user-FQ7sI0yp0Qqn6wWdqzy9mZic",
+      "service_tier": "default",
+      "status": "completed",
+      "store": false,
+      "temperature": 1.0,
+      "text": {
+        "format": {
+          "type": "text"
+        },
+        "verbosity": "medium"
+      },
+      "tool_choice": "auto",
+      "tool_usage": {
+        "image_gen": {
+          "input_tokens": 0,
+          "input_tokens_details": {
+            "image_tokens": 0,
+            "text_tokens": 0
+          },
+          "output_tokens": 0,
+          "output_tokens_details": {
+            "image_tokens": 0,
+            "text_tokens": 0
+          },
+          "total_tokens": 0
+        },
+        "web_search": {
+          "num_requests": 0
+        }
+      },
+      "tools": [],
+      "top_logprobs": 0,
+      "top_p": 0.98,
+      "truncation": "disabled",
+      "usage": {
+        "input_tokens": 1214,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 0
+        },
+        "output_tokens": 625,
+        "output_tokens_details": {
+          "reasoning_tokens": 429
+        },
+        "total_tokens": 1839
+      },
+      "user": null
+    },
+    "sequence_number": 199,
+    "type": "response.completed"
+  },
+  "raw_text": "{\"permit_decision\":\"CONDITIONAL\",\"jurisdiction\":{\"jurisdiction_id\":null,\"name\":\"Raleigh\",\"state\":\"NC\",\"type\":\"city_or_local_authority\"},\"project_family\":\"residential_cosmetic_repair\",\"primary_permit_family\":\"BUILDING\",\"companion_permits\":[],\"filing\":{\"authority_id\":null,\"office\":\"Raleigh permitting office\",\"destination_url\":\"https://raleighnc.gov/permits\",\"url_role\":\"INFORMATIONAL_OFFICE\"},\"source_support\":{\"state\":\"OFFICIAL_SOURCE_SUPPORTED\",\"strength\":\"MODERATE\",\"evidence\":[{\"url\":\"https://www.ncleg.gov/EnactedLegislation/Statutes/HTML/BySection/Chapter_160D/GS_160D-1110.html\",\"role\":\"REQUIREMENT_EVIDENCE\"},{\"url\":\"https://raleighnc.gov/permits\",\"role\":\"INFORMATIONAL_OFFICE\"}]},\"contradictions\":[]}",
+  "requested_model": "gpt-5.6-luna",
+  "requested_provider": "openai-codex",
+  "requested_runtime": "luna",
+  "response_id": "resp_0730dea583d0f143016a678408e9588194b7eb097fef64de8b",
+  "runtime": "openai-codex responses SSE"
+}

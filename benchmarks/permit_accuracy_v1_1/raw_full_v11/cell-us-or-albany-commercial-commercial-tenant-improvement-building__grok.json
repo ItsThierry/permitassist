@@ -1,0 +1,78 @@
+{
+  "observed_model": "x-ai/grok-4.5",
+  "observed_provider": "openrouter",
+  "path_proof": {
+    "adapter": "grok",
+    "engine_called": false,
+    "engine_result_supplied_to_model": false,
+    "model_call_count": 1
+  },
+  "provider": "openrouter",
+  "provider_response": {
+    "choices": [
+      {
+        "finish_reason": "stop",
+        "index": 0,
+        "logprobs": null,
+        "message": {
+          "content": "{\"permit_decision\":\"VERIFY\",\"jurisdiction\":{\"jurisdiction_id\":\"us-or-albany\",\"name\":\"Albany\",\"state\":\"OR\",\"type\":\"city_or_local_authority\"},\"project_family\":\"commercial_tenant_improvement\",\"primary_permit_family\":\"BUILDING\",\"companion_permits\":[{\"family\":\"ELECTRICAL\",\"status\":\"VERIFY\"},{\"family\":\"PLUMBING\",\"status\":\"VERIFY\"},{\"family\":\"MECHANICAL\",\"status\":\"VERIFY\"},{\"family\":\"FIRE_LIFE_SAFETY\",\"status\":\"VERIFY\"},{\"family\":\"OCCUPANCY\",\"status\":\"VERIFY\"},{\"family\":\"PLANNING_ZONING\",\"status\":\"VERIFY\"}],\"filing\":{\"authority_id\":null,\"office\":\"Oregon Building Codes Division Local Building Department Directory\",\"destination_url\":\"https://aca-oregon.accela.com/oregon/\",\"url_role\":\"APPLICATION_START\"},\"source_support\":{\"state\":\"OFFICIAL_SOURCE_SUPPORTED\",\"strength\":\"WEAK\",\"evidence\":[{\"url\":\"https://www.oregon.gov/bcd/lbdd/pages/index.aspx\",\"role\":\"INFORMATIONAL_OFFICE\"},{\"url\":\"https://aca-oregon.accela.com/oregon/\",\"role\":\"APPLICATION_START\"}]},\"contradictions\":[]}",
+          "reasoning": "The user wants me to return exactly one JSON object conforming to MODEL_SCHEMA based on the evidence packet. No markdown fences, commentary, etc. Just JSON.\n",
+          "reasoning_details": [
+            {
+              "format": "xai-responses-v1",
+              "index": 0,
+              "summary": "The user wants me to return exactly one JSON object conforming to MODEL_SCHEMA based on the evidence packet. No markdown fences, commentary, etc. Just JSON.\n",
+              "type": "reasoning.summary"
+            },
+            {
+              "data": "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",
+              "format": "xai-responses-v1",
+              "id": "rs_ef7a72eb-4fb5-91b5-9df1-8cd1a5f3e1ca",
+              "index": 1,
+              "type": "reasoning.encrypted"
+            }
+          ],
+          "refusal": null,
+          "role": "assistant"
+        },
+        "native_finish_reason": "completed"
+      }
+    ],
+    "created": 1785167389,
+    "id": "gen-1785167389-lpx2EHz6ctw9TVL0R2Ps",
+    "model": "x-ai/grok-4.5",
+    "object": "chat.completion",
+    "provider": "xAI",
+    "service_tier": "default",
+    "system_fingerprint": null,
+    "usage": {
+      "completion_tokens": 1410,
+      "completion_tokens_details": {
+        "audio_tokens": 0,
+        "image_tokens": 0,
+        "reasoning_tokens": 1118
+      },
+      "cost": 0.0110484,
+      "cost_details": {
+        "upstream_inference_completions_cost": 0.00846,
+        "upstream_inference_cost": 0.0110484,
+        "upstream_inference_prompt_cost": 0.0025884
+      },
+      "is_byok": false,
+      "prompt_tokens": 1403,
+      "prompt_tokens_details": {
+        "audio_tokens": 0,
+        "cache_write_tokens": 0,
+        "cached_tokens": 128,
+        "video_tokens": 0
+      },
+      "total_tokens": 2813
+    }
+  },
+  "raw_text": "{\"permit_decision\":\"VERIFY\",\"jurisdiction\":{\"jurisdiction_id\":\"us-or-albany\",\"name\":\"Albany\",\"state\":\"OR\",\"type\":\"city_or_local_authority\"},\"project_family\":\"commercial_tenant_improvement\",\"primary_permit_family\":\"BUILDING\",\"companion_permits\":[{\"family\":\"ELECTRICAL\",\"status\":\"VERIFY\"},{\"family\":\"PLUMBING\",\"status\":\"VERIFY\"},{\"family\":\"MECHANICAL\",\"status\":\"VERIFY\"},{\"family\":\"FIRE_LIFE_SAFETY\",\"status\":\"VERIFY\"},{\"family\":\"OCCUPANCY\",\"status\":\"VERIFY\"},{\"family\":\"PLANNING_ZONING\",\"status\":\"VERIFY\"}],\"filing\":{\"authority_id\":null,\"office\":\"Oregon Building Codes Division Local Building Department Directory\",\"destination_url\":\"https://aca-oregon.accela.com/oregon/\",\"url_role\":\"APPLICATION_START\"},\"source_support\":{\"state\":\"OFFICIAL_SOURCE_SUPPORTED\",\"strength\":\"WEAK\",\"evidence\":[{\"url\":\"https://www.oregon.gov/bcd/lbdd/pages/index.aspx\",\"role\":\"INFORMATIONAL_OFFICE\"},{\"url\":\"https://aca-oregon.accela.com/oregon/\",\"role\":\"APPLICATION_START\"}]},\"contradictions\":[]}",
+  "requested_model": "x-ai/grok-4.5",
+  "requested_provider": "openrouter",
+  "requested_runtime": "grok",
+  "response_id": "gen-1785167389-lpx2EHz6ctw9TVL0R2Ps",
+  "runtime": "OpenRouter chat/completions; upstream_provider=xAI"
+}

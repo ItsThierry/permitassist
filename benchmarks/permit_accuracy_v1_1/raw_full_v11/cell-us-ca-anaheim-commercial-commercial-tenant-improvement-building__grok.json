@@ -1,0 +1,78 @@
+{
+  "observed_model": "x-ai/grok-4.5",
+  "observed_provider": "openrouter",
+  "path_proof": {
+    "adapter": "grok",
+    "engine_called": false,
+    "engine_result_supplied_to_model": false,
+    "model_call_count": 1
+  },
+  "provider": "openrouter",
+  "provider_response": {
+    "choices": [
+      {
+        "finish_reason": "stop",
+        "index": 0,
+        "logprobs": null,
+        "message": {
+          "content": "{\"companion_permits\":[{\"family\":\"ELECTRICAL\",\"status\":\"REQUIRED\"},{\"family\":\"PLUMBING\",\"status\":\"REQUIRED\"},{\"family\":\"MECHANICAL\",\"status\":\"REQUIRED\"},{\"family\":\"FIRE_LIFE_SAFETY\",\"status\":\"VERIFY\"},{\"family\":\"OCCUPANCY\",\"status\":\"CONDITIONAL\"},{\"family\":\"PLANNING_ZONING\",\"status\":\"VERIFY\"}],\"contradictions\":[],\"filing\":{\"authority_id\":\"us-ca-anaheim\",\"destination_url\":\"https://www.anaheim.net/620/Building-Permits\",\"office\":\"City of Anaheim Building Permits\",\"url_role\":\"APPLICATION_START\"},\"jurisdiction\":{\"jurisdiction_id\":\"us-ca-anaheim\",\"name\":\"Anaheim\",\"state\":\"CA\",\"type\":\"city_or_local_authority\"},\"permit_decision\":\"REQUIRED\",\"primary_permit_family\":\"BUILDING\",\"project_family\":\"commercial_tenant_improvement\",\"source_support\":{\"evidence\":[{\"url\":\"https://www.anaheim.net/DocumentCenter/View/730/When-is-a-Building-Permit-Required\",\"role\":\"REQUIREMENT_EVIDENCE\"},{\"url\":\"https://www.anaheim.net/620/Building-Permits\",\"role\":\"APPLICATION_START\"},{\"url\":\"https://www.anaheim.net/6019/Certificates-of-Occupancy-TCOs\",\"role\":\"INFORMATIONAL_OFFICE\"}],\"state\":\"OFFICIAL_SOURCE_SUPPORTED\",\"strength\":\"STRONG\"}}",
+          "reasoning": "The user wants me to evaluate one permit lookup using ONLY the supplied official-source evidence packet and return exactly one JSON object conforming to MODEL_SCHEMA.\n",
+          "reasoning_details": [
+            {
+              "format": "xai-responses-v1",
+              "index": 0,
+              "summary": "The user wants me to evaluate one permit lookup using ONLY the supplied official-source evidence packet and return exactly one JSON object conforming to MODEL_SCHEMA.\n",
+              "type": "reasoning.summary"
+            },
+            {
+              "data": "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",
+              "format": "xai-responses-v1",
+              "id": "rs_bb8c6d1f-30ec-903f-b590-c50fe2bffb5f",
+              "index": 1,
+              "type": "reasoning.encrypted"
+            }
+          ],
+          "refusal": null,
+          "role": "assistant"
+        },
+        "native_finish_reason": "completed"
+      }
+    ],
+    "created": 1785164494,
+    "id": "gen-1785164494-HCswE69JrCFjpbn9KzJy",
+    "model": "x-ai/grok-4.5",
+    "object": "chat.completion",
+    "provider": "xAI",
+    "service_tier": "default",
+    "system_fingerprint": null,
+    "usage": {
+      "completion_tokens": 1458,
+      "completion_tokens_details": {
+        "audio_tokens": 0,
+        "image_tokens": 0,
+        "reasoning_tokens": 1118
+      },
+      "cost": 0.0116424,
+      "cost_details": {
+        "upstream_inference_completions_cost": 0.008748,
+        "upstream_inference_cost": 0.0116424,
+        "upstream_inference_prompt_cost": 0.0028944
+      },
+      "is_byok": false,
+      "prompt_tokens": 1556,
+      "prompt_tokens_details": {
+        "audio_tokens": 0,
+        "cache_write_tokens": 0,
+        "cached_tokens": 128,
+        "video_tokens": 0
+      },
+      "total_tokens": 3014
+    }
+  },
+  "raw_text": "{\"companion_permits\":[{\"family\":\"ELECTRICAL\",\"status\":\"REQUIRED\"},{\"family\":\"PLUMBING\",\"status\":\"REQUIRED\"},{\"family\":\"MECHANICAL\",\"status\":\"REQUIRED\"},{\"family\":\"FIRE_LIFE_SAFETY\",\"status\":\"VERIFY\"},{\"family\":\"OCCUPANCY\",\"status\":\"CONDITIONAL\"},{\"family\":\"PLANNING_ZONING\",\"status\":\"VERIFY\"}],\"contradictions\":[],\"filing\":{\"authority_id\":\"us-ca-anaheim\",\"destination_url\":\"https://www.anaheim.net/620/Building-Permits\",\"office\":\"City of Anaheim Building Permits\",\"url_role\":\"APPLICATION_START\"},\"jurisdiction\":{\"jurisdiction_id\":\"us-ca-anaheim\",\"name\":\"Anaheim\",\"state\":\"CA\",\"type\":\"city_or_local_authority\"},\"permit_decision\":\"REQUIRED\",\"primary_permit_family\":\"BUILDING\",\"project_family\":\"commercial_tenant_improvement\",\"source_support\":{\"evidence\":[{\"url\":\"https://www.anaheim.net/DocumentCenter/View/730/When-is-a-Building-Permit-Required\",\"role\":\"REQUIREMENT_EVIDENCE\"},{\"url\":\"https://www.anaheim.net/620/Building-Permits\",\"role\":\"APPLICATION_START\"},{\"url\":\"https://www.anaheim.net/6019/Certificates-of-Occupancy-TCOs\",\"role\":\"INFORMATIONAL_OFFICE\"}],\"state\":\"OFFICIAL_SOURCE_SUPPORTED\",\"strength\":\"STRONG\"}}",
+  "requested_model": "x-ai/grok-4.5",
+  "requested_provider": "openrouter",
+  "requested_runtime": "grok",
+  "response_id": "gen-1785164494-HCswE69JrCFjpbn9KzJy",
+  "runtime": "OpenRouter chat/completions; upstream_provider=xAI"
+}

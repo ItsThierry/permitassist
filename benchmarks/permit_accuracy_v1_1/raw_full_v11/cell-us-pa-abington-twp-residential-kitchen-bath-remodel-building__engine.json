@@ -1,0 +1,265 @@
+{
+  "observed_model": "NONE",
+  "observed_provider": "permitassist-local-engine",
+  "path_proof": {
+    "adapter": "engine",
+    "authority_recovery": null,
+    "decision_cell_reference": null,
+    "engine_called": true,
+    "engine_result_supplied_to_model": false,
+    "engine_stdout": "[url_check] URL verified: https://www.abingtonpa.gov/240/Residential-Applications-Forms\n",
+    "model_call_count": 0
+  },
+  "provider": "permitassist-local-engine",
+  "raw_response": {
+    "apply_path": {
+      "channel": "contact_ahj",
+      "documents_to_prepare": [
+        "scope of work",
+        "plans/drawings if required",
+        "contractor license",
+        "valuation",
+        "owner authorization"
+      ],
+      "office_name": "Abington Township Fire and Code Services Department",
+      "permit_category": "Permit package",
+      "permit_type": "Required permit package — Building Permit",
+      "portal_url": "https://www.abingtonpa.gov/240/Residential-Applications-Forms",
+      "primary_filing_source_tier": "none",
+      "primary_requirement_source_tier": "local_ahj",
+      "state": "HONEST_FALLBACK",
+      "steps": [
+        "Open the listed permit portal or contact the permit office",
+        "Select the closest category to: Required permit package — Building Permit",
+        "Confirm exact portal subcategories before final submission"
+      ],
+      "support_level": "not available",
+      "verification_note": "Confirm the exact portal category with the listed permit office before filing"
+    },
+    "apply_url": "https://www.abingtonpa.gov/240/Residential-Applications-Forms",
+    "apply_url_known": true,
+    "applying_office": "Abington Township Fire and Code Services Department",
+    "confidence": "high",
+    "confidence_reason": "Official building department official-source permit decision for this exact jurisdiction and project type.",
+    "customer_first_screen_summary": {
+      "ahj_department": "Abington Township Fire and Code Services Department",
+      "decision": "REQUIRED",
+      "kind_category": "Building",
+      "next_action": "File the required permit categories with Abington Township Fire and Code Services Department: Building Permit, Permit, Plumbing Permit — Residential Remodel / Addition, Mechanical Permit — Residential Remodel / Addition, Electrical Permit — Residential Remodel / Addition. Confirm exact portal subcategories before final submission.",
+      "source_cue": "Official sources attached for 4 required permit categories."
+    },
+    "customer_headline": "Permit required: Required permit package — Building Permit.",
+    "customer_next_step": "File the required permit categories with Abington Township Fire and Code Services Department: Building Permit, Permit, Plumbing Permit — Residential Remodel / Addition, Mechanical Permit — Residential Remodel / Addition, Electrical Permit — Residential Remodel / Addition. Confirm exact portal subcategories before final submission.",
+    "customer_result_summary": {
+      "ahj_department": "Abington Township Fire and Code Services Department",
+      "fee_cost_caveat": "Fees depend on valuation, trade scope, plan-review fees, and the current local fee schedule; verify before quoting.",
+      "freshness_label": "Checked 2026-07-27",
+      "jurisdiction": "Abington Twp, PA",
+      "next_step": "File the required permit categories with Abington Township Fire and Code Services Department: Building Permit, Permit, Plumbing Permit — Residential Remodel / Addition, Mechanical Permit — Residential Remodel / Addition, Electrical Permit — Residential Remodel / Addition. Confirm exact portal subcategories before final submission.",
+      "permit_decision": "REQUIRED",
+      "permit_kind": "Building",
+      "permit_name": "Required permit package — Building Permit",
+      "source_cue": "Official sources attached for 4 required permit categories."
+    },
+    "degraded_sources": false,
+    "inspection_booking": "Schedule online at Confirm the inspection advance-notice window when booking.",
+    "job_summary": "Required permit package: Building Permit; Permit; Plumbing Permit — Residential Remodel / Addition; Mechanical Permit — Residential Remodel / Addition; Electrical Permit — Residential Remodel / Addition.",
+    "local_form_known": true,
+    "online_application_url": null,
+    "permit_decision": "REQUIRED",
+    "permit_kind": "Building",
+    "permit_name": "Required permit package — Building Permit",
+    "permit_required": true,
+    "permit_type": "Required permit package — Building Permit",
+    "permit_verdict": "YES",
+    "permits_required": [
+      {
+        "approval_type": "Building Permit",
+        "decision": "REQUIRED",
+        "display_family": "Building",
+        "family": "building",
+        "filing_family": "building",
+        "kind": "Building",
+        "permit_kind": "building",
+        "permit_name": "Building Permit",
+        "permit_type": "Building Permit",
+        "portal_selection": "Permit",
+        "rationale": "Required because the original request explicitly includes building scope; confirm the exact portal subcategory with the listed permit office before filing.",
+        "required": true,
+        "scope_trigger": "building_explicit_scope",
+        "segment": "residential",
+        "status": "REQUIRED"
+      },
+      {
+        "approval_type": "Permit",
+        "decision": "REQUIRED",
+        "display_family": "Building",
+        "family": "building",
+        "filing_family": "building",
+        "kind": "Building",
+        "permit_kind": "building",
+        "permit_name": "Permit",
+        "permit_type": "Permit",
+        "portal_selection": "Permit",
+        "required": true,
+        "segment": "residential",
+        "status": "REQUIRED"
+      },
+      {
+        "ahj_name": "Abington Twp permit office",
+        "application_authority_name": "Abington Twp permit office",
+        "approval_type": "Plumbing Permit",
+        "decision": "REQUIRED",
+        "display_family": "Plumbing",
+        "family": "plumbing",
+        "filing_family": "plumbing",
+        "kind": "Plumbing",
+        "notes": "Related plumbing permit for fixture, DWV, water-supply, bathroom, kitchen, or rough/final plumbing work included in the remodel/addition. Required because the described scope triggers Plumbing Permit.",
+        "permit_name": "Plumbing Permit — Residential Remodel / Addition",
+        "permit_type": "Plumbing Permit — Residential Remodel / Addition",
+        "portal_selection": "Plumbing - Residential Alteration",
+        "rationale": "Related plumbing permit for fixture, DWV, water-supply, bathroom, kitchen, or rough/final plumbing work included in the remodel/addition. Required because the described scope triggers Plumbing Permit.",
+        "required": true,
+        "scope_trigger": "plumbing_explicit_scope",
+        "segment": "residential",
+        "status": "REQUIRED"
+      },
+      {
+        "ahj_name": "Abington Twp permit office",
+        "application_authority_name": "Abington Twp permit office",
+        "approval_type": "Mechanical Permit",
+        "decision": "REQUIRED",
+        "display_family": "Mechanical",
+        "family": "mechanical",
+        "filing_family": "mechanical",
+        "kind": "Mechanical",
+        "notes": "Related mechanical permit for HVAC, duct relocation, ventilation, or rough/final mechanical work included in the remodel/addition. Required because the described scope triggers Mechanical Permit.",
+        "permit_name": "Mechanical Permit — Residential Remodel / Addition",
+        "permit_type": "Mechanical Permit — Residential Remodel / Addition",
+        "portal_selection": "Mechanical - Residential Alteration",
+        "rationale": "Related mechanical permit for HVAC, duct relocation, ventilation, or rough/final mechanical work included in the remodel/addition. Required because the described scope triggers Mechanical Permit.",
+        "required": true,
+        "scope_trigger": "mechanical_explicit_scope",
+        "segment": "residential",
+        "status": "REQUIRED"
+      },
+      {
+        "ahj_name": "Abington Twp permit office",
+        "application_authority_name": "Abington Twp permit office",
+        "approval_type": "Electrical Permit",
+        "decision": "REQUIRED",
+        "display_family": "Electrical",
+        "family": "electrical",
+        "filing_family": "electrical",
+        "kind": "Electrical",
+        "notes": "Related electrical permit for circuits, lighting, receptacles, panel work, or rough/final electrical inspections included in the remodel/addition. Required because the described scope triggers Electrical Permit.",
+        "permit_name": "Electrical Permit — Residential Remodel / Addition",
+        "permit_type": "Electrical Permit — Residential Remodel / Addition",
+        "portal_selection": "Electrical - Residential Alteration",
+        "rationale": "Related electrical permit for circuits, lighting, receptacles, panel work, or rough/final electrical inspections included in the remodel/addition. Required because the described scope triggers Electrical Permit.",
+        "required": true,
+        "scope_trigger": "electrical_explicit_scope",
+        "segment": "residential",
+        "status": "REQUIRED"
+      }
+    ],
+    "permits_required_logic": [
+      {
+        "filing_family": "building",
+        "included_because": "Official permit rule: Required because the original request explicitly includes building scope; confirm the exact portal subcategory with the listed permit office before filing.",
+        "permit_type": "Building Permit",
+        "scope_trigger": "building_explicit_scope",
+        "segment": "residential"
+      },
+      {
+        "filing_family": "building",
+        "included_because": "Official permit rule: Required because the described scope triggers Building review.",
+        "permit_type": "Permit",
+        "scope_trigger": "building_scope",
+        "segment": "residential"
+      },
+      {
+        "filing_family": "plumbing",
+        "included_because": "Official permit rule: Related plumbing permit for fixture, DWV, water-supply, bathroom, kitchen, or rough/final plumbing work included in the remodel/addition. Required because the described scope triggers Plumbing Permit.",
+        "permit_type": "Plumbing Permit — Residential Remodel / Addition",
+        "scope_trigger": "plumbing_explicit_scope",
+        "segment": "residential"
+      },
+      {
+        "filing_family": "mechanical",
+        "included_because": "Official permit rule: Related mechanical permit for HVAC, duct relocation, ventilation, or rough/final mechanical work included in the remodel/addition. Required because the described scope triggers Mechanical Permit.",
+        "permit_type": "Mechanical Permit — Residential Remodel / Addition",
+        "scope_trigger": "mechanical_explicit_scope",
+        "segment": "residential"
+      },
+      {
+        "filing_family": "electrical",
+        "included_because": "Official permit rule: Related electrical permit for circuits, lighting, receptacles, panel work, or rough/final electrical inspections included in the remodel/addition. Required because the described scope triggers Electrical Permit.",
+        "permit_type": "Electrical Permit — Residential Remodel / Addition",
+        "scope_trigger": "electrical_explicit_scope",
+        "segment": "residential"
+      }
+    ],
+    "required_permit_families": [
+      "Building",
+      "Plumbing",
+      "Mechanical",
+      "Electrical"
+    ],
+    "required_permit_names": [
+      "Building Permit",
+      "Permit",
+      "Plumbing Permit — Residential Remodel / Addition",
+      "Mechanical Permit — Residential Remodel / Addition",
+      "Electrical Permit — Residential Remodel / Addition"
+    ],
+    "required_permit_segments": [
+      "residential"
+    ],
+    "required_permit_summary": "Required permit package: Building Permit; Permit; Plumbing Permit — Residential Remodel / Addition; Mechanical Permit — Residential Remodel / Addition; Electrical Permit — Residential Remodel / Addition.",
+    "source_confidence": "AHJ_DIRECT",
+    "source_support": {
+      "apply_url_known": true,
+      "apply_url_source_confidence": "FILING_PATH_DEGRADED",
+      "confidence_tier": "AHJ_DIRECT",
+      "context_source_count": 0,
+      "decision_mutation_allowed": false,
+      "degraded_sources": false,
+      "display_source_count": 1,
+      "exact_form_known": true,
+      "filing_path_state": "HONEST_FALLBACK",
+      "filing_source_count": 0,
+      "has_official_source": true,
+      "has_source_backed_evidence": true,
+      "local_decision_evidence_urls": [
+        "https://www.abingtonpa.gov/240/Residential-Applications-Forms"
+      ],
+      "local_form_known": true,
+      "primary_filing_source_tier": "none",
+      "primary_requirement_source_tier": "local_ahj",
+      "requirement_source_count": 1,
+      "source_confidence": "AHJ_DIRECT"
+    },
+    "source_urls": [
+      "https://www.abingtonpa.gov/240/Residential-Applications-Forms"
+    ],
+    "sources": [
+      {
+        "publisher": "Abington Township Fire and Code Services Department",
+        "snippet": "Alterations Required for modifying, remodeling, or renovating existing interior or exterior spaces without expanding the structure's footprint. Alteration Permit Application Additional Information Residential Permit Application Requirements (PDF) Township will require construction details Alterations include, but are not limited to, framing, insulation and drywall.",
+        "title": "Official building department source",
+        "url": "https://www.abingtonpa.gov/240/Residential-Applications-Forms"
+      }
+    ],
+    "summary": "Required permit package: Building Permit; Permit; Plumbing Permit — Residential Remodel / Addition; Mechanical Permit — Residential Remodel / Addition; Electrical Permit — Residential Remodel / Addition.",
+    "warnings": [
+      "Filing path degraded: exact local online filing portal was not verified; permit decision preserved.",
+      "Customer-boundary filing rows were normalized so only hard scope-triggered permits appear as required; address-dependent companion reviews are shown separately."
+    ]
+  },
+  "requested_model": "NONE",
+  "requested_provider": "permitassist-local-engine",
+  "requested_runtime": "engine",
+  "response_id": null,
+  "runtime": "api.server Decision Cell + finalize + customer egress"
+}

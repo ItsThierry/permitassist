@@ -1,0 +1,12 @@
+{
+  "schema": "permitassist.session2.runtime_protected_hash_successor.v1",
+  "session1_artifacts_unchanged": true,
+  "authorization_scope": "Session 2 flag-gated Permit Manifest customer-egress integration only",
+  "authorized_successors": {
+    "api/server.py": {
+      "session1_opening_sha256": "38e46a451e2d93e5f8397c90254fed85f7c6c5f31aa2368fd6f824c91d342fa6",
+      "session2_current_sha256": "8cdb0b0e55c9c08ab9351aa3754d9e4896699c3fd9a5bcc4b510523a5e752da1",
+      "reason": "Flag-gated canonical Permit Manifest projection at final customer egress; legacy companion writer consolidation; report/share projection routing."
+    }
+  }
+}

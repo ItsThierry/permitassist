@@ -549,13 +549,13 @@ def test_step7l_enabled_pack_accumulates_combined_contract_warnings_deterministi
 
 
 
-def test_disabled_default_behavior_preserves_legacy_source_apply_url_fallback(tmp_path, monkeypatch):
+def test_disabled_default_behavior_preserves_source_but_rejects_generic_apply_fallback(tmp_path, monkeypatch):
     monkeypatch.delenv("PERMITASSIST_EVIDENCE_PACK_PATH", raising=False)
     server = _import_server(tmp_path, monkeypatch)
 
     result = server.finalize_permit_lookup_result(_base_engine_result(), "office tenant improvement", "Denver", "CO")
 
-    assert result["apply_url"] == "https://denvergov.org/generic-permits"
+    assert not result.get("apply_url")
     assert "_evidence_pack" not in result
     assert result["claim_citations"]
     assert result["claim_citations"][0]["source_url"] == "https://denvergov.org/generic-permits"
@@ -678,7 +678,7 @@ def test_preview_only_permit_without_sample_header_stays_normal_no_cache_bypass(
     assert calls and calls[0]["use_cache"] is True
     assert calls[0]["suppress_cache_write"] is False
     assert "_evidence_pack" not in body
-    assert body["apply_url"] == "https://denvergov.org/generic-permits"
+    assert not body.get("apply_url")
 
 
 def test_preview_only_permit_sample_demo_header_allows_evidence_pack(tmp_path, monkeypatch):
@@ -736,7 +736,7 @@ def test_preview_only_paid_permit_without_sample_header_stays_normal(tmp_path, m
     assert calls and calls[0]["use_cache"] is True
     assert calls[0]["suppress_cache_write"] is False
     assert "_evidence_pack" not in body
-    assert body["apply_url"] == "https://denvergov.org/generic-permits"
+    assert not body.get("apply_url")
     assert body["remaining_lookups"] == -1
 
 
@@ -1598,7 +1598,7 @@ def test_step7p_path_alone_does_not_activate_evidence_pack(tmp_path, monkeypatch
     result = server.finalize_permit_lookup_result(_base_engine_result(), "office tenant improvement", "Denver", "CO")
 
     assert "_evidence_pack" not in result
-    assert result["apply_url"] == "https://denvergov.org/generic-permits"
+    assert not result.get("apply_url")
 
 
 def test_step7p_invalid_mode_fails_closed_without_paths_or_full_hash(tmp_path, monkeypatch):

@@ -1,0 +1,6 @@
+PermitAssist independently adjudicated official filing route
+Official source URL: https://lockportny.gov/wp-content/uploads/2018/04/building-permit-application-general.pdf
+Official filing URL: https://lockportny.gov/wp-content/uploads/2018/04/building-permit-application-general.pdf
+Verification boundary: PASS_WEB_EXTRACT_20260728
+Exact official quote:
+BUILDING PERMIT APPLICATION FOR GENERAL CONSTRUCTION

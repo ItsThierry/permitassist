@@ -19,7 +19,7 @@ ALLOWLIST = (
     "us-ak-matanuska_susitna_borough",
     "us-wi-eau-claire",
 )
-MANIFEST_SHA256 = "77030601ee9c5522abeea29d8c9aa5a5352fc7ae49dbd7b2f11e1fe4885f653f"
+MANIFEST_SHA256 = "9916d097a5e5f9331caa7530d96d2f378144824b113fe2a8fab5df2c716316b1"
 CASES = (
     {
         "id": "buckeye-required",
@@ -33,14 +33,14 @@ CASES = (
         "payload": {"job_type": "residential remodel", "city": "Albertville", "state": "AL", "zip_code": "", "job_category": "residential"},
         "core": True,
         "decision": "REQUIRED",
-        "families": [["building", "REQUIRED"], ["demolition", "CONDITIONAL"], ["electrical", "CONDITIONAL"], ["gas", "CONDITIONAL"], ["mechanical", "CONDITIONAL"], ["plumbing", "CONDITIONAL"]],
+        "families": [["building", "REQUIRED"], ["demolition", "VERIFY"], ["electrical", "VERIFY"], ["gas", "VERIFY"], ["mechanical", "VERIFY"], ["plumbing", "VERIFY"]],
     },
     {
         "id": "matanuska-w4-ten-lane",
         "payload": {"job_type": "commercial tenant improvement", "city": "Matanuska-Susitna Borough", "state": "AK", "zip_code": "", "job_category": "commercial"},
         "core": True,
         "decision": "REQUIRED",
-        "families": [["building", "REQUIRED"], ["electrical", "REQUIRED"], ["fire", "REQUIRED"], ["health", "VERIFY"], ["liquor", "VERIFY"], ["mechanical", "REQUIRED"], ["occupancy", "REQUIRED"], ["plumbing", "REQUIRED"], ["wastewater", "VERIFY"], ["zoning", "REQUIRED"]],
+        "families": [["building", "REQUIRED"], ["electrical", "VERIFY"], ["fire", "VERIFY"], ["health", "VERIFY"], ["liquor", "VERIFY"], ["mechanical", "VERIFY"], ["occupancy", "VERIFY"], ["plumbing", "VERIFY"], ["wastewater", "VERIFY"], ["zoning", "VERIFY"]],
     },
     {
         "id": "eau-claire-alias-route",

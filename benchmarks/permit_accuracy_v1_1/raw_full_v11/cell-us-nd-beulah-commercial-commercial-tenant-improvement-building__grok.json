@@ -1,0 +1,78 @@
+{
+  "observed_model": "x-ai/grok-4.5",
+  "observed_provider": "openrouter",
+  "path_proof": {
+    "adapter": "grok",
+    "engine_called": false,
+    "engine_result_supplied_to_model": false,
+    "model_call_count": 1
+  },
+  "provider": "openrouter",
+  "provider_response": {
+    "choices": [
+      {
+        "finish_reason": "stop",
+        "index": 0,
+        "logprobs": null,
+        "message": {
+          "content": "{\"permit_decision\":\"REQUIRED\",\"jurisdiction\":{\"jurisdiction_id\":\"us-nd-beulah\",\"name\":\"Beulah\",\"state\":\"ND\",\"type\":\"city_or_local_authority\"},\"project_family\":\"commercial_tenant_improvement\",\"primary_permit_family\":\"BUILDING\",\"companion_permits\":[{\"family\":\"ELECTRICAL\",\"status\":\"VERIFY\"},{\"family\":\"PLUMBING\",\"status\":\"VERIFY\"},{\"family\":\"MECHANICAL\",\"status\":\"VERIFY\"},{\"family\":\"FIRE_LIFE_SAFETY\",\"status\":\"VERIFY\"},{\"family\":\"OCCUPANCY\",\"status\":\"VERIFY\"},{\"family\":\"PLANNING_ZONING\",\"status\":\"CONDITIONAL\"}],\"filing\":{\"authority_id\":\"us-nd-beulah\",\"destination_url\":\"https://beulahnd.portal.iworq.net/portalhome/beulahnd\",\"office\":\"City of Beulah Planning & Zoning / Citizen Building Permit Portal\",\"url_role\":\"APPLICATION_START\"},\"source_support\":{\"state\":\"OFFICIAL_SOURCE_SUPPORTED\",\"strength\":\"MODERATE\",\"evidence\":[{\"url\":\"https://www.beulahnd.org/government/planning_and_zoning/permits_and_property_information.php\",\"role\":\"INFORMATIONAL_OFFICE\"},{\"url\":\"https://beulahnd.portal.iworq.net/portalhome/beulahnd\",\"role\":\"APPLICATION_START\"},{\"url\":\"https://beulahnd.portal.iworq.net/portalhome/beulahnd\",\"role\":\"REQUIREMENT_EVIDENCE\"}]},\"contradictions\":[]}",
+          "reasoning": "The user wants me to return exactly one JSON object conforming to MODEL_SCHEMA based on the evidence packet. No markdown fences, commentary, etc. Output JSON only.\n",
+          "reasoning_details": [
+            {
+              "format": "xai-responses-v1",
+              "index": 0,
+              "summary": "The user wants me to return exactly one JSON object conforming to MODEL_SCHEMA based on the evidence packet. No markdown fences, commentary, etc. Output JSON only.\n",
+              "type": "reasoning.summary"
+            },
+            {
+              "data": "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",
+              "format": "xai-responses-v1",
+              "id": "rs_725199ff-46e7-9cbf-9a0e-6c5941b7a953",
+              "index": 1,
+              "type": "reasoning.encrypted"
+            }
+          ],
+          "refusal": null,
+          "role": "assistant"
+        },
+        "native_finish_reason": "completed"
+      }
+    ],
+    "created": 1785166735,
+    "id": "gen-1785166735-4DQiWrGqInsFuqJ0A1V2",
+    "model": "x-ai/grok-4.5",
+    "object": "chat.completion",
+    "provider": "xAI",
+    "service_tier": "default",
+    "system_fingerprint": null,
+    "usage": {
+      "completion_tokens": 807,
+      "completion_tokens_details": {
+        "audio_tokens": 0,
+        "image_tokens": 0,
+        "reasoning_tokens": 445
+      },
+      "cost": 0.0061332,
+      "cost_details": {
+        "upstream_inference_completions_cost": 0.004842,
+        "upstream_inference_cost": 0.0061332,
+        "upstream_inference_prompt_cost": 0.0012912
+      },
+      "is_byok": false,
+      "prompt_tokens": 1516,
+      "prompt_tokens_details": {
+        "audio_tokens": 0,
+        "cache_write_tokens": 0,
+        "cached_tokens": 1024,
+        "video_tokens": 0
+      },
+      "total_tokens": 2323
+    }
+  },
+  "raw_text": "{\"permit_decision\":\"REQUIRED\",\"jurisdiction\":{\"jurisdiction_id\":\"us-nd-beulah\",\"name\":\"Beulah\",\"state\":\"ND\",\"type\":\"city_or_local_authority\"},\"project_family\":\"commercial_tenant_improvement\",\"primary_permit_family\":\"BUILDING\",\"companion_permits\":[{\"family\":\"ELECTRICAL\",\"status\":\"VERIFY\"},{\"family\":\"PLUMBING\",\"status\":\"VERIFY\"},{\"family\":\"MECHANICAL\",\"status\":\"VERIFY\"},{\"family\":\"FIRE_LIFE_SAFETY\",\"status\":\"VERIFY\"},{\"family\":\"OCCUPANCY\",\"status\":\"VERIFY\"},{\"family\":\"PLANNING_ZONING\",\"status\":\"CONDITIONAL\"}],\"filing\":{\"authority_id\":\"us-nd-beulah\",\"destination_url\":\"https://beulahnd.portal.iworq.net/portalhome/beulahnd\",\"office\":\"City of Beulah Planning & Zoning / Citizen Building Permit Portal\",\"url_role\":\"APPLICATION_START\"},\"source_support\":{\"state\":\"OFFICIAL_SOURCE_SUPPORTED\",\"strength\":\"MODERATE\",\"evidence\":[{\"url\":\"https://www.beulahnd.org/government/planning_and_zoning/permits_and_property_information.php\",\"role\":\"INFORMATIONAL_OFFICE\"},{\"url\":\"https://beulahnd.portal.iworq.net/portalhome/beulahnd\",\"role\":\"APPLICATION_START\"},{\"url\":\"https://beulahnd.portal.iworq.net/portalhome/beulahnd\",\"role\":\"REQUIREMENT_EVIDENCE\"}]},\"contradictions\":[]}",
+  "requested_model": "x-ai/grok-4.5",
+  "requested_provider": "openrouter",
+  "requested_runtime": "grok",
+  "response_id": "gen-1785166735-4DQiWrGqInsFuqJ0A1V2",
+  "runtime": "OpenRouter chat/completions; upstream_provider=xAI"
+}

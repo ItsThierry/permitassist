@@ -1,0 +1,78 @@
+{
+  "observed_model": "x-ai/grok-4.5",
+  "observed_provider": "openrouter",
+  "path_proof": {
+    "adapter": "grok",
+    "engine_called": false,
+    "engine_result_supplied_to_model": false,
+    "model_call_count": 1
+  },
+  "provider": "openrouter",
+  "provider_response": {
+    "choices": [
+      {
+        "finish_reason": "stop",
+        "index": 0,
+        "logprobs": null,
+        "message": {
+          "content": "{\"permit_decision\":\"REQUIRED\",\"jurisdiction\":{\"jurisdiction_id\":\"us-nm-alamogordo\",\"name\":\"Alamogordo\",\"state\":\"NM\",\"type\":\"city_or_local_authority\"},\"project_family\":\"commercial_tenant_improvement\",\"primary_permit_family\":\"BUILDING\",\"companion_permits\":[{\"family\":\"ELECTRICAL\",\"status\":\"REQUIRED\"},{\"family\":\"PLUMBING\",\"status\":\"REQUIRED\"},{\"family\":\"MECHANICAL\",\"status\":\"REQUIRED\"},{\"family\":\"FIRE_LIFE_SAFETY\",\"status\":\"VERIFY\"},{\"family\":\"OCCUPANCY\",\"status\":\"VERIFY\"},{\"family\":\"PLANNING_ZONING\",\"status\":\"VERIFY\"},{\"family\":\"GAS\",\"status\":\"VERIFY\"}],\"filing\":{\"authority_id\":null,\"office\":\"New Mexico Regulation and Licensing Department - Construction Industries\",\"destination_url\":\"https://nmrld.my.site.com/MHD/s\",\"url_role\":\"APPLICATION_START\"},\"source_support\":{\"state\":\"OFFICIAL_SOURCE_SUPPORTED\",\"strength\":\"MODERATE\",\"evidence\":[{\"url\":\"https://www.srca.nm.gov/parts/title14/14.005.0002.html\",\"role\":\"REQUIREMENT_EVIDENCE\"},{\"url\":\"https://www.rld.nm.gov/construction-industries/apply-for-a-permit/\",\"role\":\"INFORMATIONAL_OFFICE\"},{\"url\":\"https://nmrld.my.site.com/MHD/s\",\"role\":\"APPLICATION_START\"}]},\"contradictions\":[]}",
+          "reasoning": "The user wants me to evaluate one permit lookup using ONLY the supplied official-source evidence packet and return exactly one JSON object conforming to MODEL_SCHEMA. No Markdown fences, commentary, o...",
+          "reasoning_details": [
+            {
+              "format": "xai-responses-v1",
+              "index": 0,
+              "summary": "The user wants me to evaluate one permit lookup using ONLY the supplied official-source evidence packet and return exactly one JSON object conforming to MODEL_SCHEMA. No Markdown fences, commentary, o...",
+              "type": "reasoning.summary"
+            },
+            {
+              "data": "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",
+              "format": "xai-responses-v1",
+              "id": "rs_297f3190-6ed8-9f63-a1ff-c380bbc01cec",
+              "index": 1,
+              "type": "reasoning.encrypted"
+            }
+          ],
+          "refusal": null,
+          "role": "assistant"
+        },
+        "native_finish_reason": "completed"
+      }
+    ],
+    "created": 1785167001,
+    "id": "gen-1785167001-mdSJfrbiXu1iySDQw8UI",
+    "model": "x-ai/grok-4.5",
+    "object": "chat.completion",
+    "provider": "xAI",
+    "service_tier": "default",
+    "system_fingerprint": null,
+    "usage": {
+      "completion_tokens": 1019,
+      "completion_tokens_details": {
+        "audio_tokens": 0,
+        "image_tokens": 0,
+        "reasoning_tokens": 661
+      },
+      "cost": 0.0072292,
+      "cost_details": {
+        "upstream_inference_completions_cost": 0.006114,
+        "upstream_inference_cost": 0.0072292,
+        "upstream_inference_prompt_cost": 0.0011152
+      },
+      "is_byok": false,
+      "prompt_tokens": 1428,
+      "prompt_tokens_details": {
+        "audio_tokens": 0,
+        "cache_write_tokens": 0,
+        "cached_tokens": 1024,
+        "video_tokens": 0
+      },
+      "total_tokens": 2447
+    }
+  },
+  "raw_text": "{\"permit_decision\":\"REQUIRED\",\"jurisdiction\":{\"jurisdiction_id\":\"us-nm-alamogordo\",\"name\":\"Alamogordo\",\"state\":\"NM\",\"type\":\"city_or_local_authority\"},\"project_family\":\"commercial_tenant_improvement\",\"primary_permit_family\":\"BUILDING\",\"companion_permits\":[{\"family\":\"ELECTRICAL\",\"status\":\"REQUIRED\"},{\"family\":\"PLUMBING\",\"status\":\"REQUIRED\"},{\"family\":\"MECHANICAL\",\"status\":\"REQUIRED\"},{\"family\":\"FIRE_LIFE_SAFETY\",\"status\":\"VERIFY\"},{\"family\":\"OCCUPANCY\",\"status\":\"VERIFY\"},{\"family\":\"PLANNING_ZONING\",\"status\":\"VERIFY\"},{\"family\":\"GAS\",\"status\":\"VERIFY\"}],\"filing\":{\"authority_id\":null,\"office\":\"New Mexico Regulation and Licensing Department - Construction Industries\",\"destination_url\":\"https://nmrld.my.site.com/MHD/s\",\"url_role\":\"APPLICATION_START\"},\"source_support\":{\"state\":\"OFFICIAL_SOURCE_SUPPORTED\",\"strength\":\"MODERATE\",\"evidence\":[{\"url\":\"https://www.srca.nm.gov/parts/title14/14.005.0002.html\",\"role\":\"REQUIREMENT_EVIDENCE\"},{\"url\":\"https://www.rld.nm.gov/construction-industries/apply-for-a-permit/\",\"role\":\"INFORMATIONAL_OFFICE\"},{\"url\":\"https://nmrld.my.site.com/MHD/s\",\"role\":\"APPLICATION_START\"}]},\"contradictions\":[]}",
+  "requested_model": "x-ai/grok-4.5",
+  "requested_provider": "openrouter",
+  "requested_runtime": "grok",
+  "response_id": "gen-1785167001-mdSJfrbiXu1iySDQw8UI",
+  "runtime": "OpenRouter chat/completions; upstream_provider=xAI"
+}

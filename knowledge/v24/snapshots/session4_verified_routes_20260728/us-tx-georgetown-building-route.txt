@@ -1,0 +1,6 @@
+PermitAssist independently adjudicated official filing route
+Official source URL: https://georgetowntexas.gov/development_services/permits/commercial_permits/
+Official filing URL: https://mgoconnect.org/cp?JID=48
+Verification boundary: PASS_OFFICIAL_PAGE_WEB_EXTRACT_20260728
+Exact official quote:
+How to Submit a Commercial Building Permit Application

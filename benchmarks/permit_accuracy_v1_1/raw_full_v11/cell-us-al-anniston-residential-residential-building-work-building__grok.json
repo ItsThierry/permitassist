@@ -1,0 +1,78 @@
+{
+  "observed_model": "x-ai/grok-4.5",
+  "observed_provider": "openrouter",
+  "path_proof": {
+    "adapter": "grok",
+    "engine_called": false,
+    "engine_result_supplied_to_model": false,
+    "model_call_count": 1
+  },
+  "provider": "openrouter",
+  "provider_response": {
+    "choices": [
+      {
+        "finish_reason": "stop",
+        "index": 0,
+        "logprobs": null,
+        "message": {
+          "content": "{\"permit_decision\":\"REQUIRED\",\"jurisdiction\":{\"jurisdiction_id\":\"us-al-anniston\",\"name\":\"Anniston\",\"state\":\"AL\",\"type\":\"city_or_local_authority\"},\"project_family\":\"residential_remodel\",\"primary_permit_family\":\"BUILDING\",\"companion_permits\":[{\"family\":\"ELECTRICAL\",\"status\":\"CONDITIONAL\"},{\"family\":\"PLUMBING\",\"status\":\"CONDITIONAL\"},{\"family\":\"MECHANICAL\",\"status\":\"CONDITIONAL\"},{\"family\":\"OTHER\",\"status\":\"CONDITIONAL\"}],\"filing\":{\"authority_id\":\"us-al-anniston\",\"destination_url\":\"https://library.municode.com/al/anniston/codes/code_of_ordinances?nodeId=CO_CH6BU_ARTIIIBUPEFE_S6.3BUPERESCFEEX\",\"office\":\"City of Anniston\",\"url_role\":\"REQUIREMENT_EVIDENCE\"},\"source_support\":{\"state\":\"OFFICIAL_SOURCE_SUPPORTED\",\"strength\":\"STRONG\",\"evidence\":[{\"url\":\"https://library.municode.com/al/anniston/codes/code_of_ordinances?nodeId=CO_CH6BU_ARTIIIBUPEFE_S6.3BUPERESCFEEX\",\"role\":\"REQUIREMENT_EVIDENCE\"}]},\"contradictions\":[]}",
+          "reasoning": "The user wants me to return exactly one JSON object conforming to MODEL_SCHEMA based on the evidence packet. No markdown fences, commentary, etc. Output JSON only.\n{\n  \"permit_decision\": \"REQUIRED\",\n  \"jurisdiction\": {\n    \"jurisdiction_id\": \"us-al-anniston\",\n    \"name\": \"Anniston\",\n    \"state\": \"AL\",\n    \"type\": \"city_or_local_authority\"\n  },\n  \"project_family\": \"residential_rem remodel\",\n  \"primary_permit_family\": \"BUILDING\",\n  \"companion_permits\": [\n    {\n      \"family\": \"ELECTRICAL\",\n      \"status\": \"REQUIRED\"\n    },\n    {\n      \"family\": \"PLUMBING\",\n      \"status\": \"REQUIRED\"\n    },\n    {\n      \"family\": \"MECHANICAL\",\n       \"status\": \"REQUIRED\"\n    }\n  ],\n  \"filing\": {\n    \"authority_id\": \"us-al-anniston\",\n    \"destination_url\": \"https://library.municode.",
+          "reasoning_details": [
+            {
+              "format": "xai-responses-v1",
+              "index": 0,
+              "summary": "The user wants me to return exactly one JSON object conforming to MODEL_SCHEMA based on the evidence packet. No markdown fences, commentary, etc. Output JSON only.\n{\n  \"permit_decision\": \"REQUIRED\",\n  \"jurisdiction\": {\n    \"jurisdiction_id\": \"us-al-anniston\",\n    \"name\": \"Anniston\",\n    \"state\": \"AL\",\n    \"type\": \"city_or_local_authority\"\n  },\n  \"project_family\": \"residential_rem remodel\",\n  \"primary_permit_family\": \"BUILDING\",\n  \"companion_permits\": [\n    {\n      \"family\": \"ELECTRICAL\",\n      \"status\": \"REQUIRED\"\n    },\n    {\n      \"family\": \"PLUMBING\",\n      \"status\": \"REQUIRED\"\n    },\n    {\n      \"family\": \"MECHANICAL\",\n       \"status\": \"REQUIRED\"\n    }\n  ],\n  \"filing\": {\n    \"authority_id\": \"us-al-anniston\",\n    \"destination_url\": \"https://library.municode.",
+              "type": "reasoning.summary"
+            },
+            {
+              "data": "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",
+              "format": "xai-responses-v1",
+              "id": "rs_df308615-bc11-9efa-be65-52925223b3e1",
+              "index": 1,
+              "type": "reasoning.encrypted"
+            }
+          ],
+          "refusal": null,
+          "role": "assistant"
+        },
+        "native_finish_reason": "completed"
+      }
+    ],
+    "created": 1785164149,
+    "id": "gen-1785164149-u7ikJImjeHCWorebIpmq",
+    "model": "x-ai/grok-4.5",
+    "object": "chat.completion",
+    "provider": "xAI",
+    "service_tier": "default",
+    "system_fingerprint": null,
+    "usage": {
+      "completion_tokens": 1369,
+      "completion_tokens_details": {
+        "audio_tokens": 0,
+        "image_tokens": 0,
+        "reasoning_tokens": 1062
+      },
+      "cost": 0.0106684,
+      "cost_details": {
+        "upstream_inference_completions_cost": 0.008214,
+        "upstream_inference_cost": 0.0106684,
+        "upstream_inference_prompt_cost": 0.0024544
+      },
+      "is_byok": false,
+      "prompt_tokens": 1336,
+      "prompt_tokens_details": {
+        "audio_tokens": 0,
+        "cache_write_tokens": 0,
+        "cached_tokens": 128,
+        "video_tokens": 0
+      },
+      "total_tokens": 2705
+    }
+  },
+  "raw_text": "{\"permit_decision\":\"REQUIRED\",\"jurisdiction\":{\"jurisdiction_id\":\"us-al-anniston\",\"name\":\"Anniston\",\"state\":\"AL\",\"type\":\"city_or_local_authority\"},\"project_family\":\"residential_remodel\",\"primary_permit_family\":\"BUILDING\",\"companion_permits\":[{\"family\":\"ELECTRICAL\",\"status\":\"CONDITIONAL\"},{\"family\":\"PLUMBING\",\"status\":\"CONDITIONAL\"},{\"family\":\"MECHANICAL\",\"status\":\"CONDITIONAL\"},{\"family\":\"OTHER\",\"status\":\"CONDITIONAL\"}],\"filing\":{\"authority_id\":\"us-al-anniston\",\"destination_url\":\"https://library.municode.com/al/anniston/codes/code_of_ordinances?nodeId=CO_CH6BU_ARTIIIBUPEFE_S6.3BUPERESCFEEX\",\"office\":\"City of Anniston\",\"url_role\":\"REQUIREMENT_EVIDENCE\"},\"source_support\":{\"state\":\"OFFICIAL_SOURCE_SUPPORTED\",\"strength\":\"STRONG\",\"evidence\":[{\"url\":\"https://library.municode.com/al/anniston/codes/code_of_ordinances?nodeId=CO_CH6BU_ARTIIIBUPEFE_S6.3BUPERESCFEEX\",\"role\":\"REQUIREMENT_EVIDENCE\"}]},\"contradictions\":[]}",
+  "requested_model": "x-ai/grok-4.5",
+  "requested_provider": "openrouter",
+  "requested_runtime": "grok",
+  "response_id": "gen-1785164149-u7ikJImjeHCWorebIpmq",
+  "runtime": "OpenRouter chat/completions; upstream_provider=xAI"
+}

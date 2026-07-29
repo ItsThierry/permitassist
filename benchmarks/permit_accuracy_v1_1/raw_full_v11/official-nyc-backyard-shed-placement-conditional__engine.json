@@ -1,0 +1,131 @@
+{
+  "observed_model": "NONE",
+  "observed_provider": "permitassist-local-engine",
+  "path_proof": {
+    "adapter": "engine",
+    "authority_recovery": null,
+    "decision_cell_reference": null,
+    "engine_called": true,
+    "engine_result_supplied_to_model": false,
+    "engine_stdout": "",
+    "model_call_count": 0
+  },
+  "provider": "permitassist-local-engine",
+  "raw_response": {
+    "apply_google_maps": "",
+    "apply_path": {
+      "channel": "contact_ahj",
+      "documents_to_prepare": [
+        "scope of work",
+        "plans/drawings if required",
+        "contractor license",
+        "valuation",
+        "owner authorization"
+      ],
+      "login_required": null,
+      "office_name": "New York City permit office",
+      "permit_category": "Residential / Trade Permit",
+      "permit_type": "Detached Shed Permit / Zoning Verification",
+      "platform": null,
+      "portal_selection_path": [
+        "No verified online filing path is available from current field evidence; contact the building department or verify the correct portal before filing",
+        "Ask the building department which permit category best matches: Building/Zoning Verification — Detached Shed",
+        "Prepare scope of work, plans/drawings, contractor license info, valuation, and owner authorization before final submission"
+      ],
+      "portal_url": null,
+      "primary_filing_source_tier": "none",
+      "primary_requirement_source_tier": "none",
+      "state": "HONEST_FALLBACK",
+      "steps": [
+        "No verified online filing path is available from current field evidence; contact the building department or verify the correct portal before filing",
+        "Ask the building department which permit category best matches: Building/Zoning Verification — Detached Shed",
+        "Prepare scope of work, plans/drawings, contractor license info, valuation, and owner authorization before final submission",
+        "Stop before final submit, payment, signature, or legal attestation until the building department details are verified"
+      ],
+      "stop_before": "final submit, payment, signature, or legal attestation",
+      "support_level": "not available",
+      "verification_note": "Exact local filing portal is unresolved; permit decision is preserved while filing-path confidence is degraded"
+    },
+    "apply_pdf": null,
+    "apply_phone": "",
+    "apply_url": null,
+    "apply_url_known": false,
+    "applying_office": "New York City permit office",
+    "building_dept_name": "",
+    "building_dept_phone": "",
+    "companion_permits": [],
+    "companion_permits_or_reviews": [],
+    "confidence": "fail_closed",
+    "confidence_reason": "No exact authenticated Decision Cell matched this building department and project family; no binary permit answer was invented.",
+    "customer_headline": "Permit requirement needs verification.",
+    "customer_next_step": "Verify the permit requirement and filing category with New York City permit office before work starts.",
+    "decision_source": "permit_rule_engine_integrity_fail_closed",
+    "degraded_sources": true,
+    "job_summary": "The server-held Decision Cell index does not contain an exact supported building department/project match.",
+    "local_form_known": true,
+    "office_phone": "",
+    "online_application_url": null,
+    "permit_decision": "VERIFY",
+    "permit_kind": "Other",
+    "permit_name": "Permit requirement verification",
+    "permit_required": null,
+    "permit_type": "Permit requirement verification",
+    "permit_verdict": "VERIFY",
+    "permits_required": [],
+    "permits_required_logic": [
+      {
+        "filing_family": "building",
+        "included_because": "shed_accessory_structure",
+        "permit_type": "Planning / Zoning Use Clearance",
+        "scope_trigger": "shed_accessory_structure"
+      }
+    ],
+    "phone": "",
+    "related_permits": [
+      {
+        "decision": "VERIFY",
+        "derived_from": [
+          "shed_threshold_unconfirmed"
+        ],
+        "permit_type": "Zoning / setback verification",
+        "reason": "Verify New York City shed size threshold, zoning setbacks, easements, floodplain/landmark overlays, and utility/HOA constraints before placement.",
+        "required": null
+      }
+    ],
+    "source_confidence": "SCOPE_DEFAULT",
+    "source_support": {
+      "apply_url_known": false,
+      "apply_url_source_confidence": "FILING_PATH_DEGRADED",
+      "confidence_tier": "SCOPE_DEFAULT",
+      "context_source_count": 0,
+      "decision_mutation_allowed": false,
+      "degraded_sources": true,
+      "display_source_count": 0,
+      "exact_form_known": true,
+      "filing_path_state": "HONEST_FALLBACK",
+      "filing_source_count": 0,
+      "has_official_source": false,
+      "has_source_backed_evidence": false,
+      "local_decision_evidence_urls": [],
+      "local_form_known": true,
+      "primary_filing_source_tier": "none",
+      "primary_requirement_source_tier": "none",
+      "requirement_source_count": 0,
+      "source_confidence": "SCOPE_DEFAULT"
+    },
+    "source_urls": [],
+    "sources": [],
+    "summary": "Verify the permit requirement with the issuing authority.",
+    "trade_permits": [],
+    "warnings": [
+      "Some report claims do not yet have quoted source snippets; use the listed building department source before relying on them.",
+      "Exact local source support is degraded; the customer permit decision remains resolved.",
+      "Filing path degraded: exact local online filing portal was not verified; permit decision preserved."
+    ]
+  },
+  "requested_model": "NONE",
+  "requested_provider": "permitassist-local-engine",
+  "requested_runtime": "engine",
+  "response_id": null,
+  "runtime": "api.server Decision Cell + finalize + customer egress"
+}

@@ -1,0 +1,78 @@
+{
+  "observed_model": "x-ai/grok-4.5",
+  "observed_provider": "openrouter",
+  "path_proof": {
+    "adapter": "grok",
+    "engine_called": false,
+    "engine_result_supplied_to_model": false,
+    "model_call_count": 1
+  },
+  "provider": "openrouter",
+  "provider_response": {
+    "choices": [
+      {
+        "finish_reason": "stop",
+        "index": 0,
+        "logprobs": null,
+        "message": {
+          "content": "{\"permit_decision\":\"VERIFY\",\"jurisdiction\":{\"jurisdiction_id\":\"us-wy-albany_county\",\"name\":\"Albany County\",\"state\":\"WY\",\"type\":\"county\"},\"project_family\":\"commercial_tenant_improvement\",\"primary_permit_family\":\"PLANNING_ZONING\",\"companion_permits\":[{\"family\":\"BUILDING\",\"status\":\"VERIFY\"},{\"family\":\"ELECTRICAL\",\"status\":\"VERIFY\"},{\"family\":\"PLUMBING\",\"status\":\"VERIFY\"},{\"family\":\"MECHANICAL\",\"status\":\"VERIFY\"},{\"family\":\"FIRE_LIFE_SAFETY\",\"status\":\"VERIFY\"},{\"family\":\"OCCUPANCY\",\"status\":\"VERIFY\"}],\"filing\":{\"authority_id\":\"us-wy-albany_county\",\"destination_url\":\"https://www.albanycountywy.gov/257/Applications-Forms\",\"office\":\"Albany County Planning\",\"url_role\":\"APPLICATION_START\"},\"source_support\":{\"state\":\"OFFICIAL_SOURCE_SUPPORTED\",\"strength\":\"WEAK\",\"evidence\":[{\"url\":\"https://www.albanycountywy.gov/257/Applications-Forms\",\"role\":\"APPLICATION_START\"},{\"url\":\"https://www.albanycountywy.gov/253/Planning\",\"role\":\"INFORMATIONAL_OFFICE\"}]},\"contradictions\":[]}",
+          "reasoning": "The user wants me to evaluate one permit lookup using ONLY the supplied official-source evidence packet and return exactly one JSON object conforming to MODEL_SCHEMA. No markdown fences, commentary, e...",
+          "reasoning_details": [
+            {
+              "format": "xai-responses-v1",
+              "index": 0,
+              "summary": "The user wants me to evaluate one permit lookup using ONLY the supplied official-source evidence packet and return exactly one JSON object conforming to MODEL_SCHEMA. No markdown fences, commentary, e...",
+              "type": "reasoning.summary"
+            },
+            {
+              "data": "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",
+              "format": "xai-responses-v1",
+              "id": "rs_0046b2be-a769-93f7-b0c6-379703c70d00",
+              "index": 1,
+              "type": "reasoning.encrypted"
+            }
+          ],
+          "refusal": null,
+          "role": "assistant"
+        },
+        "native_finish_reason": "completed"
+      }
+    ],
+    "created": 1785168713,
+    "id": "gen-1785168713-sHWtgZSV1sBaYG0YZATE",
+    "model": "x-ai/grok-4.5",
+    "object": "chat.completion",
+    "provider": "xAI",
+    "service_tier": "default",
+    "system_fingerprint": null,
+    "usage": {
+      "completion_tokens": 955,
+      "completion_tokens_details": {
+        "audio_tokens": 0,
+        "image_tokens": 0,
+        "reasoning_tokens": 664
+      },
+      "cost": 0.0085624,
+      "cost_details": {
+        "upstream_inference_completions_cost": 0.00573,
+        "upstream_inference_cost": 0.0085624,
+        "upstream_inference_prompt_cost": 0.0028324
+      },
+      "is_byok": false,
+      "prompt_tokens": 1525,
+      "prompt_tokens_details": {
+        "audio_tokens": 0,
+        "cache_write_tokens": 0,
+        "cached_tokens": 128,
+        "video_tokens": 0
+      },
+      "total_tokens": 2480
+    }
+  },
+  "raw_text": "{\"permit_decision\":\"VERIFY\",\"jurisdiction\":{\"jurisdiction_id\":\"us-wy-albany_county\",\"name\":\"Albany County\",\"state\":\"WY\",\"type\":\"county\"},\"project_family\":\"commercial_tenant_improvement\",\"primary_permit_family\":\"PLANNING_ZONING\",\"companion_permits\":[{\"family\":\"BUILDING\",\"status\":\"VERIFY\"},{\"family\":\"ELECTRICAL\",\"status\":\"VERIFY\"},{\"family\":\"PLUMBING\",\"status\":\"VERIFY\"},{\"family\":\"MECHANICAL\",\"status\":\"VERIFY\"},{\"family\":\"FIRE_LIFE_SAFETY\",\"status\":\"VERIFY\"},{\"family\":\"OCCUPANCY\",\"status\":\"VERIFY\"}],\"filing\":{\"authority_id\":\"us-wy-albany_county\",\"destination_url\":\"https://www.albanycountywy.gov/257/Applications-Forms\",\"office\":\"Albany County Planning\",\"url_role\":\"APPLICATION_START\"},\"source_support\":{\"state\":\"OFFICIAL_SOURCE_SUPPORTED\",\"strength\":\"WEAK\",\"evidence\":[{\"url\":\"https://www.albanycountywy.gov/257/Applications-Forms\",\"role\":\"APPLICATION_START\"},{\"url\":\"https://www.albanycountywy.gov/253/Planning\",\"role\":\"INFORMATIONAL_OFFICE\"}]},\"contradictions\":[]}",
+  "requested_model": "x-ai/grok-4.5",
+  "requested_provider": "openrouter",
+  "requested_runtime": "grok",
+  "response_id": "gen-1785168713-sHWtgZSV1sBaYG0YZATE",
+  "runtime": "OpenRouter chat/completions; upstream_provider=xAI"
+}

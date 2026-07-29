@@ -1,0 +1,78 @@
+{
+  "observed_model": "x-ai/grok-4.5",
+  "observed_provider": "openrouter",
+  "path_proof": {
+    "adapter": "grok",
+    "engine_called": false,
+    "engine_result_supplied_to_model": false,
+    "model_call_count": 1
+  },
+  "provider": "openrouter",
+  "provider_response": {
+    "choices": [
+      {
+        "finish_reason": "stop",
+        "index": 0,
+        "logprobs": null,
+        "message": {
+          "content": "{\"permit_decision\":\"VERIFY\",\"jurisdiction\":{\"jurisdiction_id\":\"us-wa-asotin_county\",\"name\":\"Asotin County\",\"state\":\"WA\",\"type\":\"county\"},\"project_family\":\"commercial_tenant_improvement\",\"primary_permit_family\":\"VERIFY\",\"companion_permits\":[{\"family\":\"BUILDING\",\"status\":\"VERIFY\"},{\"family\":\"ELECTRICAL\",\"status\":\"VERIFY\"},{\"family\":\"PLUMBING\",\"status\":\"VERIFY\"},{\"family\":\"MECHANICAL\",\"status\":\"VERIFY\"},{\"family\":\"FIRE_LIFE_SAFETY\",\"status\":\"VERIFY\"},{\"family\":\"OCCUPANCY\",\"status\":\"VERIFY\"},{\"family\":\"PLANNING_ZONING\",\"status\":\"VERIFY\"}],\"filing\":{\"authority_id\":null,\"office\":\"VERIFY\",\"destination_url\":null,\"url_role\":\"VERIFY\"},\"source_support\":{\"state\":\"OFFICIAL_SOURCE_UNSUPPORTED\",\"strength\":\"WEAK\",\"evidence\":[{\"url\":\"https://apps.oria.wa.gov/permithandbook/permitdetail/2\",\"role\":\"VERIFY\"}]},\"contradictions\":[\"Official source evidence addresses fruit and vegetable shipping permits, not commercial tenant improvement or building-related permits for Asotin County.\"]}",
+          "reasoning": "The user wants me to evaluate one permit lookup using ONLY the supplied official-source evidence packet and return exactly one JSON object conforming to MODEL_SCHEMA.\n",
+          "reasoning_details": [
+            {
+              "format": "xai-responses-v1",
+              "index": 0,
+              "summary": "The user wants me to evaluate one permit lookup using ONLY the supplied official-source evidence packet and return exactly one JSON object conforming to MODEL_SCHEMA.\n",
+              "type": "reasoning.summary"
+            },
+            {
+              "data": "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",
+              "format": "xai-responses-v1",
+              "id": "rs_2bb7da54-9b48-9482-a516-9c96c69e2ddd",
+              "index": 1,
+              "type": "reasoning.encrypted"
+            }
+          ],
+          "refusal": null,
+          "role": "assistant"
+        },
+        "native_finish_reason": "completed"
+      }
+    ],
+    "created": 1785168466,
+    "id": "gen-1785168466-cWWnrBW6s3GBpDEC2Zew",
+    "model": "x-ai/grok-4.5",
+    "object": "chat.completion",
+    "provider": "xAI",
+    "service_tier": "default",
+    "system_fingerprint": null,
+    "usage": {
+      "completion_tokens": 1463,
+      "completion_tokens_details": {
+        "audio_tokens": 0,
+        "image_tokens": 0,
+        "reasoning_tokens": 1186
+      },
+      "cost": 0.0098372,
+      "cost_details": {
+        "upstream_inference_completions_cost": 0.008778,
+        "upstream_inference_cost": 0.0098372,
+        "upstream_inference_prompt_cost": 0.0010592
+      },
+      "is_byok": false,
+      "prompt_tokens": 1400,
+      "prompt_tokens_details": {
+        "audio_tokens": 0,
+        "cache_write_tokens": 0,
+        "cached_tokens": 1024,
+        "video_tokens": 0
+      },
+      "total_tokens": 2863
+    }
+  },
+  "raw_text": "{\"permit_decision\":\"VERIFY\",\"jurisdiction\":{\"jurisdiction_id\":\"us-wa-asotin_county\",\"name\":\"Asotin County\",\"state\":\"WA\",\"type\":\"county\"},\"project_family\":\"commercial_tenant_improvement\",\"primary_permit_family\":\"VERIFY\",\"companion_permits\":[{\"family\":\"BUILDING\",\"status\":\"VERIFY\"},{\"family\":\"ELECTRICAL\",\"status\":\"VERIFY\"},{\"family\":\"PLUMBING\",\"status\":\"VERIFY\"},{\"family\":\"MECHANICAL\",\"status\":\"VERIFY\"},{\"family\":\"FIRE_LIFE_SAFETY\",\"status\":\"VERIFY\"},{\"family\":\"OCCUPANCY\",\"status\":\"VERIFY\"},{\"family\":\"PLANNING_ZONING\",\"status\":\"VERIFY\"}],\"filing\":{\"authority_id\":null,\"office\":\"VERIFY\",\"destination_url\":null,\"url_role\":\"VERIFY\"},\"source_support\":{\"state\":\"OFFICIAL_SOURCE_UNSUPPORTED\",\"strength\":\"WEAK\",\"evidence\":[{\"url\":\"https://apps.oria.wa.gov/permithandbook/permitdetail/2\",\"role\":\"VERIFY\"}]},\"contradictions\":[\"Official source evidence addresses fruit and vegetable shipping permits, not commercial tenant improvement or building-related permits for Asotin County.\"]}",
+  "requested_model": "x-ai/grok-4.5",
+  "requested_provider": "openrouter",
+  "requested_runtime": "grok",
+  "response_id": "gen-1785168466-cWWnrBW6s3GBpDEC2Zew",
+  "runtime": "OpenRouter chat/completions; upstream_provider=xAI"
+}

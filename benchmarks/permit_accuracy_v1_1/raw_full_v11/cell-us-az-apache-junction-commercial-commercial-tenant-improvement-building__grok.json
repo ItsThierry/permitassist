@@ -1,0 +1,78 @@
+{
+  "observed_model": "x-ai/grok-4.5",
+  "observed_provider": "openrouter",
+  "path_proof": {
+    "adapter": "grok",
+    "engine_called": false,
+    "engine_result_supplied_to_model": false,
+    "model_call_count": 1
+  },
+  "provider": "openrouter",
+  "provider_response": {
+    "choices": [
+      {
+        "finish_reason": "stop",
+        "index": 0,
+        "logprobs": null,
+        "message": {
+          "content": "{\"permit_decision\":\"REQUIRED\",\"jurisdiction\":{\"jurisdiction_id\":\"us-az-apache_junction\",\"name\":\"Apache Junction\",\"state\":\"AZ\",\"type\":\"city_or_local_authority\"},\"project_family\":\"commercial_tenant_improvement\",\"primary_permit_family\":\"BUILDING\",\"companion_permits\":[{\"family\":\"ELECTRICAL\",\"status\":\"VERIFY\"},{\"family\":\"PLUMBING\",\"status\":\"VERIFY\"},{\"family\":\"MECHANICAL\",\"status\":\"VERIFY\"},{\"family\":\"FIRE_LIFE_SAFETY\",\"status\":\"VERIFY\"},{\"family\":\"OCCUPANCY\",\"status\":\"VERIFY\"},{\"family\":\"PLANNING_ZONING\",\"status\":\"VERIFY\"}],\"filing\":{\"authority_id\":\"us-az-apache_junction\",\"destination_url\":\"https://www.apachejunctionaz.gov/302/Applications-Forms-Typical-Details\",\"office\":\"Division of Building Safety and Inspections\",\"url_role\":\"APPLICATION_START\"},\"source_support\":{\"state\":\"OFFICIAL_SOURCE_SUPPORTED\",\"strength\":\"STRONG\",\"evidence\":[{\"url\":\"https://www.apachejunctionaz.gov/302/Applications-Forms-Typical-Details\",\"role\":\"APPLICATION_START\"},{\"url\":\"https://apachejunctionaz.gov/622/Permits\",\"role\":\"INFORMATIONAL_OFFICE\"}]},\"contradictions\":[]}",
+          "reasoning": "The user wants me to evaluate one permit lookup using ONLY the supplied official-source evidence packet and return exactly one JSON object conforming to MODEL_SCHEMA. No Markdown fences, commentary, e...",
+          "reasoning_details": [
+            {
+              "format": "xai-responses-v1",
+              "index": 0,
+              "summary": "The user wants me to evaluate one permit lookup using ONLY the supplied official-source evidence packet and return exactly one JSON object conforming to MODEL_SCHEMA. No Markdown fences, commentary, e...",
+              "type": "reasoning.summary"
+            },
+            {
+              "data": "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",
+              "format": "xai-responses-v1",
+              "id": "rs_9c5d7105-a9fd-99d3-bab6-b7959be25fa8",
+              "index": 1,
+              "type": "reasoning.encrypted"
+            }
+          ],
+          "refusal": null,
+          "role": "assistant"
+        },
+        "native_finish_reason": "completed"
+      }
+    ],
+    "created": 1785164317,
+    "id": "gen-1785164317-y03pcdY49RaWmNVmio04",
+    "model": "x-ai/grok-4.5",
+    "object": "chat.completion",
+    "provider": "xAI",
+    "service_tier": "default",
+    "system_fingerprint": null,
+    "usage": {
+      "completion_tokens": 808,
+      "completion_tokens_details": {
+        "audio_tokens": 0,
+        "image_tokens": 0,
+        "reasoning_tokens": 502
+      },
+      "cost": 0.0072564,
+      "cost_details": {
+        "upstream_inference_completions_cost": 0.004848,
+        "upstream_inference_cost": 0.0072564,
+        "upstream_inference_prompt_cost": 0.0024084
+      },
+      "is_byok": false,
+      "prompt_tokens": 1313,
+      "prompt_tokens_details": {
+        "audio_tokens": 0,
+        "cache_write_tokens": 0,
+        "cached_tokens": 128,
+        "video_tokens": 0
+      },
+      "total_tokens": 2121
+    }
+  },
+  "raw_text": "{\"permit_decision\":\"REQUIRED\",\"jurisdiction\":{\"jurisdiction_id\":\"us-az-apache_junction\",\"name\":\"Apache Junction\",\"state\":\"AZ\",\"type\":\"city_or_local_authority\"},\"project_family\":\"commercial_tenant_improvement\",\"primary_permit_family\":\"BUILDING\",\"companion_permits\":[{\"family\":\"ELECTRICAL\",\"status\":\"VERIFY\"},{\"family\":\"PLUMBING\",\"status\":\"VERIFY\"},{\"family\":\"MECHANICAL\",\"status\":\"VERIFY\"},{\"family\":\"FIRE_LIFE_SAFETY\",\"status\":\"VERIFY\"},{\"family\":\"OCCUPANCY\",\"status\":\"VERIFY\"},{\"family\":\"PLANNING_ZONING\",\"status\":\"VERIFY\"}],\"filing\":{\"authority_id\":\"us-az-apache_junction\",\"destination_url\":\"https://www.apachejunctionaz.gov/302/Applications-Forms-Typical-Details\",\"office\":\"Division of Building Safety and Inspections\",\"url_role\":\"APPLICATION_START\"},\"source_support\":{\"state\":\"OFFICIAL_SOURCE_SUPPORTED\",\"strength\":\"STRONG\",\"evidence\":[{\"url\":\"https://www.apachejunctionaz.gov/302/Applications-Forms-Typical-Details\",\"role\":\"APPLICATION_START\"},{\"url\":\"https://apachejunctionaz.gov/622/Permits\",\"role\":\"INFORMATIONAL_OFFICE\"}]},\"contradictions\":[]}",
+  "requested_model": "x-ai/grok-4.5",
+  "requested_provider": "openrouter",
+  "requested_runtime": "grok",
+  "response_id": "gen-1785164317-y03pcdY49RaWmNVmio04",
+  "runtime": "OpenRouter chat/completions; upstream_provider=xAI"
+}

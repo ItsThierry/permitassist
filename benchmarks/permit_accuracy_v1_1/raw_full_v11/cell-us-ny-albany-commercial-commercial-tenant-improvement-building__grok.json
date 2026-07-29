@@ -1,0 +1,78 @@
+{
+  "observed_model": "x-ai/grok-4.5",
+  "observed_provider": "openrouter",
+  "path_proof": {
+    "adapter": "grok",
+    "engine_called": false,
+    "engine_result_supplied_to_model": false,
+    "model_call_count": 1
+  },
+  "provider": "openrouter",
+  "provider_response": {
+    "choices": [
+      {
+        "finish_reason": "stop",
+        "index": 0,
+        "logprobs": null,
+        "message": {
+          "content": "{\"permit_decision\":\"VERIFY\",\"jurisdiction\":{\"jurisdiction_id\":\"us-ny-albany\",\"name\":\"Albany\",\"state\":\"NY\",\"type\":\"city_or_local_authority\"},\"project_family\":\"commercial_tenant_improvement\",\"primary_permit_family\":\"BUILDING\",\"companion_permits\":[{\"family\":\"ELECTRICAL\",\"status\":\"VERIFY\"},{\"family\":\"PLUMBING\",\"status\":\"VERIFY\"},{\"family\":\"MECHANICAL\",\"status\":\"VERIFY\"},{\"family\":\"FIRE_LIFE_SAFETY\",\"status\":\"VERIFY\"},{\"family\":\"OCCUPANCY\",\"status\":\"VERIFY\"},{\"family\":\"PLANNING_ZONING\",\"status\":\"VERIFY\"}],\"filing\":{\"authority_id\":\"us-ny-albany\",\"office\":\"Albany Citizens Self-Service Portal\",\"destination_url\":\"https://www.albanyny.gov/2156/Citizens-Self-Service-Portal\",\"url_role\":\"INFORMATIONAL_OFFICE\"},\"source_support\":{\"state\":\"OFFICIAL_SOURCE_SUPPORTED\",\"strength\":\"WEAK\",\"evidence\":[{\"url\":\"https://www.albanyny.gov/2156/Citizens-Self-Service-Portal\",\"role\":\"INFORMATIONAL_OFFICE\"}]},\"contradictions\":[]}",
+          "reasoning": "The user wants me to evaluate one permit lookup using ONLY the supplied official-source evidence packet and return exactly one JSON object conforming to MODEL_SCHEMA.\n",
+          "reasoning_details": [
+            {
+              "format": "xai-responses-v1",
+              "index": 0,
+              "summary": "The user wants me to evaluate one permit lookup using ONLY the supplied official-source evidence packet and return exactly one JSON object conforming to MODEL_SCHEMA.\n",
+              "type": "reasoning.summary"
+            },
+            {
+              "data": "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",
+              "format": "xai-responses-v1",
+              "id": "rs_cf6cf708-01d0-9d3e-a3b0-85588b48b50c",
+              "index": 1,
+              "type": "reasoning.encrypted"
+            }
+          ],
+          "refusal": null,
+          "role": "assistant"
+        },
+        "native_finish_reason": "completed"
+      }
+    ],
+    "created": 1785167166,
+    "id": "gen-1785167166-XgOCayrmMzi7fIyTwTJ6",
+    "model": "x-ai/grok-4.5",
+    "object": "chat.completion",
+    "provider": "xAI",
+    "service_tier": "default",
+    "system_fingerprint": null,
+    "usage": {
+      "completion_tokens": 1367,
+      "completion_tokens_details": {
+        "audio_tokens": 0,
+        "image_tokens": 0,
+        "reasoning_tokens": 1081
+      },
+      "cost": 0.0107624,
+      "cost_details": {
+        "upstream_inference_completions_cost": 0.008202,
+        "upstream_inference_cost": 0.0107624,
+        "upstream_inference_prompt_cost": 0.0025604
+      },
+      "is_byok": false,
+      "prompt_tokens": 1389,
+      "prompt_tokens_details": {
+        "audio_tokens": 0,
+        "cache_write_tokens": 0,
+        "cached_tokens": 128,
+        "video_tokens": 0
+      },
+      "total_tokens": 2756
+    }
+  },
+  "raw_text": "{\"permit_decision\":\"VERIFY\",\"jurisdiction\":{\"jurisdiction_id\":\"us-ny-albany\",\"name\":\"Albany\",\"state\":\"NY\",\"type\":\"city_or_local_authority\"},\"project_family\":\"commercial_tenant_improvement\",\"primary_permit_family\":\"BUILDING\",\"companion_permits\":[{\"family\":\"ELECTRICAL\",\"status\":\"VERIFY\"},{\"family\":\"PLUMBING\",\"status\":\"VERIFY\"},{\"family\":\"MECHANICAL\",\"status\":\"VERIFY\"},{\"family\":\"FIRE_LIFE_SAFETY\",\"status\":\"VERIFY\"},{\"family\":\"OCCUPANCY\",\"status\":\"VERIFY\"},{\"family\":\"PLANNING_ZONING\",\"status\":\"VERIFY\"}],\"filing\":{\"authority_id\":\"us-ny-albany\",\"office\":\"Albany Citizens Self-Service Portal\",\"destination_url\":\"https://www.albanyny.gov/2156/Citizens-Self-Service-Portal\",\"url_role\":\"INFORMATIONAL_OFFICE\"},\"source_support\":{\"state\":\"OFFICIAL_SOURCE_SUPPORTED\",\"strength\":\"WEAK\",\"evidence\":[{\"url\":\"https://www.albanyny.gov/2156/Citizens-Self-Service-Portal\",\"role\":\"INFORMATIONAL_OFFICE\"}]},\"contradictions\":[]}",
+  "requested_model": "x-ai/grok-4.5",
+  "requested_provider": "openrouter",
+  "requested_runtime": "grok",
+  "response_id": "gen-1785167166-XgOCayrmMzi7fIyTwTJ6",
+  "runtime": "OpenRouter chat/completions; upstream_provider=xAI"
+}

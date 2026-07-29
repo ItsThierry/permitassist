@@ -1,0 +1,47 @@
+{
+  "schema": "permit_accuracy_session1_opening_baseline_v1",
+  "captured_before_session1_writes": true,
+  "branch": "fix/authority-timeout-successor-v11",
+  "head": "8b0eb9bbfc51186a603d69295d482a6ab78fb8ea",
+  "tracked_worktree_diff_sha256": "5444d376d6ecfa51ec1f20357efa04e2178873a313dbbd49b7ed77a90d390662",
+  "staged_diff_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "status_porcelain_v1_z_sha256": "f2c2b59746ee4418b38ef51902e1c6119058015f65d009bf5f9b2a8375a50542",
+  "status_entry_count": 1189,
+  "untracked_count": 1180,
+  "untracked_top_level_counts": {"benchmarks": 1180},
+  "modified_tracked_paths": [
+    "api/decision_resolver.py",
+    "api/permit_decision.py",
+    "api/research_engine.py",
+    "api/scope_contract.py",
+    "api/server.py",
+    "api/v231_decision_cells.py",
+    "api/v24_decision_cells.py",
+    "tests/test_permit_decision_contract.py",
+    "tests/test_v24_runtime_package.py"
+  ],
+  "protected_path_sha256": {
+    "api/decision_resolver.py": "154d8fc8799fd26b29cf5d83fcbbaa5b372168a9bfc7940852740a7ecdb9402f",
+    "api/permit_decision.py": "5201cbc42293a58d48d9711135590e4fc92c06d4f6f979a2b1ac3fb2cc7d53bb",
+    "api/research_engine.py": "2942a1a56b848053ca3c03ee259a7a5e6f5993ff260d050a00640383477c567f",
+    "api/scope_contract.py": "dc34e73714a3207df2d180d50c89c2fbe272c742aebd1b16b5de01abe828f237",
+    "api/server.py": "38e46a451e2d93e5f8397c90254fed85f7c6c5f31aa2368fd6f824c91d342fa6",
+    "api/v231_decision_cells.py": "0013487bd97ec38bf4abddacac6a0cc46cc7fa76f3ed304427c58233d0eab41d",
+    "api/v24_decision_cells.py": "a81e81853a34886a2a77986a1b07ccba4483f280d1418dea42cbea207011b9c4",
+    "tests/test_permit_decision_contract.py": "8ef1792ae4591ed0d9c83a76364f3c0188060a2d08ba1e0d343f4830352b6119",
+    "tests/test_v24_runtime_package.py": "38aab6282913d6700f32c996631a32660dab5aa0b66f3528f7031636a125dbab"
+  },
+  "authoritative_input_sha256": {
+    "benchmarks/permit_accuracy_v1_1/PERMIT_ACCURACY_FINAL_BOUNDED_PLAN.md": "c799b18e51c108a40a12320fa6eb8d94e9f07de4843c60a176767eac64856029",
+    "benchmarks/permit_accuracy_v1_1/FABLE5_BENCHMARK_AND_FIX_PLAN_CONSULT.md": "e733aa4a4e16c03c39ba2fd7dfb9adcb5286c25fcb4d2cdfb697cb40af822155",
+    "benchmarks/permit_accuracy_v1_1/DIAGNOSTIC_FULL_V11_CLOSEOUT.md": "ade7dbc9dbacd0fe1de94f4ef0200213f7ce2e3e3498d434e914f8301b3961bb",
+    "benchmarks/permit_accuracy_v1_1/diagnostic_full_v11_summary.json": "e99df86792095d9caed48f623158e040b4380eb37ccdfbcef47102379cc4cc73",
+    "benchmarks/permit_accuracy_v1_1/scoreboard_full_v11.csv": "53e5495845a3bf896d4b37f8bfa0dd8521bf8f06479b6eb3e8f47cad8ee699d4"
+  },
+  "active_benchmark_test_codex_claude_processes": 0,
+  "notes": [
+    "The status digest and counts were captured before this v1.2 directory was created.",
+    "The 1180 pre-existing untracked files were all under benchmarks/.",
+    "This artifact itself is an approved Session 1 benchmark artifact and is not part of the opening status digest."
+  ]
+}

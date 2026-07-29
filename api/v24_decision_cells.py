@@ -699,6 +699,17 @@ def _normalize_ahj_key(value: str) -> str:
 
 
 def _classify_project_candidates(job_type: str, job_category: str = "") -> list[str]:
+    def has(text: str, *phrases: str) -> bool:
+        text_tokens = tuple(re.findall(r"[a-z0-9]+", text.lower()))
+        for phrase in phrases:
+            phrase_tokens = tuple(re.findall(r"[a-z0-9]+", phrase.lower()))
+            if phrase_tokens and len(phrase_tokens) <= len(text_tokens) and any(
+                text_tokens[index : index + len(phrase_tokens)] == phrase_tokens
+                for index in range(len(text_tokens) - len(phrase_tokens) + 1)
+            ):
+                return True
+        return False
+
     try:
         from .v231_decision_cells import classify_project_candidates
     except Exception:
@@ -709,7 +720,7 @@ def _classify_project_candidates(job_type: str, job_category: str = "") -> list[
     if classify_project_candidates:
         candidates = list(classify_project_candidates(job_type, job_category))
         text = _normalize_text(f"{job_type} {job_category}")
-        if "roof" in text and "residential_remodel" not in candidates and ("residential" in text or "home" in text):
+        if has(text, "roof", "roofing", "reroof") and "residential_remodel" not in candidates and has(text, "residential", "home"):
             # Many v24 W3 residential cells cover roofing inside the broader
             # residential_remodel family. Try exact reroof first, then the
             # source-backed broader residential family instead of dropping to a
@@ -717,11 +728,11 @@ def _classify_project_candidates(job_type: str, job_category: str = "") -> list[
             candidates.append("residential_remodel")
         return candidates
     text = _normalize_text(f"{job_type} {job_category}")
-    if "roof" in text:
+    if has(text, "roof", "roofing", "reroof"):
         return ["reroof"]
-    if "residential" in text or "home" in text or "kitchen" in text or "bath" in text:
+    if has(text, "residential", "home", "kitchen", "bath", "bathroom"):
         return ["residential_remodel"]
-    if any(t in text for t in ("tenant improvement", " ti ", "buildout", "build out", "commercial")):
+    if has(text, "tenant improvement", "ti", "buildout", "build out", "commercial"):
         return ["commercial_tenant_improvement"]
     return []
 
@@ -851,6 +862,31 @@ def _v24_ahj_has_any_project(index: dict[str, dict[str, Any]], state_key: str, a
     return any(key.startswith(f"{state_key}|{ahj_key}|") for key in index)
 
 
+def _resolve_authenticated_ahj_key(
+    index: dict[str, dict[str, Any]],
+    state_key: str,
+    requested_ahj_key: str,
+    projects: tuple[str, ...],
+) -> str:
+    """Resolve an exact server-held AHJ display name to its canonical index key.
+
+    Callers sometimes hold the official department name rather than the shorter
+    municipality label used in the index key.  Only an exact normalized match
+    against the authenticated cell AHJ is accepted; no fuzzy or cross-state
+    neighbor selection is allowed.
+    """
+    if any(f"{state_key}|{requested_ahj_key}|{project}" in index for project in projects):
+        return requested_ahj_key
+    matches: set[str] = set()
+    for key, cell in index.items():
+        parts = key.split("|", 2)
+        if len(parts) != 3 or parts[0] != state_key or parts[2] not in projects:
+            continue
+        if _normalize_ahj_key(str(cell.get("ahj") or "")) == requested_ahj_key:
+            matches.add(parts[1])
+    return next(iter(matches)) if len(matches) == 1 else requested_ahj_key
+
+
 def resolve_v24_cell(city: str, state: str, job_type: str, job_category: str = "", *, index_path: str | Path | None = None, force: bool = False) -> V24Resolution:
     if get_v24_mode() == "off" and not force:
         return V24Resolution(V24ResolutionStatus.INDEX_UNAVAILABLE, reason="v24 mode off")
@@ -865,6 +901,7 @@ def resolve_v24_cell(city: str, state: str, job_type: str, job_category: str = "
     if not candidates:
         status = V24ResolutionStatus.AMBIGUOUS_ABSTAIN if _v24_ahj_has_any_project(index, state_key, ahj_key) else V24ResolutionStatus.AHJ_NOT_COVERED
         return V24Resolution(status, project_candidates=(), reason="project family ambiguous or unsupported")
+    ahj_key = _resolve_authenticated_ahj_key(index, state_key, ahj_key, candidates)
     for project in candidates:
         key = f"{state_key}|{ahj_key}|{project}"
         cell = index.get(key)

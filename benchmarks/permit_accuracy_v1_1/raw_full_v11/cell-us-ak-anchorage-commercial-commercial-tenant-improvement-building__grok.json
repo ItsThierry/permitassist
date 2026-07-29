@@ -1,0 +1,78 @@
+{
+  "observed_model": "x-ai/grok-4.5",
+  "observed_provider": "openrouter",
+  "path_proof": {
+    "adapter": "grok",
+    "engine_called": false,
+    "engine_result_supplied_to_model": false,
+    "model_call_count": 1
+  },
+  "provider": "openrouter",
+  "provider_response": {
+    "choices": [
+      {
+        "finish_reason": "stop",
+        "index": 0,
+        "logprobs": null,
+        "message": {
+          "content": "{\"permit_decision\":\"REQUIRED\",\"jurisdiction\":{\"jurisdiction_id\":\"us-ak-anchorage\",\"name\":\"Anchorage\",\"state\":\"AK\",\"type\":\"city_or_local_authority\"},\"project_family\":\"commercial_tenant_improvement\",\"primary_permit_family\":\"BUILDING\",\"companion_permits\":[{\"family\":\"ELECTRICAL\",\"status\":\"REQUIRED\"},{\"family\":\"PLUMBING\",\"status\":\"REQUIRED\"},{\"family\":\"MECHANICAL\",\"status\":\"REQUIRED\"},{\"family\":\"GAS\",\"status\":\"REQUIRED\"},{\"family\":\"FIRE_LIFE_SAFETY\",\"status\":\"VERIFY\"},{\"family\":\"OCCUPANCY\",\"status\":\"VERIFY\"},{\"family\":\"PLANNING_ZONING\",\"status\":\"VERIFY\"}],\"filing\":{\"authority_id\":\"us-ak-anchorage\",\"office\":\"Municipality of Anchorage Permit Counter\",\"destination_url\":\"https://www.muni.org/Departments/OCPD/development-services/permits-inspections/Pages/Commercial-Building.aspx\",\"url_role\":\"REQUIREMENT_EVIDENCE\"},\"source_support\":{\"state\":\"OFFICIAL_SOURCE_SUPPORTED\",\"strength\":\"STRONG\",\"evidence\":[{\"url\":\"https://www.muni.org/Departments/OCPD/development-services/permits-inspections/Pages/Commercial-Building.aspx\",\"role\":\"REQUIREMENT_EVIDENCE\"}]},\"contradictions\":[]}",
+          "reasoning": "The user wants me to evaluate one permit lookup using ONLY the supplied official-source evidence packet and return exactly one JSON object conforming to MODEL_SCHEMA. No markdown fences, commentary, e...{\n  \"companion_permits\": [\n    {\n      \"family\": \"ELECTRICAL\",\n      \"status\": \"REQUIRED\"\n    },\n    {\n      \"family\": \"GAS\",\n      \"status\": \"REQUIRED\"\n    },\n    {\n      \"family\": \"MECHANICAL\",\n      \"status\": \"REQUIRED \"\n    },\n    {\n      \"family\": \"PLUMBING\",\n      \"status\": \"REQUIRED\"\n    },\n    {\n      \"family\": \"FIRE_LIFE_SAFETY\",\n      \"status\": \"REQUIRED\"\n    },\n    {\n      \"family\": \"OCCUPANCY\",\n      \"status\": \"REQUIRED \"\n    },\n    {\n      \"family\": \"PLANNING_ZONING\",\n      \"status\": \"REQUIRED\"\n    }\n  ],\n  \"contradictions\": [],\n  \"filing\": {\n    \"authority_id\": \"us-ak-anchorage\",\n    \"destination_url\": \"https://www.muni.",
+          "reasoning_details": [
+            {
+              "format": "xai-responses-v1",
+              "index": 0,
+              "summary": "The user wants me to evaluate one permit lookup using ONLY the supplied official-source evidence packet and return exactly one JSON object conforming to MODEL_SCHEMA. No markdown fences, commentary, e...{\n  \"companion_permits\": [\n    {\n      \"family\": \"ELECTRICAL\",\n      \"status\": \"REQUIRED\"\n    },\n    {\n      \"family\": \"GAS\",\n      \"status\": \"REQUIRED\"\n    },\n    {\n      \"family\": \"MECHANICAL\",\n      \"status\": \"REQUIRED \"\n    },\n    {\n      \"family\": \"PLUMBING\",\n      \"status\": \"REQUIRED\"\n    },\n    {\n      \"family\": \"FIRE_LIFE_SAFETY\",\n      \"status\": \"REQUIRED\"\n    },\n    {\n      \"family\": \"OCCUPANCY\",\n      \"status\": \"REQUIRED \"\n    },\n    {\n      \"family\": \"PLANNING_ZONING\",\n      \"status\": \"REQUIRED\"\n    }\n  ],\n  \"contradictions\": [],\n  \"filing\": {\n    \"authority_id\": \"us-ak-anchorage\",\n    \"destination_url\": \"https://www.muni.",
+              "type": "reasoning.summary"
+            },
+            {
+              "data": "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",
+              "format": "xai-responses-v1",
+              "id": "rs_d8291265-947f-9715-988c-e24a403461f0",
+              "index": 1,
+              "type": "reasoning.encrypted"
+            }
+          ],
+          "refusal": null,
+          "role": "assistant"
+        },
+        "native_finish_reason": "completed"
+      }
+    ],
+    "created": 1785163920,
+    "id": "gen-1785163920-z3tNpnCc9aw8EZguo9sq",
+    "model": "x-ai/grok-4.5",
+    "object": "chat.completion",
+    "provider": "xAI",
+    "service_tier": "default",
+    "system_fingerprint": null,
+    "usage": {
+      "completion_tokens": 1401,
+      "completion_tokens_details": {
+        "audio_tokens": 0,
+        "image_tokens": 0,
+        "reasoning_tokens": 1081
+      },
+      "cost": 0.0110484,
+      "cost_details": {
+        "upstream_inference_completions_cost": 0.008406,
+        "upstream_inference_cost": 0.0110484,
+        "upstream_inference_prompt_cost": 0.0026424
+      },
+      "is_byok": false,
+      "prompt_tokens": 1430,
+      "prompt_tokens_details": {
+        "audio_tokens": 0,
+        "cache_write_tokens": 0,
+        "cached_tokens": 128,
+        "video_tokens": 0
+      },
+      "total_tokens": 2831
+    }
+  },
+  "raw_text": "{\"permit_decision\":\"REQUIRED\",\"jurisdiction\":{\"jurisdiction_id\":\"us-ak-anchorage\",\"name\":\"Anchorage\",\"state\":\"AK\",\"type\":\"city_or_local_authority\"},\"project_family\":\"commercial_tenant_improvement\",\"primary_permit_family\":\"BUILDING\",\"companion_permits\":[{\"family\":\"ELECTRICAL\",\"status\":\"REQUIRED\"},{\"family\":\"PLUMBING\",\"status\":\"REQUIRED\"},{\"family\":\"MECHANICAL\",\"status\":\"REQUIRED\"},{\"family\":\"GAS\",\"status\":\"REQUIRED\"},{\"family\":\"FIRE_LIFE_SAFETY\",\"status\":\"VERIFY\"},{\"family\":\"OCCUPANCY\",\"status\":\"VERIFY\"},{\"family\":\"PLANNING_ZONING\",\"status\":\"VERIFY\"}],\"filing\":{\"authority_id\":\"us-ak-anchorage\",\"office\":\"Municipality of Anchorage Permit Counter\",\"destination_url\":\"https://www.muni.org/Departments/OCPD/development-services/permits-inspections/Pages/Commercial-Building.aspx\",\"url_role\":\"REQUIREMENT_EVIDENCE\"},\"source_support\":{\"state\":\"OFFICIAL_SOURCE_SUPPORTED\",\"strength\":\"STRONG\",\"evidence\":[{\"url\":\"https://www.muni.org/Departments/OCPD/development-services/permits-inspections/Pages/Commercial-Building.aspx\",\"role\":\"REQUIREMENT_EVIDENCE\"}]},\"contradictions\":[]}",
+  "requested_model": "x-ai/grok-4.5",
+  "requested_provider": "openrouter",
+  "requested_runtime": "grok",
+  "response_id": "gen-1785163920-z3tNpnCc9aw8EZguo9sq",
+  "runtime": "OpenRouter chat/completions; upstream_provider=xAI"
+}

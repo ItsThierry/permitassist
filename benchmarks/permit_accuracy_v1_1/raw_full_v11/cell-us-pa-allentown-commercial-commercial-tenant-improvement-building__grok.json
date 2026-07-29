@@ -1,0 +1,78 @@
+{
+  "observed_model": "x-ai/grok-4.5",
+  "observed_provider": "openrouter",
+  "path_proof": {
+    "adapter": "grok",
+    "engine_called": false,
+    "engine_result_supplied_to_model": false,
+    "model_call_count": 1
+  },
+  "provider": "openrouter",
+  "provider_response": {
+    "choices": [
+      {
+        "finish_reason": "stop",
+        "index": 0,
+        "logprobs": null,
+        "message": {
+          "content": "{\"permit_decision\":\"REQUIRED\",\"jurisdiction\":{\"jurisdiction_id\":\"us-pa-allentown\",\"name\":\"Allentown\",\"state\":\"PA\",\"type\":\"city_or_local_authority\"},\"project_family\":\"commercial_tenant_improvement\",\"primary_permit_family\":\"BUILDING\",\"companion_permits\":[{\"family\":\"ELECTRICAL\",\"status\":\"VERIFY\"},{\"family\":\"PLUMBING\",\"status\":\"VERIFY\"},{\"family\":\"MECHANICAL\",\"status\":\"VERIFY\"},{\"family\":\"FIRE_LIFE_SAFETY\",\"status\":\"VERIFY\"},{\"family\":\"OCCUPANCY\",\"status\":\"VERIFY\"},{\"family\":\"PLANNING_ZONING\",\"status\":\"VERIFY\"}],\"filing\":{\"authority_id\":\"us-pa-allentown\",\"destination_url\":\"https://www.allentownpa.gov/en-us/Government/Departments/Community-Economic-Development/Building-Standards-and-Safety\",\"office\":\"Building Standards and Safety\",\"url_role\":\"REQUIREMENT_EVIDENCE\"},\"source_support\":{\"state\":\"OFFICIAL_SOURCE_SUPPORTED\",\"strength\":\"WEAK\",\"evidence\":[{\"url\":\"https://www.allentownpa.gov/en-us/Government/Departments/Community-Economic-Development/Building-Standards-and-Safety\",\"role\":\"REQUIREMENT_EVIDENCE\"}]},\"contradictions\":[]}",
+          "reasoning": "The user wants me to return exactly one JSON object conforming to MODEL_SCHEMA based on the evidence packet. No markdown fences, commentary, etc. Output JSON only.\n",
+          "reasoning_details": [
+            {
+              "format": "xai-responses-v1",
+              "index": 0,
+              "summary": "The user wants me to return exactly one JSON object conforming to MODEL_SCHEMA based on the evidence packet. No markdown fences, commentary, etc. Output JSON only.\n",
+              "type": "reasoning.summary"
+            },
+            {
+              "data": "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",
+              "format": "xai-responses-v1",
+              "id": "rs_291935d3-5710-9686-8ba3-ad9bbae775a3",
+              "index": 1,
+              "type": "reasoning.encrypted"
+            }
+          ],
+          "refusal": null,
+          "role": "assistant"
+        },
+        "native_finish_reason": "completed"
+      }
+    ],
+    "created": 1785167538,
+    "id": "gen-1785167538-LFr5UgxkjBmisY63GlVN",
+    "model": "x-ai/grok-4.5",
+    "object": "chat.completion",
+    "provider": "xAI",
+    "service_tier": "default",
+    "system_fingerprint": null,
+    "usage": {
+      "completion_tokens": 717,
+      "completion_tokens_details": {
+        "audio_tokens": 0,
+        "image_tokens": 0,
+        "reasoning_tokens": 407
+      },
+      "cost": 0.0066704,
+      "cost_details": {
+        "upstream_inference_completions_cost": 0.004302,
+        "upstream_inference_cost": 0.0066704,
+        "upstream_inference_prompt_cost": 0.0023684
+      },
+      "is_byok": false,
+      "prompt_tokens": 1293,
+      "prompt_tokens_details": {
+        "audio_tokens": 0,
+        "cache_write_tokens": 0,
+        "cached_tokens": 128,
+        "video_tokens": 0
+      },
+      "total_tokens": 2010
+    }
+  },
+  "raw_text": "{\"permit_decision\":\"REQUIRED\",\"jurisdiction\":{\"jurisdiction_id\":\"us-pa-allentown\",\"name\":\"Allentown\",\"state\":\"PA\",\"type\":\"city_or_local_authority\"},\"project_family\":\"commercial_tenant_improvement\",\"primary_permit_family\":\"BUILDING\",\"companion_permits\":[{\"family\":\"ELECTRICAL\",\"status\":\"VERIFY\"},{\"family\":\"PLUMBING\",\"status\":\"VERIFY\"},{\"family\":\"MECHANICAL\",\"status\":\"VERIFY\"},{\"family\":\"FIRE_LIFE_SAFETY\",\"status\":\"VERIFY\"},{\"family\":\"OCCUPANCY\",\"status\":\"VERIFY\"},{\"family\":\"PLANNING_ZONING\",\"status\":\"VERIFY\"}],\"filing\":{\"authority_id\":\"us-pa-allentown\",\"destination_url\":\"https://www.allentownpa.gov/en-us/Government/Departments/Community-Economic-Development/Building-Standards-and-Safety\",\"office\":\"Building Standards and Safety\",\"url_role\":\"REQUIREMENT_EVIDENCE\"},\"source_support\":{\"state\":\"OFFICIAL_SOURCE_SUPPORTED\",\"strength\":\"WEAK\",\"evidence\":[{\"url\":\"https://www.allentownpa.gov/en-us/Government/Departments/Community-Economic-Development/Building-Standards-and-Safety\",\"role\":\"REQUIREMENT_EVIDENCE\"}]},\"contradictions\":[]}",
+  "requested_model": "x-ai/grok-4.5",
+  "requested_provider": "openrouter",
+  "requested_runtime": "grok",
+  "response_id": "gen-1785167538-LFr5UgxkjBmisY63GlVN",
+  "runtime": "OpenRouter chat/completions; upstream_provider=xAI"
+}

@@ -1,0 +1,78 @@
+{
+  "observed_model": "x-ai/grok-4.5",
+  "observed_provider": "openrouter",
+  "path_proof": {
+    "adapter": "grok",
+    "engine_called": false,
+    "engine_result_supplied_to_model": false,
+    "model_call_count": 1
+  },
+  "provider": "openrouter",
+  "provider_response": {
+    "choices": [
+      {
+        "finish_reason": "stop",
+        "index": 0,
+        "logprobs": null,
+        "message": {
+          "content": "{\"permit_decision\":\"REQUIRED\",\"jurisdiction\":{\"jurisdiction_id\":\"us-or-benton_county\",\"name\":\"Benton County\",\"state\":\"OR\",\"type\":\"county\"},\"project_family\":\"residential_remodel\",\"primary_permit_family\":\"BUILDING\",\"companion_permits\":[{\"family\":\"ELECTRICAL\",\"status\":\"CONDITIONAL\"},{\"family\":\"PLUMBING\",\"status\":\"CONDITIONAL\"},{\"family\":\"MECHANICAL\",\"status\":\"CONDITIONAL\"}],\"filing\":{\"authority_id\":\"us-or-benton_county\",\"destination_url\":\"https://www.oregon.gov/bcd/lbdd/pages/index.aspx\",\"office\":\"Benton County Building Permits\",\"url_role\":\"APPLICATION_START\"},\"source_support\":{\"state\":\"OFFICIAL_SOURCE_SUPPORTED\",\"strength\":\"MODERATE\",\"evidence\":[{\"url\":\"https://www.oregon.gov/bcd/lbdd/pages/index.aspx\",\"role\":\"APPLICATION_START\"}]},\"contradictions\":[]}",
+          "reasoning": "The user wants me to evaluate one permit lookup using ONLY the supplied official-source evidence packet and return exactly one JSON object conforming to MODEL_SCHEMA. No markdown fences, commentary, e...",
+          "reasoning_details": [
+            {
+              "format": "xai-responses-v1",
+              "index": 0,
+              "summary": "The user wants me to evaluate one permit lookup using ONLY the supplied official-source evidence packet and return exactly one JSON object conforming to MODEL_SCHEMA. No markdown fences, commentary, e...",
+              "type": "reasoning.summary"
+            },
+            {
+              "data": "CfwoC6WLm4Iiah/GwjM5vaWrZnDl2faJdlBczSrUP+Gynshgl4KYmNwiTuXNr6F0kBgXqEvfRHf0OSZxURCJNFOJsNutYXf1E6n1mPVUmF/E6uRstWCarpZKeTOL0/8vQfdQ7FVpd8QJHH3SPzUkVytEjnttTUgh3BzBaY3MWKMXL3pF4ONHcrGwzG/HiFEtda8U/6wO8ZK+ynXTj/kmbLa+jTeOimfKo4OTKz2SDdWyhk8Y/gRW67zarx2j8dAEszEB/JvMJMjjcaL5ZmCI0DuGCqpGBMVq31qbf1VfxfuyDl59WucBrl4uB6qikbFllRKPfR/cfdyXYNO6uDP5wGnnnneQfpxCk59CVkc5sQ9oJPsQjMjUHDNl06ZHTXR4pkzjMA0nN+jdxu5h+xOzvfOE0VEWYtE7rRgCPN6IrwaDavlVt6bjMySgKvpXj5pAlUU9B+1RLNJBQIhu9PkVngIUcwpXSAljDJjVQcPH7A2D90Ax8Mg7UgNd9YOrewqu5yjIJqSUG0N6IGj3Y9QZoXUpcj/b06oW5jRCzHDQfEJyPl19rS5xgl5w2yQAqVaDYQYCEk7Jks5ZPGwPok4iAyLVAsRLfV7+WQ2Dno2yjbZqkYECWPOD7Srv3fPUgHUvFl93/uhdi5gryRQeBBxo9aKVctqclw9obbETyFDNfubx3+r5HpsPuT4XlLwCpIsN7tUz1i6ZtOea/Aedlh3xTAPm45GVSdjHjwXVFiu2Nqr+K0Bwe035HfSCaiyxbIjTd2YbQWo4qoxgXMHRnHO+nJDDKLPRUJk4UO2Rz56JsK2Amy3re+PU7eJOlUEfFhYC2vxknhCNOtqgpkD5azncGicQMFhlpoXjPqMyusA0k8xB8iPbKRVaYJBEhGPdW+LGHLWR9leSA9w/9IEmk2ngscbJEk0+lxYGmpj7ankFaTNiVcRtD/U75dsQKbphzBRYd1O2oHHTux8auZ4PyYEhcJ9uZWf9dAwVwybKOiSZ4YxIRE53ByQE+SjJnihEmayaP8t4Vln07+W7SGuM5c10vW5asa338iQ9V5t01td3U70PZTd0sSusgkRxcpFUKM0ZRNKz8DGKzaOswJS/zD7HITf4w+OShtmhv0n6ruWxueWn/nfPQfDgzqvWhiPdvPo7SBO33sVvvJNA4rlKACsa44FK+6bih6ukmveyRA5ILFnusq+dW68XX2yUG0/miZCmoD4pKdqeecACgfMTMAbkQrETyF2UEhl/lzq3bAAAqV5Wl+25wjeu2dfqWlRsy7GfYUpHaiKKLuF2tONKRf+blnuHkVhENYaxcBZLZnELYL4eubkhyajm2ccMvQATqHbnyVCBF31eURMnlrzB5Ur9F+ewlINCpcUEewzZ9L4+mRe4qdquJHgVVS9KZ3BixcWZmvfSBqQXSkKotABP9JroVONQScHhEtUpD5MR9RS79VSIy6DTQcedq5P/tZ7SQ2Obf/MCP451ErswJEimmVcrJlZE6MxocEi6MNyVi5WeBuTxXQPpeXFVkEiil1A06ZyEuOuWj60i4LzbYFK+WzFsjs2kqLmM5EwCzKAcMjkYLZlP1l6klhqfbe3UkgyrpzCP6PizbhSviAgn69nYAyCw2P+EK0ENCw1kSD5wLP1k51sR8mECO3sLGOcjnM+y78/a71cV3/H5+NSdY1+mYpMs/jAn4wodktPasSGzooed3yKdUumdhzCFVkSBlFrWxsJnRbfxQiiaPtYqB75gOQ4m7Unf1VFRzhhm/tpJw2zCnKDTLQJKE+tgko+vUKJXruHtyWkjPGkUHQzH4kEDG4VcIu//5cZE8VlxhJ1+ZzhCTClYoMV2UjSCocbKqF09RTvIMTmZMtq4KJ552Us1Hi26zraMMkcQgTFAHRKBRN2B+AtVAg4QU2mPHM2FoFGLX4VdznqceW+CXS3kchkPeu0BNWdrP4v4VqY6K1b/Y2l//0SvkIPh4UBNnDcN6HNZ3aiUJ5VR/YVSP+rWcfIitfB6A0mgqnBmhNti9ozKgsgjnRZhLDGe2WcwT8CVyCVt2EfefbqbJVw1k6sr5OEvQ7LBuSiTplfZNu1GGDAW87Cq43m/kvCh8rdIgLNrMktuRkEerorNEpGaDcULk2U7+G5MnS7RkHsIbbm7WxGlmN0FL1+/kOge37iJdnk1EnOSfslRJd4OAZVmEKOW07obiTPcJn8vzs2vBjQBV0VoyJ5f+1LYG/zMkm65fYTW2h9EEFUe8khFlJnYkCw0Dk434B9vs9egLcfJjWNk2yXOYB5a7AU1awG88eFaTR+7vkvq/4+B8VYNJ75iKdVIyGVSCJ6RaLfHjiYE7xZY9DedmqyDkicAc49WQW9Ra58Xg1Te32SGJnh73gutop5UbU1tG6Nv88Ucscx1sqeExFoj+tEadIpTBt3lYyl4+fkl7swoOXwWUpHu8s4NmsfaUPm3bV4ei4ISBNyUVAxk1CAaH8gHhuv1HNLkrLEC+HjKqXGMNYij5os87UayIVk4QTocfeJOm7Y8LomdXcoGNqJsWL18tlwPibDVE21HCN8sbmip39T9YoBiLsgZ4BTTCuP7g4WrFVz6NBfeWsjZNrW2yoWv3BB5TPzXjUCIyWCPYpeNjw5NtdTndBzLX9WhDDC3l0UzaohOklhBO4zRGIg3CEjk3e+ixeERt1iBWl3b+ii5Qr7dv26kwLYceU1vf2dwczMHx9C6mL1O/Gh9LGAjrXqH/ndW0PXoR8/Ay0nZvpBOJjL1CGAmjn93uvFoBHviRohvtH5r5kNP+Ny5tHHnl15p5+iUWKXphe0eQtssme5m2O4GYTaWj0gQdHDR/8APb56IaTnFOpLOLKzUqwaXNhsJZUmlKd8OUwpjZStrpTRzFZtvXzFfp/PDPNPhyaiQi1/obaq9ZlwPvhtR4O4gU7sCnMZlTAwWdJdjujlggliNqk8P3SsA/XyGa/guHsUuZZ6LUJnQl7O7oWmuGbtoQg/iiZXImjf6YRCATByL/Dsqh3aUUqA0HutIiqHTpqxgd9ELKVWsAHCDz6CCWwoD3d4qLXqG3hnUwYL7VXKzsNFPBfyeQyXw4wS0HSp2qmei5JglbUUtezIlYe8IRmjAvAoNb/KjKEXMnEVPwgixqrlWQq2A+eX2shUdES5KK/U+f8cHaE0wVtPTeV80RUmHyiI+/Lrhn0ildKji2impwMpxdfqa1YGhMyntWAzoFmmoLmwahJ+DRhuVgJf8yCL1QE57aJ8WoCTwcGAWKxV5cuusREEKbuDgSVxqlFxYKjGGGGWomIvySH+/8mqZUmxG64DOqj9tsihMiQW+Mrt+vddouVXsmAH8rTgaIA6bzLyq2+srqVTnrHE2StDpXAioxs6D6sTTHX1QBw4Y67ydEWVxXZNxJNKxD/jQBKGsxrA",
+              "format": "xai-responses-v1",
+              "id": "rs_3def52a5-ea1c-9bdc-a208-acb1e49e4a9e",
+              "index": 1,
+              "type": "reasoning.encrypted"
+            }
+          ],
+          "refusal": null,
+          "role": "assistant"
+        },
+        "native_finish_reason": "completed"
+      }
+    ],
+    "created": 1785167443,
+    "id": "gen-1785167443-JbyDigwxCAkTGJUdeK6W",
+    "model": "x-ai/grok-4.5",
+    "object": "chat.completion",
+    "provider": "xAI",
+    "service_tier": "default",
+    "system_fingerprint": null,
+    "usage": {
+      "completion_tokens": 777,
+      "completion_tokens_details": {
+        "audio_tokens": 0,
+        "image_tokens": 0,
+        "reasoning_tokens": 547
+      },
+      "cost": 0.0069864,
+      "cost_details": {
+        "upstream_inference_completions_cost": 0.004662,
+        "upstream_inference_cost": 0.0069864,
+        "upstream_inference_prompt_cost": 0.0023244
+      },
+      "is_byok": false,
+      "prompt_tokens": 1271,
+      "prompt_tokens_details": {
+        "audio_tokens": 0,
+        "cache_write_tokens": 0,
+        "cached_tokens": 128,
+        "video_tokens": 0
+      },
+      "total_tokens": 2048
+    }
+  },
+  "raw_text": "{\"permit_decision\":\"REQUIRED\",\"jurisdiction\":{\"jurisdiction_id\":\"us-or-benton_county\",\"name\":\"Benton County\",\"state\":\"OR\",\"type\":\"county\"},\"project_family\":\"residential_remodel\",\"primary_permit_family\":\"BUILDING\",\"companion_permits\":[{\"family\":\"ELECTRICAL\",\"status\":\"CONDITIONAL\"},{\"family\":\"PLUMBING\",\"status\":\"CONDITIONAL\"},{\"family\":\"MECHANICAL\",\"status\":\"CONDITIONAL\"}],\"filing\":{\"authority_id\":\"us-or-benton_county\",\"destination_url\":\"https://www.oregon.gov/bcd/lbdd/pages/index.aspx\",\"office\":\"Benton County Building Permits\",\"url_role\":\"APPLICATION_START\"},\"source_support\":{\"state\":\"OFFICIAL_SOURCE_SUPPORTED\",\"strength\":\"MODERATE\",\"evidence\":[{\"url\":\"https://www.oregon.gov/bcd/lbdd/pages/index.aspx\",\"role\":\"APPLICATION_START\"}]},\"contradictions\":[]}",
+  "requested_model": "x-ai/grok-4.5",
+  "requested_provider": "openrouter",
+  "requested_runtime": "grok",
+  "response_id": "gen-1785167443-JbyDigwxCAkTGJUdeK6W",
+  "runtime": "OpenRouter chat/completions; upstream_provider=xAI"
+}

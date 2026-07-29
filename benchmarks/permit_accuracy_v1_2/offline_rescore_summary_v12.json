@@ -1,0 +1,427 @@
+{
+  "constant_baselines": {
+    "constant_BUILDING_primary": {
+      "denominator": 100,
+      "pass": 96
+    },
+    "constant_REQUIRED_decision": {
+      "denominator": 100,
+      "pass": 95
+    },
+    "constant_empty_companions_legacy_truth": {
+      "denominator": 100,
+      "pass": 93,
+      "warning": "diagnostic only; 93 empty sets are truth-incomplete"
+    },
+    "constant_empty_companions_v12_eligible": {
+      "denominator": 4,
+      "pass": 0
+    }
+  },
+  "frozen_denominators": {
+    "companion_case_ids": [
+      "cell-us-al-andalusia-residential-residential-building-work-building",
+      "cell-us-al-anniston-residential-residential-building-work-building",
+      "cell-us-sc-anderson-county-residential-residential-building-construction-alteration-or-inspection-building",
+      "smoke-us-al-albertville-residential-residential-building-work-building"
+    ],
+    "companion_truth_conditional_items": 18,
+    "companion_truth_required_items": 0,
+    "decision_case_ids": [
+      "smoke-us-az-buckeye-residential-reroof-building",
+      "smoke-us-al-albertville-residential-residential-building-work-building",
+      "smoke-us-ak-matanuska-susitna-borough-commercial-commercial-tenant-improvement-building",
+      "smoke-us-wi-eau-claire-commercial-commercial-tenant-improvement-building",
+      "smoke-us-az-phoenix-commercial-commercial-tenant-improvement-building",
+      "smoke-us-wy-crook-county-commercial-commercial-tenant-improvement-building",
+      "cell-ne-run3run4-next10-09-us-ne-plattsmouth-residential-building",
+      "cell-us-ak-anchorage-commercial-commercial-tenant-improvement-building",
+      "cell-us-ak-angoon-commercial-commercial-tenant-improvement-building",
+      "cell-us-al-alabaster-commercial-commercial-tenant-improvement-building",
+      "cell-us-al-andalusia-residential-residential-building-work-building",
+      "cell-us-al-anniston-residential-residential-building-work-building",
+      "cell-us-al-auburn-commercial-commercial-tenant-improvement-building",
+      "cell-us-ar-arkadelphia-commercial-commercial-tenant-improvement-building",
+      "cell-us-az-apache-junction-commercial-commercial-tenant-improvement-building",
+      "cell-us-az-flagstaff-residential-reroof-building",
+      "cell-us-az-mesa-residential-residential-construction-building",
+      "cell-us-ca-anaheim-commercial-commercial-tenant-improvement-building",
+      "cell-us-co-adams-county-commercial-commercial-tenant-improvement-building",
+      "cell-us-ct-branford-commercial-commercial-tenant-improvement-building",
+      "cell-us-de-arden-residential-building-alteration",
+      "cell-us-de-bethany-beach-commercial-commercial-tenant-improvement-building",
+      "cell-us-fl-boca-raton-residential-roofing-building",
+      "cell-us-fl-brevard-county-commercial-commercial-tenant-improvement-building",
+      "cell-us-fl-charlotte-county-residential-residential-roof-building",
+      "cell-us-fl-collier-county-residential-roofing-building",
+      "cell-us-fl-hernando-county-residential-roofing-building",
+      "cell-us-fl-highlands-county-residential-building-structural-or-roofline-modification-building",
+      "cell-us-fl-indian-river-county-residential-roofing-building",
+      "cell-us-fl-lake-county-residential-reroof-building",
+      "cell-us-fl-sarasota-residential-roofing-building",
+      "cell-us-fl-st-johns-county-residential-building-repair-alteration-building",
+      "cell-us-ga-albany-commercial-commercial-tenant-improvement-building",
+      "cell-us-ga-canton-residential-commercial-building-construction-building",
+      "cell-us-hi-dhhl-commercial-commercial-tenant-improvement-building",
+      "cell-us-ia-altoona-commercial-commercial-tenant-improvement-building",
+      "cell-us-id-ada-county-commercial-commercial-tenant-improvement-building",
+      "cell-us-il-arlington-heights-commercial-commercial-tenant-improvement-building",
+      "cell-us-il-waukegan-residential-building-repair-or-improvement-building",
+      "cell-us-il-will-county-general-unincorporated-building-or-regulated-appurtenance-work-permit-building",
+      "cell-us-in-anderson-commercial-commercial-tenant-improvement-building",
+      "cell-us-in-crown-point-residential-residential-building-construction-alteration-or-inspection-building",
+      "cell-us-ks-arkansas-city-commercial-commercial-tenant-improvement-building",
+      "cell-us-ky-ashland-commercial-commercial-tenant-improvement-building",
+      "cell-us-ky-mount-washington-residential-residential-building-construction-alteration-or-inspection-building",
+      "cell-us-la-acadia-parish-commercial-commercial-tenant-improvement-building",
+      "cell-us-la-covington-residential-residential-building-construction-alteration-or-inspection-building",
+      "cell-us-ma-amherst-commercial-commercial-tenant-improvement-building",
+      "cell-us-md-allegany-county-residential-land-use-building-construction-project-land-use-building",
+      "cell-us-md-anne-arundel-county-commercial-commercial-tenant-improvement-building",
+      "cell-us-me-auburn-commercial-commercial-tenant-improvement-building",
+      "cell-us-mi-battle-creek-commercial-commercial-tenant-improvement-building",
+      "cell-us-mi-sterling-heights-residential-reroof-building",
+      "cell-us-mn-anoka-commercial-commercial-tenant-improvement-building",
+      "cell-us-mo-arnold-commercial-commercial-tenant-improvement-building",
+      "cell-us-ms-biloxi-city-commercial-commercial-tenant-improvement-building",
+      "cell-us-mt-anaconda-deer-lodge-commercial-commercial-tenant-improvement-building",
+      "cell-us-nc-alamance-county-commercial-commercial-tenant-improvement-building",
+      "cell-us-nd-beulah-commercial-commercial-tenant-improvement-building",
+      "cell-us-ne-atkinson-commercial-commercial-tenant-improvement-building",
+      "cell-us-nh-amherst-commercial-commercial-tenant-improvement-building",
+      "cell-us-nj-bayonne-city-commercial-commercial-tenant-improvement-building",
+      "cell-us-nj-berkeley-twp-residential-building-construction-permit",
+      "cell-us-nm-alamogordo-commercial-commercial-tenant-improvement-building",
+      "cell-us-nv-boulder-city-commercial-commercial-tenant-improvement-building",
+      "cell-us-nv-churchill-county-commercial-county-residential-commercial-building-work-building-v231",
+      "cell-us-ny-albany-commercial-commercial-tenant-improvement-building",
+      "cell-us-oh-akron-commercial-commercial-tenant-improvement-building",
+      "cell-us-ok-altus-commercial-commercial-tenant-improvement-building",
+      "cell-us-ok-bixby-residential-residential-building-construction-alteration-or-inspection-building",
+      "cell-us-or-albany-commercial-commercial-tenant-improvement-building",
+      "cell-us-or-benton-county-residential-residential-building-construction-alteration-or-inspection-building",
+      "cell-us-pa-abington-twp-residential-kitchen-bath-remodel-building",
+      "cell-us-pa-allentown-commercial-commercial-tenant-improvement-building",
+      "cell-us-ri-barrington-commercial-commercial-tenant-improvement-building",
+      "cell-us-sc-aiken-city-commercial-commercial-tenant-improvement-building",
+      "cell-us-sc-anderson-county-residential-residential-building-construction-alteration-or-inspection-building",
+      "cell-us-sd-belle-fourche-commercial-commercial-tenant-improvement-building",
+      "cell-us-sd-huron--new-construction-structural-change-or-remodel--building",
+      "cell-us-sd-milbank--building-or-site-work--building",
+      "cell-us-sd-north-sioux-city--building-project-or-renovation--building",
+      "cell-us-sd-vermillion--building-or-remodel-work--building",
+      "cell-us-sd-volga--building-or-remodel-project--building",
+      "cell-us-tn-anderson-county-commercial-commercial-tenant-improvement-building",
+      "cell-us-tx-abilene-residential-residential-structure-building",
+      "cell-us-tx-amarillo-commercial-commercial-tenant-improvement-building",
+      "cell-us-ut-american-fork-commercial-commercial-tenant-improvement-building",
+      "cell-us-ut-cache-county-residential-residential-remodel-building",
+      "cell-us-va-albemarle-county-commercial-commercial-tenant-improvement-building",
+      "cell-us-va-colonial-heights-residential-commercial-building-construction-building",
+      "cell-us-vt-barre-city-commercial-commercial-tenant-improvement-building",
+      "cell-us-wa-asotin-county-commercial-commercial-tenant-improvement-building",
+      "cell-us-wa-shoreline-residential-interior-remodel-building",
+      "cell-us-wi-appleton-commercial-commercial-tenant-improvement-building",
+      "cell-us-wv-barboursville-commercial-commercial-tenant-improvement-building",
+      "cell-us-wy-albany-county-commercial-commercial-tenant-improvement-building",
+      "official-nyc-backyard-shed-placement-conditional",
+      "official-seattle-commercial-reroof-area-conditional",
+      "source-reviewed-c100-050",
+      "source-reviewed-r100-048"
+    ],
+    "post_seal_edits_prohibited": true,
+    "primary_case_ids": [
+      "smoke-us-az-buckeye-residential-reroof-building",
+      "smoke-us-al-albertville-residential-residential-building-work-building",
+      "smoke-us-ak-matanuska-susitna-borough-commercial-commercial-tenant-improvement-building",
+      "smoke-us-wi-eau-claire-commercial-commercial-tenant-improvement-building",
+      "smoke-us-az-phoenix-commercial-commercial-tenant-improvement-building",
+      "smoke-us-wy-crook-county-commercial-commercial-tenant-improvement-building",
+      "cell-ne-run3run4-next10-09-us-ne-plattsmouth-residential-building",
+      "cell-us-ak-anchorage-commercial-commercial-tenant-improvement-building",
+      "cell-us-ak-angoon-commercial-commercial-tenant-improvement-building",
+      "cell-us-al-alabaster-commercial-commercial-tenant-improvement-building",
+      "cell-us-al-andalusia-residential-residential-building-work-building",
+      "cell-us-al-anniston-residential-residential-building-work-building",
+      "cell-us-al-auburn-commercial-commercial-tenant-improvement-building",
+      "cell-us-ar-arkadelphia-commercial-commercial-tenant-improvement-building",
+      "cell-us-az-apache-junction-commercial-commercial-tenant-improvement-building",
+      "cell-us-az-flagstaff-residential-reroof-building",
+      "cell-us-az-mesa-residential-residential-construction-building",
+      "cell-us-ca-anaheim-commercial-commercial-tenant-improvement-building",
+      "cell-us-co-adams-county-commercial-commercial-tenant-improvement-building",
+      "cell-us-ct-branford-commercial-commercial-tenant-improvement-building",
+      "cell-us-de-arden-residential-building-alteration",
+      "cell-us-de-bethany-beach-commercial-commercial-tenant-improvement-building",
+      "cell-us-fl-boca-raton-residential-roofing-building",
+      "cell-us-fl-brevard-county-commercial-commercial-tenant-improvement-building",
+      "cell-us-fl-charlotte-county-residential-residential-roof-building",
+      "cell-us-fl-collier-county-residential-roofing-building",
+      "cell-us-fl-hernando-county-residential-roofing-building",
+      "cell-us-fl-highlands-county-residential-building-structural-or-roofline-modification-building",
+      "cell-us-fl-indian-river-county-residential-roofing-building",
+      "cell-us-fl-lake-county-residential-reroof-building",
+      "cell-us-fl-sarasota-residential-roofing-building",
+      "cell-us-fl-st-johns-county-residential-building-repair-alteration-building",
+      "cell-us-ga-albany-commercial-commercial-tenant-improvement-building",
+      "cell-us-ga-canton-residential-commercial-building-construction-building",
+      "cell-us-hi-dhhl-commercial-commercial-tenant-improvement-building",
+      "cell-us-ia-altoona-commercial-commercial-tenant-improvement-building",
+      "cell-us-id-ada-county-commercial-commercial-tenant-improvement-building",
+      "cell-us-il-arlington-heights-commercial-commercial-tenant-improvement-building",
+      "cell-us-il-waukegan-residential-building-repair-or-improvement-building",
+      "cell-us-il-will-county-general-unincorporated-building-or-regulated-appurtenance-work-permit-building",
+      "cell-us-in-anderson-commercial-commercial-tenant-improvement-building",
+      "cell-us-in-crown-point-residential-residential-building-construction-alteration-or-inspection-building",
+      "cell-us-ks-arkansas-city-commercial-commercial-tenant-improvement-building",
+      "cell-us-ky-ashland-commercial-commercial-tenant-improvement-building",
+      "cell-us-ky-mount-washington-residential-residential-building-construction-alteration-or-inspection-building",
+      "cell-us-la-acadia-parish-commercial-commercial-tenant-improvement-building",
+      "cell-us-la-covington-residential-residential-building-construction-alteration-or-inspection-building",
+      "cell-us-ma-amherst-commercial-commercial-tenant-improvement-building",
+      "cell-us-md-allegany-county-residential-land-use-building-construction-project-land-use-building",
+      "cell-us-md-anne-arundel-county-commercial-commercial-tenant-improvement-building",
+      "cell-us-me-auburn-commercial-commercial-tenant-improvement-building",
+      "cell-us-mi-battle-creek-commercial-commercial-tenant-improvement-building",
+      "cell-us-mi-sterling-heights-residential-reroof-building",
+      "cell-us-mn-anoka-commercial-commercial-tenant-improvement-building",
+      "cell-us-mo-arnold-commercial-commercial-tenant-improvement-building",
+      "cell-us-ms-biloxi-city-commercial-commercial-tenant-improvement-building",
+      "cell-us-mt-anaconda-deer-lodge-commercial-commercial-tenant-improvement-building",
+      "cell-us-nc-alamance-county-commercial-commercial-tenant-improvement-building",
+      "cell-us-nd-beulah-commercial-commercial-tenant-improvement-building",
+      "cell-us-ne-atkinson-commercial-commercial-tenant-improvement-building",
+      "cell-us-nh-amherst-commercial-commercial-tenant-improvement-building",
+      "cell-us-nj-bayonne-city-commercial-commercial-tenant-improvement-building",
+      "cell-us-nj-berkeley-twp-residential-building-construction-permit",
+      "cell-us-nm-alamogordo-commercial-commercial-tenant-improvement-building",
+      "cell-us-nv-boulder-city-commercial-commercial-tenant-improvement-building",
+      "cell-us-nv-churchill-county-commercial-county-residential-commercial-building-work-building-v231",
+      "cell-us-ny-albany-commercial-commercial-tenant-improvement-building",
+      "cell-us-oh-akron-commercial-commercial-tenant-improvement-building",
+      "cell-us-ok-altus-commercial-commercial-tenant-improvement-building",
+      "cell-us-ok-bixby-residential-residential-building-construction-alteration-or-inspection-building",
+      "cell-us-or-albany-commercial-commercial-tenant-improvement-building",
+      "cell-us-or-benton-county-residential-residential-building-construction-alteration-or-inspection-building",
+      "cell-us-pa-abington-twp-residential-kitchen-bath-remodel-building",
+      "cell-us-pa-allentown-commercial-commercial-tenant-improvement-building",
+      "cell-us-ri-barrington-commercial-commercial-tenant-improvement-building",
+      "cell-us-sc-aiken-city-commercial-commercial-tenant-improvement-building",
+      "cell-us-sc-anderson-county-residential-residential-building-construction-alteration-or-inspection-building",
+      "cell-us-sd-belle-fourche-commercial-commercial-tenant-improvement-building",
+      "cell-us-sd-huron--new-construction-structural-change-or-remodel--building",
+      "cell-us-sd-milbank--building-or-site-work--building",
+      "cell-us-sd-north-sioux-city--building-project-or-renovation--building",
+      "cell-us-sd-vermillion--building-or-remodel-work--building",
+      "cell-us-sd-volga--building-or-remodel-project--building",
+      "cell-us-tn-anderson-county-commercial-commercial-tenant-improvement-building",
+      "cell-us-tx-abilene-residential-residential-structure-building",
+      "cell-us-tx-amarillo-commercial-commercial-tenant-improvement-building",
+      "cell-us-ut-american-fork-commercial-commercial-tenant-improvement-building",
+      "cell-us-ut-cache-county-residential-residential-remodel-building",
+      "cell-us-va-albemarle-county-commercial-commercial-tenant-improvement-building",
+      "cell-us-va-colonial-heights-residential-commercial-building-construction-building",
+      "cell-us-vt-barre-city-commercial-commercial-tenant-improvement-building",
+      "cell-us-wa-asotin-county-commercial-commercial-tenant-improvement-building",
+      "cell-us-wa-shoreline-residential-interior-remodel-building",
+      "cell-us-wi-appleton-commercial-commercial-tenant-improvement-building",
+      "cell-us-wv-barboursville-commercial-commercial-tenant-improvement-building",
+      "cell-us-wy-albany-county-commercial-commercial-tenant-improvement-building",
+      "official-nyc-backyard-shed-placement-conditional",
+      "official-seattle-commercial-reroof-area-conditional",
+      "source-reviewed-c100-050",
+      "source-reviewed-r100-048"
+    ]
+  },
+  "input_cases": 100,
+  "input_raw_envelopes": 500,
+  "interpretation_limits": [
+    "The v1.1 corpus remains development/diagnosis evidence only.",
+    "Required-companion recall is N/A because preserved independently supportable companion truth has zero REQUIRED items.",
+    "No provider calls or runtime imports occur in v1.2.",
+    "Companion metrics exclude all truth-incomplete cases rather than rewarding empty truth."
+  ],
+  "paths": {
+    "engine": {
+      "attempts": 100,
+      "companion_complete_set_exact": {
+        "denominator": 4,
+        "pass": 0
+      },
+      "companion_conditional_recall": {
+        "denominator": 18,
+        "numerator": 0,
+        "value": 0.0
+      },
+      "companion_metric_eligible_cases": 4,
+      "companion_precision": {
+        "denominator": 9,
+        "numerator": 0,
+        "value": 0.0
+      },
+      "companion_required_recall": {
+        "denominator": 0,
+        "numerator": 0,
+        "value": null
+      },
+      "confident_required_not_required_flips": 0,
+      "dangerous_omitted_required_companions": 0,
+      "dangerous_wrong_required_primary_without_abstention": 0,
+      "decision_abstentions": 4,
+      "decision_accuracy": {
+        "denominator": 100,
+        "pass": 96
+      },
+      "legacy_empty_truth_exact_set_pass": 19,
+      "primary_family_accuracy": {
+        "denominator": 100,
+        "pass": 96
+      }
+    },
+    "engine_luna": {
+      "attempts": 100,
+      "companion_complete_set_exact": {
+        "denominator": 4,
+        "pass": 0
+      },
+      "companion_conditional_recall": {
+        "denominator": 18,
+        "numerator": 0,
+        "value": 0.0
+      },
+      "companion_metric_eligible_cases": 4,
+      "companion_precision": {
+        "denominator": 9,
+        "numerator": 0,
+        "value": 0.0
+      },
+      "companion_required_recall": {
+        "denominator": 0,
+        "numerator": 0,
+        "value": null
+      },
+      "confident_required_not_required_flips": 0,
+      "dangerous_omitted_required_companions": 0,
+      "dangerous_wrong_required_primary_without_abstention": 0,
+      "decision_abstentions": 0,
+      "decision_accuracy": {
+        "denominator": 100,
+        "pass": 99
+      },
+      "legacy_empty_truth_exact_set_pass": 16,
+      "primary_family_accuracy": {
+        "denominator": 100,
+        "pass": 98
+      }
+    },
+    "gemini": {
+      "attempts": 100,
+      "companion_complete_set_exact": {
+        "denominator": 4,
+        "pass": 0
+      },
+      "companion_conditional_recall": {
+        "denominator": 18,
+        "numerator": 3,
+        "value": 0.16666666666666666
+      },
+      "companion_metric_eligible_cases": 4,
+      "companion_precision": {
+        "denominator": 3,
+        "numerator": 3,
+        "value": 1.0
+      },
+      "companion_required_recall": {
+        "denominator": 0,
+        "numerator": 0,
+        "value": null
+      },
+      "confident_required_not_required_flips": 0,
+      "dangerous_omitted_required_companions": 0,
+      "dangerous_wrong_required_primary_without_abstention": 0,
+      "decision_abstentions": 46,
+      "decision_accuracy": {
+        "denominator": 100,
+        "pass": 54
+      },
+      "legacy_empty_truth_exact_set_pass": 69,
+      "primary_family_accuracy": {
+        "denominator": 100,
+        "pass": 53
+      }
+    },
+    "grok": {
+      "attempts": 100,
+      "companion_complete_set_exact": {
+        "denominator": 4,
+        "pass": 0
+      },
+      "companion_conditional_recall": {
+        "denominator": 18,
+        "numerator": 10,
+        "value": 0.5555555555555556
+      },
+      "companion_metric_eligible_cases": 4,
+      "companion_precision": {
+        "denominator": 11,
+        "numerator": 10,
+        "value": 0.9090909090909091
+      },
+      "companion_required_recall": {
+        "denominator": 0,
+        "numerator": 0,
+        "value": null
+      },
+      "confident_required_not_required_flips": 0,
+      "dangerous_omitted_required_companions": 0,
+      "dangerous_wrong_required_primary_without_abstention": 2,
+      "decision_abstentions": 34,
+      "decision_accuracy": {
+        "denominator": 100,
+        "pass": 64
+      },
+      "legacy_empty_truth_exact_set_pass": 16,
+      "primary_family_accuracy": {
+        "denominator": 100,
+        "pass": 85
+      }
+    },
+    "luna": {
+      "attempts": 100,
+      "companion_complete_set_exact": {
+        "denominator": 4,
+        "pass": 0
+      },
+      "companion_conditional_recall": {
+        "denominator": 18,
+        "numerator": 6,
+        "value": 0.3333333333333333
+      },
+      "companion_metric_eligible_cases": 4,
+      "companion_precision": {
+        "denominator": 6,
+        "numerator": 6,
+        "value": 1.0
+      },
+      "companion_required_recall": {
+        "denominator": 0,
+        "numerator": 0,
+        "value": null
+      },
+      "confident_required_not_required_flips": 0,
+      "dangerous_omitted_required_companions": 0,
+      "dangerous_wrong_required_primary_without_abstention": 1,
+      "decision_abstentions": 48,
+      "decision_accuracy": {
+        "denominator": 100,
+        "pass": 45
+      },
+      "legacy_empty_truth_exact_set_pass": 21,
+      "primary_family_accuracy": {
+        "denominator": 100,
+        "pass": 58
+      }
+    }
+  },
+  "schema": "permit_accuracy_v12_offline_rescore_v1"
+}

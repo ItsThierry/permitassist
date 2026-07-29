@@ -30,15 +30,19 @@ from typing import Any
 import pytest
 
 
-SOURCE_REPO = Path(
-    os.environ.get(
-        "PERMITASSIST_SOURCE_REPO",
-        "/home/boban/projects/permitassist-rule-engine-integrated-remediation-20260714",
-    )
+SOURCE_REPO_SETTING = str(os.environ.get("PERMITASSIST_SOURCE_REPO") or "").strip()
+EXPECTED_SOURCE_SHA = str(os.environ.get("PERMITASSIST_EXPECTED_SOURCE_SHA") or "").strip()
+SOURCE_REPO = (
+    Path(SOURCE_REPO_SETTING).resolve()
+    if SOURCE_REPO_SETTING
+    else Path(__file__).resolve().parents[1]
 )
-EXPECTED_SOURCE_SHA = os.environ.get(
-    "PERMITASSIST_EXPECTED_SOURCE_SHA",
-    "408df57a7a653592f91388de1917a2419814624e",
+pytestmark = pytest.mark.skipif(
+    not SOURCE_REPO_SETTING or not EXPECTED_SOURCE_SHA,
+    reason=(
+        "historical trust-successor RED contract requires explicit "
+        "PERMITASSIST_SOURCE_REPO and PERMITASSIST_EXPECTED_SOURCE_SHA"
+    ),
 )
 FIXED_SESSION_SIGNING_MATERIAL = (
     "test-only-permitassist-trust-successor-session-signing-material-v1"

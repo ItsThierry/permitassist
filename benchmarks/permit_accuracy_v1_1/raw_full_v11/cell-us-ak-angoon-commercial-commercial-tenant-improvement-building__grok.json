@@ -1,0 +1,78 @@
+{
+  "observed_model": "x-ai/grok-4.5",
+  "observed_provider": "openrouter",
+  "path_proof": {
+    "adapter": "grok",
+    "engine_called": false,
+    "engine_result_supplied_to_model": false,
+    "model_call_count": 1
+  },
+  "provider": "openrouter",
+  "provider_response": {
+    "choices": [
+      {
+        "finish_reason": "stop",
+        "index": 0,
+        "logprobs": null,
+        "message": {
+          "content": "{\"permit_decision\":\"REQUIRED\",\"jurisdiction\":{\"jurisdiction_id\":\"us-ak-angoon\",\"name\":\"Angoon\",\"state\":\"AK\",\"type\":\"city_or_local_authority\"},\"project_family\":\"commercial_tenant_improvement\",\"primary_permit_family\":\"FIRE_LIFE_SAFETY\",\"companion_permits\":[{\"family\":\"BUILDING\",\"status\":\"VERIFY\"},{\"family\":\"ELECTRICAL\",\"status\":\"VERIFY\"},{\"family\":\"PLUMBING\",\"status\":\"VERIFY\"},{\"family\":\"MECHANICAL\",\"status\":\"VERIFY\"},{\"family\":\"OCCUPANCY\",\"status\":\"VERIFY\"},{\"family\":\"PLANNING_ZONING\",\"status\":\"VERIFY\"},{\"family\":\"GAS\",\"status\":\"VERIFY\"}],\"filing\":{\"authority_id\":null,\"office\":\"Alaska State Fire Marshal’s Office Plan Review Bureau\",\"destination_url\":\"https://dps.alaska.gov/Fire/Plan-Review/\",\"url_role\":\"REQUIREMENT_EVIDENCE\"},\"source_support\":{\"state\":\"OFFICIAL_SOURCE_SUPPORTED\",\"strength\":\"MODERATE\",\"evidence\":[{\"url\":\"https://dps.alaska.gov/Fire/Plan-Review/\",\"role\":\"REQUIREMENT_EVIDENCE\"}]},\"contradictions\":[]}",
+          "reasoning": "The user wants me to evaluate one permit lookup using ONLY the supplied official-source evidence packet and return exactly one JSON object conforming to MODEL_SCHEMA.\n",
+          "reasoning_details": [
+            {
+              "format": "xai-responses-v1",
+              "index": 0,
+              "summary": "The user wants me to evaluate one permit lookup using ONLY the supplied official-source evidence packet and return exactly one JSON object conforming to MODEL_SCHEMA.\n",
+              "type": "reasoning.summary"
+            },
+            {
+              "data": "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",
+              "format": "xai-responses-v1",
+              "id": "rs_7f02458c-d934-951a-9e72-1d9ccad4f9bb",
+              "index": 1,
+              "type": "reasoning.encrypted"
+            }
+          ],
+          "refusal": null,
+          "role": "assistant"
+        },
+        "native_finish_reason": "completed"
+      }
+    ],
+    "created": 1785163983,
+    "id": "gen-1785163983-rWeeLkW86g86tLDst79m",
+    "model": "x-ai/grok-4.5",
+    "object": "chat.completion",
+    "provider": "xAI",
+    "service_tier": "default",
+    "system_fingerprint": null,
+    "usage": {
+      "completion_tokens": 1445,
+      "completion_tokens_details": {
+        "audio_tokens": 0,
+        "image_tokens": 0,
+        "reasoning_tokens": 1160
+      },
+      "cost": 0.0111964,
+      "cost_details": {
+        "upstream_inference_completions_cost": 0.00867,
+        "upstream_inference_cost": 0.0111964,
+        "upstream_inference_prompt_cost": 0.0025264
+      },
+      "is_byok": false,
+      "prompt_tokens": 1372,
+      "prompt_tokens_details": {
+        "audio_tokens": 0,
+        "cache_write_tokens": 0,
+        "cached_tokens": 128,
+        "video_tokens": 0
+      },
+      "total_tokens": 2817
+    }
+  },
+  "raw_text": "{\"permit_decision\":\"REQUIRED\",\"jurisdiction\":{\"jurisdiction_id\":\"us-ak-angoon\",\"name\":\"Angoon\",\"state\":\"AK\",\"type\":\"city_or_local_authority\"},\"project_family\":\"commercial_tenant_improvement\",\"primary_permit_family\":\"FIRE_LIFE_SAFETY\",\"companion_permits\":[{\"family\":\"BUILDING\",\"status\":\"VERIFY\"},{\"family\":\"ELECTRICAL\",\"status\":\"VERIFY\"},{\"family\":\"PLUMBING\",\"status\":\"VERIFY\"},{\"family\":\"MECHANICAL\",\"status\":\"VERIFY\"},{\"family\":\"OCCUPANCY\",\"status\":\"VERIFY\"},{\"family\":\"PLANNING_ZONING\",\"status\":\"VERIFY\"},{\"family\":\"GAS\",\"status\":\"VERIFY\"}],\"filing\":{\"authority_id\":null,\"office\":\"Alaska State Fire Marshal’s Office Plan Review Bureau\",\"destination_url\":\"https://dps.alaska.gov/Fire/Plan-Review/\",\"url_role\":\"REQUIREMENT_EVIDENCE\"},\"source_support\":{\"state\":\"OFFICIAL_SOURCE_SUPPORTED\",\"strength\":\"MODERATE\",\"evidence\":[{\"url\":\"https://dps.alaska.gov/Fire/Plan-Review/\",\"role\":\"REQUIREMENT_EVIDENCE\"}]},\"contradictions\":[]}",
+  "requested_model": "x-ai/grok-4.5",
+  "requested_provider": "openrouter",
+  "requested_runtime": "grok",
+  "response_id": "gen-1785163983-rWeeLkW86g86tLDst79m",
+  "runtime": "OpenRouter chat/completions; upstream_provider=xAI"
+}

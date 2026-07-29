@@ -1,0 +1,78 @@
+{
+  "observed_model": "x-ai/grok-4.5",
+  "observed_provider": "openrouter",
+  "path_proof": {
+    "adapter": "grok",
+    "engine_called": false,
+    "engine_result_supplied_to_model": false,
+    "model_call_count": 1
+  },
+  "provider": "openrouter",
+  "provider_response": {
+    "choices": [
+      {
+        "finish_reason": "stop",
+        "index": 0,
+        "logprobs": null,
+        "message": {
+          "content": "{\"permit_decision\":\"CONDITIONAL\",\"jurisdiction\":{\"jurisdiction_id\":\"us-md-allegany_county\",\"name\":\"Allegany County\",\"state\":\"MD\",\"type\":\"county\"},\"project_family\":\"residential_remodel\",\"primary_permit_family\":\"BUILDING\",\"companion_permits\":[{\"family\":\"PLANNING_ZONING\",\"status\":\"REQUIRED\"},{\"family\":\"ELECTRICAL\",\"status\":\"VERIFY\"},{\"family\":\"PLUMBING\",\"status\":\"VERIFY\"},{\"family\":\"MECHANICAL\",\"status\":\"VERIFY\"},{\"family\":\"FIRE_LIFE_SAFETY\",\"status\":\"VERIFY\"}],\"filing\":{\"authority_id\":null,\"office\":\"Allegany County Building Permits\",\"destination_url\":\"https://www.alleganygov.org/1799/Building-Permits\",\"url_role\":\"REQUIREMENT_EVIDENCE\"},\"source_support\":{\"state\":\"OFFICIAL_SOURCE_SUPPORTED\",\"strength\":\"MODERATE\",\"evidence\":[{\"url\":\"https://www.alleganygov.org/1799/Building-Permits\",\"role\":\"REQUIREMENT_EVIDENCE\"}]},\"contradictions\":[]}",
+          "reasoning": "The user wants me to evaluate one permit lookup using ONLY the supplied official-source evidence packet and return exactly one JSON object conforming to MODEL_SCHEMA. No Markdown fences, commentary, o...{\n  \"companion_permits\": [\n    {\n      \"family\": \"BUILDING\",\n      \"status\": \"REQUIRED\"\n    },\n    {\n      \"family\": \"ELECTRICAL\",\n      \"status\": \"REQUIRED\"\n    },\n    {\n      \"family\": \"PLUMBING\",\n      \"status\": \" REQUIRED\"\n    },\n    {\n      \"family\": \"MECHANICAL\",\n      \"status\": \"REQUIRED\"\n    }\n  ],\n  \"contradictions\": [],\n  \"filing\": {\n    \"authority_id\": \"us-md-allegany_county\",\n    \"destination_url\": \"https://www.",
+          "reasoning_details": [
+            {
+              "format": "xai-responses-v1",
+              "index": 0,
+              "summary": "The user wants me to evaluate one permit lookup using ONLY the supplied official-source evidence packet and return exactly one JSON object conforming to MODEL_SCHEMA. No Markdown fences, commentary, o...{\n  \"companion_permits\": [\n    {\n      \"family\": \"BUILDING\",\n      \"status\": \"REQUIRED\"\n    },\n    {\n      \"family\": \"ELECTRICAL\",\n      \"status\": \"REQUIRED\"\n    },\n    {\n      \"family\": \"PLUMBING\",\n      \"status\": \" REQUIRED\"\n    },\n    {\n      \"family\": \"MECHANICAL\",\n      \"status\": \"REQUIRED\"\n    }\n  ],\n  \"contradictions\": [],\n  \"filing\": {\n    \"authority_id\": \"us-md-allegany_county\",\n    \"destination_url\": \"https://www.",
+              "type": "reasoning.summary"
+            },
+            {
+              "data": "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",
+              "format": "xai-responses-v1",
+              "id": "rs_2f912771-a036-942c-9962-dbeadb764f72",
+              "index": 1,
+              "type": "reasoning.encrypted"
+            }
+          ],
+          "refusal": null,
+          "role": "assistant"
+        },
+        "native_finish_reason": "completed"
+      }
+    ],
+    "created": 1785166137,
+    "id": "gen-1785166137-nHaOsNfaOsZlxEBetWoE",
+    "model": "x-ai/grok-4.5",
+    "object": "chat.completion",
+    "provider": "xAI",
+    "service_tier": "default",
+    "system_fingerprint": null,
+    "usage": {
+      "completion_tokens": 1113,
+      "completion_tokens_details": {
+        "audio_tokens": 0,
+        "image_tokens": 0,
+        "reasoning_tokens": 851
+      },
+      "cost": 0.0090024,
+      "cost_details": {
+        "upstream_inference_completions_cost": 0.006678,
+        "upstream_inference_cost": 0.0090024,
+        "upstream_inference_prompt_cost": 0.0023244
+      },
+      "is_byok": false,
+      "prompt_tokens": 1271,
+      "prompt_tokens_details": {
+        "audio_tokens": 0,
+        "cache_write_tokens": 0,
+        "cached_tokens": 128,
+        "video_tokens": 0
+      },
+      "total_tokens": 2384
+    }
+  },
+  "raw_text": "{\"permit_decision\":\"CONDITIONAL\",\"jurisdiction\":{\"jurisdiction_id\":\"us-md-allegany_county\",\"name\":\"Allegany County\",\"state\":\"MD\",\"type\":\"county\"},\"project_family\":\"residential_remodel\",\"primary_permit_family\":\"BUILDING\",\"companion_permits\":[{\"family\":\"PLANNING_ZONING\",\"status\":\"REQUIRED\"},{\"family\":\"ELECTRICAL\",\"status\":\"VERIFY\"},{\"family\":\"PLUMBING\",\"status\":\"VERIFY\"},{\"family\":\"MECHANICAL\",\"status\":\"VERIFY\"},{\"family\":\"FIRE_LIFE_SAFETY\",\"status\":\"VERIFY\"}],\"filing\":{\"authority_id\":null,\"office\":\"Allegany County Building Permits\",\"destination_url\":\"https://www.alleganygov.org/1799/Building-Permits\",\"url_role\":\"REQUIREMENT_EVIDENCE\"},\"source_support\":{\"state\":\"OFFICIAL_SOURCE_SUPPORTED\",\"strength\":\"MODERATE\",\"evidence\":[{\"url\":\"https://www.alleganygov.org/1799/Building-Permits\",\"role\":\"REQUIREMENT_EVIDENCE\"}]},\"contradictions\":[]}",
+  "requested_model": "x-ai/grok-4.5",
+  "requested_provider": "openrouter",
+  "requested_runtime": "grok",
+  "response_id": "gen-1785166137-nHaOsNfaOsZlxEBetWoE",
+  "runtime": "OpenRouter chat/completions; upstream_provider=xAI"
+}

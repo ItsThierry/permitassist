@@ -1,0 +1,78 @@
+{
+  "observed_model": "x-ai/grok-4.5",
+  "observed_provider": "openrouter",
+  "path_proof": {
+    "adapter": "grok",
+    "engine_called": false,
+    "engine_result_supplied_to_model": false,
+    "model_call_count": 1
+  },
+  "provider": "openrouter",
+  "provider_response": {
+    "choices": [
+      {
+        "finish_reason": "stop",
+        "index": 0,
+        "logprobs": null,
+        "message": {
+          "content": "{\"permit_decision\":\"VERIFY\",\"jurisdiction\":{\"jurisdiction_id\":\"us-id-ada_county\",\"name\":\"Ada County\",\"state\":\"ID\",\"type\":\"county\"},\"project_family\":\"commercial_tenant_improvement\",\"primary_permit_family\":\"BUILDING\",\"companion_permits\":[{\"family\":\"ELECTRICAL\",\"status\":\"VERIFY\"},{\"family\":\"PLUMBING\",\"status\":\"VERIFY\"},{\"family\":\"MECHANICAL\",\"status\":\"VERIFY\"},{\"family\":\"FIRE_LIFE_SAFETY\",\"status\":\"VERIFY\"},{\"family\":\"OCCUPANCY\",\"status\":\"VERIFY\"},{\"family\":\"PLANNING_ZONING\",\"status\":\"VERIFY\"}],\"filing\":{\"authority_id\":\"us-id-ada_county\",\"office\":\"Ada County Development Services Permitting Division\",\"destination_url\":\"https://adacounty.id.gov/developmentservices/permitting-division/applications-forms-templates\",\"url_role\":\"APPLICATION_START\"},\"source_support\":{\"state\":\"OFFICIAL_SOURCE_SUPPORTED\",\"strength\":\"WEAK\",\"evidence\":[{\"url\":\"https://adacounty.id.gov/developmentservices/building-division/\",\"role\":\"INFORMATIONAL_OFFICE\"},{\"url\":\"https://adacounty.id.gov/developmentservices/permitting-division/applications-forms-templates\",\"role\":\"APPLICATION_START\"}]},\"contradictions\":[]}",
+          "reasoning": "The user wants me to evaluate one permit lookup using ONLY the supplied official-source evidence packet and return exactly one JSON object conforming to MODEL_SCHEMA. No markdown fences, commentary, e...",
+          "reasoning_details": [
+            {
+              "format": "xai-responses-v1",
+              "index": 0,
+              "summary": "The user wants me to evaluate one permit lookup using ONLY the supplied official-source evidence packet and return exactly one JSON object conforming to MODEL_SCHEMA. No markdown fences, commentary, e...",
+              "type": "reasoning.summary"
+            },
+            {
+              "data": "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",
+              "format": "xai-responses-v1",
+              "id": "rs_b098f4f9-05cf-9b74-8335-875dc5858cb3",
+              "index": 1,
+              "type": "reasoning.encrypted"
+            }
+          ],
+          "refusal": null,
+          "role": "assistant"
+        },
+        "native_finish_reason": "completed"
+      }
+    ],
+    "created": 1785165505,
+    "id": "gen-1785165505-t2qH8zoHGuxkgxjUtJLj",
+    "model": "x-ai/grok-4.5",
+    "object": "chat.completion",
+    "provider": "xAI",
+    "service_tier": "default",
+    "system_fingerprint": null,
+    "usage": {
+      "completion_tokens": 1126,
+      "completion_tokens_details": {
+        "audio_tokens": 0,
+        "image_tokens": 0,
+        "reasoning_tokens": 813
+      },
+      "cost": 0.0096304,
+      "cost_details": {
+        "upstream_inference_completions_cost": 0.006756,
+        "upstream_inference_cost": 0.0096304,
+        "upstream_inference_prompt_cost": 0.0028744
+      },
+      "is_byok": false,
+      "prompt_tokens": 1546,
+      "prompt_tokens_details": {
+        "audio_tokens": 0,
+        "cache_write_tokens": 0,
+        "cached_tokens": 128,
+        "video_tokens": 0
+      },
+      "total_tokens": 2672
+    }
+  },
+  "raw_text": "{\"permit_decision\":\"VERIFY\",\"jurisdiction\":{\"jurisdiction_id\":\"us-id-ada_county\",\"name\":\"Ada County\",\"state\":\"ID\",\"type\":\"county\"},\"project_family\":\"commercial_tenant_improvement\",\"primary_permit_family\":\"BUILDING\",\"companion_permits\":[{\"family\":\"ELECTRICAL\",\"status\":\"VERIFY\"},{\"family\":\"PLUMBING\",\"status\":\"VERIFY\"},{\"family\":\"MECHANICAL\",\"status\":\"VERIFY\"},{\"family\":\"FIRE_LIFE_SAFETY\",\"status\":\"VERIFY\"},{\"family\":\"OCCUPANCY\",\"status\":\"VERIFY\"},{\"family\":\"PLANNING_ZONING\",\"status\":\"VERIFY\"}],\"filing\":{\"authority_id\":\"us-id-ada_county\",\"office\":\"Ada County Development Services Permitting Division\",\"destination_url\":\"https://adacounty.id.gov/developmentservices/permitting-division/applications-forms-templates\",\"url_role\":\"APPLICATION_START\"},\"source_support\":{\"state\":\"OFFICIAL_SOURCE_SUPPORTED\",\"strength\":\"WEAK\",\"evidence\":[{\"url\":\"https://adacounty.id.gov/developmentservices/building-division/\",\"role\":\"INFORMATIONAL_OFFICE\"},{\"url\":\"https://adacounty.id.gov/developmentservices/permitting-division/applications-forms-templates\",\"role\":\"APPLICATION_START\"}]},\"contradictions\":[]}",
+  "requested_model": "x-ai/grok-4.5",
+  "requested_provider": "openrouter",
+  "requested_runtime": "grok",
+  "response_id": "gen-1785165505-t2qH8zoHGuxkgxjUtJLj",
+  "runtime": "OpenRouter chat/completions; upstream_provider=xAI"
+}

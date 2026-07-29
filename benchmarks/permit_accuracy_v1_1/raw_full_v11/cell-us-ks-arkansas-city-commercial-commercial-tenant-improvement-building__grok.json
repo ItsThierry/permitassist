@@ -1,0 +1,78 @@
+{
+  "observed_model": "x-ai/grok-4.5",
+  "observed_provider": "openrouter",
+  "path_proof": {
+    "adapter": "grok",
+    "engine_called": false,
+    "engine_result_supplied_to_model": false,
+    "model_call_count": 1
+  },
+  "provider": "openrouter",
+  "provider_response": {
+    "choices": [
+      {
+        "finish_reason": "stop",
+        "index": 0,
+        "logprobs": null,
+        "message": {
+          "content": "{\"permit_decision\":\"VERIFY\",\"jurisdiction\":{\"jurisdiction_id\":\"us-ks-arkansas_city\",\"name\":\"Arkansas City\",\"state\":\"KS\",\"type\":\"city_or_local_authority\"},\"project_family\":\"commercial_tenant_improvement\",\"primary_permit_family\":\"VERIFY\",\"companion_permits\":[{\"family\":\"BUILDING\",\"status\":\"VERIFY\"},{\"family\":\"ELECTRICAL\",\"status\":\"VERIFY\"},{\"family\":\"PLUMBING\",\"status\":\"VERIFY\"},{\"family\":\"MECHANICAL\",\"status\":\"VERIFY\"},{\"family\":\"FIRE_LIFE_SAFETY\",\"status\":\"VERIFY\"},{\"family\":\"OCCUPANCY\",\"status\":\"VERIFY\"},{\"family\":\"PLANNING_ZONING\",\"status\":\"VERIFY\"}],\"filing\":{\"authority_id\":null,\"office\":\"VERIFY\",\"destination_url\":\"https://www.arkcity.org/neighborhood-services/page/permit-application-procedures\",\"url_role\":\"VERIFY\"},\"source_support\":{\"state\":\"OFFICIAL_SOURCE_UNSUPPORTED\",\"strength\":\"WEAK\",\"evidence\":[{\"url\":\"https://www.arkcity.org/neighborhood-services/page/permit-application-procedures\",\"role\":\"VERIFY\"}]},\"contradictions\":[]}",
+          "reasoning": "The user wants me to evaluate one permit lookup using ONLY the supplied official-source evidence packet and return exactly one JSON object conforming to MODEL_SCHEMA.\n",
+          "reasoning_details": [
+            {
+              "format": "xai-responses-v1",
+              "index": 0,
+              "summary": "The user wants me to evaluate one permit lookup using ONLY the supplied official-source evidence packet and return exactly one JSON object conforming to MODEL_SCHEMA.\n",
+              "type": "reasoning.summary"
+            },
+            {
+              "data": "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",
+              "format": "xai-responses-v1",
+              "id": "rs_fb8e73b5-646e-912e-b77c-d3ed801488cb",
+              "index": 1,
+              "type": "reasoning.encrypted"
+            }
+          ],
+          "refusal": null,
+          "role": "assistant"
+        },
+        "native_finish_reason": "completed"
+      }
+    ],
+    "created": 1785165833,
+    "id": "gen-1785165833-FuCkt8scEsB8KD8peIgk",
+    "model": "x-ai/grok-4.5",
+    "object": "chat.completion",
+    "provider": "xAI",
+    "service_tier": "default",
+    "system_fingerprint": null,
+    "usage": {
+      "completion_tokens": 1442,
+      "completion_tokens_details": {
+        "audio_tokens": 0,
+        "image_tokens": 0,
+        "reasoning_tokens": 1166
+      },
+      "cost": 0.011456,
+      "cost_details": {
+        "upstream_inference_completions_cost": 0.008652,
+        "upstream_inference_cost": 0.011456,
+        "upstream_inference_prompt_cost": 0.002804
+      },
+      "is_byok": false,
+      "prompt_tokens": 1402,
+      "prompt_tokens_details": {
+        "audio_tokens": 0,
+        "cache_write_tokens": 0,
+        "cached_tokens": 0,
+        "video_tokens": 0
+      },
+      "total_tokens": 2844
+    }
+  },
+  "raw_text": "{\"permit_decision\":\"VERIFY\",\"jurisdiction\":{\"jurisdiction_id\":\"us-ks-arkansas_city\",\"name\":\"Arkansas City\",\"state\":\"KS\",\"type\":\"city_or_local_authority\"},\"project_family\":\"commercial_tenant_improvement\",\"primary_permit_family\":\"VERIFY\",\"companion_permits\":[{\"family\":\"BUILDING\",\"status\":\"VERIFY\"},{\"family\":\"ELECTRICAL\",\"status\":\"VERIFY\"},{\"family\":\"PLUMBING\",\"status\":\"VERIFY\"},{\"family\":\"MECHANICAL\",\"status\":\"VERIFY\"},{\"family\":\"FIRE_LIFE_SAFETY\",\"status\":\"VERIFY\"},{\"family\":\"OCCUPANCY\",\"status\":\"VERIFY\"},{\"family\":\"PLANNING_ZONING\",\"status\":\"VERIFY\"}],\"filing\":{\"authority_id\":null,\"office\":\"VERIFY\",\"destination_url\":\"https://www.arkcity.org/neighborhood-services/page/permit-application-procedures\",\"url_role\":\"VERIFY\"},\"source_support\":{\"state\":\"OFFICIAL_SOURCE_UNSUPPORTED\",\"strength\":\"WEAK\",\"evidence\":[{\"url\":\"https://www.arkcity.org/neighborhood-services/page/permit-application-procedures\",\"role\":\"VERIFY\"}]},\"contradictions\":[]}",
+  "requested_model": "x-ai/grok-4.5",
+  "requested_provider": "openrouter",
+  "requested_runtime": "grok",
+  "response_id": "gen-1785165833-FuCkt8scEsB8KD8peIgk",
+  "runtime": "OpenRouter chat/completions; upstream_provider=xAI"
+}

@@ -1,0 +1,78 @@
+{
+  "observed_model": "x-ai/grok-4.5",
+  "observed_provider": "openrouter",
+  "path_proof": {
+    "adapter": "grok",
+    "engine_called": false,
+    "engine_result_supplied_to_model": false,
+    "model_call_count": 1
+  },
+  "provider": "openrouter",
+  "provider_response": {
+    "choices": [
+      {
+        "finish_reason": "stop",
+        "index": 0,
+        "logprobs": null,
+        "message": {
+          "content": "{\"permit_decision\":\"REQUIRED\",\"jurisdiction\":{\"jurisdiction_id\":\"us-pa-abington_twp\",\"name\":\"Abington Twp\",\"state\":\"PA\",\"type\":\"city_or_local_authority\"},\"project_family\":\"residential_remodel\",\"primary_permit_family\":\"BUILDING\",\"companion_permits\":[{\"family\":\"ELECTRICAL\",\"status\":\"VERIFY\"},{\"family\":\"PLUMBING\",\"status\":\"VERIFY\"},{\"family\":\"MECHANICAL\",\"status\":\"VERIFY\"},{\"family\":\"FIRE_LIFE_SAFETY\",\"status\":\"VERIFY\"}],\"filing\":{\"authority_id\":\"us-pa-abington_twp\",\"office\":\"Abington Township\",\"destination_url\":\"https://www.abingtonpa.gov/240/Residential-Applications-Forms\",\"url_role\":\"REQUIREMENT_EVIDENCE\"},\"source_support\":{\"state\":\"OFFICIAL_SOURCE_SUPPORTED\",\"strength\":\"MODERATE\",\"evidence\":[{\"url\":\"https://www.abingtonpa.gov/240/Residential-Applications-Forms\",\"role\":\"REQUIREMENT_EVIDENCE\"}]},\"contradictions\":[]}",
+          "reasoning": "The user wants me to evaluate one permit lookup using ONLY the supplied official-source evidence packet and return exactly one JSON object conforming to MODEL_SCHEMA.\n{\n  \"companion_permits\": [\n    {\n      \"family\": \"ELECTRICAL\",\n      \"status\": \"VERIFY\"\n    },\n    {\n      \"family\": \"PLUMBING\",\n      \"status\": \"VERIFY\"\n    },\n    {\n      \"family\": \"MECHANICAL\",\n      \"status\": \"VERIFY\"\n    }\n  ],\n  \"contradictions\": [],\n  \"filing\": {\n    \"authority_id\": \"us-pa-abington_twp\",\n    \"destination_url\": \"https://www.abingtonpa.",
+          "reasoning_details": [
+            {
+              "format": "xai-responses-v1",
+              "index": 0,
+              "summary": "The user wants me to evaluate one permit lookup using ONLY the supplied official-source evidence packet and return exactly one JSON object conforming to MODEL_SCHEMA.\n{\n  \"companion_permits\": [\n    {\n      \"family\": \"ELECTRICAL\",\n      \"status\": \"VERIFY\"\n    },\n    {\n      \"family\": \"PLUMBING\",\n      \"status\": \"VERIFY\"\n    },\n    {\n      \"family\": \"MECHANICAL\",\n      \"status\": \"VERIFY\"\n    }\n  ],\n  \"contradictions\": [],\n  \"filing\": {\n    \"authority_id\": \"us-pa-abington_twp\",\n    \"destination_url\": \"https://www.abingtonpa.",
+              "type": "reasoning.summary"
+            },
+            {
+              "data": "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",
+              "format": "xai-responses-v1",
+              "id": "rs_57dea349-3f56-9640-9e54-109a4807bffb",
+              "index": 1,
+              "type": "reasoning.encrypted"
+            }
+          ],
+          "refusal": null,
+          "role": "assistant"
+        },
+        "native_finish_reason": "completed"
+      }
+    ],
+    "created": 1785167490,
+    "id": "gen-1785167490-ksK7MqRzykQ8vrHFXurz",
+    "model": "x-ai/grok-4.5",
+    "object": "chat.completion",
+    "provider": "xAI",
+    "service_tier": "default",
+    "system_fingerprint": null,
+    "usage": {
+      "completion_tokens": 1089,
+      "completion_tokens_details": {
+        "audio_tokens": 0,
+        "image_tokens": 0,
+        "reasoning_tokens": 835
+      },
+      "cost": 0.0089184,
+      "cost_details": {
+        "upstream_inference_completions_cost": 0.006534,
+        "upstream_inference_cost": 0.0089184,
+        "upstream_inference_prompt_cost": 0.0023844
+      },
+      "is_byok": false,
+      "prompt_tokens": 1301,
+      "prompt_tokens_details": {
+        "audio_tokens": 0,
+        "cache_write_tokens": 0,
+        "cached_tokens": 128,
+        "video_tokens": 0
+      },
+      "total_tokens": 2390
+    }
+  },
+  "raw_text": "{\"permit_decision\":\"REQUIRED\",\"jurisdiction\":{\"jurisdiction_id\":\"us-pa-abington_twp\",\"name\":\"Abington Twp\",\"state\":\"PA\",\"type\":\"city_or_local_authority\"},\"project_family\":\"residential_remodel\",\"primary_permit_family\":\"BUILDING\",\"companion_permits\":[{\"family\":\"ELECTRICAL\",\"status\":\"VERIFY\"},{\"family\":\"PLUMBING\",\"status\":\"VERIFY\"},{\"family\":\"MECHANICAL\",\"status\":\"VERIFY\"},{\"family\":\"FIRE_LIFE_SAFETY\",\"status\":\"VERIFY\"}],\"filing\":{\"authority_id\":\"us-pa-abington_twp\",\"office\":\"Abington Township\",\"destination_url\":\"https://www.abingtonpa.gov/240/Residential-Applications-Forms\",\"url_role\":\"REQUIREMENT_EVIDENCE\"},\"source_support\":{\"state\":\"OFFICIAL_SOURCE_SUPPORTED\",\"strength\":\"MODERATE\",\"evidence\":[{\"url\":\"https://www.abingtonpa.gov/240/Residential-Applications-Forms\",\"role\":\"REQUIREMENT_EVIDENCE\"}]},\"contradictions\":[]}",
+  "requested_model": "x-ai/grok-4.5",
+  "requested_provider": "openrouter",
+  "requested_runtime": "grok",
+  "response_id": "gen-1785167490-ksK7MqRzykQ8vrHFXurz",
+  "runtime": "OpenRouter chat/completions; upstream_provider=xAI"
+}

@@ -11,6 +11,9 @@ if str(API) not in sys.path:
 
 from api.scope_contract import build_scope_contract
 from api.server import _normalize_public_required_permit_package
+from api import permit_model
+from api import permit_decision
+from api import residential_universal_gate
 
 
 def _row(name, kind=None):
@@ -89,3 +92,36 @@ def test_portland_hpwh_keeps_plumbing_and_electrical_but_seattle_keeps_plumbing_
     assert _families(portland) == ["Electrical", "Plumbing"]
     assert _families(seattle) == ["Plumbing"]
     assert "additional trade" in seattle.get("fee_range", "")
+
+
+def test_fireplace_and_fire_alarm_remain_distinct_families_and_rows():
+    fireplace = {
+        "permit_type": "Mechanical Permit — Fireplace Installation",
+        "required": True,
+    }
+    fire_alarm = {
+        "permit_type": "Fire Permit — Alarm Modification",
+        "required": True,
+    }
+
+    assert residential_universal_gate._family_for_row(fireplace) == "mechanical"
+    assert residential_universal_gate._family_for_row(fire_alarm) == "fire"
+    assert residential_universal_gate._dedupe_rows([fireplace, fire_alarm]) == [
+        fireplace,
+        fire_alarm,
+    ]
+
+    assert permit_model.normalize_family("", row=fireplace) == permit_model.PermitFamily.MECHANICAL
+    assert permit_model.normalize_family("", row=fire_alarm) == permit_model.PermitFamily.FIRE
+    assert "Fire review" not in permit_decision._companion_reviews(
+        {}, "Mechanical permit for fireplace installation"
+    )
+    assert "Fire review" in permit_decision._companion_reviews(
+        {}, "Fire alarm modification"
+    )
+    assert permit_decision._recovered_lock_permit_name(
+        {"notes": "proof of insurance"}, "Electrical"
+    ) == "Electrical Permit"
+    assert permit_decision._recovered_lock_permit_name(
+        {"notes": "residential roof replacement"}, "Electrical"
+    ) == "Building Permit"

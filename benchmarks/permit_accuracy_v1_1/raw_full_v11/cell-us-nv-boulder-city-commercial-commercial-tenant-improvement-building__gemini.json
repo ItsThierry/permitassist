@@ -1,0 +1,20 @@
+{
+  "observed_model": "Gemini 3.6 Flash (High)",
+  "observed_provider": "google-antigravity-oauth",
+  "path_proof": {
+    "adapter": "gemini",
+    "capture_created_by_model": true,
+    "engine_called": false,
+    "engine_result_supplied_to_model": false,
+    "model_call_count": 1
+  },
+  "provider": "google-antigravity-oauth",
+  "provider_stderr": "",
+  "provider_stdout": "DONE\n",
+  "raw_text": "{\"companion_permits\":[{\"family\":\"ELECTRICAL\",\"status\":\"REQUIRED\"},{\"family\":\"FIRE_LIFE_SAFETY\",\"status\":\"REQUIRED\"},{\"family\":\"MECHANICAL\",\"status\":\"VERIFY\"},{\"family\":\"OCCUPANCY\",\"status\":\"VERIFY\"},{\"family\":\"PLANNING_ZONING\",\"status\":\"VERIFY\"},{\"family\":\"PLUMBING\",\"status\":\"VERIFY\"}],\"contradictions\":[],\"filing\":{\"authority_id\":\"us-nv-boulder_city\",\"destination_url\":\"https://www.bcnv.org/334/Development-Services\",\"office\":\"Community Development Department\",\"url_role\":\"INFORMATIONAL_OFFICE\"},\"jurisdiction\":{\"jurisdiction_id\":\"us-nv-boulder_city\",\"name\":\"Boulder City\",\"state\":\"NV\",\"type\":\"city_or_local_authority\"},\"permit_decision\":\"REQUIRED\",\"primary_permit_family\":\"BUILDING\",\"project_family\":\"commercial_tenant_improvement\",\"source_support\":{\"evidence\":[{\"role\":\"REQUIREMENT_EVIDENCE\",\"url\":\"https://www.bcnv.org/771/Permit-Submittal-Checklists\"},{\"role\":\"INFORMATIONAL_OFFICE\",\"url\":\"https://www.bcnv.org/334/Development-Services\"}],\"state\":\"OFFICIAL_SOURCE_SUPPORTED\",\"strength\":\"STRONG\"}}\n",
+  "requested_model": "Gemini 3.6 Flash (High)",
+  "requested_provider": "google-antigravity-oauth",
+  "requested_runtime": "gemini",
+  "response_id": null,
+  "runtime": "agy.exe 1.0.2 / language-server 1.1.7"
+}

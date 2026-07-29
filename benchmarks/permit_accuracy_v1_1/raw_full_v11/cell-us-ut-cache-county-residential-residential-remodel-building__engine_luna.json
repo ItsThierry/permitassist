@@ -1,0 +1,389 @@
+{
+  "observed_model": "gpt-5.6-luna",
+  "observed_provider": "openai-codex",
+  "path_proof": {
+    "adapter": "engine_luna",
+    "authority_recovery": null,
+    "decision_cell_reference": null,
+    "engine_called": true,
+    "engine_result_supplied_to_model": false,
+    "engine_stdout": "[url_check] URL verified: https://www.cachecounty.gov/building/\n",
+    "local_merge_customer_path_called": true,
+    "model_call_count": 1
+  },
+  "provider": "openai-codex",
+  "provider_terminal_event": {
+    "response": {
+      "background": false,
+      "completed_at": 1785168295,
+      "created_at": 1785168285,
+      "error": null,
+      "frequency_penalty": 0.0,
+      "id": "resp_0d21c8488ae737a1016a67819debd48190945749eab9282cba",
+      "incomplete_details": null,
+      "instructions": "Follow the user request exactly. Do not call tools.",
+      "max_output_tokens": null,
+      "max_tool_calls": null,
+      "metadata": {},
+      "model": "gpt-5.6-luna",
+      "moderation": null,
+      "object": "response",
+      "output": [],
+      "parallel_tool_calls": true,
+      "presence_penalty": 0.0,
+      "previous_response_id": null,
+      "prompt_cache_key": "3944971b-b5e0-49f6-9b96-8cf3f08a0d83",
+      "prompt_cache_retention": "24h",
+      "reasoning": {
+        "context": "all_turns",
+        "effort": "medium",
+        "mode": "standard",
+        "summary": null
+      },
+      "safety_identifier": "user-FQ7sI0yp0Qqn6wWdqzy9mZic",
+      "service_tier": "default",
+      "status": "completed",
+      "store": false,
+      "temperature": 1.0,
+      "text": {
+        "format": {
+          "type": "text"
+        },
+        "verbosity": "medium"
+      },
+      "tool_choice": "auto",
+      "tool_usage": {
+        "image_gen": {
+          "input_tokens": 0,
+          "input_tokens_details": {
+            "image_tokens": 0,
+            "text_tokens": 0
+          },
+          "output_tokens": 0,
+          "output_tokens_details": {
+            "image_tokens": 0,
+            "text_tokens": 0
+          },
+          "total_tokens": 0
+        },
+        "web_search": {
+          "num_requests": 0
+        }
+      },
+      "tools": [],
+      "top_logprobs": 0,
+      "top_p": 0.98,
+      "truncation": "disabled",
+      "usage": {
+        "input_tokens": 1073,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 0
+        },
+        "output_tokens": 524,
+        "output_tokens_details": {
+          "reasoning_tokens": 329
+        },
+        "total_tokens": 1597
+      },
+      "user": null
+    },
+    "sequence_number": 198,
+    "type": "response.completed"
+  },
+  "raw_model_text": "{\"permit_decision\":\"REQUIRED\",\"jurisdiction\":{\"jurisdiction_id\":\"us-ut-cache_county\",\"name\":\"Cache County\",\"state\":\"UT\",\"type\":\"county\"},\"project_family\":\"residential_remodel\",\"primary_permit_family\":\"BUILDING\",\"companion_permits\":[{\"family\":\"PLANNING_ZONING\",\"status\":\"REQUIRED\"},{\"family\":\"ELECTRICAL\",\"status\":\"VERIFY\"},{\"family\":\"PLUMBING\",\"status\":\"VERIFY\"},{\"family\":\"MECHANICAL\",\"status\":\"VERIFY\"}],\"filing\":{\"authority_id\":\"us-ut-cache_county\",\"office\":\"Cache County Building Division\",\"destination_url\":\"https://www.cachecounty.gov/building/\",\"url_role\":\"APPLICATION_START\"},\"source_support\":{\"state\":\"OFFICIAL_SOURCE_SUPPORTED\",\"strength\":\"STRONG\",\"evidence\":[{\"url\":\"https://www.cachecounty.gov/building/\",\"role\":\"REQUIREMENT_EVIDENCE\"}]},\"contradictions\":[]}",
+  "raw_response": {
+    "apply_path": {
+      "channel": "contact_ahj",
+      "documents_to_prepare": [
+        "scope of work",
+        "plans/drawings if required",
+        "contractor license",
+        "valuation",
+        "owner authorization"
+      ],
+      "office_name": "Cache County building permit applications / electronic plan submission",
+      "permit_category": "Permit package",
+      "permit_type": "Required permit package — Building Permit",
+      "portal_url": "https://www.cachecounty.gov/building/",
+      "primary_filing_source_tier": "none",
+      "primary_requirement_source_tier": "county",
+      "state": "HONEST_FALLBACK",
+      "steps": [
+        "Open the listed permit portal or contact the permit office",
+        "Select the closest category to: Required permit package — Building Permit",
+        "Confirm exact portal subcategories before final submission"
+      ],
+      "support_level": "not available",
+      "verification_note": "Confirm the exact portal category with the listed permit office before filing"
+    },
+    "apply_url": "https://www.cachecounty.gov/building/",
+    "apply_url_known": true,
+    "applying_office": "Cache County building permit applications / electronic plan submission",
+    "customer_first_screen_summary": {
+      "ahj_department": "Cache County building permit applications / electronic plan submission",
+      "decision": "REQUIRED",
+      "kind_category": "Building",
+      "next_action": "File the required permit categories with Cache County building permit applications / electronic plan submission: Building Permit, Plumbing Permit — Residential Remodel / Addition, Mechanical Permit — Residential Remodel / Addition, Electrical Permit — Residential Remodel / Addition. Confirm exact portal subcategories before final submission.",
+      "source_cue": "Official sources attached for 4 required permit categories."
+    },
+    "customer_headline": "Permit required: Required permit package — Building Permit.",
+    "customer_next_step": "File the required permit categories with Cache County building permit applications / electronic plan submission: Building Permit, Plumbing Permit — Residential Remodel / Addition, Mechanical Permit — Residential Remodel / Addition, Electrical Permit — Residential Remodel / Addition. Confirm exact portal subcategories before final submission.",
+    "customer_result_summary": {
+      "ahj_department": "Cache County building permit applications / electronic plan submission",
+      "fee_cost_caveat": "Fees depend on valuation, trade scope, plan-review fees, and the current local fee schedule; verify before quoting.",
+      "freshness_label": "Checked 2026-07-27",
+      "jurisdiction": "Cache County, UT",
+      "next_step": "File the required permit categories with Cache County building permit applications / electronic plan submission: Building Permit, Plumbing Permit — Residential Remodel / Addition, Mechanical Permit — Residential Remodel / Addition, Electrical Permit — Residential Remodel / Addition. Confirm exact portal subcategories before final submission.",
+      "permit_decision": "REQUIRED",
+      "permit_kind": "Building",
+      "permit_name": "Required permit package — Building Permit",
+      "source_cue": "Official sources attached for 4 required permit categories."
+    },
+    "degraded_sources": false,
+    "inspection_booking": "Schedule online at Confirm the inspection advance-notice window when booking.",
+    "job_summary": "Required permit package: Building Permit; Plumbing Permit — Residential Remodel / Addition; Mechanical Permit — Residential Remodel / Addition; Electrical Permit — Residential Remodel / Addition.",
+    "local_form_known": true,
+    "online_application_url": null,
+    "permit_decision": "REQUIRED",
+    "permit_kind": "Building",
+    "permit_name": "Required permit package — Building Permit",
+    "permit_required": true,
+    "permit_type": "Required permit package — Building Permit",
+    "permit_verdict": "YES",
+    "permits_required": [
+      {
+        "approval_type": "Building Permit",
+        "decision": "REQUIRED",
+        "display_family": "Building",
+        "family": "building",
+        "filing_family": "building",
+        "kind": "Building",
+        "permit_kind": "building",
+        "permit_name": "Building Permit",
+        "permit_type": "Building Permit",
+        "portal_selection": "Building Permit",
+        "required": true,
+        "segment": "residential",
+        "status": "REQUIRED"
+      },
+      {
+        "ahj_name": "Cache County permit office",
+        "application_authority_name": "Cache County permit office",
+        "approval_type": "Plumbing Permit",
+        "decision": "REQUIRED",
+        "display_family": "Plumbing",
+        "family": "plumbing",
+        "filing_family": "plumbing",
+        "kind": "Plumbing",
+        "notes": "Related plumbing permit for fixture, DWV, water-supply, bathroom, kitchen, or rough/final plumbing work included in the remodel/addition. Required because the described scope triggers Plumbing Permit.",
+        "permit_name": "Plumbing Permit — Residential Remodel / Addition",
+        "permit_type": "Plumbing Permit — Residential Remodel / Addition",
+        "portal_selection": "Plumbing - Residential Alteration",
+        "rationale": "Related plumbing permit for fixture, DWV, water-supply, bathroom, kitchen, or rough/final plumbing work included in the remodel/addition. Required because the described scope triggers Plumbing Permit.",
+        "required": true,
+        "scope_trigger": "plumbing_explicit_scope",
+        "segment": "residential",
+        "status": "REQUIRED"
+      },
+      {
+        "ahj_name": "Cache County permit office",
+        "application_authority_name": "Cache County permit office",
+        "approval_type": "Mechanical Permit",
+        "decision": "REQUIRED",
+        "display_family": "Mechanical",
+        "family": "mechanical",
+        "filing_family": "mechanical",
+        "kind": "Mechanical",
+        "notes": "Related mechanical permit for HVAC, duct relocation, ventilation, or rough/final mechanical work included in the remodel/addition. Required because the described scope triggers Mechanical Permit.",
+        "permit_name": "Mechanical Permit — Residential Remodel / Addition",
+        "permit_type": "Mechanical Permit — Residential Remodel / Addition",
+        "portal_selection": "Mechanical - Residential Alteration",
+        "rationale": "Related mechanical permit for HVAC, duct relocation, ventilation, or rough/final mechanical work included in the remodel/addition. Required because the described scope triggers Mechanical Permit.",
+        "required": true,
+        "scope_trigger": "mechanical_explicit_scope",
+        "segment": "residential",
+        "status": "REQUIRED"
+      },
+      {
+        "ahj_name": "Cache County permit office",
+        "application_authority_name": "Cache County permit office",
+        "approval_type": "Electrical Permit",
+        "decision": "REQUIRED",
+        "display_family": "Electrical",
+        "family": "electrical",
+        "filing_family": "electrical",
+        "kind": "Electrical",
+        "notes": "Related electrical permit for circuits, lighting, receptacles, panel work, or rough/final electrical inspections included in the remodel/addition. Required because the described scope triggers Electrical Permit.",
+        "permit_name": "Electrical Permit — Residential Remodel / Addition",
+        "permit_type": "Electrical Permit — Residential Remodel / Addition",
+        "portal_selection": "Electrical - Residential Alteration",
+        "rationale": "Related electrical permit for circuits, lighting, receptacles, panel work, or rough/final electrical inspections included in the remodel/addition. Required because the described scope triggers Electrical Permit.",
+        "required": true,
+        "scope_trigger": "electrical_explicit_scope",
+        "segment": "residential",
+        "status": "REQUIRED"
+      }
+    ],
+    "permits_required_logic": [
+      {
+        "filing_family": "building",
+        "included_because": "Official permit rule: Required because the described scope triggers Building review.",
+        "permit_type": "Building Permit",
+        "scope_trigger": "building_scope",
+        "segment": "residential"
+      },
+      {
+        "filing_family": "plumbing",
+        "included_because": "Official permit rule: Related plumbing permit for fixture, DWV, water-supply, bathroom, kitchen, or rough/final plumbing work included in the remodel/addition. Required because the described scope triggers Plumbing Permit.",
+        "permit_type": "Plumbing Permit — Residential Remodel / Addition",
+        "scope_trigger": "plumbing_explicit_scope",
+        "segment": "residential"
+      },
+      {
+        "filing_family": "mechanical",
+        "included_because": "Official permit rule: Related mechanical permit for HVAC, duct relocation, ventilation, or rough/final mechanical work included in the remodel/addition. Required because the described scope triggers Mechanical Permit.",
+        "permit_type": "Mechanical Permit — Residential Remodel / Addition",
+        "scope_trigger": "mechanical_explicit_scope",
+        "segment": "residential"
+      },
+      {
+        "filing_family": "electrical",
+        "included_because": "Official permit rule: Related electrical permit for circuits, lighting, receptacles, panel work, or rough/final electrical inspections included in the remodel/addition. Required because the described scope triggers Electrical Permit.",
+        "permit_type": "Electrical Permit — Residential Remodel / Addition",
+        "scope_trigger": "electrical_explicit_scope",
+        "segment": "residential"
+      }
+    ],
+    "related_permit_families": [
+      "Electrical",
+      "Planning/Zoning"
+    ],
+    "related_permit_names": [
+      "Electrical Permit",
+      "Planning / Zoning Use Clearance",
+      "Planning/Zoning Verification"
+    ],
+    "related_permit_segments": [
+      "residential"
+    ],
+    "related_permits": [
+      {
+        "approval_type": "Electrical Permit",
+        "condition_text": "Verify whether permit is triggered for this project when the building department confirms the relevant permit scope condition.",
+        "decision": "VERIFY",
+        "display_family": "Electrical",
+        "family": "electrical",
+        "filing_family": "electrical",
+        "kind": "Electrical",
+        "permit_name": "Electrical Permit",
+        "permit_type": "Electrical Permit",
+        "rationale": "permit may apply to this scope",
+        "required": false,
+        "segment": "residential",
+        "status": "VERIFY",
+        "trigger_condition": "Verify whether permit is triggered for this project when the building department confirms the relevant permit scope condition."
+      },
+      {
+        "ahj_name": "Cache County permit office",
+        "application_authority_name": "Cache County permit office",
+        "approval_type": "Planning / Zoning Use Clearance",
+        "decision": "CONDITIONAL",
+        "display_family": "Planning/Zoning",
+        "family": "planning",
+        "filing_family": "planning",
+        "kind": "Planning/Zoning",
+        "notes": "Conditional review; file this only if the building department or parcel/address review confirms a specific planning/zoning trigger.",
+        "permit_name": "Planning / Zoning Use Clearance",
+        "permit_type": "Planning / Zoning Use Clearance",
+        "rationale": "Conditional review; file this only if the building department or parcel/address review confirms a specific planning/zoning trigger.",
+        "required": false,
+        "required_if": "the exact property/scope has a planning/zoning trigger confirmed by the building department or parcel/address review",
+        "segment": "residential",
+        "status": "CONDITIONAL"
+      },
+      {
+        "approval_type": "Planning/Zoning Verification",
+        "condition_text": "Verify whether Planning/Zoning is triggered for this project when the building department confirms the relevant planning scope condition.",
+        "decision": "VERIFY",
+        "display_family": "Planning/Zoning",
+        "family": "planning",
+        "filing_family": "planning",
+        "kind": "Planning/Zoning",
+        "permit_name": "Planning/Zoning Verification",
+        "permit_type": "Planning/Zoning Verification",
+        "rationale": "Planning/Zoning may apply to this scope",
+        "required": false,
+        "required_if": "Required only if the exact address, parcel, overlay, or project scope triggers this review.",
+        "requirement_label": "verify with the permit office before treating this as a required filing row",
+        "segment": "residential",
+        "status": "VERIFY",
+        "trigger_condition": "Verify whether Planning/Zoning is triggered for this project when the building department confirms the relevant planning scope condition."
+      }
+    ],
+    "required_permit_families": [
+      "Building",
+      "Plumbing",
+      "Mechanical",
+      "Electrical"
+    ],
+    "required_permit_names": [
+      "Building Permit",
+      "Plumbing Permit — Residential Remodel / Addition",
+      "Mechanical Permit — Residential Remodel / Addition",
+      "Electrical Permit — Residential Remodel / Addition"
+    ],
+    "required_permit_segments": [
+      "residential"
+    ],
+    "required_permit_summary": "Required permit package: Building Permit; Plumbing Permit — Residential Remodel / Addition; Mechanical Permit — Residential Remodel / Addition; Electrical Permit — Residential Remodel / Addition.",
+    "source_confidence": "AHJ_DIRECT",
+    "source_support": {
+      "apply_url_known": true,
+      "apply_url_source_confidence": "FILING_PATH_DEGRADED",
+      "context_source_count": 0,
+      "decision_mutation_allowed": false,
+      "degraded_sources": false,
+      "display_source_count": 1,
+      "evidence": [
+        {
+          "role": "REQUIREMENT_EVIDENCE"
+        }
+      ],
+      "filing_path_state": "HONEST_FALLBACK",
+      "filing_source_count": 0,
+      "has_source_backed_evidence": true,
+      "local_decision_evidence_urls": [
+        "https://www.cachecounty.gov/building/"
+      ],
+      "local_form_known": true,
+      "primary_filing_source_tier": "none",
+      "primary_requirement_source_tier": "county",
+      "requirement_source_count": 1,
+      "source_confidence": "AHJ_DIRECT",
+      "state": "OFFICIAL_SOURCE_SUPPORTED",
+      "strength": "STRONG"
+    },
+    "source_urls": [
+      "https://www.cachecounty.gov/building/"
+    ],
+    "sources": [
+      {
+        "publisher": "Cache County building permit applications / electronic plan submission",
+        "snippet": "Step 1: Apply for a Zoning Clearance (go to Planning and Zoning or Development Services on this county site) Step 2: Apply for a Building Permit The Cache County Building Division protects the health, safety, and general welfare of the public by enforcing compliance with current building codes.",
+        "title": "Official building department source",
+        "url": "https://www.cachecounty.gov/building/"
+      }
+    ],
+    "summary": "Required permit package: Building Permit; Plumbing Permit — Residential Remodel / Addition; Mechanical Permit — Residential Remodel / Addition; Electrical Permit — Residential Remodel / Addition.",
+    "warnings": [
+      "Filing path degraded: exact local online filing portal was not verified; permit decision preserved.",
+      "Customer-boundary filing rows were normalized so only hard scope-triggered permits appear as required; address-dependent companion reviews are shown separately."
+    ]
+  },
+  "requested_model": "gpt-5.6-luna",
+  "requested_provider": "openai-codex",
+  "requested_runtime": "engine_luna",
+  "response_id": "resp_0d21c8488ae737a1016a67819debd48190945749eab9282cba",
+  "runtime": "openai-codex responses SSE + api.server real local finalize/customer path"
+}

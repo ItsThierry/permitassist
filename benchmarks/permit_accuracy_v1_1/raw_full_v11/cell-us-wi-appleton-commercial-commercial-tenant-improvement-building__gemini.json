@@ -1,0 +1,20 @@
+{
+  "observed_model": "Gemini 3.6 Flash (High)",
+  "observed_provider": "google-antigravity-oauth",
+  "path_proof": {
+    "adapter": "gemini",
+    "capture_created_by_model": true,
+    "engine_called": false,
+    "engine_result_supplied_to_model": false,
+    "model_call_count": 1
+  },
+  "provider": "google-antigravity-oauth",
+  "provider_stderr": "",
+  "provider_stdout": "DONE\n",
+  "raw_text": "{\n  \"companion_permits\": [\n    {\n      \"family\": \"ELECTRICAL\",\n      \"status\": \"VERIFY\"\n    },\n    {\n      \"family\": \"FIRE_LIFE_SAFETY\",\n      \"status\": \"VERIFY\"\n    },\n    {\n      \"family\": \"MECHANICAL\",\n      \"status\": \"VERIFY\"\n    },\n    {\n      \"family\": \"OCCUPANCY\",\n      \"status\": \"VERIFY\"\n    },\n    {\n      \"family\": \"PLANNING_ZONING\",\n      \"status\": \"VERIFY\"\n    },\n    {\n      \"family\": \"PLUMBING\",\n      \"status\": \"VERIFY\"\n    }\n  ],\n  \"contradictions\": [],\n  \"filing\": {\n    \"authority_id\": \"us-wi-appleton\",\n    \"destination_url\": \"https://appletonwi.gov/government/departments/community_development/building_inspections/permit_applications.php\",\n    \"office\": \"Building Inspections\",\n    \"url_role\": \"APPLICATION_START\"\n  },\n  \"jurisdiction\": {\n    \"jurisdiction_id\": \"us-wi-appleton\",\n    \"name\": \"Appleton\",\n    \"state\": \"WI\",\n    \"type\": \"city_or_local_authority\"\n  },\n  \"permit_decision\": \"REQUIRED\",\n  \"primary_permit_family\": \"BUILDING\",\n  \"project_family\": \"commercial_tenant_improvement\",\n  \"source_support\": {\n    \"evidence\": [\n      {\n        \"role\": \"APPLICATION_START\",\n        \"url\": \"https://appletonwi.gov/government/departments/community_development/building_inspections/permit_applications.php\"\n      }\n    ],\n    \"state\": \"OFFICIAL_SOURCE_SUPPORTED\",\n    \"strength\": \"MODERATE\"\n  }\n}\n",
+  "requested_model": "Gemini 3.6 Flash (High)",
+  "requested_provider": "google-antigravity-oauth",
+  "requested_runtime": "gemini",
+  "response_id": null,
+  "runtime": "agy.exe 1.0.2 / language-server 1.1.7"
+}

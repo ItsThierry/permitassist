@@ -1,0 +1,78 @@
+{
+  "observed_model": "x-ai/grok-4.5",
+  "observed_provider": "openrouter",
+  "path_proof": {
+    "adapter": "grok",
+    "engine_called": false,
+    "engine_result_supplied_to_model": false,
+    "model_call_count": 1
+  },
+  "provider": "openrouter",
+  "provider_response": {
+    "choices": [
+      {
+        "finish_reason": "stop",
+        "index": 0,
+        "logprobs": null,
+        "message": {
+          "content": "{\"permit_decision\":\"NOT_REQUIRED\",\"jurisdiction\":{\"jurisdiction_id\":\"VERIFY\",\"name\":\"Raleigh\",\"state\":\"NC\",\"type\":\"city_or_local_authority\"},\"project_family\":\"residential_cosmetic_repair\",\"primary_permit_family\":\"BUILDING\",\"companion_permits\":[],\"filing\":{\"authority_id\":null,\"office\":\"City of Raleigh Permits\",\"destination_url\":\"https://raleighnc.gov/permits\",\"url_role\":\"INFORMATIONAL_OFFICE\"},\"source_support\":{\"state\":\"OFFICIAL_SOURCE_SUPPORTED\",\"strength\":\"STRONG\",\"evidence\":[{\"url\":\"https://www.ncleg.gov/EnactedLegislation/Statutes/HTML/BySection/Chapter_160D/GS_160D-1110.html\",\"role\":\"REQUIREMENT_EVIDENCE\"},{\"url\":\"https://raleighnc.gov/permits\",\"role\":\"INFORMATIONAL_OFFICE\"},{\"url\":\"https://permits.raleighnc.gov\",\"role\":\"APPLICATION_START\"},{\"url\":\"https://raleighnc.gov/permits/services/how-get-residential-permit\",\"role\":\"INFORMATIONAL_OFFICE\"},{\"url\":\"https://cityofraleigh0drupal.blob.core.usgovcloudapi.net/drupal-prod/COR15/ResidentialPermitApplication.pdf\",\"role\":\"DIRECT_FORM\"}]},\"contradictions\":[]}",
+          "reasoning": "The user wants me to evaluate a permit lookup using ONLY the supplied official-source evidence packet and return exactly one JSON object conforming to MODEL_SCHEMA. No markdown fences, commentary, or ...{\n  \"permit_decision\": \"NOT_REQUIRED\",\n  \"jurisdiction\": {\n    \"jurisdiction_id\": \"VERIFY\",\n    \"name\": \"Raleigh\",\n    \"state\": \"NC\",\n    \"type\": \"city_or_local_authority\"\n  },\n  \"project_family\": \"residential_cosmetic_re pair\",\n  \"primary_permit_family\": \"BUILDING\",\n  \"companion_permits\": [],\n  \"filing\": {\n    \"authority_id\": null,\n    \"destination_url\": \"https://www.ncleg.",
+          "reasoning_details": [
+            {
+              "format": "xai-responses-v1",
+              "index": 0,
+              "summary": "The user wants me to evaluate a permit lookup using ONLY the supplied official-source evidence packet and return exactly one JSON object conforming to MODEL_SCHEMA. No markdown fences, commentary, or ...{\n  \"permit_decision\": \"NOT_REQUIRED\",\n  \"jurisdiction\": {\n    \"jurisdiction_id\": \"VERIFY\",\n    \"name\": \"Raleigh\",\n    \"state\": \"NC\",\n    \"type\": \"city_or_local_authority\"\n  },\n  \"project_family\": \"residential_cosmetic_re pair\",\n  \"primary_permit_family\": \"BUILDING\",\n  \"companion_permits\": [],\n  \"filing\": {\n    \"authority_id\": null,\n    \"destination_url\": \"https://www.ncleg.",
+              "type": "reasoning.summary"
+            },
+            {
+              "data": "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",
+              "format": "xai-responses-v1",
+              "id": "rs_833b3ba9-75c8-9c91-bd65-19630d78031c",
+              "index": 1,
+              "type": "reasoning.encrypted"
+            }
+          ],
+          "refusal": null,
+          "role": "assistant"
+        },
+        "native_finish_reason": "completed"
+      }
+    ],
+    "created": 1785168916,
+    "id": "gen-1785168916-bWQ9pIQ9aendzeEIareb",
+    "model": "x-ai/grok-4.5",
+    "object": "chat.completion",
+    "provider": "xAI",
+    "service_tier": "default",
+    "system_fingerprint": null,
+    "usage": {
+      "completion_tokens": 1191,
+      "completion_tokens_details": {
+        "audio_tokens": 0,
+        "image_tokens": 0,
+        "reasoning_tokens": 883
+      },
+      "cost": 0.0097924,
+      "cost_details": {
+        "upstream_inference_completions_cost": 0.007146,
+        "upstream_inference_cost": 0.0097924,
+        "upstream_inference_prompt_cost": 0.0026464
+      },
+      "is_byok": false,
+      "prompt_tokens": 1432,
+      "prompt_tokens_details": {
+        "audio_tokens": 0,
+        "cache_write_tokens": 0,
+        "cached_tokens": 128,
+        "video_tokens": 0
+      },
+      "total_tokens": 2623
+    }
+  },
+  "raw_text": "{\"permit_decision\":\"NOT_REQUIRED\",\"jurisdiction\":{\"jurisdiction_id\":\"VERIFY\",\"name\":\"Raleigh\",\"state\":\"NC\",\"type\":\"city_or_local_authority\"},\"project_family\":\"residential_cosmetic_repair\",\"primary_permit_family\":\"BUILDING\",\"companion_permits\":[],\"filing\":{\"authority_id\":null,\"office\":\"City of Raleigh Permits\",\"destination_url\":\"https://raleighnc.gov/permits\",\"url_role\":\"INFORMATIONAL_OFFICE\"},\"source_support\":{\"state\":\"OFFICIAL_SOURCE_SUPPORTED\",\"strength\":\"STRONG\",\"evidence\":[{\"url\":\"https://www.ncleg.gov/EnactedLegislation/Statutes/HTML/BySection/Chapter_160D/GS_160D-1110.html\",\"role\":\"REQUIREMENT_EVIDENCE\"},{\"url\":\"https://raleighnc.gov/permits\",\"role\":\"INFORMATIONAL_OFFICE\"},{\"url\":\"https://permits.raleighnc.gov\",\"role\":\"APPLICATION_START\"},{\"url\":\"https://raleighnc.gov/permits/services/how-get-residential-permit\",\"role\":\"INFORMATIONAL_OFFICE\"},{\"url\":\"https://cityofraleigh0drupal.blob.core.usgovcloudapi.net/drupal-prod/COR15/ResidentialPermitApplication.pdf\",\"role\":\"DIRECT_FORM\"}]},\"contradictions\":[]}",
+  "requested_model": "x-ai/grok-4.5",
+  "requested_provider": "openrouter",
+  "requested_runtime": "grok",
+  "response_id": "gen-1785168916-bWQ9pIQ9aendzeEIareb",
+  "runtime": "OpenRouter chat/completions; upstream_provider=xAI"
+}

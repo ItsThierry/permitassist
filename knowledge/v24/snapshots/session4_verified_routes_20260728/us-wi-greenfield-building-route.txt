@@ -1,0 +1,6 @@
+PermitAssist independently adjudicated official filing route
+Official source URL: https://www.ci.greenfield.wi.us/1290/Permits
+Official filing URL: https://www.ci.greenfield.wi.us/1549/Apply-Online
+Verification boundary: PASS_OFFICIAL_PAGE_WEB_EXTRACT_20260728
+Exact official quote:
+Building Permits (Apply here)

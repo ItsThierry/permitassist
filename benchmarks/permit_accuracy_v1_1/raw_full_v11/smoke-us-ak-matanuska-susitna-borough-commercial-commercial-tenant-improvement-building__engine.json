@@ -1,0 +1,552 @@
+{
+  "observed_model": "NONE",
+  "observed_provider": "permitassist-local-engine",
+  "path_proof": {
+    "adapter": "engine",
+    "authority_recovery": null,
+    "decision_cell_reference": null,
+    "engine_called": true,
+    "engine_result_supplied_to_model": false,
+    "engine_stdout": "",
+    "model_call_count": 0
+  },
+  "provider": "permitassist-local-engine",
+  "raw_response": {
+    "apply_url": "https://matsugov.us/articles/firecodesafety",
+    "applying_office": "Central Mat-Su Fire Department, Fire and Life Safety Division (Permit Technician) — Matanuska-Susitna Borough; online plan-review applications via Tyler EnerGov self-service portal",
+    "city": "Matanuska Susitna Borough",
+    "companion_permits": [
+      {
+        "permit_kind": "health",
+        "permit_type": "Health Permit",
+        "required": "maybe",
+        "required_status": "VERIFY",
+        "trigger": "health applicability is not closed by the exact seed"
+      },
+      {
+        "permit_kind": "liquor",
+        "permit_type": "Liquor Permit",
+        "required": "maybe",
+        "required_status": "VERIFY",
+        "trigger": "liquor applicability is not closed by the exact seed"
+      },
+      {
+        "permit_kind": "wastewater",
+        "permit_type": "Wastewater Permit",
+        "required": "maybe",
+        "required_status": "VERIFY",
+        "trigger": "wastewater applicability is not closed by the exact seed"
+      }
+    ],
+    "coverage_reason": "source-backed exact AHJ/project row is incomplete: family closure=health,liquor,wastewater; authority closure=health,liquor,wastewater; provenance closure=health,liquor,wastewater",
+    "coverage_status": "validated_exact_partial",
+    "customer_headline": "Permit decision: YES",
+    "customer_next_step": "Verify unresolved permit families, then apply with Central Mat-Su Fire Department, Fire and Life Safety Division (Permit Technician) — Matanuska-Susitna Borough; online plan-review applications via Tyler EnerGov self-service portal.",
+    "decision_source": "sealed_permit_rule_engine_envelope",
+    "family_authority_routes": [
+      {
+        "application_route": {
+          "apply_url": "https://matsugov.us/articles/firecodesafety",
+          "channel": "online",
+          "office_name": "Central Mat-Su Fire Department, Fire and Life Safety Division (Permit Technician) — Matanuska-Susitna Borough; online plan-review applications via Tyler EnerGov self-service portal",
+          "permit_name": "Commercial Building Permit",
+          "provenance": [
+            {
+              "effective_date": null,
+              "last_verified_at": "2026-06-23T09:08:12Z",
+              "quote": "You may also contact the Permit Technician listed below for assistance.",
+              "source_quote": "You may also contact the Permit Technician listed below for assistance.",
+              "source_url": "https://matsugov.us/articles/firecodesafety",
+              "title": "Official jurisdiction source",
+              "url": "https://matsugov.us/articles/firecodesafety"
+            }
+          ],
+          "validation_issue_codes": []
+        },
+        "authority": {
+          "application_authority": "Central Mat-Su Fire Department, Fire and Life Safety Division (Permit Technician) — Matanuska-Susitna Borough; online plan-review applications via Tyler EnerGov self-service portal",
+          "family": "building",
+          "issuing_authority": "Central Mat-Su Fire Department (CMSFD) — Fire and Life Safety Division (state-deferred JHA under the Alaska State Fire Marshal), Matanuska-Susitna Borough"
+        },
+        "family": "building"
+      },
+      {
+        "application_route": {
+          "apply_url": "https://matsugov.us/articles/firecodesafety",
+          "channel": "online",
+          "office_name": "Central Mat-Su Fire Department, Fire and Life Safety Division (Permit Technician) — Matanuska-Susitna Borough; online plan-review applications via Tyler EnerGov self-service portal",
+          "permit_name": "Commercial Building Permit",
+          "provenance": [
+            {
+              "effective_date": null,
+              "last_verified_at": "2026-06-23T09:08:12Z",
+              "quote": "You may also contact the Permit Technician listed below for assistance.",
+              "source_quote": "You may also contact the Permit Technician listed below for assistance.",
+              "source_url": "https://matsugov.us/articles/firecodesafety",
+              "title": "Official jurisdiction source",
+              "url": "https://matsugov.us/articles/firecodesafety"
+            }
+          ],
+          "validation_issue_codes": []
+        },
+        "authority": {
+          "application_authority": "Central Mat-Su Fire Department, Fire and Life Safety Division (Permit Technician) — Matanuska-Susitna Borough; online plan-review applications via Tyler EnerGov self-service portal",
+          "family": "electrical",
+          "issuing_authority": "Central Mat-Su Fire Department (CMSFD) — Fire and Life Safety Division (state-deferred JHA under the Alaska State Fire Marshal), Matanuska-Susitna Borough"
+        },
+        "family": "electrical"
+      },
+      {
+        "application_route": {
+          "apply_url": "https://matsugov.us/articles/firecodesafety",
+          "channel": "online",
+          "office_name": "Central Mat-Su Fire Department, Fire and Life Safety Division (Permit Technician) — Matanuska-Susitna Borough; online plan-review applications via Tyler EnerGov self-service portal",
+          "permit_name": "Commercial Building Permit",
+          "provenance": [
+            {
+              "effective_date": null,
+              "last_verified_at": "2026-06-23T09:08:12Z",
+              "quote": "You may also contact the Permit Technician listed below for assistance.",
+              "source_quote": "You may also contact the Permit Technician listed below for assistance.",
+              "source_url": "https://matsugov.us/articles/firecodesafety",
+              "title": "Official jurisdiction source",
+              "url": "https://matsugov.us/articles/firecodesafety"
+            }
+          ],
+          "validation_issue_codes": []
+        },
+        "authority": {
+          "application_authority": "Central Mat-Su Fire Department, Fire and Life Safety Division (Permit Technician) — Matanuska-Susitna Borough; online plan-review applications via Tyler EnerGov self-service portal",
+          "family": "fire",
+          "issuing_authority": "Central Mat-Su Fire Department (CMSFD) — Fire and Life Safety Division (state-deferred JHA under the Alaska State Fire Marshal), Matanuska-Susitna Borough"
+        },
+        "family": "fire"
+      },
+      {
+        "application_route": {
+          "apply_url": "https://matsugov.us/articles/firecodesafety",
+          "channel": "online",
+          "office_name": "Central Mat-Su Fire Department, Fire and Life Safety Division (Permit Technician) — Matanuska-Susitna Borough; online plan-review applications via Tyler EnerGov self-service portal",
+          "permit_name": "Commercial Building Permit",
+          "provenance": [
+            {
+              "effective_date": null,
+              "last_verified_at": "2026-06-23T09:08:12Z",
+              "quote": "You may also contact the Permit Technician listed below for assistance.",
+              "source_quote": "You may also contact the Permit Technician listed below for assistance.",
+              "source_url": "https://matsugov.us/articles/firecodesafety",
+              "title": "Official jurisdiction source",
+              "url": "https://matsugov.us/articles/firecodesafety"
+            }
+          ],
+          "validation_issue_codes": []
+        },
+        "authority": {
+          "application_authority": "Central Mat-Su Fire Department, Fire and Life Safety Division (Permit Technician) — Matanuska-Susitna Borough; online plan-review applications via Tyler EnerGov self-service portal",
+          "family": "mechanical",
+          "issuing_authority": "Central Mat-Su Fire Department (CMSFD) — Fire and Life Safety Division (state-deferred JHA under the Alaska State Fire Marshal), Matanuska-Susitna Borough"
+        },
+        "family": "mechanical"
+      },
+      {
+        "application_route": {
+          "apply_url": "https://matsugov.us/articles/firecodesafety",
+          "channel": "online",
+          "office_name": "Central Mat-Su Fire Department, Fire and Life Safety Division (Permit Technician) — Matanuska-Susitna Borough; online plan-review applications via Tyler EnerGov self-service portal",
+          "permit_name": "Commercial Building Permit",
+          "provenance": [
+            {
+              "effective_date": null,
+              "last_verified_at": "2026-06-23T09:08:12Z",
+              "quote": "You may also contact the Permit Technician listed below for assistance.",
+              "source_quote": "You may also contact the Permit Technician listed below for assistance.",
+              "source_url": "https://matsugov.us/articles/firecodesafety",
+              "title": "Official jurisdiction source",
+              "url": "https://matsugov.us/articles/firecodesafety"
+            }
+          ],
+          "validation_issue_codes": []
+        },
+        "authority": {
+          "application_authority": "Central Mat-Su Fire Department, Fire and Life Safety Division (Permit Technician) — Matanuska-Susitna Borough; online plan-review applications via Tyler EnerGov self-service portal",
+          "family": "occupancy",
+          "issuing_authority": "Central Mat-Su Fire Department (CMSFD) — Fire and Life Safety Division (state-deferred JHA under the Alaska State Fire Marshal), Matanuska-Susitna Borough"
+        },
+        "family": "occupancy"
+      },
+      {
+        "application_route": {
+          "apply_url": "https://matsugov.us/articles/firecodesafety",
+          "channel": "online",
+          "office_name": "Central Mat-Su Fire Department, Fire and Life Safety Division (Permit Technician) — Matanuska-Susitna Borough; online plan-review applications via Tyler EnerGov self-service portal",
+          "permit_name": "Commercial Building Permit",
+          "provenance": [
+            {
+              "effective_date": null,
+              "last_verified_at": "2026-06-23T09:08:12Z",
+              "quote": "You may also contact the Permit Technician listed below for assistance.",
+              "source_quote": "You may also contact the Permit Technician listed below for assistance.",
+              "source_url": "https://matsugov.us/articles/firecodesafety",
+              "title": "Official jurisdiction source",
+              "url": "https://matsugov.us/articles/firecodesafety"
+            }
+          ],
+          "validation_issue_codes": []
+        },
+        "authority": {
+          "application_authority": "Central Mat-Su Fire Department, Fire and Life Safety Division (Permit Technician) — Matanuska-Susitna Borough; online plan-review applications via Tyler EnerGov self-service portal",
+          "family": "plumbing",
+          "issuing_authority": "Central Mat-Su Fire Department (CMSFD) — Fire and Life Safety Division (state-deferred JHA under the Alaska State Fire Marshal), Matanuska-Susitna Borough"
+        },
+        "family": "plumbing"
+      },
+      {
+        "application_route": {
+          "apply_url": "https://matsugov.us/articles/firecodesafety",
+          "channel": "online",
+          "office_name": "Central Mat-Su Fire Department, Fire and Life Safety Division (Permit Technician) — Matanuska-Susitna Borough; online plan-review applications via Tyler EnerGov self-service portal",
+          "permit_name": "Commercial Building Permit",
+          "provenance": [
+            {
+              "effective_date": null,
+              "last_verified_at": "2026-06-23T09:08:12Z",
+              "quote": "You may also contact the Permit Technician listed below for assistance.",
+              "source_quote": "You may also contact the Permit Technician listed below for assistance.",
+              "source_url": "https://matsugov.us/articles/firecodesafety",
+              "title": "Official jurisdiction source",
+              "url": "https://matsugov.us/articles/firecodesafety"
+            }
+          ],
+          "validation_issue_codes": []
+        },
+        "authority": {
+          "application_authority": "Central Mat-Su Fire Department, Fire and Life Safety Division (Permit Technician) — Matanuska-Susitna Borough; online plan-review applications via Tyler EnerGov self-service portal",
+          "family": "zoning",
+          "issuing_authority": "Central Mat-Su Fire Department (CMSFD) — Fire and Life Safety Division (state-deferred JHA under the Alaska State Fire Marshal), Matanuska-Susitna Borough"
+        },
+        "family": "zoning"
+      }
+    ],
+    "family_decisions": [
+      {
+        "apply_url": "https://matsugov.us/articles/firecodesafety",
+        "authority": "Central Mat-Su Fire Department, Fire and Life Safety Division (Permit Technician) — Matanuska-Susitna Borough; online plan-review applications via Tyler EnerGov self-service portal",
+        "family": "building",
+        "trigger": "building_commercial_alteration_ti",
+        "validation_issue_codes": [],
+        "verdict": "REQUIRED"
+      },
+      {
+        "apply_url": "https://matsugov.us/articles/firecodesafety",
+        "authority": "Central Mat-Su Fire Department, Fire and Life Safety Division (Permit Technician) — Matanuska-Susitna Borough; online plan-review applications via Tyler EnerGov self-service portal",
+        "family": "electrical",
+        "trigger": "electrical",
+        "validation_issue_codes": [],
+        "verdict": "REQUIRED"
+      },
+      {
+        "apply_url": "https://matsugov.us/articles/firecodesafety",
+        "authority": "Central Mat-Su Fire Department, Fire and Life Safety Division (Permit Technician) — Matanuska-Susitna Borough; online plan-review applications via Tyler EnerGov self-service portal",
+        "family": "fire",
+        "trigger": "fire_alarm_sprinkler_life_safety",
+        "validation_issue_codes": [],
+        "verdict": "REQUIRED"
+      },
+      {
+        "apply_url": "",
+        "authority": "",
+        "family": "health",
+        "trigger": "health applicability is not closed by the exact seed",
+        "validation_issue_codes": [
+          "verified_partial_dimension_unclosed"
+        ],
+        "verdict": "VERIFY"
+      },
+      {
+        "apply_url": "",
+        "authority": "",
+        "family": "liquor",
+        "trigger": "liquor applicability is not closed by the exact seed",
+        "validation_issue_codes": [
+          "verified_partial_dimension_unclosed"
+        ],
+        "verdict": "VERIFY"
+      },
+      {
+        "apply_url": "https://matsugov.us/articles/firecodesafety",
+        "authority": "Central Mat-Su Fire Department, Fire and Life Safety Division (Permit Technician) — Matanuska-Susitna Borough; online plan-review applications via Tyler EnerGov self-service portal",
+        "family": "mechanical",
+        "trigger": "mechanical_hvac_gas",
+        "validation_issue_codes": [],
+        "verdict": "REQUIRED"
+      },
+      {
+        "apply_url": "https://matsugov.us/articles/firecodesafety",
+        "authority": "Central Mat-Su Fire Department, Fire and Life Safety Division (Permit Technician) — Matanuska-Susitna Borough; online plan-review applications via Tyler EnerGov self-service portal",
+        "family": "occupancy",
+        "trigger": "co_change_of_use_use_and_occupancy",
+        "validation_issue_codes": [],
+        "verdict": "REQUIRED"
+      },
+      {
+        "apply_url": "https://matsugov.us/articles/firecodesafety",
+        "authority": "Central Mat-Su Fire Department, Fire and Life Safety Division (Permit Technician) — Matanuska-Susitna Borough; online plan-review applications via Tyler EnerGov self-service portal",
+        "family": "plumbing",
+        "trigger": "plumbing",
+        "validation_issue_codes": [],
+        "verdict": "REQUIRED"
+      },
+      {
+        "apply_url": "",
+        "authority": "",
+        "family": "wastewater",
+        "trigger": "wastewater applicability is not closed by the exact seed",
+        "validation_issue_codes": [
+          "verified_partial_dimension_unclosed"
+        ],
+        "verdict": "VERIFY"
+      },
+      {
+        "apply_url": "https://matsugov.us/articles/firecodesafety",
+        "authority": "Central Mat-Su Fire Department, Fire and Life Safety Division (Permit Technician) — Matanuska-Susitna Borough; online plan-review applications via Tyler EnerGov self-service portal",
+        "family": "zoning",
+        "trigger": "zoning_planning",
+        "validation_issue_codes": [],
+        "verdict": "REQUIRED"
+      }
+    ],
+    "jurisdiction_id": "us-ak-matanuska-susitna-borough",
+    "jurisdiction_name": "Matanuska Susitna Borough",
+    "online_application_url": "https://matsugov.us/articles/firecodesafety",
+    "permit_decision": "REQUIRED",
+    "permit_kind": "building",
+    "permit_name": "Building Permit",
+    "permit_required": true,
+    "permit_verdict": "YES",
+    "permits_required": [
+      {
+        "apply_url": "https://matsugov.us/articles/firecodesafety",
+        "applying_office": "Central Mat-Su Fire Department, Fire and Life Safety Division (Permit Technician) — Matanuska-Susitna Borough; online plan-review applications via Tyler EnerGov self-service portal",
+        "permit_kind": "building",
+        "permit_type": "Building Permit",
+        "required": true,
+        "required_status": "REQUIRED",
+        "trigger": "building_commercial_alteration_ti"
+      },
+      {
+        "apply_url": "https://matsugov.us/articles/firecodesafety",
+        "applying_office": "Central Mat-Su Fire Department, Fire and Life Safety Division (Permit Technician) — Matanuska-Susitna Borough; online plan-review applications via Tyler EnerGov self-service portal",
+        "permit_kind": "electrical",
+        "permit_type": "Electrical Permit",
+        "required": true,
+        "required_status": "REQUIRED",
+        "trigger": "electrical"
+      },
+      {
+        "apply_url": "https://matsugov.us/articles/firecodesafety",
+        "applying_office": "Central Mat-Su Fire Department, Fire and Life Safety Division (Permit Technician) — Matanuska-Susitna Borough; online plan-review applications via Tyler EnerGov self-service portal",
+        "permit_kind": "fire",
+        "permit_type": "Fire Permit",
+        "required": true,
+        "required_status": "REQUIRED",
+        "trigger": "fire_alarm_sprinkler_life_safety"
+      },
+      {
+        "apply_url": "",
+        "applying_office": "",
+        "permit_kind": "health",
+        "permit_type": "Health Permit",
+        "required": "maybe",
+        "required_status": "VERIFY",
+        "trigger": "health applicability is not closed by the exact seed"
+      },
+      {
+        "apply_url": "",
+        "applying_office": "",
+        "permit_kind": "liquor",
+        "permit_type": "Liquor Permit",
+        "required": "maybe",
+        "required_status": "VERIFY",
+        "trigger": "liquor applicability is not closed by the exact seed"
+      },
+      {
+        "apply_url": "https://matsugov.us/articles/firecodesafety",
+        "applying_office": "Central Mat-Su Fire Department, Fire and Life Safety Division (Permit Technician) — Matanuska-Susitna Borough; online plan-review applications via Tyler EnerGov self-service portal",
+        "permit_kind": "mechanical",
+        "permit_type": "Mechanical Permit",
+        "required": true,
+        "required_status": "REQUIRED",
+        "trigger": "mechanical_hvac_gas"
+      },
+      {
+        "apply_url": "https://matsugov.us/articles/firecodesafety",
+        "applying_office": "Central Mat-Su Fire Department, Fire and Life Safety Division (Permit Technician) — Matanuska-Susitna Borough; online plan-review applications via Tyler EnerGov self-service portal",
+        "permit_kind": "occupancy",
+        "permit_type": "Occupancy Permit",
+        "required": true,
+        "required_status": "REQUIRED",
+        "trigger": "co_change_of_use_use_and_occupancy"
+      },
+      {
+        "apply_url": "https://matsugov.us/articles/firecodesafety",
+        "applying_office": "Central Mat-Su Fire Department, Fire and Life Safety Division (Permit Technician) — Matanuska-Susitna Borough; online plan-review applications via Tyler EnerGov self-service portal",
+        "permit_kind": "plumbing",
+        "permit_type": "Plumbing Permit",
+        "required": true,
+        "required_status": "REQUIRED",
+        "trigger": "plumbing"
+      },
+      {
+        "apply_url": "",
+        "applying_office": "",
+        "permit_kind": "wastewater",
+        "permit_type": "Wastewater Permit",
+        "required": "maybe",
+        "required_status": "VERIFY",
+        "trigger": "wastewater applicability is not closed by the exact seed"
+      },
+      {
+        "apply_url": "https://matsugov.us/articles/firecodesafety",
+        "applying_office": "Central Mat-Su Fire Department, Fire and Life Safety Division (Permit Technician) — Matanuska-Susitna Borough; online plan-review applications via Tyler EnerGov self-service portal",
+        "permit_kind": "zoning",
+        "permit_type": "Zoning Permit",
+        "required": true,
+        "required_status": "REQUIRED",
+        "trigger": "zoning_planning"
+      }
+    ],
+    "project_family": "commercial_tenant_improvement",
+    "projection_schema_version": "permitassist.customer-decision-projection.v1",
+    "related_permits": [
+      {
+        "permit_kind": "health",
+        "permit_type": "Health Permit",
+        "required": "maybe",
+        "required_status": "VERIFY",
+        "trigger": "health applicability is not closed by the exact seed"
+      },
+      {
+        "permit_kind": "liquor",
+        "permit_type": "Liquor Permit",
+        "required": "maybe",
+        "required_status": "VERIFY",
+        "trigger": "liquor applicability is not closed by the exact seed"
+      },
+      {
+        "permit_kind": "wastewater",
+        "permit_type": "Wastewater Permit",
+        "required": "maybe",
+        "required_status": "VERIFY",
+        "trigger": "wastewater applicability is not closed by the exact seed"
+      }
+    ],
+    "seed_classification": "exact_partial",
+    "source_cell_id": "us-ak-matanuska_susitna_borough__commercial__commercial_tenant_improvement__building",
+    "sources": [
+      {
+        "effective_date": null,
+        "last_verified_at": "2026-06-23T12:47:40Z",
+        "quote": "Additional permits may be required from other agencies, including but not limited to specific State Agencies such as Licensing or DEC, Matanuska Susitna Borough planning department, cities of Wasilla, Palmer, Houston, or other agencies.",
+        "source_quote": "Additional permits may be required from other agencies, including but not limited to specific State Agencies such as Licensing or DEC, Matanuska Susitna Borough planning department, cities of Wasilla, Palmer, Houston, or other agencies.",
+        "source_url": "https://matsu.gov/services/plan-review-permitting",
+        "title": "Official jurisdiction source",
+        "url": "https://matsu.gov/services/plan-review-permitting"
+      },
+      {
+        "effective_date": null,
+        "last_verified_at": "2026-06-23T09:08:12Z",
+        "quote": "Every commercial structure in the fire service area where people work, play or spend time is subject to annual inspection.",
+        "source_quote": "Every commercial structure in the fire service area where people work, play or spend time is subject to annual inspection.",
+        "source_url": "https://matsugov.us/articles/firecodesafety",
+        "title": "Official jurisdiction source",
+        "url": "https://matsugov.us/articles/firecodesafety"
+      },
+      {
+        "effective_date": null,
+        "last_verified_at": "2026-06-23T09:08:12Z",
+        "quote": "Submit completed plan review application form and construction documents (see above) to the Permit Technician at This email address is being protected from spambots.",
+        "source_quote": "Submit completed plan review application form and construction documents (see above) to the Permit Technician at This email address is being protected from spambots.",
+        "source_url": "https://matsugov.us/articles/firecodesafety",
+        "title": "Official jurisdiction source",
+        "url": "https://matsugov.us/articles/firecodesafety"
+      },
+      {
+        "effective_date": null,
+        "last_verified_at": "2026-06-23T09:08:12Z",
+        "quote": "This review does not address structural considerations or mechanical or electrical review beyond that necessary to confirm compliance with fire or life safety requirements.",
+        "source_quote": "This review does not address structural considerations or mechanical or electrical review beyond that necessary to confirm compliance with fire or life safety requirements.",
+        "source_url": "https://matsugov.us/articles/firecodesafety",
+        "title": "Official jurisdiction source",
+        "url": "https://matsugov.us/articles/firecodesafety"
+      },
+      {
+        "effective_date": null,
+        "last_verified_at": "2026-06-23T09:08:12Z",
+        "quote": "Once any deficiencies have been corrected, a certificate of occupancy will be issued and the plan review will be closed.",
+        "source_quote": "Once any deficiencies have been corrected, a certificate of occupancy will be issued and the plan review will be closed.",
+        "source_url": "https://matsugov.us/articles/firecodesafety",
+        "title": "Official jurisdiction source",
+        "url": "https://matsugov.us/articles/firecodesafety"
+      },
+      {
+        "effective_date": null,
+        "last_verified_at": "2026-06-23T12:47:40Z",
+        "quote": "State inspectors perform electrical and plumbing inspections of work performed on new construction and repairs or alterations to existing structures.",
+        "source_quote": "State inspectors perform electrical and plumbing inspections of work performed on new construction and repairs or alterations to existing structures.",
+        "source_url": "https://labor.alaska.gov/lss/plumbing_electrical.htm",
+        "title": "Official jurisdiction source",
+        "url": "https://labor.alaska.gov/lss/plumbing_electrical.htm"
+      }
+    ],
+    "state": "AK",
+    "summary": "source-backed exact AHJ/project row is incomplete: family closure=health,liquor,wastewater; authority closure=health,liquor,wastewater; provenance closure=health,liquor,wastewater",
+    "verification_tasks": [
+      {
+        "action": "Verify health applicability, source evidence, filing authority, application route with the official permit authority before filing.",
+        "apply_url": "",
+        "authority": "",
+        "family": "health",
+        "unresolved_dimensions": [
+          "applicability",
+          "source evidence",
+          "filing authority",
+          "application route"
+        ]
+      },
+      {
+        "action": "Verify liquor applicability, source evidence, filing authority, application route with the official permit authority before filing.",
+        "apply_url": "",
+        "authority": "",
+        "family": "liquor",
+        "unresolved_dimensions": [
+          "applicability",
+          "source evidence",
+          "filing authority",
+          "application route"
+        ]
+      },
+      {
+        "action": "Verify wastewater applicability, source evidence, filing authority, application route with the official permit authority before filing.",
+        "apply_url": "",
+        "authority": "",
+        "family": "wastewater",
+        "unresolved_dimensions": [
+          "applicability",
+          "source evidence",
+          "filing authority",
+          "application route"
+        ]
+      }
+    ],
+    "warnings": [
+      "Health: VERIFY — verify before filing.",
+      "Liquor: VERIFY — verify before filing.",
+      "Wastewater: VERIFY — verify before filing."
+    ]
+  },
+  "requested_model": "NONE",
+  "requested_provider": "permitassist-local-engine",
+  "requested_runtime": "engine",
+  "response_id": null,
+  "runtime": "api.server Decision Cell + finalize + customer egress"
+}

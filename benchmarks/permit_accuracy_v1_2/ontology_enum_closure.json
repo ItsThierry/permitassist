@@ -1,0 +1,604 @@
+{
+  "closure_pass": true,
+  "counts": {
+    "preserved_runtime_and_model_raw": 84,
+    "truth": 15,
+    "v24_cells": 18
+  },
+  "note": "Ambiguous labels deterministically map to VERIFY or OTHER; no label defaults to BUILDING.",
+  "schema": "permit_family_enum_closure_inventory_v1",
+  "sources": {
+    "preserved_runtime_and_model_raw": [
+      {
+        "canonical_family": "ACCESSIBILITY",
+        "count": 324,
+        "label": "Accessibility / ADA path-of-travel verification"
+      },
+      {
+        "canonical_family": "ACCESSIBILITY",
+        "count": 4,
+        "label": "Accessibility review permit/review"
+      },
+      {
+        "canonical_family": "BUILDING",
+        "count": 6,
+        "label": "All building permits"
+      },
+      {
+        "canonical_family": "BUILDING",
+        "count": 367,
+        "label": "Building"
+      },
+      {
+        "canonical_family": "BUILDING",
+        "count": 293,
+        "label": "Building Permit"
+      },
+      {
+        "canonical_family": "BUILDING",
+        "count": 6,
+        "label": "Building Permit Application"
+      },
+      {
+        "canonical_family": "BUILDING",
+        "count": 6,
+        "label": "Building Permits"
+      },
+      {
+        "canonical_family": "OCCUPANCY_CO",
+        "count": 110,
+        "label": "Certificate of Occupancy"
+      },
+      {
+        "canonical_family": "OCCUPANCY_CO",
+        "count": 220,
+        "label": "Certificate of Occupancy / Change-of-Occupancy Verification"
+      },
+      {
+        "canonical_family": "BUILDING",
+        "count": 218,
+        "label": "Commercial Building / Tenant Improvement"
+      },
+      {
+        "canonical_family": "BUILDING",
+        "count": 5,
+        "label": "Commercial Building / Tenant Improvement Permit"
+      },
+      {
+        "canonical_family": "BUILDING",
+        "count": 328,
+        "label": "Commercial Building Permit"
+      },
+      {
+        "canonical_family": "ELECTRICAL",
+        "count": 2,
+        "label": "Commercial Electrical Permit / Inspection Routing"
+      },
+      {
+        "canonical_family": "BUILDING",
+        "count": 6,
+        "label": "Construction Permit"
+      },
+      {
+        "canonical_family": "DEMOLITION",
+        "count": 3,
+        "label": "Demolition Permit"
+      },
+      {
+        "canonical_family": "ZONING_PLANNING",
+        "count": 1,
+        "label": "Detached Shed Permit / Zoning Verification"
+      },
+      {
+        "canonical_family": "ELECTRICAL",
+        "count": 205,
+        "label": "Electrical"
+      },
+      {
+        "canonical_family": "ELECTRICAL",
+        "count": 475,
+        "label": "Electrical Permit"
+      },
+      {
+        "canonical_family": "ELECTRICAL",
+        "count": 4,
+        "label": "Electrical Permit / Electrical Inspections"
+      },
+      {
+        "canonical_family": "ELECTRICAL",
+        "count": 92,
+        "label": "Electrical Permit — Residential Remodel / Addition"
+      },
+      {
+        "canonical_family": "FIRE_LIFE_SAFETY",
+        "count": 6,
+        "label": "Fire"
+      },
+      {
+        "canonical_family": "FIRE_LIFE_SAFETY",
+        "count": 4,
+        "label": "Fire / life safety permit/review"
+      },
+      {
+        "canonical_family": "FIRE_LIFE_SAFETY",
+        "count": 4,
+        "label": "Fire Permit"
+      },
+      {
+        "canonical_family": "FIRE_LIFE_SAFETY",
+        "count": 12,
+        "label": "Fire Permit / Fire Prevention Review"
+      },
+      {
+        "canonical_family": "GAS",
+        "count": 3,
+        "label": "Gas Permit"
+      },
+      {
+        "canonical_family": "HEALTH",
+        "count": 6,
+        "label": "Health Permit"
+      },
+      {
+        "canonical_family": "LIQUOR",
+        "count": 6,
+        "label": "Liquor Permit"
+      },
+      {
+        "canonical_family": "MECHANICAL",
+        "count": 150,
+        "label": "Mechanical"
+      },
+      {
+        "canonical_family": "MECHANICAL",
+        "count": 6,
+        "label": "Mechanical / HVAC permit/review"
+      },
+      {
+        "canonical_family": "MECHANICAL",
+        "count": 365,
+        "label": "Mechanical Permit"
+      },
+      {
+        "canonical_family": "MECHANICAL",
+        "count": 92,
+        "label": "Mechanical Permit — Residential Remodel / Addition"
+      },
+      {
+        "canonical_family": "NO_PRIMARY_PERMIT",
+        "count": 6,
+        "label": "No permit required"
+      },
+      {
+        "canonical_family": "NO_PRIMARY_PERMIT",
+        "count": 7,
+        "label": "Not Required"
+      },
+      {
+        "canonical_family": "OCCUPANCY_CO",
+        "count": 4,
+        "label": "Occupancy Permit"
+      },
+      {
+        "canonical_family": "OTHER",
+        "count": 113,
+        "label": "Other"
+      },
+      {
+        "canonical_family": "OTHER",
+        "count": 6,
+        "label": "Permit"
+      },
+      {
+        "canonical_family": "VERIFY",
+        "count": 2,
+        "label": "Permit Category Verification"
+      },
+      {
+        "canonical_family": "VERIFY",
+        "count": 6,
+        "label": "Permit requirement verification"
+      },
+      {
+        "canonical_family": "ZONING_PLANNING",
+        "count": 116,
+        "label": "Planning / Zoning Use Clearance"
+      },
+      {
+        "canonical_family": "ZONING_PLANNING",
+        "count": 117,
+        "label": "Planning/Zoning"
+      },
+      {
+        "canonical_family": "ZONING_PLANNING",
+        "count": 10,
+        "label": "Planning/Zoning Use Verification"
+      },
+      {
+        "canonical_family": "ZONING_PLANNING",
+        "count": 4,
+        "label": "Planning/Zoning Verification"
+      },
+      {
+        "canonical_family": "PLUMBING",
+        "count": 154,
+        "label": "Plumbing"
+      },
+      {
+        "canonical_family": "PLUMBING",
+        "count": 6,
+        "label": "Plumbing / FOG Permit"
+      },
+      {
+        "canonical_family": "PLUMBING",
+        "count": 375,
+        "label": "Plumbing Permit"
+      },
+      {
+        "canonical_family": "PLUMBING",
+        "count": 88,
+        "label": "Plumbing Permit — Residential Remodel / Addition"
+      },
+      {
+        "canonical_family": "PLUMBING",
+        "count": 6,
+        "label": "Plumbing permit/review"
+      },
+      {
+        "canonical_family": "BUILDING",
+        "count": 4,
+        "label": "Required permit package — All building permits"
+      },
+      {
+        "canonical_family": "BUILDING",
+        "count": 62,
+        "label": "Required permit package — Building Permit"
+      },
+      {
+        "canonical_family": "BUILDING",
+        "count": 4,
+        "label": "Required permit package — Building Permit Application"
+      },
+      {
+        "canonical_family": "BUILDING",
+        "count": 4,
+        "label": "Required permit package — Building Permits"
+      },
+      {
+        "canonical_family": "BUILDING",
+        "count": 216,
+        "label": "Required permit package — Commercial Building Permit"
+      },
+      {
+        "canonical_family": "BUILDING",
+        "count": 4,
+        "label": "Required permit package — Construction Permit"
+      },
+      {
+        "canonical_family": "BUILDING",
+        "count": 4,
+        "label": "Required permit package — Residential Building Permit"
+      },
+      {
+        "canonical_family": "BUILDING",
+        "count": 4,
+        "label": "Required permit package — Residential Building Permit — Remodel / Alteration"
+      },
+      {
+        "canonical_family": "BUILDING",
+        "count": 4,
+        "label": "Required permit package — Residential Construction Permit"
+      },
+      {
+        "canonical_family": "BUILDING",
+        "count": 4,
+        "label": "Required permit package — building permit"
+      },
+      {
+        "canonical_family": "BUILDING",
+        "count": 6,
+        "label": "Residential Building Permit"
+      },
+      {
+        "canonical_family": "BUILDING",
+        "count": 6,
+        "label": "Residential Building Permit — Remodel / Alteration"
+      },
+      {
+        "canonical_family": "BUILDING",
+        "count": 6,
+        "label": "Residential Construction Permit"
+      },
+      {
+        "canonical_family": "PLUMBING",
+        "count": 6,
+        "label": "Residential Plumbing Permit — Water Heater Replacement"
+      },
+      {
+        "canonical_family": "ROOFING",
+        "count": 4,
+        "label": "Roofing Permit — Tear-Off / Re-Roof"
+      },
+      {
+        "canonical_family": "WASTEWATER_FOG",
+        "count": 6,
+        "label": "Wastewater Permit"
+      },
+      {
+        "canonical_family": "ZONING_PLANNING",
+        "count": 1,
+        "label": "Zoning / Land Use"
+      },
+      {
+        "canonical_family": "ZONING_PLANNING",
+        "count": 208,
+        "label": "Zoning / Land Use Permit"
+      },
+      {
+        "canonical_family": "ZONING_PLANNING",
+        "count": 3,
+        "label": "Zoning / setback verification"
+      },
+      {
+        "canonical_family": "ZONING_PLANNING",
+        "count": 4,
+        "label": "Zoning Permit"
+      },
+      {
+        "canonical_family": "BUILDING",
+        "count": 820,
+        "label": "building"
+      },
+      {
+        "canonical_family": "BUILDING",
+        "count": 6,
+        "label": "building permit"
+      },
+      {
+        "canonical_family": "BUILDING",
+        "count": 2,
+        "label": "building_ti"
+      },
+      {
+        "canonical_family": "OCCUPANCY_CO",
+        "count": 220,
+        "label": "co"
+      },
+      {
+        "canonical_family": "DEMOLITION",
+        "count": 7,
+        "label": "demolition"
+      },
+      {
+        "canonical_family": "ELECTRICAL",
+        "count": 576,
+        "label": "electrical"
+      },
+      {
+        "canonical_family": "FIRE_LIFE_SAFETY",
+        "count": 21,
+        "label": "fire"
+      },
+      {
+        "canonical_family": "GAS",
+        "count": 7,
+        "label": "gas"
+      },
+      {
+        "canonical_family": "HEALTH",
+        "count": 10,
+        "label": "health"
+      },
+      {
+        "canonical_family": "LIQUOR",
+        "count": 10,
+        "label": "liquor"
+      },
+      {
+        "canonical_family": "MECHANICAL",
+        "count": 466,
+        "label": "mechanical"
+      },
+      {
+        "canonical_family": "OCCUPANCY_CO",
+        "count": 9,
+        "label": "occupancy"
+      },
+      {
+        "canonical_family": "OTHER",
+        "count": 218,
+        "label": "other"
+      },
+      {
+        "canonical_family": "ZONING_PLANNING",
+        "count": 339,
+        "label": "planning"
+      },
+      {
+        "canonical_family": "PLUMBING",
+        "count": 478,
+        "label": "plumbing"
+      },
+      {
+        "canonical_family": "WASTEWATER_FOG",
+        "count": 10,
+        "label": "wastewater"
+      },
+      {
+        "canonical_family": "ZONING_PLANNING",
+        "count": 9,
+        "label": "zoning"
+      }
+    ],
+    "truth": [
+      {
+        "canonical_family": "BUILDING",
+        "count": 96,
+        "label": "BUILDING"
+      },
+      {
+        "canonical_family": "DEMOLITION",
+        "count": 1,
+        "label": "DEMOLITION"
+      },
+      {
+        "canonical_family": "ELECTRICAL",
+        "count": 6,
+        "label": "ELECTRICAL"
+      },
+      {
+        "canonical_family": "FIRE_LIFE_SAFETY",
+        "count": 3,
+        "label": "FIRE"
+      },
+      {
+        "canonical_family": "GAS",
+        "count": 1,
+        "label": "GAS"
+      },
+      {
+        "canonical_family": "LANDMARKS_HISTORIC",
+        "count": 1,
+        "label": "LANDMARKS"
+      },
+      {
+        "canonical_family": "MECHANICAL",
+        "count": 6,
+        "label": "MECHANICAL"
+      },
+      {
+        "canonical_family": "MOVING",
+        "count": 1,
+        "label": "MOVING"
+      },
+      {
+        "canonical_family": "NO_PRIMARY_PERMIT",
+        "count": 3,
+        "label": "NO_PRIMARY_PERMIT"
+      },
+      {
+        "canonical_family": "OCCUPANCY_CO",
+        "count": 2,
+        "label": "OCCUPANCY"
+      },
+      {
+        "canonical_family": "PLUMBING",
+        "count": 6,
+        "label": "PLUMBING"
+      },
+      {
+        "canonical_family": "POOL_SPA",
+        "count": 1,
+        "label": "POOL"
+      },
+      {
+        "canonical_family": "ROOFING",
+        "count": 1,
+        "label": "ROOFING"
+      },
+      {
+        "canonical_family": "SIGN",
+        "count": 1,
+        "label": "SIGN"
+      },
+      {
+        "canonical_family": "ZONING_PLANNING",
+        "count": 2,
+        "label": "ZONING"
+      }
+    ],
+    "v24_cells": [
+      {
+        "canonical_family": "BUILDING",
+        "count": 4270,
+        "label": "building"
+      },
+      {
+        "canonical_family": "BUILDING",
+        "count": 8,
+        "label": "building_construction"
+      },
+      {
+        "canonical_family": "BUILDING",
+        "count": 2,
+        "label": "building_trade"
+      },
+      {
+        "canonical_family": "DEMOLITION",
+        "count": 8,
+        "label": "demolition"
+      },
+      {
+        "canonical_family": "ELECTRICAL",
+        "count": 166,
+        "label": "electrical"
+      },
+      {
+        "canonical_family": "FIRE_LIFE_SAFETY",
+        "count": 116,
+        "label": "fire"
+      },
+      {
+        "canonical_family": "GAS",
+        "count": 10,
+        "label": "gas"
+      },
+      {
+        "canonical_family": "MANUFACTURED_STRUCTURE",
+        "count": 2,
+        "label": "manufactured_structure_installation"
+      },
+      {
+        "canonical_family": "MECHANICAL",
+        "count": 156,
+        "label": "mechanical"
+      },
+      {
+        "canonical_family": "MOVING",
+        "count": 2,
+        "label": "moving"
+      },
+      {
+        "canonical_family": "OCCUPANCY_CO",
+        "count": 190,
+        "label": "occupancy"
+      },
+      {
+        "canonical_family": "PLUMBING",
+        "count": 172,
+        "label": "plumbing"
+      },
+      {
+        "canonical_family": "POOL_SPA",
+        "count": 4,
+        "label": "pool"
+      },
+      {
+        "canonical_family": "HEALTH",
+        "count": 4,
+        "label": "septic_oss_health"
+      },
+      {
+        "canonical_family": "SIGN",
+        "count": 2,
+        "label": "sign"
+      },
+      {
+        "canonical_family": "TRADE_OR_SUBPERMIT_REVIEW",
+        "count": 8,
+        "label": "trade_or_subpermit_review"
+      },
+      {
+        "canonical_family": "ZONING_PLANNING",
+        "count": 184,
+        "label": "zoning"
+      },
+      {
+        "canonical_family": "ZONING_PLANNING",
+        "count": 18,
+        "label": "zoning_planning"
+      }
+    ]
+  },
+  "unmapped_labels": []
+}

@@ -1,0 +1,78 @@
+{
+  "observed_model": "x-ai/grok-4.5",
+  "observed_provider": "openrouter",
+  "path_proof": {
+    "adapter": "grok",
+    "engine_called": false,
+    "engine_result_supplied_to_model": false,
+    "model_call_count": 1
+  },
+  "provider": "openrouter",
+  "provider_response": {
+    "choices": [
+      {
+        "finish_reason": "stop",
+        "index": 0,
+        "logprobs": null,
+        "message": {
+          "content": "{\"permit_decision\":\"VERIFY\",\"jurisdiction\":{\"jurisdiction_id\":\"us-nh-amherst\",\"name\":\"Amherst\",\"state\":\"NH\",\"type\":\"city_or_local_authority\"},\"project_family\":\"commercial_tenant_improvement\",\"primary_permit_family\":\"BUILDING\",\"companion_permits\":[{\"family\":\"ELECTRICAL\",\"status\":\"VERIFY\"},{\"family\":\"PLUMBING\",\"status\":\"VERIFY\"},{\"family\":\"MECHANICAL\",\"status\":\"VERIFY\"},{\"family\":\"FIRE_LIFE_SAFETY\",\"status\":\"VERIFY\"},{\"family\":\"OCCUPANCY\",\"status\":\"VERIFY\"},{\"family\":\"PLANNING_ZONING\",\"status\":\"VERIFY\"}],\"filing\":{\"authority_id\":\"us-nh-amherst\",\"office\":\"Community Development Office\",\"destination_url\":\"https://www.amherstnh.gov/community-development-office/files/chapter-h\",\"url_role\":\"DIRECT_FORM\"},\"source_support\":{\"state\":\"OFFICIAL_SOURCE_SUPPORTED\",\"strength\":\"WEAK\",\"evidence\":[{\"url\":\"https://www.amherstnh.gov/community-development-office\",\"role\":\"INFORMATIONAL_OFFICE\"},{\"url\":\"https://www.amherstnh.gov/community-development-office/files/chapter-h\",\"role\":\"DIRECT_FORM\"}]},\"contradictions\":[]}",
+          "reasoning": "The user wants me to evaluate a permit lookup using ONLY the supplied official-source evidence packet and return exactly one JSON object conforming to MODEL_SCHEMA.\n",
+          "reasoning_details": [
+            {
+              "format": "xai-responses-v1",
+              "index": 0,
+              "summary": "The user wants me to evaluate a permit lookup using ONLY the supplied official-source evidence packet and return exactly one JSON object conforming to MODEL_SCHEMA.\n",
+              "type": "reasoning.summary"
+            },
+            {
+              "data": "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",
+              "format": "xai-responses-v1",
+              "id": "rs_56c51afe-e40b-91ca-baab-dd934ecadf81",
+              "index": 1,
+              "type": "reasoning.encrypted"
+            }
+          ],
+          "refusal": null,
+          "role": "assistant"
+        },
+        "native_finish_reason": "completed"
+      }
+    ],
+    "created": 1785166848,
+    "id": "gen-1785166848-qolzySUyWVeJ14v7rJVI",
+    "model": "x-ai/grok-4.5",
+    "object": "chat.completion",
+    "provider": "xAI",
+    "service_tier": "default",
+    "system_fingerprint": null,
+    "usage": {
+      "completion_tokens": 1468,
+      "completion_tokens_details": {
+        "audio_tokens": 0,
+        "image_tokens": 0,
+        "reasoning_tokens": 1161
+      },
+      "cost": 0.0114164,
+      "cost_details": {
+        "upstream_inference_completions_cost": 0.008808,
+        "upstream_inference_cost": 0.0114164,
+        "upstream_inference_prompt_cost": 0.0026084
+      },
+      "is_byok": false,
+      "prompt_tokens": 1413,
+      "prompt_tokens_details": {
+        "audio_tokens": 0,
+        "cache_write_tokens": 0,
+        "cached_tokens": 128,
+        "video_tokens": 0
+      },
+      "total_tokens": 2881
+    }
+  },
+  "raw_text": "{\"permit_decision\":\"VERIFY\",\"jurisdiction\":{\"jurisdiction_id\":\"us-nh-amherst\",\"name\":\"Amherst\",\"state\":\"NH\",\"type\":\"city_or_local_authority\"},\"project_family\":\"commercial_tenant_improvement\",\"primary_permit_family\":\"BUILDING\",\"companion_permits\":[{\"family\":\"ELECTRICAL\",\"status\":\"VERIFY\"},{\"family\":\"PLUMBING\",\"status\":\"VERIFY\"},{\"family\":\"MECHANICAL\",\"status\":\"VERIFY\"},{\"family\":\"FIRE_LIFE_SAFETY\",\"status\":\"VERIFY\"},{\"family\":\"OCCUPANCY\",\"status\":\"VERIFY\"},{\"family\":\"PLANNING_ZONING\",\"status\":\"VERIFY\"}],\"filing\":{\"authority_id\":\"us-nh-amherst\",\"office\":\"Community Development Office\",\"destination_url\":\"https://www.amherstnh.gov/community-development-office/files/chapter-h\",\"url_role\":\"DIRECT_FORM\"},\"source_support\":{\"state\":\"OFFICIAL_SOURCE_SUPPORTED\",\"strength\":\"WEAK\",\"evidence\":[{\"url\":\"https://www.amherstnh.gov/community-development-office\",\"role\":\"INFORMATIONAL_OFFICE\"},{\"url\":\"https://www.amherstnh.gov/community-development-office/files/chapter-h\",\"role\":\"DIRECT_FORM\"}]},\"contradictions\":[]}",
+  "requested_model": "x-ai/grok-4.5",
+  "requested_provider": "openrouter",
+  "requested_runtime": "grok",
+  "response_id": "gen-1785166848-qolzySUyWVeJ14v7rJVI",
+  "runtime": "OpenRouter chat/completions; upstream_provider=xAI"
+}

@@ -1,0 +1,78 @@
+{
+  "observed_model": "x-ai/grok-4.5",
+  "observed_provider": "openrouter",
+  "path_proof": {
+    "adapter": "grok",
+    "engine_called": false,
+    "engine_result_supplied_to_model": false,
+    "model_call_count": 1
+  },
+  "provider": "openrouter",
+  "provider_response": {
+    "choices": [
+      {
+        "finish_reason": "stop",
+        "index": 0,
+        "logprobs": null,
+        "message": {
+          "content": "{\"permit_decision\":\"REQUIRED\",\"jurisdiction\":{\"jurisdiction_id\":\"us-wi-eau-claire\",\"name\":\"Eau Claire\",\"state\":\"WI\",\"type\":\"city_or_local_authority\"},\"project_family\":\"commercial_tenant_improvement\",\"primary_permit_family\":\"BUILDING\",\"companion_permits\":[{\"family\":\"MECHANICAL\",\"status\":\"VERIFY\"},{\"family\":\"ELECTRICAL\",\"status\":\"VERIFY\"},{\"family\":\"PLUMBING\",\"status\":\"VERIFY\"},{\"family\":\"FIRE_LIFE_SAFETY\",\"status\":\"VERIFY\"}],\"filing\":{\"authority_id\":\"us-wi-eau-claire\",\"destination_url\":\"https://evolvepublic.infovisionsoftware.com/eauclaire/\",\"office\":\"City of Eau Claire Inspections\",\"url_role\":\"APPLICATION_START\"},\"source_support\":{\"state\":\"OFFICIAL_SOURCE_SUPPORTED\",\"strength\":\"STRONG\",\"evidence\":[{\"url\":\"https://www.eauclairewi.gov/government/our-divisions/inspections/applications\",\"role\":\"REQUIREMENT_EVIDENCE\"},{\"url\":\"https://evolvepublic.infovisionsoftware.com/eauclaire/\",\"role\":\"APPLICATION_START\"}]},\"contradictions\":[]}",
+          "reasoning": "The user wants me to return exactly one JSON object conforming to MODEL_SCHEMA based on the evidence packet. No markdown fences, commentary, etc. - JSON only.\n",
+          "reasoning_details": [
+            {
+              "format": "xai-responses-v1",
+              "index": 0,
+              "summary": "The user wants me to return exactly one JSON object conforming to MODEL_SCHEMA based on the evidence packet. No markdown fences, commentary, etc. - JSON only.\n",
+              "type": "reasoning.summary"
+            },
+            {
+              "data": "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",
+              "format": "xai-responses-v1",
+              "id": "rs_d22ef8d1-c5b9-9050-b7c9-664b8eb062df",
+              "index": 1,
+              "type": "reasoning.encrypted"
+            }
+          ],
+          "refusal": null,
+          "role": "assistant"
+        },
+        "native_finish_reason": "completed"
+      }
+    ],
+    "created": 1785163715,
+    "id": "gen-1785163715-wqkFvAjBwTnuDMBMTA4A",
+    "model": "x-ai/grok-4.5",
+    "object": "chat.completion",
+    "provider": "xAI",
+    "service_tier": "default",
+    "system_fingerprint": null,
+    "usage": {
+      "completion_tokens": 1094,
+      "completion_tokens_details": {
+        "audio_tokens": 0,
+        "image_tokens": 0,
+        "reasoning_tokens": 815
+      },
+      "cost": 0.007142,
+      "cost_details": {
+        "upstream_inference_completions_cost": 0.006564,
+        "upstream_inference_cost": 0.007142,
+        "upstream_inference_prompt_cost": 0.000578
+      },
+      "is_byok": false,
+      "prompt_tokens": 1377,
+      "prompt_tokens_details": {
+        "audio_tokens": 0,
+        "cache_write_tokens": 0,
+        "cached_tokens": 1280,
+        "video_tokens": 0
+      },
+      "total_tokens": 2471
+    }
+  },
+  "raw_text": "{\"permit_decision\":\"REQUIRED\",\"jurisdiction\":{\"jurisdiction_id\":\"us-wi-eau-claire\",\"name\":\"Eau Claire\",\"state\":\"WI\",\"type\":\"city_or_local_authority\"},\"project_family\":\"commercial_tenant_improvement\",\"primary_permit_family\":\"BUILDING\",\"companion_permits\":[{\"family\":\"MECHANICAL\",\"status\":\"VERIFY\"},{\"family\":\"ELECTRICAL\",\"status\":\"VERIFY\"},{\"family\":\"PLUMBING\",\"status\":\"VERIFY\"},{\"family\":\"FIRE_LIFE_SAFETY\",\"status\":\"VERIFY\"}],\"filing\":{\"authority_id\":\"us-wi-eau-claire\",\"destination_url\":\"https://evolvepublic.infovisionsoftware.com/eauclaire/\",\"office\":\"City of Eau Claire Inspections\",\"url_role\":\"APPLICATION_START\"},\"source_support\":{\"state\":\"OFFICIAL_SOURCE_SUPPORTED\",\"strength\":\"STRONG\",\"evidence\":[{\"url\":\"https://www.eauclairewi.gov/government/our-divisions/inspections/applications\",\"role\":\"REQUIREMENT_EVIDENCE\"},{\"url\":\"https://evolvepublic.infovisionsoftware.com/eauclaire/\",\"role\":\"APPLICATION_START\"}]},\"contradictions\":[]}",
+  "requested_model": "x-ai/grok-4.5",
+  "requested_provider": "openrouter",
+  "requested_runtime": "grok",
+  "response_id": "gen-1785163715-wqkFvAjBwTnuDMBMTA4A",
+  "runtime": "OpenRouter chat/completions; upstream_provider=xAI"
+}

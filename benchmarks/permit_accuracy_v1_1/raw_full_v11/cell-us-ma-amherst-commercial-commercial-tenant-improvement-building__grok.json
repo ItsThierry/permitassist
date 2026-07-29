@@ -1,0 +1,78 @@
+{
+  "observed_model": "x-ai/grok-4.5",
+  "observed_provider": "openrouter",
+  "path_proof": {
+    "adapter": "grok",
+    "engine_called": false,
+    "engine_result_supplied_to_model": false,
+    "model_call_count": 1
+  },
+  "provider": "openrouter",
+  "provider_response": {
+    "choices": [
+      {
+        "finish_reason": "stop",
+        "index": 0,
+        "logprobs": null,
+        "message": {
+          "content": "{\"permit_decision\":\"REQUIRED\",\"jurisdiction\":{\"jurisdiction_id\":\"us-ma-amherst\",\"name\":\"Amherst\",\"state\":\"MA\",\"type\":\"city_or_local_authority\"},\"project_family\":\"commercial_tenant_improvement\",\"primary_permit_family\":\"BUILDING\",\"companion_permits\":[{\"family\":\"ELECTRICAL\",\"status\":\"VERIFY\"},{\"family\":\"PLUMBING\",\"status\":\"VERIFY\"},{\"family\":\"MECHANICAL\",\"status\":\"VERIFY\"},{\"family\":\"FIRE_LIFE_SAFETY\",\"status\":\"VERIFY\"},{\"family\":\"OCCUPANCY\",\"status\":\"VERIFY\"},{\"family\":\"PLANNING_ZONING\",\"status\":\"VERIFY\"},{\"family\":\"GAS\",\"status\":\"VERIFY\"}],\"filing\":{\"authority_id\":\"us-ma-amherst\",\"office\":\"Inspection Services\",\"destination_url\":\"https://www.amherstma.gov/231/Inspection-Services\",\"url_role\":\"INFORMATIONAL_OFFICE\"},\"source_support\":{\"state\":\"OFFICIAL_SOURCE_SUPPORTED\",\"strength\":\"MODERATE\",\"evidence\":[{\"url\":\"https://www.amherstma.gov/544/Building-Permit-Fee-Schedule\",\"role\":\"REQUIREMENT_EVIDENCE\"},{\"url\":\"https://www.amherstma.gov/231/Inspection-Services\",\"role\":\"INFORMATIONAL_OFFICE\"}]},\"contradictions\":[]}",
+          "reasoning": "The user wants me to evaluate one permit lookup using ONLY the supplied official-source evidence packet and return exactly one JSON object conforming to MODEL_SCHEMA.\n",
+          "reasoning_details": [
+            {
+              "format": "xai-responses-v1",
+              "index": 0,
+              "summary": "The user wants me to evaluate one permit lookup using ONLY the supplied official-source evidence packet and return exactly one JSON object conforming to MODEL_SCHEMA.\n",
+              "type": "reasoning.summary"
+            },
+            {
+              "data": "/pdAAioJJLts6VBCS6PgmhBK52zkbxb8xGSy28weJ701DGv+n3NZroJKRRiWtExi+t2MMhClLnKWWRXV3biaEPm+R3OCHlJUa8vI11FVKdunX9H4ealTk6yoy3VgarUf8txHaWJYGApyaSkhyubw4A0AeeCJKP9RpZnaHOyH+9sP4UgzSAZ6ZuzK3/PPYipSi8LgOA4XFLEV8OMFy+pX6F95SGXoQOnOa2DCLKIS2Ags6e190NNwtCjhFRycYJKdR5wH23tiBOgri9heQ7yIU1toLoMbyE/Dd1y3F4K/WyHMRrphjigzr000H9zNTWz63G14aJJs8m1YUdiIvMoqTRsyq8648KeKTAPeeSGrHUWII1p1mt47i6e+yDPAAH0J3xZoL2ZcePfwHkKD1lf+ByHT2YcP7d0cgvYWoXKt9TE/ETy+1XmENnrgzhXMNPCWua2i9YQtBXlSmd5kiJqe+iQC+7zj8TQwptn0lmAmVMXtwlhfHAafBNNE+e5sjxHgLhF6pvr0asTgorEfYIPpFY7pKsYvI753ykGTyZ0u+RY4nCgoPisLUycRPtsshY7RkL3ZOqrip4t70iDFiAFtJozX0lIooHdSDbOc5Sg9CT7zgghsGzXFEnViPRgxI+zBXJvA5V4kYM/T2ujIsy47RFIlygjAgC0l4lKjwn8uRax0wNaefCwcxsWVwz+GfK5TgJ79nAsT4DkmifjhuiZsXVjUD3YEjW+H9eHXGj7rfHXDKtLfF7Z0ON56/Haon6AL1oAzSTrCSd0AwNP67MoD+S2oys2P28P7iOunpFqSGKQ4Rz/dNJFD4EPbdTH769VGl6merY55x78u2kKwcxATTbbYvzGvkIGJeKkfEJdKTwK1ySZda1+94yAZcvjRTt98wzTwhqDH6IvIDOjFqLYKbzrs0Wurz2rQpF+mbV1wq+R9PlmBxyv5P941eNrGz0Q1QcsQ59mAAD0sjw7plKMQhnKpRGvSTrfkob36xwGODuoUrEITECcktVxmBSV1zPKR8xWY3P/5OhmlsZp6ttrRShbqQeMLjhgUYjPCDj4i5FFVBhk6fSuH1EKQ5sFKfs0KDmNft9R5/cVYour8nW0CzeCxGqU53PiTuun0Zy4jirD2kt9SO8I/SnlIKXp0JhRawStcoXLt3zqgFKPwP02vKKtvho8Kwkj82JldotfQ6/jzzvGPCLJo4VubX+4DDP0ZRMn3d1fFdBm1/HsEqHtjSdLY1ADaCuIcU1REyndaoohsfBtwjdfhqonmEDcAtDg9TYE5F1m50SdbW1Y4sNRZyRsYN4PAccKDRYLTorqYmc4noo/bqIr09TNWFde1fJx11dWXsNdj2LOZcgEnWyTkKCoZoGco6A/G8wrP0EiWhOqOXbKi0wMsrUQ/LwBJM9Lm6N3oxMEdLqEOaC4PSpHLLpQzOt7ibu+ihDWbNNQzrrVkt4qUUSoVDaUScL9ztB7QW+hvHF0o/x+PHxMtXxWcvHVsLZN49pQK8EMAHiraFR+CzIroO4pw68Cc1eiLVBkwnJa1btjffj1fMrtQ0gf1OmyZ029Yz1QcGzMWgCMYXpMSWTZtigYnkNciuSS6m1Uxj/WtOjWxi3/t7Gb2MbW3dhXGMuU2Wk7tZ3Mlt9ONNIr0ioDB8zRuZOuuTWG1lrHHvVJi6CjgBfSVlGmFiD9vmVSejx0RXvZl6jsq+pUEB5HtgcbIT/XrKk+Jn0SmAs/u48Xy2rKVbzrptLFyYq24loXLvtNZ4ZvkCienVmlEAy3789BKV1d0G5DPZpaEy2U6s2kpTlGoRSrjvbzIt+630qH/69rdqABoV1xpjNj2V83FgH+Isf/ZVQYBSacw51GLJmX9JL54zo5HcHESb0RT1ZW/IwvYij/W5x41kduSjyG0k1XeOTvHBfQyz42j2ulQPpqBzs0q7O4uQAseig/x4zpN5okjjkh2HjVWMxNJoxmLBf/d628kqME47fH69bbYyjEBPK7he8ZU5VVo6IxFEUUB9aFdZz9SwbYYBffToDU9jYXnIrr66X27x07qrlr3vgYwUEJ4PIMEwIfZtccgON/oqwXvYtJiBmcU6sjwlegDC23O6Zbof+tcsalD1AzRAvzSZTI3sXpSNyZVFGWy+Xx4IGBhVvN2qU6r8+pVGNBElofgxOrRWhVyhojflTH0hYt6vADTyfzrhjSvzvUfe4B9J0qMF4lC3egtHdhwmGRKooidiJx/CQ83P3C2c6HdYojvCE+okBjH4Z5jiN4+mpCsPMOmKraHo3LTU9HO0xiqz4xV5XKwy9d2GRCj5gb1vJTtbV36TLWZ+Qq7Jqbcgya0epj5dBX4aJF/luvUwrmSIAVu05803+/EwVmz6+c4uJ+RbQgqj/o89RUqLiDmDsnoh11Z8MNq+1bc0QnZ+MtaYAK2QF3F+vWnXuJj5hq6L6ESJTMzF4E+rbeC3EXgDAOo/ljiOYo8W8RusguMeFz5F+FwgHiMPSbSGlAUFR6/BRmaRK6q1pAOIe7s04K3alnF7sPbqF5/btjMYRxdv6j7RUBkXCMv7vw4YKYBqM0VpR1R2N84exBOgrM50nKkg/dnzH6STtZ6P6TffPeMp/lTa00Y4vVgf7itNHVGsz4cn/Y/IwQM3Blm7/tAP1GKShUPPDtf2/q4dWhaPCIkPVTaDmxDtbZLzsZz4cJOB7W8sUjMpGlJP76N5AVdq9OuTJQXQvbBrMV24cGW6MM7Zmi/P00THyZOXONN8xbqH7d3isNWY0yQL6BJSwHmSUoc1CIqVAG1aAdq1oIp/LGDXRtJ0OuGaMlVEogRI5zcH5IG0Y/GXabnl6KDHBilKZJPRgM73kezvmC2v67l2SEG8KEnNFl8aZXX7mbpcXYapyHWzGcA614TQQP9HW1lWU49WGoY8A2FEhVIGVCXpdvSuID7xNyntJ/JxAcmzqAgOnDQAKeWVq5N4SD0b9DWiX+sbzklEpFVIAhaNRfl1fQtyGaXZoLM2czgX7CFMxtSZOqdLu3fgttW4QvfUiK8Pox9LGASEEHdwa/x9HFpZ1z/ZvR+KejtsOgLby2Sq2hCDIpyQy4mzf3eVor58XGZPyyI/j68oA96BWGFofUHhI8nCVVBzq5Ga6nPW6R+GFJ3EVb6iCNX7i32WKZ44kEzgHxypDjXLfrSnB353nbTpEgie54aLIdtfsmjgTfdE4g3FzLRdVRqUEi3rn3RZQ+tbeLgnsbvGu44e1/+1Ozxm5Blz+zD1qhn1USbIiUu4eSshb0zqWwe7nmhX3e+PxPgkwbgpuoH/UwzvQkr3KB4U6nDS8FsSWIo+tMtNK2onaLbRG0ygOCcnNKIZdzEOJkjpn5D+dOHE3OtDwf3LeLOKIQt16b3wlSeNOOEbeW1hNOEpQ3asxKEDq/57HvUo0t5K6Tiqp81RNdZwyJOIUQDDitDg+AVtxBc9oOd708ohBIUDDVuYDpjvUyffgR2idNDaR9qNq6rpFwMvPSP9FVStaD/8DOReVpwMTvYQNuS7MwVbt1V6mRFUhyhixAJdYyeCTT20EWUUEy+kwlnbV0GYhygNu6WwqX1VgthgLH1T05kKyoxAYx8CJ45k0ZmzmYVEqmpG1q/8C1hvECcojGtsVSxRzWg3BQ+kM8C2r1pWq54OzUb1dK3lXG8oOXlhROAHWutBEA6cDyIdcYp53itW15xlxUhenFy4xbdsz+wQdqBoBfaFW3AmEEguSPvEbLa+Wno7ckAonw5diiEkRz5+Ub9q47JHIzz+GsvsbVrIKRNmDqm+EW/vW9dyL/tGZrYsroK5CGFnE50plSz30SqmhSNb7msp1dgdKzxJF/nHs7dH0iqabToq2qegSYIdKF3ezrYyEn0qRc+wk0nrcjDmJacCcq2kf1S/rQBaGlif+8Nuplq1+xkcpZU6LbSmUx2XuVEPFgqyMZQeO8PMEOSvq4qYDnYT4bNq8sxDT+bBSiYfXS31DXzx53L3aeDwntaheciLerlKWR0DqRgvZnJGA6wXn58YIrtx+La1krz4s5yYoD+pj24vvKybfQ9F54kHROM5nyz+aszgWfL4944u15MO7u5ht/8RTgfHnXuu1XQIr9RXI4HSJLrzq1WDH154XmNqsAcg9ZrwgKoyt4+s0tktFlGmrcu4OcmMzuzpYSr7QzbK1TfBerhwB7ODPh/v3exUDrFtVEk7VrjiLAihxxwDFVdFoxW1V7kElSoaffVsa08bd646bO8JRhKKa2D8SLTv6Il1lDNTkOHoNGRRhCxqs6dOoGe2WlzsP1lBqGWnOZYv/Wiyhwcm91lzXAf6U1YmjxXMhthF5NChisZqP+IDIgOyJ9bSJTNUloexj1DJv9vHpNrB09vAdMxHywKa+Q2oVsJzt/N8YXSYE9hBJhEMrpeOqALrlBEwZN5j3ABSQzoFb316yk7xYrZBB6NY1urT0yjyr6/3pdyiUy9QQBxxebLVi6mZL4nHS3UUGmY/hJf2DgUuHUv17d0UTQ51P38UoVVGQV27KnbV7pzJGUThichuO24oCMcc6tSiEGdCZq7vFggUiyNqprSrDVPy17Ullu/FVLafXYpDa4s+Q1csd0e6i4q4sGvW7Y+ruwYC2awyFoUUXGNnJs62k4nj0pjPyxIxyECB1s8I6qulqDZ9VRdk9VnhAYIrfU1qoTx5w/fTQUOE1cckFHBrsROz88ajtRovz89nHKxRCLyr+fq0Z2mB2hcY351HDVdr1QANaCG/reNX29EuFvNalLqtbKZUZf39eXJcNyQuiSNMdDaTwg3iCRlRLUK4vTpY9Cz7DmXo4LrIzfv4aV9pop18gvTx8IhCGhY1Ph/wQ0Xe+5WfGB0TUP6BYmt53q7uswd2utPcykHVdP6nQKoNpzai3FAFA4ODSHddH6KyA4NLSaQ9u8LUJ7MZ/r2qJ9dGJEdz7kqRuP6UT6v3wSTVZYXvgkDGrtHmxKdchitEJUQG/JiMQeIJD0jQqaBlGByU2Z5wqFssH71rONrfF5zBoZr5JGr43IAMVPCdTA/LJugjPFMLRYne3bBZ5hpGWln2k6/k/T0ZKfoG+UvoY8q2lAQpKwcvhmewUZ77C6ndllQeP3HyBirh+Pvp5h4Eif1fEildRyCgmWBhG3aQtNNTl5qEl2cte/huzrffF8CXfO2jfINGXKsaHz6lOeV9o9JlQ6Usm52UivoJQ2m/W4IRfieuO/Wr1yG0AKnhOGGh6J3z7XKSwflDJnQqxMTLTPDigR7GiJt4IJfvf8nNdLhDWhsZJK4hkPsmOQboYNQpU/Ci16mrlXU8c2e+BKuIjgGbma1Ns5eobU5MJjYmkDthX7TS0mt27jnak7HwR1KQFaXobPZnfeU+WSG2jmndPgKt/I+adH1snSoBcB2/gzvcj6eiS7/xrKgZADVjuT/6Q9bS7+wtFraRPU+uU4ws08vggKCuREhGnmDUtkl49sTIWK5w0Nclc/+QF8Bu1F9z0TqG6SX5wFgdWk1/LC8ecwUwKBL9F139X31ur/UybUikUbt8RmXn+9jJeHm3bugNZRq5t2nVNQRh8BZlS+rIKTAN5zrzUC2RGmvJUnUVB8jvYAJDmhv9/QE0EJigBtI2seJ9RsDss3Hw6p71o7/Lg9WYjafrC7ypoDxcGxnWo2rSm6uVjBmjhzAmxmt4zWmS3plIqwAFPkVuurj67N82JVGCunp4DLIHzxbaUBzGMMbm7/XmSr9ypYZpfmv6KyD8bYsjSR5VmJHZj388+81ujHgAY0+ksmAP94UpJTU2QbFbsFF4/1n4JcLVOtRDCLsdPrJJLwzFyYocNM1XU2wcw7ngVi4IwAfUilWEW7prbP8fc4XwFG429c8Oo4mabMf5UceBC1iezUq3A2bYT439YwdEGLWiVtfnKjnnC/VlUn7BVjrFpe4qUqjr9JNJJcaJh30WdO37h8+CviRxX/zuC3hV3sCVvDg6yV3+kQQVgbG4acyJG5mEzaEPbzkGkpDndYBsAJ4NC3HyCWIkq8aiw99zuesaRfA9aHwi6t+3enlouvV4U9PHgYZEkfbcKC0YAit0qbrsDPxilesDfV3WRsj/vElbNHu7ciG8e+11E13IGKuAzRoIBQtJuHecDqnLdUmuMNVx95WW59+fXXsTBXQVHIy3mqvd/OrOk97qNzWOKNamAjYl1o0Dgtb3tMDNQ/KgW9xh8J4hynkgRpLtVBO3sXLry5A/Te/6IUfHZxA+sxs8YWUeqHrGMm6CrdPYu/cnzc0qTRkE3fa+2PqcTl8wSO/bj6vH3PcNSTzlUbaDSkfyDa7X67nQzkiJO9GJAFtBjAvrXQa9gj8E0+/K6Kk0hsbUBN/hxfmFjN6RSYc/hx1zZnvh/i8aV+w+xQ/eVWBsNwH3BwWA/217TfVbwVw2h8jQQHtgcufLLXqm/b+YqhMl29iDrfOiD0uAQaEDfDmE54GOhT2eF3n8d/GLY+ZrzL5DvRIe2CHMbyTbhrQR6C+3qLUQbZ49DqZQ8YXveUOspwcsx5SqMFXBbsHcc7kuCbcP/HEy4zyDqGkXBFHNre79j7t6Ax64O3XR+m6ICqxT9xAdZQqxwRXo3P18XVthq9W0iA7/DC+BxA/8fiRt+99+sDWKmihwZNdMQJHZVbn7+cWdTiIEHmGjZlVSNUebdj/qiQNblQOEV4Yf8XGjVEXhP4T9LIwlLsQGxwBRe2otq2ABgZ317ALHVhP90qDJ5mg7fCE5iqtyfdTJU+JfWBys4HyHRqiZdCH3KWCgv4bmxPrPoaUxpfEVGdV26PrJUxcPYqgkX6GI2cccDx+a7CYslXUL9akCZXRYxoy46D1Zvveg/XTn9oDHiZZ9cA0QFSsSE5DG1AFnieTiwGC6qV7kVAldPZ8+TsCJECMXFY/a1hE8Q5MDP5xoRyF6Spr97rgAdgpPQZbJ8xCbfWsPBM7A7Rbd8KMjyoIw3ENCgVUeZCA4aEF0Zz4Ww3bGPsn00wzZi5wiiROLUK8cl3AR1FtNqSYGFciG70NPmLvaIVXiCOymRsWv7cHYHldl2cYR5IfeRlKD7pf1iOI8XG4aJB7QJG3w5AMIHu6RRDywKYDmgNdmSNFVCIVgBiUC384M/+QuPYO4/mnN2iZm2+mricGrSkgCaTxuPFx3nq4xO7E4VNM06LSwVDSdq2M1AShS/XYooGBdu166G1RRGFtkYu7PvQqHKAB/wHHpCKetebpOOQcXFWrmi2dmfS3MCvDLBGrGVMMzPJihGLhT2B5NgPNAr75AFTVeiQCEa4Gc2+A3jZefM/FDuKcZfMT+5R0j51pyEQD91IiA2ZWBFu9ni2l01Eg8HHZ1ubQLsD1LB86sv2oTh31TQgbsrH1GQ0wXaVmPsh+OIfIywXZSVgF/29Siv3JoXk0Dg5zb4cmvqt9jVFrmQ2xIO6KLck7CmDOuKeB/UVOFDqPax8hmUoxRvOTnsDiDcX2qDfGSB2HqkCR/r0qOR+086JHmJBY7fEwL5zX1PrRORWD26F+a0auKITZT8S7J7Y2s/QNXabt5AB+9G/27Ezx7BbtbFTh+MuR1YPPIO4mOeHq4gseQcUxIcStb2wrjvIWaUDTVT7QfKWbse92Ogzd/mypQlwXKJ6sqJGNdsprVSEpbX3oKTs8P0cBACtJns8hZpH2eip/n6MXS/avm8leNKMJhcLXmiuvctwhKE21k8pvvfEpByOw816MkA8IVBoGdiUaui5T/qnX0m5IF/1pQ3+01HS1vqM8/pfAAV8+wc67TD5dAKfWBxu7k5fjrshLvtgF+QgFpH9o01M8rR4a4BF+pptjnCXraOGTR4exsqBnEbBfB0/s/Fihw7mI5mn+YkJj6syUxo8PdH8YkNI4yr0mmCgp4XGm2IunksotWCLY9ScS1uZimMCmz8pMQf4smoA2eN7kB5PzZBuRMNdVCrj0oZSAjXKaSJ/Xb1r+n1TiIjJxk5SOhBdPtZeS/HAtRpGwEiFvRo8AaPlpLais3qZpEP3ltZHXdBrxP9nwl4UBidXsN6E4D3zM0w",
+              "format": "xai-responses-v1",
+              "id": "rs_8f4a9871-e46f-9041-a7ab-5b488e0295d8",
+              "index": 1,
+              "type": "reasoning.encrypted"
+            }
+          ],
+          "refusal": null,
+          "role": "assistant"
+        },
+        "native_finish_reason": "completed"
+      }
+    ],
+    "created": 1785166074,
+    "id": "gen-1785166074-55xzKGSiDT0A8iU4nYLW",
+    "model": "x-ai/grok-4.5",
+    "object": "chat.completion",
+    "provider": "xAI",
+    "service_tier": "default",
+    "system_fingerprint": null,
+    "usage": {
+      "completion_tokens": 1730,
+      "completion_tokens_details": {
+        "audio_tokens": 0,
+        "image_tokens": 0,
+        "reasoning_tokens": 1413
+      },
+      "cost": 0.0133024,
+      "cost_details": {
+        "upstream_inference_completions_cost": 0.01038,
+        "upstream_inference_cost": 0.0133024,
+        "upstream_inference_prompt_cost": 0.0029224
+      },
+      "is_byok": false,
+      "prompt_tokens": 1570,
+      "prompt_tokens_details": {
+        "audio_tokens": 0,
+        "cache_write_tokens": 0,
+        "cached_tokens": 128,
+        "video_tokens": 0
+      },
+      "total_tokens": 3300
+    }
+  },
+  "raw_text": "{\"permit_decision\":\"REQUIRED\",\"jurisdiction\":{\"jurisdiction_id\":\"us-ma-amherst\",\"name\":\"Amherst\",\"state\":\"MA\",\"type\":\"city_or_local_authority\"},\"project_family\":\"commercial_tenant_improvement\",\"primary_permit_family\":\"BUILDING\",\"companion_permits\":[{\"family\":\"ELECTRICAL\",\"status\":\"VERIFY\"},{\"family\":\"PLUMBING\",\"status\":\"VERIFY\"},{\"family\":\"MECHANICAL\",\"status\":\"VERIFY\"},{\"family\":\"FIRE_LIFE_SAFETY\",\"status\":\"VERIFY\"},{\"family\":\"OCCUPANCY\",\"status\":\"VERIFY\"},{\"family\":\"PLANNING_ZONING\",\"status\":\"VERIFY\"},{\"family\":\"GAS\",\"status\":\"VERIFY\"}],\"filing\":{\"authority_id\":\"us-ma-amherst\",\"office\":\"Inspection Services\",\"destination_url\":\"https://www.amherstma.gov/231/Inspection-Services\",\"url_role\":\"INFORMATIONAL_OFFICE\"},\"source_support\":{\"state\":\"OFFICIAL_SOURCE_SUPPORTED\",\"strength\":\"MODERATE\",\"evidence\":[{\"url\":\"https://www.amherstma.gov/544/Building-Permit-Fee-Schedule\",\"role\":\"REQUIREMENT_EVIDENCE\"},{\"url\":\"https://www.amherstma.gov/231/Inspection-Services\",\"role\":\"INFORMATIONAL_OFFICE\"}]},\"contradictions\":[]}",
+  "requested_model": "x-ai/grok-4.5",
+  "requested_provider": "openrouter",
+  "requested_runtime": "grok",
+  "response_id": "gen-1785166074-55xzKGSiDT0A8iU4nYLW",
+  "runtime": "OpenRouter chat/completions; upstream_provider=xAI"
+}

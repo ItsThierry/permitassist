@@ -1,0 +1,272 @@
+{
+  "observed_model": "gpt-5.6-luna",
+  "observed_provider": "openai-codex",
+  "path_proof": {
+    "adapter": "engine_luna",
+    "authority_recovery": null,
+    "decision_cell_reference": null,
+    "engine_called": true,
+    "engine_result_supplied_to_model": false,
+    "engine_stdout": "",
+    "local_merge_customer_path_called": true,
+    "model_call_count": 1
+  },
+  "provider": "openai-codex",
+  "provider_terminal_event": {
+    "response": {
+      "background": false,
+      "completed_at": 1785163844,
+      "created_at": 1785163831,
+      "error": null,
+      "frequency_penalty": 0.0,
+      "id": "resp_02eee7dcda016f43016a67703795d08193accd957de083b8f8",
+      "incomplete_details": null,
+      "instructions": "Follow the user request exactly. Do not call tools.",
+      "max_output_tokens": null,
+      "max_tool_calls": null,
+      "metadata": {},
+      "model": "gpt-5.6-luna",
+      "moderation": null,
+      "object": "response",
+      "output": [],
+      "parallel_tool_calls": true,
+      "presence_penalty": 0.0,
+      "previous_response_id": null,
+      "prompt_cache_key": "d4837aa0-2bda-49ad-b2c6-193a568dba37",
+      "prompt_cache_retention": "24h",
+      "reasoning": {
+        "context": "all_turns",
+        "effort": "medium",
+        "mode": "standard",
+        "summary": null
+      },
+      "safety_identifier": "user-FQ7sI0yp0Qqn6wWdqzy9mZic",
+      "service_tier": "default",
+      "status": "completed",
+      "store": false,
+      "temperature": 1.0,
+      "text": {
+        "format": {
+          "type": "text"
+        },
+        "verbosity": "medium"
+      },
+      "tool_choice": "auto",
+      "tool_usage": {
+        "image_gen": {
+          "input_tokens": 0,
+          "input_tokens_details": {
+            "image_tokens": 0,
+            "text_tokens": 0
+          },
+          "output_tokens": 0,
+          "output_tokens_details": {
+            "image_tokens": 0,
+            "text_tokens": 0
+          },
+          "total_tokens": 0
+        },
+        "web_search": {
+          "num_requests": 0
+        }
+      },
+      "tools": [],
+      "top_logprobs": 0,
+      "top_p": 0.98,
+      "truncation": "disabled",
+      "usage": {
+        "input_tokens": 1169,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 0
+        },
+        "output_tokens": 684,
+        "output_tokens_details": {
+          "reasoning_tokens": 498
+        },
+        "total_tokens": 1853
+      },
+      "user": null
+    },
+    "sequence_number": 189,
+    "type": "response.completed"
+  },
+  "raw_model_text": "{\"permit_decision\":\"NOT_REQUIRED\",\"jurisdiction\":{\"jurisdiction_id\":\"us-wy-crook_county\",\"name\":\"Crook County\",\"state\":\"WY\",\"type\":\"county\"},\"project_family\":\"commercial_tenant_improvement\",\"primary_permit_family\":\"BUILDING\",\"companion_permits\":[],\"filing\":{\"authority_id\":\"us-wy-crook_county\",\"office\":\"Crook County Growth and Development\",\"destination_url\":null,\"url_role\":\"VERIFY\"},\"source_support\":{\"state\":\"OFFICIAL_SOURCE_SUPPORTED\",\"strength\":\"STRONG\",\"evidence\":[{\"url\":\"https://www.crookcounty.wy.gov/departments/growth_and_development/docs/2024/Land%20Use%20Zoning%20Building%20Permit%20Information.pdf?t=202412022024060\",\"role\":\"REQUIREMENT_EVIDENCE\"}]},\"contradictions\":[]}",
+  "raw_response": {
+    "apply_path": {
+      "channel": "no_permit_required",
+      "documents_to_prepare": [],
+      "login_required": null,
+      "permit_category": null,
+      "permit_type": null,
+      "platform": null,
+      "portal_selection_path": [],
+      "portal_url": null,
+      "state": "NOT_APPLICABLE",
+      "steps": [],
+      "stop_before": null,
+      "support_level": "not applicable",
+      "verification_note": "No permit filing path is needed for the resolved NOT_REQUIRED scope."
+    },
+    "apply_url": "",
+    "apply_url_known": false,
+    "applying_office": "Crook County Growth and Development Department",
+    "approval_timeline": "No primary permit review timeline applies to the resolved scope; separately triggered companion permits may have their own timelines.",
+    "checklist": [
+      "Confirm the work remains within the exact no-permit scope; check separately listed conditional companion permits if the scope changes.",
+      "Save invoices/photos for project records.",
+      "Contact the permit office before adding framing, trade, occupancy, fire/life-safety, exterior, or accessibility work."
+    ],
+    "common_mistakes": [
+      "Letting the scope expand into trade, framing, occupancy, fire/life-safety, exterior, or accessibility work without checking the permit office first."
+    ],
+    "companion_permits_or_reviews": [],
+    "confidence": "high",
+    "confidence_reason": "Official building department official-source permit decision for this exact jurisdiction and project type.",
+    "customer_first_screen_summary": {
+      "ahj_department": "Crook County Growth and Development Department",
+      "decision": "NOT_REQUIRED",
+      "kind_category": "Not Required",
+      "next_action": "Keep the official no-permit note with the job file before starting work.",
+      "source_cue": "Official source: Official building department source"
+    },
+    "customer_headline": "No permit required: Not Required.",
+    "customer_next_step": "Keep the official no-permit note with the job file before starting work.",
+    "customer_result_summary": {
+      "ahj_department": "Crook County Growth and Development Department",
+      "fee_cost_caveat": "No primary permit fee applies to the resolved scope; separately triggered companion permits may have their own fees.",
+      "freshness_label": "Official source date not published; verify current requirements before starting work",
+      "jurisdiction": "Crook County, WY",
+      "next_step": "Keep the official no-permit note with the job file before starting work.",
+      "permit_decision": "NOT_REQUIRED",
+      "permit_kind": "Not Required",
+      "permit_name": "No permit required",
+      "source_cue": "Official source: Official building department source",
+      "timeline": "No primary permit review timeline applies to the resolved scope; separately triggered companion permits may have their own timelines."
+    },
+    "data_source": "Official permit authority decision rule",
+    "degraded_sources": false,
+    "documents_needed": [
+      "Nothing for permit filing because this resolved scope does not require a permit.",
+      "Keep photos/invoices documenting that the work remained within the exact no-permit scope."
+    ],
+    "fee_estimate": "No primary permit fee applies to the resolved scope; separately triggered companion permits may have their own fees.",
+    "fee_range": "No primary permit fee applies to the resolved scope; separately triggered companion permits may have their own fees.",
+    "inspection_booking": "No primary permit inspection is scheduled for the resolved scope; separately triggered companion permits may have their own inspections.",
+    "job_summary": "No primary permit is required for the resolved scope.",
+    "local_form_known": true,
+    "not_required_reason": "No permit required for this exact scope.",
+    "online_application_url": "",
+    "permit_decision": "NOT_REQUIRED",
+    "permit_kind": "Not Required",
+    "permit_name": "No permit required",
+    "permit_required": false,
+    "permit_type": "No permit required",
+    "permit_verdict": "NO",
+    "permits_required": [],
+    "permits_required_logic": [],
+    "pro_tips": [
+      "Keep the scope tight and document that no trade, framing, occupancy, fire/life-safety, exterior, or accessibility work was added."
+    ],
+    "related_permit_families": [
+      "Planning/Zoning",
+      "Certificate of Occupancy"
+    ],
+    "related_permit_names": [
+      "Planning/Zoning Use Verification",
+      "Certificate of Occupancy / Change-of-Occupancy Verification"
+    ],
+    "related_permit_segments": [
+      "commercial"
+    ],
+    "related_permits": [
+      {
+        "approval_type": "Planning/Zoning Use Verification",
+        "condition_text": "Verify planning/zoning only if the TI changes use, signage, parking, exterior conditions, or zoning-sensitive operations.",
+        "decision": "CONDITIONAL",
+        "display_family": "Planning/Zoning",
+        "family": "planning",
+        "filing_family": "planning",
+        "kind": "Planning/Zoning",
+        "permit_name": "Planning/Zoning Use Verification",
+        "permit_type": "Planning/Zoning Use Verification",
+        "rationale": "Verify planning/zoning only if the TI changes use, signage, parking, exterior conditions, or zoning-sensitive operations.",
+        "required": false,
+        "required_if": "Verify planning/zoning only if the TI changes use, signage, parking, exterior conditions, or zoning-sensitive operations.",
+        "segment": "commercial",
+        "source_url": "https://www.crookcounty.wy.gov/departments/growth_and_development/docs/2024/Land%20Use%20Zoning%20Building%20Permit%20Information.pdf?t=202412022024060",
+        "status": "CONDITIONAL"
+      },
+      {
+        "approval_type": "Certificate of Occupancy / Change-of-Occupancy Verification",
+        "condition_text": "Verify certificate-of-occupancy/change-of-occupancy review if the TI changes use, occupant load, occupancy group, or business operation.",
+        "decision": "CONDITIONAL",
+        "display_family": "Certificate of Occupancy",
+        "family": "co",
+        "filing_family": "co",
+        "kind": "Certificate of Occupancy",
+        "permit_name": "Certificate of Occupancy / Change-of-Occupancy Verification",
+        "permit_type": "Certificate of Occupancy / Change-of-Occupancy Verification",
+        "rationale": "Verify certificate-of-occupancy/change-of-occupancy review if the TI changes use, occupant load, occupancy group, or business operation.",
+        "required": false,
+        "required_if": "Verify certificate-of-occupancy/change-of-occupancy review if the TI changes use, occupant load, occupancy group, or business operation.",
+        "segment": "commercial",
+        "source_url": "https://www.crookcounty.wy.gov/departments/growth_and_development/docs/2024/Land%20Use%20Zoning%20Building%20Permit%20Information.pdf?t=202412022024060",
+        "status": "CONDITIONAL"
+      }
+    ],
+    "required_permit_families": [],
+    "required_permit_names": [],
+    "required_permit_segments": [],
+    "required_permit_summary": "No primary permit is required for the resolved scope.",
+    "requirements": [
+      "Keep the scope limited as described; verify with the permit office if the work expands."
+    ],
+    "source_confidence": "AHJ_DIRECT",
+    "source_support": {
+      "apply_url_known": false,
+      "decision_mutation_allowed": false,
+      "degraded_sources": false,
+      "display_source_count": 1,
+      "evidence": [
+        {
+          "role": "REQUIREMENT_EVIDENCE"
+        }
+      ],
+      "has_official_source": true,
+      "has_source_backed_evidence": true,
+      "local_decision_evidence_urls": [
+        "https://www.crookcounty.wy.gov/departments/growth_and_development/docs/2024/Land%20Use%20Zoning%20Building%20Permit%20Information.pdf?t=202412022024060"
+      ],
+      "local_form_known": true,
+      "source_confidence": "AHJ_DIRECT",
+      "state": "OFFICIAL_SOURCE_SUPPORTED",
+      "strength": "STRONG"
+    },
+    "source_urls": [
+      "https://www.crookcounty.wy.gov/departments/growth_and_development/docs/2024/Land%20Use%20Zoning%20Building%20Permit%20Information.pdf?t=202412022024060"
+    ],
+    "sources": [
+      {
+        "publisher": "Crook County Growth and Development",
+        "snippet": "To Whom It May Concern: Crook County, Wyoming, does not have Land Use Regulations, Zoning Regulations, Adopted Building Codes, or Building Permit Requirements; does not do Residential, Commercial, or Industrial building construction inspections; and does not issue Certificates of Occupancy. Please do not contact us concerning this, as we have no additional information to provide. Also ; Crook C ounty, Wyoming, recommends that all building construction comply with the codes and referenced standar",
+        "title": "Official AHJ source",
+        "url": "https://www.crookcounty.wy.gov/departments/growth_and_development/docs/2024/Land%20Use%20Zoning%20Building%20Permit%20Information.pdf?t=202412022024060"
+      }
+    ],
+    "summary": "No primary permit is required for the resolved scope.",
+    "timeline": "No primary permit review timeline applies to the resolved scope; separately triggered companion permits may have their own timelines.",
+    "trade_permits": [],
+    "warnings": [
+      "Commercial scope may require companion reviews/permits not fully proven here: electrical, mechanical, plumbing."
+    ],
+    "what_to_bring": [
+      "Nothing for permit filing because this resolved scope does not require a permit."
+    ]
+  },
+  "requested_model": "gpt-5.6-luna",
+  "requested_provider": "openai-codex",
+  "requested_runtime": "engine_luna",
+  "response_id": "resp_02eee7dcda016f43016a67703795d08193accd957de083b8f8",
+  "runtime": "openai-codex responses SSE + api.server real local finalize/customer path"
+}

@@ -1,0 +1,6 @@
+PermitAssist independently adjudicated official filing route
+Official source URL: https://www.joplinmo.org/1255/Building-Permit-Applications
+Official filing URL: https://jopl-egov.aspgov.com/Click2GovBP/index.html
+Verification boundary: PASS_OFFICIAL_PAGE_WEB_EXTRACT_20260728
+Exact official quote:
+The City of Joplin prefers to accept applications online.

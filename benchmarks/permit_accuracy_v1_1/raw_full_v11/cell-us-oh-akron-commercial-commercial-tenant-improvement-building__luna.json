@@ -1,0 +1,97 @@
+{
+  "observed_model": "gpt-5.6-luna",
+  "observed_provider": "openai-codex",
+  "path_proof": {
+    "adapter": "luna",
+    "engine_called": false,
+    "engine_result_supplied_to_model": false,
+    "model_call_count": 1
+  },
+  "provider": "openai-codex",
+  "provider_event_count": 360,
+  "provider_terminal_event": {
+    "response": {
+      "background": false,
+      "completed_at": 1785167225,
+      "created_at": 1785167209,
+      "error": null,
+      "frequency_penalty": 0.0,
+      "id": "resp_090f67dea3ef86c5016a677d69ebdc8191b00e467b1c9e122b",
+      "incomplete_details": null,
+      "instructions": "Follow the user request exactly. Do not call tools.",
+      "max_output_tokens": null,
+      "max_tool_calls": null,
+      "metadata": {},
+      "model": "gpt-5.6-luna",
+      "moderation": null,
+      "object": "response",
+      "output": [],
+      "parallel_tool_calls": true,
+      "presence_penalty": 0.0,
+      "previous_response_id": null,
+      "prompt_cache_key": "b0e13396-f6f7-41e3-a21a-7fd076af7c0b",
+      "prompt_cache_retention": "24h",
+      "reasoning": {
+        "context": "all_turns",
+        "effort": "medium",
+        "mode": "standard",
+        "summary": null
+      },
+      "safety_identifier": "user-FQ7sI0yp0Qqn6wWdqzy9mZic",
+      "service_tier": "default",
+      "status": "completed",
+      "store": false,
+      "temperature": 1.0,
+      "text": {
+        "format": {
+          "type": "text"
+        },
+        "verbosity": "medium"
+      },
+      "tool_choice": "auto",
+      "tool_usage": {
+        "image_gen": {
+          "input_tokens": 0,
+          "input_tokens_details": {
+            "image_tokens": 0,
+            "text_tokens": 0
+          },
+          "output_tokens": 0,
+          "output_tokens_details": {
+            "image_tokens": 0,
+            "text_tokens": 0
+          },
+          "total_tokens": 0
+        },
+        "web_search": {
+          "num_requests": 0
+        }
+      },
+      "tools": [],
+      "top_logprobs": 0,
+      "top_p": 0.98,
+      "truncation": "disabled",
+      "usage": {
+        "input_tokens": 1196,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 0
+        },
+        "output_tokens": 845,
+        "output_tokens_details": {
+          "reasoning_tokens": 489
+        },
+        "total_tokens": 2041
+      },
+      "user": null
+    },
+    "sequence_number": 359,
+    "type": "response.completed"
+  },
+  "raw_text": "{\"permit_decision\":\"VERIFY\",\"jurisdiction\":{\"jurisdiction_id\":\"us-oh-akron\",\"name\":\"Akron\",\"state\":\"OH\",\"type\":\"city_or_local_authority\"},\"project_family\":\"commercial_tenant_improvement\",\"primary_permit_family\":\"VERIFY\",\"companion_permits\":[{\"family\":\"BUILDING\",\"status\":\"VERIFY\"},{\"family\":\"ELECTRICAL\",\"status\":\"VERIFY\"},{\"family\":\"PLUMBING\",\"status\":\"VERIFY\"},{\"family\":\"MECHANICAL\",\"status\":\"VERIFY\"},{\"family\":\"FIRE_LIFE_SAFETY\",\"status\":\"VERIFY\"},{\"family\":\"OCCUPANCY\",\"status\":\"VERIFY\"},{\"family\":\"PLANNING_ZONING\",\"status\":\"VERIFY\"}],\"filing\":{\"authority_id\":\"us-oh-akron\",\"office\":\"City of Akron Plans and Permits / Building Inspection\",\"destination_url\":\"https://www.akronohio.gov/departments/service/engineering_bureau/plans_permits.php\",\"url_role\":\"INFORMATIONAL_OFFICE\"},\"source_support\":{\"state\":\"OFFICIAL_SOURCE_SUPPORTED\",\"strength\":\"MODERATE\",\"evidence\":[{\"url\":\"https://www.akronohio.gov/departments/service/engineering_bureau/plans_permits.php\",\"role\":\"INFORMATIONAL_OFFICE\"},{\"url\":\"https://co.summitoh.net/departments/Building-Standards.html\",\"role\":\"VERIFY\"}]},\"contradictions\":[\"The packet identifies Akron as the jurisdiction, but the recorded application destination is a Summit County Building Standards URL; the packet does not establish that this county destination is the correct filing authority for the Akron project.\",\"The Akron source describes permit and review processes and inspection requirements but does not definitively establish which permits are required for this specific commercial tenant improvement.\"]}",
+  "requested_model": "gpt-5.6-luna",
+  "requested_provider": "openai-codex",
+  "requested_runtime": "luna",
+  "response_id": "resp_090f67dea3ef86c5016a677d69ebdc8191b00e467b1c9e122b",
+  "runtime": "openai-codex responses SSE"
+}

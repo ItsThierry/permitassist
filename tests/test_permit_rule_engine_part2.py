@@ -132,14 +132,26 @@ def test_per_family_authority_routes_do_not_collapse_to_first_route() -> None:
                     "office_name": "Exampleville Permit Center",
                     "apply_url": "https://example.gov/building/apply",
                     "channel": "online",
-                    "provenance": {"source_url": "https://example.gov/building/apply"},
+                    "provenance": [{
+                        "source_url": "https://example.gov/building/apply",
+                        "source_quote": "Apply online for a Building Permit.",
+                        "snapshot_path": "tests/fixtures/permit_rule_engine_part2_red_no_neuter.json",
+                        "snapshot_hash": "6ed10204a54ae37469b79a9b969ad95769cdbe101d1b00c3cada59c157c5991a",
+                        "publishable": True,
+                    }],
                 },
                 {
                     "permit_name": "Electrical Permit",
                     "office_name": "State Trade Portal",
                     "apply_url": "https://example.gov/electrical/apply",
                     "channel": "online",
-                    "provenance": {"source_url": "https://example.gov/electrical/apply"},
+                    "provenance": [{
+                        "source_url": "https://example.gov/electrical/apply",
+                        "source_quote": "Apply online for an Electrical Permit.",
+                        "snapshot_path": "tests/fixtures/permit_rule_engine_part2_red_no_neuter.json",
+                        "snapshot_hash": "6ed10204a54ae37469b79a9b969ad95769cdbe101d1b00c3cada59c157c5991a",
+                        "publishable": True,
+                    }],
                 },
             ],
         }

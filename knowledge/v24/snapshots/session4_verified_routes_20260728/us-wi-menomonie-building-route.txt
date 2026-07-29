@@ -1,0 +1,6 @@
+PermitAssist independently adjudicated official filing route
+Official source URL: https://www.menomonie-wi.gov/DocumentCenter/View/2101
+Official filing URL: https://www.menomonie-wi.gov/DocumentCenter/View/2101
+Verification boundary: PASS_WEB_EXTRACT_20260728
+Exact official quote:
+Commercial Building Permit Application

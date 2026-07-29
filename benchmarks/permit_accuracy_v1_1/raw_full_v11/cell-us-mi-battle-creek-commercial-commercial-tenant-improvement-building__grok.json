@@ -1,0 +1,78 @@
+{
+  "observed_model": "x-ai/grok-4.5",
+  "observed_provider": "openrouter",
+  "path_proof": {
+    "adapter": "grok",
+    "engine_called": false,
+    "engine_result_supplied_to_model": false,
+    "model_call_count": 1
+  },
+  "provider": "openrouter",
+  "provider_response": {
+    "choices": [
+      {
+        "finish_reason": "stop",
+        "index": 0,
+        "logprobs": null,
+        "message": {
+          "content": "{\"permit_decision\":\"VERIFY\",\"jurisdiction\":{\"jurisdiction_id\":\"us-mi-battle_creek\",\"name\":\"Battle Creek\",\"state\":\"MI\",\"type\":\"city_or_local_authority\"},\"project_family\":\"commercial_tenant_improvement\",\"primary_permit_family\":\"VERIFY\",\"companion_permits\":[{\"family\":\"BUILDING\",\"status\":\"VERIFY\"},{\"family\":\"ELECTRICAL\",\"status\":\"VERIFY\"},{\"family\":\"PLUMBING\",\"status\":\"VERIFY\"},{\"family\":\"MECHANICAL\",\"status\":\"VERIFY\"},{\"family\":\"FIRE_LIFE_SAFETY\",\"status\":\"VERIFY\"},{\"family\":\"OCCUPANCY\",\"status\":\"VERIFY\"},{\"family\":\"PLANNING_ZONING\",\"status\":\"VERIFY\"}],\"filing\":{\"authority_id\":null,\"destination_url\":\"https://battlecreekmi.gov/709/Inspections\",\"office\":\"Battle Creek Inspections\",\"url_role\":\"INFORMATIONAL_OFFICE\"},\"source_support\":{\"state\":\"OFFICIAL_SOURCE_SUPPORTED\",\"strength\":\"WEAK\",\"evidence\":[{\"url\":\"https://battlecreekmi.gov/709/Inspections\",\"role\":\"INFORMATIONAL_OFFICE\"}]},\"contradictions\":[]}",
+          "reasoning": "The user wants me to evaluate one permit lookup using ONLY the supplied official-source evidence packet and return exactly one JSON object conforming to MODEL_SCHEMA.\n",
+          "reasoning_details": [
+            {
+              "format": "xai-responses-v1",
+              "index": 0,
+              "summary": "The user wants me to evaluate one permit lookup using ONLY the supplied official-source evidence packet and return exactly one JSON object conforming to MODEL_SCHEMA.\n",
+              "type": "reasoning.summary"
+            },
+            {
+              "data": "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",
+              "format": "xai-responses-v1",
+              "id": "rs_d38d5611-ded9-9ede-a3be-75b0bafd772e",
+              "index": 1,
+              "type": "reasoning.encrypted"
+            }
+          ],
+          "refusal": null,
+          "role": "assistant"
+        },
+        "native_finish_reason": "completed"
+      }
+    ],
+    "created": 1785166330,
+    "id": "gen-1785166330-iUmkGTA6ngZ0YuRYh6XQ",
+    "model": "x-ai/grok-4.5",
+    "object": "chat.completion",
+    "provider": "xAI",
+    "service_tier": "default",
+    "system_fingerprint": null,
+    "usage": {
+      "completion_tokens": 1524,
+      "completion_tokens_details": {
+        "audio_tokens": 0,
+        "image_tokens": 0,
+        "reasoning_tokens": 1251
+      },
+      "cost": 0.0118344,
+      "cost_details": {
+        "upstream_inference_completions_cost": 0.009144,
+        "upstream_inference_cost": 0.0118344,
+        "upstream_inference_prompt_cost": 0.0026904
+      },
+      "is_byok": false,
+      "prompt_tokens": 1454,
+      "prompt_tokens_details": {
+        "audio_tokens": 0,
+        "cache_write_tokens": 0,
+        "cached_tokens": 128,
+        "video_tokens": 0
+      },
+      "total_tokens": 2978
+    }
+  },
+  "raw_text": "{\"permit_decision\":\"VERIFY\",\"jurisdiction\":{\"jurisdiction_id\":\"us-mi-battle_creek\",\"name\":\"Battle Creek\",\"state\":\"MI\",\"type\":\"city_or_local_authority\"},\"project_family\":\"commercial_tenant_improvement\",\"primary_permit_family\":\"VERIFY\",\"companion_permits\":[{\"family\":\"BUILDING\",\"status\":\"VERIFY\"},{\"family\":\"ELECTRICAL\",\"status\":\"VERIFY\"},{\"family\":\"PLUMBING\",\"status\":\"VERIFY\"},{\"family\":\"MECHANICAL\",\"status\":\"VERIFY\"},{\"family\":\"FIRE_LIFE_SAFETY\",\"status\":\"VERIFY\"},{\"family\":\"OCCUPANCY\",\"status\":\"VERIFY\"},{\"family\":\"PLANNING_ZONING\",\"status\":\"VERIFY\"}],\"filing\":{\"authority_id\":null,\"destination_url\":\"https://battlecreekmi.gov/709/Inspections\",\"office\":\"Battle Creek Inspections\",\"url_role\":\"INFORMATIONAL_OFFICE\"},\"source_support\":{\"state\":\"OFFICIAL_SOURCE_SUPPORTED\",\"strength\":\"WEAK\",\"evidence\":[{\"url\":\"https://battlecreekmi.gov/709/Inspections\",\"role\":\"INFORMATIONAL_OFFICE\"}]},\"contradictions\":[]}",
+  "requested_model": "x-ai/grok-4.5",
+  "requested_provider": "openrouter",
+  "requested_runtime": "grok",
+  "response_id": "gen-1785166330-iUmkGTA6ngZ0YuRYh6XQ",
+  "runtime": "OpenRouter chat/completions; upstream_provider=xAI"
+}

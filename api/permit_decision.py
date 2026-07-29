@@ -18,12 +18,14 @@ from decision_resolver import is_input_rejection, resolve_customer_decision
 PERMIT_DECISION_REQUIRED = "REQUIRED"
 PERMIT_DECISION_NOT_REQUIRED = "NOT_REQUIRED"
 PERMIT_DECISION_CONDITIONAL = "CONDITIONAL"
+PERMIT_DECISION_VERIFY = "VERIFY"
 PERMIT_DECISION_FAIL_CLOSED = "FAIL_CLOSED_UNSUPPORTED_OR_NO_EVIDENCE"
 
 CONTROLLED_PERMIT_DECISIONS = {
     PERMIT_DECISION_REQUIRED,
     PERMIT_DECISION_NOT_REQUIRED,
     PERMIT_DECISION_CONDITIONAL,
+    PERMIT_DECISION_VERIFY,
     PERMIT_DECISION_FAIL_CLOSED,
 }
 
@@ -479,20 +481,32 @@ def _trade_permits(result: dict[str, Any]) -> list[dict[str, str]]:
 
 def _companion_reviews(result: dict[str, Any], job_type: str = "") -> list[str]:
     text = f"{job_type} {_blob(result.get('companion_permits') or [])} {_blob(result.get('hidden_triggers') or [])}".lower()
+    text_tokens = tuple(re.findall(r"[a-z0-9]+", text))
+
+    def has(*phrases: str) -> bool:
+        for phrase in phrases:
+            phrase_tokens = tuple(re.findall(r"[a-z0-9]+", phrase.lower()))
+            if phrase_tokens and len(phrase_tokens) <= len(text_tokens) and any(
+                text_tokens[index : index + len(phrase_tokens)] == phrase_tokens
+                for index in range(len(text_tokens) - len(phrase_tokens) + 1)
+            ):
+                return True
+        return False
+
     reviews: list[str] = []
-    if any(token in text for token in ("fire", "sprinkler", "alarm", "hood", "ansul")):
+    if has("fire", "sprinkler", "alarm", "hood", "ansul"):
         reviews.append("Fire review")
-    if any(token in text for token in ("health", "food", "restaurant", "clinic", "medical", "grease interceptor")):
+    if has("health", "food", "restaurant", "clinic", "medical", "grease interceptor"):
         reviews.append("Health Department review")
-    if any(token in text for token in ("zoning", "planning", "change of use", "change of occupancy", "signage")):
+    if has("zoning", "planning", "change of use", "change of occupancy", "signage"):
         reviews.append("Planning/Zoning review")
-    if any(token in text for token in ("utility", "meter", "service", "interconnection")):
+    if has("utility", "meter", "service", "interconnection"):
         reviews.append("Utility coordination")
-    if any(token in text for token in ("ada", "accessibility", "accessible")):
+    if has("ada", "accessibility", "accessible"):
         reviews.append("Accessibility review")
-    if any(token in text for token in ("structural", "load bearing", "roof", "foundation")):
+    if has("structural", "load bearing", "roof", "roofing", "reroof", "foundation"):
         reviews.append("Structural review")
-    if any(token in text for token in ("electrical", "mechanical", "plumbing", "mep", "hvac", "fixture")):
+    if has("electrical", "mechanical", "plumbing", "mep", "hvac", "fixture"):
         reviews.append("MEP trade permits")
     return [review for review in CONTROLLED_COMPANION_REVIEWS if review in set(reviews)]
 
@@ -931,15 +945,27 @@ def _recovered_lock_permit_name(lock: dict[str, Any], permit_kind: str = "") -> 
         return name
 
     blob = _blob(lock).lower().replace("_", " ").replace("-", " ")
-    if "tenant improvement" in blob or "tenant build" in blob or "commercial interior" in blob:
+    blob_tokens = tuple(re.findall(r"[a-z0-9]+", blob))
+
+    def has(*phrases: str) -> bool:
+        for phrase in phrases:
+            phrase_tokens = tuple(re.findall(r"[a-z0-9]+", phrase.lower()))
+            if phrase_tokens and len(phrase_tokens) <= len(blob_tokens) and any(
+                blob_tokens[index : index + len(phrase_tokens)] == phrase_tokens
+                for index in range(len(blob_tokens) - len(phrase_tokens) + 1)
+            ):
+                return True
+        return False
+
+    if has("tenant improvement", "tenant build", "commercial interior"):
         return "Commercial Building / Tenant Improvement Permit"
-    if "construction permit" in blob:
+    if has("construction permit"):
         return "Construction Permit"
-    if "water heater" in blob:
+    if has("water heater"):
         return "Residential Plumbing Permit — Water Heater Replacement"
-    if "roof" in blob or "reroof" in blob or "re roof" in blob:
+    if has("roof", "roofing", "reroof", "re roof"):
         return "Building Permit"
-    if "building permit" in blob or str(permit_kind).lower() == "building":
+    if has("building permit") or str(permit_kind).lower() == "building":
         return "Building Permit"
     if permit_kind and permit_kind not in {"Other", "Not Required"}:
         suffix = "" if permit_kind.lower().endswith("permit") else " Permit"
@@ -1276,10 +1302,9 @@ def enforce_decision_cell_primary(result: dict[str, Any], lock: dict[str, Any] |
 def apply_permit_decision_contract(result: dict[str, Any], job_type: str = "", city: str = "", state: str = "", scope_contract: dict[str, Any] | None = None) -> dict[str, Any]:
     """Attach/normalize the universal PermitDecision CustomerView contract.
 
-    Missing or weak source evidence is metadata only. Customer-facing decisions
-    are resolved through decision_resolver and can only be REQUIRED or
-    NOT_REQUIRED for valid lookup contexts. Legacy UNKNOWN/FAIL_CLOSED/cache
-    states are recovered here instead of serialized.
+    Customer-facing decisions are resolved through decision_resolver into the
+    typed REQUIRED/NOT_REQUIRED/CONDITIONAL/VERIFY contract. Legacy
+    UNKNOWN/FAIL_CLOSED/cache states are recovered instead of serialized.
     """
     result = copy.deepcopy(result) if isinstance(result, dict) else {}
     cell_lock = _get_decision_cell_primary_lock(result)
@@ -1318,9 +1343,13 @@ def apply_permit_decision_contract(result: dict[str, Any], job_type: str = "", c
         permit_name = str(dto.get("permit_name") or _KIND_KEYWORDS[0][0] or "Building Permit")
         permits_required = [{"permit_type": permit_name, "kind": kind, "required": True}]
 
-    result["permit_required"] = bool(dto["permit_required"])
+    result["permit_required"] = dto["permit_required"]
     result["permit_decision"] = decision
-    result["permit_verdict"] = "YES" if decision == PERMIT_DECISION_REQUIRED else "NO"
+    result["permit_verdict"] = (
+        "YES" if decision == PERMIT_DECISION_REQUIRED
+        else "NO" if decision == PERMIT_DECISION_NOT_REQUIRED
+        else decision
+    )
     result["permit_kind"] = kind
     result["permit_name"] = dto.get("permit_name")
     result["permits_required"] = _collapse_parent_child_permits(permits_required)
@@ -1359,6 +1388,10 @@ def apply_permit_decision_contract(result: dict[str, Any], job_type: str = "", c
             "status": "metadata_only",
             "decision_mutation_allowed": False,
             "has_source_backed_evidence": has_evidence,
+            "threshold_evidence": bool(
+                result.get("condition_threshold")
+                or result.get("conditional_threshold")
+            ) if decision == PERMIT_DECISION_CONDITIONAL else False,
             "positive_exemption_evidence": _positive_exemption_evidence(result),
             "source_confidence": dto.get("confidence_tier") or "SCOPE_DEFAULT",
             "source_support": source_support,

@@ -1,0 +1,6 @@
+PermitAssist independently adjudicated official filing route
+Official source URL: https://www.cedar-rapids.org/local_government/departments_a_-_f/building_services/building_and_trades/customer_self_service_(css).php
+Official filing URL: https://cedarrapidsia-energovpub.tylerhost.net/apps/selfservice#/home
+Verification boundary: DOSSIER_AND_OFFICIAL_PAGE_LINK_VERIFIED_20260728
+Exact official quote:
+Customer Self-Service (CSS) portal which will allow our customers the ability to apply for permit applications, pay for permit applications, and schedule inspections.

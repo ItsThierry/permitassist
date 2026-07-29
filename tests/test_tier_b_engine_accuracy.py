@@ -134,6 +134,19 @@ def test_permit_family_prefers_label_over_suppression_notes():
     }) == "roofing"
 
 
+def test_permit_family_uses_token_phrases_not_substrings():
+    assert engine._permit_family({"permit_type": "assignment review"}) not in {"sign", "mechanical"}
+    assert engine._permit_family({"permit_type": "facade design review"}) not in {"sign", "mechanical"}
+    assert engine._permit_family({"permit_type": "Sign Permit"}) == "sign"
+    assert engine._permit_family({"permit_type": "Mechanical Permit"}) == "mechanical"
+
+
+def test_rulebook_scope_uses_token_phrases_not_embedded_substrings():
+    assert engine.classify_rulebook_scope("foundational research by a deckhand") == "unknown"
+    assert engine.classify_rulebook_scope("residential foundation repair") == "foundation"
+    assert engine.classify_rulebook_scope("residential deck construction") == "deck"
+
+
 def test_scope_commercial_conversion_trade_list_leads_with_building_and_named_trades():
     for city, state in (("Austin", "TX"), ("Boston", "MA")):
         job = f"4,000 sq ft retail converted into a fitness studio, {city} {state} — restrooms, showers, HVAC, electrical"

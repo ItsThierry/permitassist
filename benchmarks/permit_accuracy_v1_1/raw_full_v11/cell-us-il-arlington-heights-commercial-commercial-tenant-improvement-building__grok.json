@@ -1,0 +1,78 @@
+{
+  "observed_model": "x-ai/grok-4.5",
+  "observed_provider": "openrouter",
+  "path_proof": {
+    "adapter": "grok",
+    "engine_called": false,
+    "engine_result_supplied_to_model": false,
+    "model_call_count": 1
+  },
+  "provider": "openrouter",
+  "provider_response": {
+    "choices": [
+      {
+        "finish_reason": "stop",
+        "index": 0,
+        "logprobs": null,
+        "message": {
+          "content": "{\"permit_decision\":\"REQUIRED\",\"jurisdiction\":{\"jurisdiction_id\":\"us-il-arlington_heights\",\"name\":\"Arlington Heights\",\"state\":\"IL\",\"type\":\"city_or_local_authority\"},\"project_family\":\"commercial_tenant_improvement\",\"primary_permit_family\":\"BUILDING\",\"companion_permits\":[{\"family\":\"ELECTRICAL\",\"status\":\"VERIFY\"},{\"family\":\"PLUMBING\",\"status\":\"VERIFY\"},{\"family\":\"MECHANICAL\",\"status\":\"VERIFY\"},{\"family\":\"FIRE_LIFE_SAFETY\",\"status\":\"VERIFY\"},{\"family\":\"OCCUPANCY\",\"status\":\"VERIFY\"},{\"family\":\"PLANNING_ZONING\",\"status\":\"VERIFY\"}],\"filing\":{\"authority_id\":\"us-il-arlington_heights\",\"office\":\"Village of Arlington Heights Permits and Licenses\",\"destination_url\":\"https://www.vah.com/government/permits___licenses_/index.php\",\"url_role\":\"REQUIREMENT_EVIDENCE\"},\"source_support\":{\"state\":\"OFFICIAL_SOURCE_SUPPORTED\",\"strength\":\"MODERATE\",\"evidence\":[{\"url\":\"https://www.vah.com/government/permits___licenses_/index.php\",\"role\":\"REQUIREMENT_EVIDENCE\"}]},\"contradictions\":[]}",
+          "reasoning": "The user wants me to evaluate one permit lookup using ONLY the supplied official-source evidence packet and return exactly one JSON object conforming to MODEL_SCHEMA. I must not use Markdown fences, c...",
+          "reasoning_details": [
+            {
+              "format": "xai-responses-v1",
+              "index": 0,
+              "summary": "The user wants me to evaluate one permit lookup using ONLY the supplied official-source evidence packet and return exactly one JSON object conforming to MODEL_SCHEMA. I must not use Markdown fences, c...",
+              "type": "reasoning.summary"
+            },
+            {
+              "data": "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",
+              "format": "xai-responses-v1",
+              "id": "rs_6b5b0e26-89dd-9b41-89ab-b083b8c1d779",
+              "index": 1,
+              "type": "reasoning.encrypted"
+            }
+          ],
+          "refusal": null,
+          "role": "assistant"
+        },
+        "native_finish_reason": "completed"
+      }
+    ],
+    "created": 1785165565,
+    "id": "gen-1785165565-BjwN49VQV0RVTr6dWFai",
+    "model": "x-ai/grok-4.5",
+    "object": "chat.completion",
+    "provider": "xAI",
+    "service_tier": "default",
+    "system_fingerprint": null,
+    "usage": {
+      "completion_tokens": 1269,
+      "completion_tokens_details": {
+        "audio_tokens": 0,
+        "image_tokens": 0,
+        "reasoning_tokens": 984
+      },
+      "cost": 0.0100164,
+      "cost_details": {
+        "upstream_inference_completions_cost": 0.007614,
+        "upstream_inference_cost": 0.0100164,
+        "upstream_inference_prompt_cost": 0.0024024
+      },
+      "is_byok": false,
+      "prompt_tokens": 1310,
+      "prompt_tokens_details": {
+        "audio_tokens": 0,
+        "cache_write_tokens": 0,
+        "cached_tokens": 128,
+        "video_tokens": 0
+      },
+      "total_tokens": 2579
+    }
+  },
+  "raw_text": "{\"permit_decision\":\"REQUIRED\",\"jurisdiction\":{\"jurisdiction_id\":\"us-il-arlington_heights\",\"name\":\"Arlington Heights\",\"state\":\"IL\",\"type\":\"city_or_local_authority\"},\"project_family\":\"commercial_tenant_improvement\",\"primary_permit_family\":\"BUILDING\",\"companion_permits\":[{\"family\":\"ELECTRICAL\",\"status\":\"VERIFY\"},{\"family\":\"PLUMBING\",\"status\":\"VERIFY\"},{\"family\":\"MECHANICAL\",\"status\":\"VERIFY\"},{\"family\":\"FIRE_LIFE_SAFETY\",\"status\":\"VERIFY\"},{\"family\":\"OCCUPANCY\",\"status\":\"VERIFY\"},{\"family\":\"PLANNING_ZONING\",\"status\":\"VERIFY\"}],\"filing\":{\"authority_id\":\"us-il-arlington_heights\",\"office\":\"Village of Arlington Heights Permits and Licenses\",\"destination_url\":\"https://www.vah.com/government/permits___licenses_/index.php\",\"url_role\":\"REQUIREMENT_EVIDENCE\"},\"source_support\":{\"state\":\"OFFICIAL_SOURCE_SUPPORTED\",\"strength\":\"MODERATE\",\"evidence\":[{\"url\":\"https://www.vah.com/government/permits___licenses_/index.php\",\"role\":\"REQUIREMENT_EVIDENCE\"}]},\"contradictions\":[]}",
+  "requested_model": "x-ai/grok-4.5",
+  "requested_provider": "openrouter",
+  "requested_runtime": "grok",
+  "response_id": "gen-1785165565-BjwN49VQV0RVTr6dWFai",
+  "runtime": "OpenRouter chat/completions; upstream_provider=xAI"
+}

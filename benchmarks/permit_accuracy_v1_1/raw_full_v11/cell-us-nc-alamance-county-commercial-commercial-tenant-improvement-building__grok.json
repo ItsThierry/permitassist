@@ -1,0 +1,78 @@
+{
+  "observed_model": "x-ai/grok-4.5",
+  "observed_provider": "openrouter",
+  "path_proof": {
+    "adapter": "grok",
+    "engine_called": false,
+    "engine_result_supplied_to_model": false,
+    "model_call_count": 1
+  },
+  "provider": "openrouter",
+  "provider_response": {
+    "choices": [
+      {
+        "finish_reason": "stop",
+        "index": 0,
+        "logprobs": null,
+        "message": {
+          "content": "{\"permit_decision\":\"REQUIRED\",\"jurisdiction\":{\"jurisdiction_id\":\"us-nc-alamance_county\",\"name\":\"Alamance County\",\"state\":\"NC\",\"type\":\"county\"},\"project_family\":\"commercial_tenant_improvement\",\"primary_permit_family\":\"BUILDING\",\"companion_permits\":[{\"family\":\"ELECTRICAL\",\"status\":\"VERIFY\"},{\"family\":\"PLUMBING\",\"status\":\"VERIFY\"},{\"family\":\"MECHANICAL\",\"status\":\"VERIFY\"},{\"family\":\"FIRE_LIFE_SAFETY\",\"status\":\"VERIFY\"},{\"family\":\"OCCUPANCY\",\"status\":\"VERIFY\"},{\"family\":\"PLANNING_ZONING\",\"status\":\"VERIFY\"}],\"filing\":{\"authority_id\":\"us-nc-alamance_county\",\"office\":\"Alamance County Inspections Department\",\"destination_url\":\"https://inspections.alamancecountync.gov/permits/permits/commercial-permits/\",\"url_role\":\"APPLICATION_START\"},\"source_support\":{\"state\":\"OFFICIAL_SOURCE_SUPPORTED\",\"strength\":\"STRONG\",\"evidence\":[{\"url\":\"https://inspections.alamancecountync.gov/permits/permits/\",\"role\":\"REQUIREMENT_EVIDENCE\"},{\"url\":\"http://apps.alamance-nc.com/inspections/\",\"role\":\"INFORMATIONAL_OFFICE\"},{\"url\":\"https://inspections.alamancecountync.gov/permits/permits/commercial-permits/\",\"role\":\"APPLICATION_START\"}]},\"contradictions\":[]}",
+          "reasoning": "The user wants me to evaluate one permit lookup using ONLY the supplied official-source evidence packet and return exactly one JSON object conforming to MODEL_SCHEMA.\n",
+          "reasoning_details": [
+            {
+              "format": "xai-responses-v1",
+              "index": 0,
+              "summary": "The user wants me to evaluate one permit lookup using ONLY the supplied official-source evidence packet and return exactly one JSON object conforming to MODEL_SCHEMA.\n",
+              "type": "reasoning.summary"
+            },
+            {
+              "data": "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",
+              "format": "xai-responses-v1",
+              "id": "rs_945b06d0-1330-9e2e-ab98-13f3d0b4f904",
+              "index": 1,
+              "type": "reasoning.encrypted"
+            }
+          ],
+          "refusal": null,
+          "role": "assistant"
+        },
+        "native_finish_reason": "completed"
+      }
+    ],
+    "created": 1785166682,
+    "id": "gen-1785166682-7Oxb0CPM9yzurLReMdbA",
+    "model": "x-ai/grok-4.5",
+    "object": "chat.completion",
+    "provider": "xAI",
+    "service_tier": "default",
+    "system_fingerprint": null,
+    "usage": {
+      "completion_tokens": 963,
+      "completion_tokens_details": {
+        "audio_tokens": 0,
+        "image_tokens": 0,
+        "reasoning_tokens": 625
+      },
+      "cost": 0.0083964,
+      "cost_details": {
+        "upstream_inference_completions_cost": 0.005778,
+        "upstream_inference_cost": 0.0083964,
+        "upstream_inference_prompt_cost": 0.0026184
+      },
+      "is_byok": false,
+      "prompt_tokens": 1418,
+      "prompt_tokens_details": {
+        "audio_tokens": 0,
+        "cache_write_tokens": 0,
+        "cached_tokens": 128,
+        "video_tokens": 0
+      },
+      "total_tokens": 2381
+    }
+  },
+  "raw_text": "{\"permit_decision\":\"REQUIRED\",\"jurisdiction\":{\"jurisdiction_id\":\"us-nc-alamance_county\",\"name\":\"Alamance County\",\"state\":\"NC\",\"type\":\"county\"},\"project_family\":\"commercial_tenant_improvement\",\"primary_permit_family\":\"BUILDING\",\"companion_permits\":[{\"family\":\"ELECTRICAL\",\"status\":\"VERIFY\"},{\"family\":\"PLUMBING\",\"status\":\"VERIFY\"},{\"family\":\"MECHANICAL\",\"status\":\"VERIFY\"},{\"family\":\"FIRE_LIFE_SAFETY\",\"status\":\"VERIFY\"},{\"family\":\"OCCUPANCY\",\"status\":\"VERIFY\"},{\"family\":\"PLANNING_ZONING\",\"status\":\"VERIFY\"}],\"filing\":{\"authority_id\":\"us-nc-alamance_county\",\"office\":\"Alamance County Inspections Department\",\"destination_url\":\"https://inspections.alamancecountync.gov/permits/permits/commercial-permits/\",\"url_role\":\"APPLICATION_START\"},\"source_support\":{\"state\":\"OFFICIAL_SOURCE_SUPPORTED\",\"strength\":\"STRONG\",\"evidence\":[{\"url\":\"https://inspections.alamancecountync.gov/permits/permits/\",\"role\":\"REQUIREMENT_EVIDENCE\"},{\"url\":\"http://apps.alamance-nc.com/inspections/\",\"role\":\"INFORMATIONAL_OFFICE\"},{\"url\":\"https://inspections.alamancecountync.gov/permits/permits/commercial-permits/\",\"role\":\"APPLICATION_START\"}]},\"contradictions\":[]}",
+  "requested_model": "x-ai/grok-4.5",
+  "requested_provider": "openrouter",
+  "requested_runtime": "grok",
+  "response_id": "gen-1785166682-7Oxb0CPM9yzurLReMdbA",
+  "runtime": "OpenRouter chat/completions; upstream_provider=xAI"
+}

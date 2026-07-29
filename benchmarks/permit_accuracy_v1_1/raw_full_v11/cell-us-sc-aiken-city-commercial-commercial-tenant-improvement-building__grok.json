@@ -1,0 +1,78 @@
+{
+  "observed_model": "x-ai/grok-4.5",
+  "observed_provider": "openrouter",
+  "path_proof": {
+    "adapter": "grok",
+    "engine_called": false,
+    "engine_result_supplied_to_model": false,
+    "model_call_count": 1
+  },
+  "provider": "openrouter",
+  "provider_response": {
+    "choices": [
+      {
+        "finish_reason": "stop",
+        "index": 0,
+        "logprobs": null,
+        "message": {
+          "content": "{\"permit_decision\":\"REQUIRED\",\"jurisdiction\":{\"jurisdiction_id\":\"us-sc-aiken_city\",\"name\":\"Aiken City\",\"state\":\"SC\",\"type\":\"city_or_local_authority\"},\"project_family\":\"commercial_tenant_improvement\",\"primary_permit_family\":\"BUILDING\",\"companion_permits\":[{\"family\":\"ELECTRICAL\",\"status\":\"VERIFY\"},{\"family\":\"PLUMBING\",\"status\":\"VERIFY\"},{\"family\":\"MECHANICAL\",\"status\":\"VERIFY\"},{\"family\":\"FIRE_LIFE_SAFETY\",\"status\":\"VERIFY\"},{\"family\":\"OCCUPANCY\",\"status\":\"VERIFY\"},{\"family\":\"PLANNING_ZONING\",\"status\":\"VERIFY\"}],\"filing\":{\"authority_id\":\"us-sc-aiken_city\",\"office\":\"City of Aiken Permitting and Codes\",\"destination_url\":\"https://www.cityofaikensc.gov/permitting-codes/building-permit-information/\",\"url_role\":\"REQUIREMENT_EVIDENCE\"},\"source_support\":{\"state\":\"OFFICIAL_SOURCE_SUPPORTED\",\"strength\":\"MODERATE\",\"evidence\":[{\"url\":\"https://www.cityofaikensc.gov/permitting-codes/building-permit-information/\",\"role\":\"REQUIREMENT_EVIDENCE\"}]},\"contradictions\":[]}",
+          "reasoning": "The user wants me to return exactly one JSON object conforming to MODEL_SCHEMA based on the evidence packet. No markdown fences, commentary, etc. Output JSON only.\n",
+          "reasoning_details": [
+            {
+              "format": "xai-responses-v1",
+              "index": 0,
+              "summary": "The user wants me to return exactly one JSON object conforming to MODEL_SCHEMA based on the evidence packet. No markdown fences, commentary, etc. Output JSON only.\n",
+              "type": "reasoning.summary"
+            },
+            {
+              "data": "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",
+              "format": "xai-responses-v1",
+              "id": "rs_668991bc-3e9b-9865-be4c-61ae2810ce05",
+              "index": 1,
+              "type": "reasoning.encrypted"
+            }
+          ],
+          "refusal": null,
+          "role": "assistant"
+        },
+        "native_finish_reason": "completed"
+      }
+    ],
+    "created": 1785167637,
+    "id": "gen-1785167637-kuvQuK8j5fVY9GXLgKhT",
+    "model": "x-ai/grok-4.5",
+    "object": "chat.completion",
+    "provider": "xAI",
+    "service_tier": "default",
+    "system_fingerprint": null,
+    "usage": {
+      "completion_tokens": 1335,
+      "completion_tokens_details": {
+        "audio_tokens": 0,
+        "image_tokens": 0,
+        "reasoning_tokens": 1035
+      },
+      "cost": 0.0090672,
+      "cost_details": {
+        "upstream_inference_completions_cost": 0.00801,
+        "upstream_inference_cost": 0.0090672,
+        "upstream_inference_prompt_cost": 0.0010572
+      },
+      "is_byok": false,
+      "prompt_tokens": 1399,
+      "prompt_tokens_details": {
+        "audio_tokens": 0,
+        "cache_write_tokens": 0,
+        "cached_tokens": 1024,
+        "video_tokens": 0
+      },
+      "total_tokens": 2734
+    }
+  },
+  "raw_text": "{\"permit_decision\":\"REQUIRED\",\"jurisdiction\":{\"jurisdiction_id\":\"us-sc-aiken_city\",\"name\":\"Aiken City\",\"state\":\"SC\",\"type\":\"city_or_local_authority\"},\"project_family\":\"commercial_tenant_improvement\",\"primary_permit_family\":\"BUILDING\",\"companion_permits\":[{\"family\":\"ELECTRICAL\",\"status\":\"VERIFY\"},{\"family\":\"PLUMBING\",\"status\":\"VERIFY\"},{\"family\":\"MECHANICAL\",\"status\":\"VERIFY\"},{\"family\":\"FIRE_LIFE_SAFETY\",\"status\":\"VERIFY\"},{\"family\":\"OCCUPANCY\",\"status\":\"VERIFY\"},{\"family\":\"PLANNING_ZONING\",\"status\":\"VERIFY\"}],\"filing\":{\"authority_id\":\"us-sc-aiken_city\",\"office\":\"City of Aiken Permitting and Codes\",\"destination_url\":\"https://www.cityofaikensc.gov/permitting-codes/building-permit-information/\",\"url_role\":\"REQUIREMENT_EVIDENCE\"},\"source_support\":{\"state\":\"OFFICIAL_SOURCE_SUPPORTED\",\"strength\":\"MODERATE\",\"evidence\":[{\"url\":\"https://www.cityofaikensc.gov/permitting-codes/building-permit-information/\",\"role\":\"REQUIREMENT_EVIDENCE\"}]},\"contradictions\":[]}",
+  "requested_model": "x-ai/grok-4.5",
+  "requested_provider": "openrouter",
+  "requested_runtime": "grok",
+  "response_id": "gen-1785167637-kuvQuK8j5fVY9GXLgKhT",
+  "runtime": "OpenRouter chat/completions; upstream_provider=xAI"
+}

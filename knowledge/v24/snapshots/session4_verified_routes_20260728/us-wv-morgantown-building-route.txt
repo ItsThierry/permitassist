@@ -1,0 +1,6 @@
+PermitAssist independently adjudicated official filing route
+Official source URL: https://www.morgantownwv.gov/704/Permitting-Licensing-Registration
+Official filing URL: https://app03.cityworksonline.com/CLIENT_MorgantownWV-Public/login
+Verification boundary: DOSSIER_VERIFIED_DYNAMIC_PORTAL_WEB_EXTRACT_BLOCKED_20260728
+Exact official quote:
+To apply for a building permit, you must create an account and complete your application through the Cityworks PLL portal.

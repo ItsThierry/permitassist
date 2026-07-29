@@ -1,0 +1,20 @@
+{
+  "observed_model": "Gemini 3.6 Flash (High)",
+  "observed_provider": "google-antigravity-oauth",
+  "path_proof": {
+    "adapter": "gemini",
+    "capture_created_by_model": true,
+    "engine_called": false,
+    "engine_result_supplied_to_model": false,
+    "model_call_count": 1
+  },
+  "provider": "google-antigravity-oauth",
+  "provider_stderr": "",
+  "provider_stdout": "DONE\n",
+  "raw_text": "{\n  \"permit_decision\": \"REQUIRED\",\n  \"jurisdiction\": {\n    \"jurisdiction_id\": \"us-al-auburn\",\n    \"name\": \"Auburn\",\n    \"state\": \"AL\",\n    \"type\": \"city_or_local_authority\"\n  },\n  \"project_family\": \"commercial_tenant_improvement\",\n  \"primary_permit_family\": \"BUILDING\",\n  \"companion_permits\": [\n    {\n      \"family\": \"ELECTRICAL\",\n      \"status\": \"VERIFY\"\n    },\n    {\n      \"family\": \"FIRE_LIFE_SAFETY\",\n      \"status\": \"VERIFY\"\n    },\n    {\n      \"family\": \"MECHANICAL\",\n      \"status\": \"VERIFY\"\n    },\n    {\n      \"family\": \"OCCUPANCY\",\n      \"status\": \"VERIFY\"\n    },\n    {\n      \"family\": \"PLANNING_ZONING\",\n      \"status\": \"VERIFY\"\n    },\n    {\n      \"family\": \"PLUMBING\",\n      \"status\": \"VERIFY\"\n    }\n  ],\n  \"filing\": {\n    \"authority_id\": \"us-al-auburn\",\n    \"office\": \"Inspection Services\",\n    \"destination_url\": \"https://www.auburnal.gov/inspection-services/services/\",\n    \"url_role\": \"REQUIREMENT_EVIDENCE\"\n  },\n  \"source_support\": {\n    \"state\": \"OFFICIAL_SOURCE_SUPPORTED\",\n    \"strength\": \"STRONG\",\n    \"evidence\": [\n      {\n        \"url\": \"https://www.auburnal.gov/inspection-services/services/\",\n        \"role\": \"REQUIREMENT_EVIDENCE\"\n      },\n      {\n        \"url\": \"https://www.auburnal.gov/permit-information\",\n        \"role\": \"INFORMATIONAL_OFFICE\"\n      }\n    ]\n  },\n  \"contradictions\": []\n}\n",
+  "requested_model": "Gemini 3.6 Flash (High)",
+  "requested_provider": "google-antigravity-oauth",
+  "requested_runtime": "gemini",
+  "response_id": null,
+  "runtime": "agy.exe 1.0.2 / language-server 1.1.7"
+}

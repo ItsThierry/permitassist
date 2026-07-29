@@ -1,0 +1,78 @@
+{
+  "observed_model": "x-ai/grok-4.5",
+  "observed_provider": "openrouter",
+  "path_proof": {
+    "adapter": "grok",
+    "engine_called": false,
+    "engine_result_supplied_to_model": false,
+    "model_call_count": 1
+  },
+  "provider": "openrouter",
+  "provider_response": {
+    "choices": [
+      {
+        "finish_reason": "stop",
+        "index": 0,
+        "logprobs": null,
+        "message": {
+          "content": "{\"permit_decision\":\"VERIFY\",\"jurisdiction\":{\"jurisdiction_id\":\"us-nv-churchill_county\",\"name\":\"Churchill County\",\"state\":\"NV\",\"type\":\"county\"},\"project_family\":\"residential_remodel\",\"primary_permit_family\":\"BUILDING\",\"companion_permits\":[{\"family\":\"ELECTRICAL\",\"status\":\"VERIFY\"},{\"family\":\"PLUMBING\",\"status\":\"VERIFY\"},{\"family\":\"MECHANICAL\",\"status\":\"VERIFY\"},{\"family\":\"FIRE_LIFE_SAFETY\",\"status\":\"VERIFY\"}],\"filing\":{\"authority_id\":null,\"office\":\"Churchill County Building Department\",\"destination_url\":\"https://www.churchillcountynv.gov/98/Building-Department\",\"url_role\":\"INFORMATIONAL_OFFICE\"},\"source_support\":{\"state\":\"OFFICIAL_SOURCE_SUPPORTED\",\"strength\":\"WEAK\",\"evidence\":[{\"url\":\"https://www.churchillcountynv.gov/98/Building-Department\",\"role\":\"INFORMATIONAL_OFFICE\"}]},\"contradictions\":[]}",
+          "reasoning": "The user wants me to evaluate one permit lookup using ONLY the supplied official-source evidence packet and return exactly one JSON object conforming to MODEL_SCHEMA.\n{\n  \"companion_permits\": [\n    {\n      \"family\": \"VERIFY\",\n      \"status\": \"VERIFY\"\n    },\n    {\n      \"family\": \"VERIFY\",\n      \"status\": \"VERIFY\"\n    },\n    {\n      \"family\": \"VERIFY\",\n      \"status\": \"VERIFY\"\n    },\n    {\n      \"family\": \"VERIFY\",\n      \"status\": \"VERIFY\"\n    }\n  ],\n  \"contradictions\": [],\n  \"filing\": {\n    \"authority_id\": null,\n    \"destination_url\": \"https://www.churchillcountynv.",
+          "reasoning_details": [
+            {
+              "format": "xai-responses-v1",
+              "index": 0,
+              "summary": "The user wants me to evaluate one permit lookup using ONLY the supplied official-source evidence packet and return exactly one JSON object conforming to MODEL_SCHEMA.\n{\n  \"companion_permits\": [\n    {\n      \"family\": \"VERIFY\",\n      \"status\": \"VERIFY\"\n    },\n    {\n      \"family\": \"VERIFY\",\n      \"status\": \"VERIFY\"\n    },\n    {\n      \"family\": \"VERIFY\",\n      \"status\": \"VERIFY\"\n    },\n    {\n      \"family\": \"VERIFY\",\n      \"status\": \"VERIFY\"\n    }\n  ],\n  \"contradictions\": [],\n  \"filing\": {\n    \"authority_id\": null,\n    \"destination_url\": \"https://www.churchillcountynv.",
+              "type": "reasoning.summary"
+            },
+            {
+              "data": "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",
+              "format": "xai-responses-v1",
+              "id": "rs_0e48dc82-08b5-9252-9bbb-7f3bb13247f1",
+              "index": 1,
+              "type": "reasoning.encrypted"
+            }
+          ],
+          "refusal": null,
+          "role": "assistant"
+        },
+        "native_finish_reason": "completed"
+      }
+    ],
+    "created": 1785167115,
+    "id": "gen-1785167115-0Ux3rdRK5E2uvq1qhaKb",
+    "model": "x-ai/grok-4.5",
+    "object": "chat.completion",
+    "provider": "xAI",
+    "service_tier": "default",
+    "system_fingerprint": null,
+    "usage": {
+      "completion_tokens": 1161,
+      "completion_tokens_details": {
+        "audio_tokens": 0,
+        "image_tokens": 0,
+        "reasoning_tokens": 924
+      },
+      "cost": 0.0079912,
+      "cost_details": {
+        "upstream_inference_completions_cost": 0.006966,
+        "upstream_inference_cost": 0.0079912,
+        "upstream_inference_prompt_cost": 0.0010252
+      },
+      "is_byok": false,
+      "prompt_tokens": 1383,
+      "prompt_tokens_details": {
+        "audio_tokens": 0,
+        "cache_write_tokens": 0,
+        "cached_tokens": 1024,
+        "video_tokens": 0
+      },
+      "total_tokens": 2544
+    }
+  },
+  "raw_text": "{\"permit_decision\":\"VERIFY\",\"jurisdiction\":{\"jurisdiction_id\":\"us-nv-churchill_county\",\"name\":\"Churchill County\",\"state\":\"NV\",\"type\":\"county\"},\"project_family\":\"residential_remodel\",\"primary_permit_family\":\"BUILDING\",\"companion_permits\":[{\"family\":\"ELECTRICAL\",\"status\":\"VERIFY\"},{\"family\":\"PLUMBING\",\"status\":\"VERIFY\"},{\"family\":\"MECHANICAL\",\"status\":\"VERIFY\"},{\"family\":\"FIRE_LIFE_SAFETY\",\"status\":\"VERIFY\"}],\"filing\":{\"authority_id\":null,\"office\":\"Churchill County Building Department\",\"destination_url\":\"https://www.churchillcountynv.gov/98/Building-Department\",\"url_role\":\"INFORMATIONAL_OFFICE\"},\"source_support\":{\"state\":\"OFFICIAL_SOURCE_SUPPORTED\",\"strength\":\"WEAK\",\"evidence\":[{\"url\":\"https://www.churchillcountynv.gov/98/Building-Department\",\"role\":\"INFORMATIONAL_OFFICE\"}]},\"contradictions\":[]}",
+  "requested_model": "x-ai/grok-4.5",
+  "requested_provider": "openrouter",
+  "requested_runtime": "grok",
+  "response_id": "gen-1785167115-0Ux3rdRK5E2uvq1qhaKb",
+  "runtime": "OpenRouter chat/completions; upstream_provider=xAI"
+}

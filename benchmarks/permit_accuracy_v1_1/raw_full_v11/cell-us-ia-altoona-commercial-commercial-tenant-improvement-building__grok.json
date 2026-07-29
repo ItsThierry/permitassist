@@ -1,0 +1,78 @@
+{
+  "observed_model": "x-ai/grok-4.5",
+  "observed_provider": "openrouter",
+  "path_proof": {
+    "adapter": "grok",
+    "engine_called": false,
+    "engine_result_supplied_to_model": false,
+    "model_call_count": 1
+  },
+  "provider": "openrouter",
+  "provider_response": {
+    "choices": [
+      {
+        "finish_reason": "stop",
+        "index": 0,
+        "logprobs": null,
+        "message": {
+          "content": "{\"permit_decision\":\"REQUIRED\",\"jurisdiction\":{\"jurisdiction_id\":\"us-ia-altoona\",\"name\":\"Altoona\",\"state\":\"IA\",\"type\":\"city_or_local_authority\"},\"project_family\":\"commercial_tenant_improvement\",\"primary_permit_family\":\"BUILDING\",\"companion_permits\":[{\"family\":\"ELECTRICAL\",\"status\":\"REQUIRED\"},{\"family\":\"PLUMBING\",\"status\":\"REQUIRED\"},{\"family\":\"MECHANICAL\",\"status\":\"REQUIRED\"},{\"family\":\"FIRE_LIFE_SAFETY\",\"status\":\"VERIFY\"},{\"family\":\"OCCUPANCY\",\"status\":\"VERIFY\"},{\"family\":\"PLANNING_ZONING\",\"status\":\"VERIFY\"}],\"filing\":{\"authority_id\":null,\"office\":\"Building Department\",\"destination_url\":\"https://www.altoona-iowa.com/how_do_i/apply_for___obtain/permits.php\",\"url_role\":\"APPLICATION_START\"},\"source_support\":{\"state\":\"OFFICIAL_SOURCE_SUPPORTED\",\"strength\":\"MODERATE\",\"evidence\":[{\"url\":\"https://www.altoona-iowa.com/how_do_i/apply_for___obtain/permits.php\",\"role\":\"REQUIREMENT_EVIDENCE\"},{\"url\":\"https://www.altoona-iowa.com/how_do_i/apply_for___obtain/permits.php\",\"role\":\"APPLICATION_START\"}]},\"contradictions\":[]}",
+          "reasoning": "I need to produce a JSON object conforming to the MODEL_SCHEMA based on the evidence packet.\n",
+          "reasoning_details": [
+            {
+              "format": "xai-responses-v1",
+              "index": 0,
+              "summary": "I need to produce a JSON object conforming to the MODEL_SCHEMA based on the evidence packet.\n",
+              "type": "reasoning.summary"
+            },
+            {
+              "data": "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",
+              "format": "xai-responses-v1",
+              "id": "rs_c28784b4-9eca-9a5d-adcf-80e1d0a5764d",
+              "index": 1,
+              "type": "reasoning.encrypted"
+            }
+          ],
+          "refusal": null,
+          "role": "assistant"
+        },
+        "native_finish_reason": "completed"
+      }
+    ],
+    "created": 1785165450,
+    "id": "gen-1785165450-EvBJPe8OutbSAooUHwP2",
+    "model": "x-ai/grok-4.5",
+    "object": "chat.completion",
+    "provider": "xAI",
+    "service_tier": "default",
+    "system_fingerprint": null,
+    "usage": {
+      "completion_tokens": 1253,
+      "completion_tokens_details": {
+        "audio_tokens": 0,
+        "image_tokens": 0,
+        "reasoning_tokens": 933
+      },
+      "cost": 0.0100724,
+      "cost_details": {
+        "upstream_inference_completions_cost": 0.007518,
+        "upstream_inference_cost": 0.0100724,
+        "upstream_inference_prompt_cost": 0.0025544
+      },
+      "is_byok": false,
+      "prompt_tokens": 1386,
+      "prompt_tokens_details": {
+        "audio_tokens": 0,
+        "cache_write_tokens": 0,
+        "cached_tokens": 128,
+        "video_tokens": 0
+      },
+      "total_tokens": 2639
+    }
+  },
+  "raw_text": "{\"permit_decision\":\"REQUIRED\",\"jurisdiction\":{\"jurisdiction_id\":\"us-ia-altoona\",\"name\":\"Altoona\",\"state\":\"IA\",\"type\":\"city_or_local_authority\"},\"project_family\":\"commercial_tenant_improvement\",\"primary_permit_family\":\"BUILDING\",\"companion_permits\":[{\"family\":\"ELECTRICAL\",\"status\":\"REQUIRED\"},{\"family\":\"PLUMBING\",\"status\":\"REQUIRED\"},{\"family\":\"MECHANICAL\",\"status\":\"REQUIRED\"},{\"family\":\"FIRE_LIFE_SAFETY\",\"status\":\"VERIFY\"},{\"family\":\"OCCUPANCY\",\"status\":\"VERIFY\"},{\"family\":\"PLANNING_ZONING\",\"status\":\"VERIFY\"}],\"filing\":{\"authority_id\":null,\"office\":\"Building Department\",\"destination_url\":\"https://www.altoona-iowa.com/how_do_i/apply_for___obtain/permits.php\",\"url_role\":\"APPLICATION_START\"},\"source_support\":{\"state\":\"OFFICIAL_SOURCE_SUPPORTED\",\"strength\":\"MODERATE\",\"evidence\":[{\"url\":\"https://www.altoona-iowa.com/how_do_i/apply_for___obtain/permits.php\",\"role\":\"REQUIREMENT_EVIDENCE\"},{\"url\":\"https://www.altoona-iowa.com/how_do_i/apply_for___obtain/permits.php\",\"role\":\"APPLICATION_START\"}]},\"contradictions\":[]}",
+  "requested_model": "x-ai/grok-4.5",
+  "requested_provider": "openrouter",
+  "requested_runtime": "grok",
+  "response_id": "gen-1785165450-EvBJPe8OutbSAooUHwP2",
+  "runtime": "OpenRouter chat/completions; upstream_provider=xAI"
+}

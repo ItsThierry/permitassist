@@ -1,0 +1,322 @@
+{
+  "observed_model": "NONE",
+  "observed_provider": "permitassist-local-engine",
+  "path_proof": {
+    "adapter": "engine",
+    "authority_recovery": null,
+    "decision_cell_reference": null,
+    "engine_called": true,
+    "engine_result_supplied_to_model": false,
+    "engine_stdout": "[url_check] URL verified: https://www.vah.com/government/permits___licenses_/index.php\n",
+    "model_call_count": 0
+  },
+  "provider": "permitassist-local-engine",
+  "raw_response": {
+    "apply_path": {
+      "channel": "contact_ahj",
+      "documents_to_prepare": [
+        "scope of work",
+        "plans/drawings if required",
+        "contractor license",
+        "valuation",
+        "owner authorization"
+      ],
+      "office_name": "Arlington Heights",
+      "permit_category": "Permit package",
+      "permit_type": "Required permit package — Commercial Building Permit",
+      "portal_url": "https://www.vah.com/government/permits___licenses_/index.php",
+      "primary_filing_source_tier": "none",
+      "primary_requirement_source_tier": "local_ahj",
+      "state": "HONEST_FALLBACK",
+      "steps": [
+        "Open the listed permit portal or contact the permit office",
+        "Select the closest category to: Required permit package — Commercial Building Permit",
+        "Confirm exact portal subcategories before final submission"
+      ],
+      "support_level": "not available",
+      "verification_note": "Confirm the exact portal category with the listed permit office before filing"
+    },
+    "apply_url": "https://www.vah.com/government/permits___licenses_/index.php",
+    "apply_url_known": true,
+    "applying_office": "Arlington Heights",
+    "companion_permits": [
+      {
+        "certainty": "likely",
+        "condition_text": "Verify whether Accessibility / ADA path-of-travel verification is triggered for this project when the building department confirms the relevant accessibility / ada path-of-travel verification scope condition.",
+        "permit_type": "Accessibility / ADA path-of-travel verification",
+        "rationale": "Commercial tenant improvements commonly trigger accessible route, restroom, door/hardware, counter, parking, or 20% disproportionality review.",
+        "reason": "Commercial tenant improvements commonly trigger accessible route, restroom, door/hardware, counter, parking, or 20% disproportionality review.",
+        "trigger_condition": "Verify whether Accessibility / ADA path-of-travel verification is triggered for this project when the building department confirms the relevant accessibility / ada path-of-travel verification scope condition."
+      }
+    ],
+    "confidence": "high",
+    "confidence_reason": "Official building department official-source permit decision for this exact jurisdiction and project type.",
+    "customer_first_screen_summary": {
+      "ahj_department": "Arlington Heights",
+      "decision": "REQUIRED",
+      "kind_category": "Commercial Building / Tenant Improvement",
+      "next_action": "File the required permit categories with Arlington Heights: Commercial Building Permit, Plumbing Permit, Mechanical Permit, Electrical Permit, Zoning / Land Use Permit. Confirm exact portal subcategories before final submission.",
+      "source_cue": "Official sources attached for 5 required permit categories."
+    },
+    "customer_headline": "Permit required: Required permit package — Commercial Building Permit.",
+    "customer_next_step": "File the required permit categories with Arlington Heights: Commercial Building Permit, Plumbing Permit, Mechanical Permit, Electrical Permit, Zoning / Land Use Permit. Confirm exact portal subcategories before final submission.",
+    "customer_result_summary": {
+      "ahj_department": "Arlington Heights",
+      "fee_cost_caveat": "Fees depend on valuation, trade scope, plan-review fees, and the current local fee schedule; verify before quoting.",
+      "freshness_label": "Checked 2026-07-27",
+      "jurisdiction": "Arlington Heights, IL",
+      "next_step": "File the required permit categories with Arlington Heights: Commercial Building Permit, Plumbing Permit, Mechanical Permit, Electrical Permit, Zoning / Land Use Permit. Confirm exact portal subcategories before final submission.",
+      "permit_decision": "REQUIRED",
+      "permit_kind": "Commercial Building / Tenant Improvement",
+      "permit_name": "Required permit package — Commercial Building Permit",
+      "source_cue": "Official sources attached for 5 required permit categories."
+    },
+    "degraded_sources": false,
+    "inspection_booking": "Schedule online at Confirm the inspection advance-notice window when booking.",
+    "job_summary": "Required permit package: Commercial Building Permit; Plumbing Permit; Mechanical Permit; Electrical Permit; Zoning / Land Use Permit.",
+    "local_form_known": true,
+    "online_application_url": null,
+    "permit_decision": "REQUIRED",
+    "permit_kind": "Commercial Building / Tenant Improvement",
+    "permit_name": "Required permit package — Commercial Building Permit",
+    "permit_required": true,
+    "permit_type": "Required permit package — Commercial Building Permit",
+    "permit_verdict": "YES",
+    "permits_required": [
+      {
+        "approval_type": "Commercial Building Permit",
+        "decision": "REQUIRED",
+        "display_family": "Building",
+        "family": "building",
+        "filing_family": "building",
+        "kind": "Building",
+        "permit_kind": "building",
+        "permit_name": "Commercial Building Permit",
+        "permit_type": "Commercial Building Permit",
+        "portal_selection": "Commercial Building Permit",
+        "required": true,
+        "segment": "commercial",
+        "status": "REQUIRED"
+      },
+      {
+        "ahj_name": "Arlington Heights permit office",
+        "application_authority_name": "Arlington Heights permit office",
+        "approval_type": "Plumbing Permit",
+        "decision": "REQUIRED",
+        "display_family": "Plumbing",
+        "family": "plumbing",
+        "filing_family": "plumbing",
+        "kind": "Plumbing",
+        "notes": "Required because the described scope triggers Plumbing Permit. Confirm the exact portal category with the listed permit office before filing.",
+        "permit_name": "Plumbing Permit",
+        "permit_type": "Plumbing Permit",
+        "rationale": "Required because the described scope triggers Plumbing Permit. Confirm the exact portal category with the listed permit office before filing.",
+        "required": true,
+        "scope_trigger": "plumbing_explicit_scope",
+        "segment": "commercial",
+        "status": "REQUIRED"
+      },
+      {
+        "ahj_name": "Arlington Heights permit office",
+        "application_authority_name": "Arlington Heights permit office",
+        "approval_type": "Mechanical Permit",
+        "decision": "REQUIRED",
+        "display_family": "Mechanical",
+        "family": "mechanical",
+        "filing_family": "mechanical",
+        "kind": "Mechanical",
+        "notes": "Required because the described scope triggers Mechanical Permit. Confirm the exact portal category with the listed permit office before filing.",
+        "permit_name": "Mechanical Permit",
+        "permit_type": "Mechanical Permit",
+        "rationale": "Required because the described scope triggers Mechanical Permit. Confirm the exact portal category with the listed permit office before filing.",
+        "required": true,
+        "scope_trigger": "mechanical_explicit_scope",
+        "segment": "commercial",
+        "status": "REQUIRED"
+      },
+      {
+        "ahj_name": "Arlington Heights permit office",
+        "application_authority_name": "Arlington Heights permit office",
+        "approval_type": "Electrical Permit",
+        "decision": "REQUIRED",
+        "display_family": "Electrical",
+        "family": "electrical",
+        "filing_family": "electrical",
+        "kind": "Electrical",
+        "notes": "Required because the described scope triggers Electrical Permit. Confirm the exact portal category with the listed permit office before filing.",
+        "permit_name": "Electrical Permit",
+        "permit_type": "Electrical Permit",
+        "rationale": "Required because the described scope triggers Electrical Permit. Confirm the exact portal category with the listed permit office before filing.",
+        "required": true,
+        "scope_trigger": "electrical_explicit_scope",
+        "segment": "commercial",
+        "status": "REQUIRED"
+      },
+      {
+        "ahj_name": "Arlington Heights permit office",
+        "application_authority_name": "Arlington Heights permit office",
+        "approval_type": "Planning / Zoning Use Clearance",
+        "decision": "REQUIRED",
+        "display_family": "Planning/Zoning",
+        "family": "planning",
+        "filing_family": "planning",
+        "kind": "Planning/Zoning",
+        "notes": "Required because the described scope triggers Planning / Zoning Use Clearance. Confirm the exact portal category with the listed permit office before filing.",
+        "permit_name": "Zoning / Land Use Permit",
+        "permit_type": "Zoning / Land Use Permit",
+        "rationale": "Required because the described scope triggers Planning / Zoning Use Clearance. Confirm the exact portal category with the listed permit office before filing.",
+        "required": true,
+        "scope_trigger": "planning_explicit_scope",
+        "segment": "commercial",
+        "status": "REQUIRED"
+      }
+    ],
+    "permits_required_logic": [
+      {
+        "filing_family": "building",
+        "included_because": "Official permit rule: Required because the described scope triggers Building review.",
+        "permit_type": "Commercial Building Permit",
+        "scope_trigger": "building_scope",
+        "segment": "commercial"
+      },
+      {
+        "filing_family": "plumbing",
+        "included_because": "Official permit rule: Required because the described scope triggers Plumbing Permit. Confirm the exact portal category with the listed permit office before filing.",
+        "permit_type": "Plumbing Permit",
+        "scope_trigger": "plumbing_explicit_scope",
+        "segment": "commercial"
+      },
+      {
+        "filing_family": "mechanical",
+        "included_because": "Official permit rule: Required because the described scope triggers Mechanical Permit. Confirm the exact portal category with the listed permit office before filing.",
+        "permit_type": "Mechanical Permit",
+        "scope_trigger": "mechanical_explicit_scope",
+        "segment": "commercial"
+      },
+      {
+        "filing_family": "electrical",
+        "included_because": "Official permit rule: Required because the described scope triggers Electrical Permit. Confirm the exact portal category with the listed permit office before filing.",
+        "permit_type": "Electrical Permit",
+        "scope_trigger": "electrical_explicit_scope",
+        "segment": "commercial"
+      },
+      {
+        "filing_family": "planning",
+        "included_because": "Official permit rule: Required because the described scope triggers Planning / Zoning Use Clearance. Confirm the exact portal category with the listed permit office before filing.",
+        "permit_type": "Zoning / Land Use Permit",
+        "scope_trigger": "planning_explicit_scope",
+        "segment": "commercial"
+      }
+    ],
+    "related_permit_families": [
+      "Certificate of Occupancy",
+      "Other"
+    ],
+    "related_permit_names": [
+      "Certificate of Occupancy / Change-of-Occupancy Verification",
+      "Accessibility / ADA path-of-travel verification"
+    ],
+    "related_permit_segments": [
+      "commercial"
+    ],
+    "related_permits": [
+      {
+        "approval_type": "Certificate of Occupancy / Change-of-Occupancy Verification",
+        "condition_text": "Verify certificate-of-occupancy/change-of-occupancy review if the TI changes use, occupant load, occupancy group, or business operation.",
+        "decision": "CONDITIONAL",
+        "display_family": "Certificate of Occupancy",
+        "family": "co",
+        "filing_family": "co",
+        "kind": "Certificate of Occupancy",
+        "permit_name": "Certificate of Occupancy / Change-of-Occupancy Verification",
+        "permit_type": "Certificate of Occupancy / Change-of-Occupancy Verification",
+        "rationale": "Verify certificate-of-occupancy/change-of-occupancy review if the TI changes use, occupant load, occupancy group, or business operation.",
+        "required": false,
+        "required_if": "Verify certificate-of-occupancy/change-of-occupancy review if the TI changes use, occupant load, occupancy group, or business operation.",
+        "segment": "commercial",
+        "source_url": "https://www.vah.com/government/permits___licenses_/index.php",
+        "status": "CONDITIONAL"
+      },
+      {
+        "approval_type": "Accessibility / ADA path-of-travel verification",
+        "condition_text": "Verify whether Accessibility / ADA path-of-travel verification is triggered for this project when the building department confirms the relevant accessibility / ada path-of-travel verification scope condition.",
+        "decision": "VERIFY",
+        "display_family": "Other",
+        "family": "other",
+        "filing_family": "other",
+        "kind": "Other",
+        "permit_name": "Accessibility / ADA path-of-travel verification",
+        "permit_type": "Accessibility / ADA path-of-travel verification",
+        "rationale": "Commercial tenant improvements commonly trigger accessible route, restroom, door/hardware, counter, parking, or 20% disproportionality review.",
+        "reason": "Commercial tenant improvements commonly trigger accessible route, restroom, door/hardware, counter, parking, or 20% disproportionality review.",
+        "required": false,
+        "segment": "commercial",
+        "status": "VERIFY",
+        "trigger_condition": "Verify whether Accessibility / ADA path-of-travel verification is triggered for this project when the building department confirms the relevant accessibility / ada path-of-travel verification scope condition."
+      }
+    ],
+    "required_permit_families": [
+      "Building",
+      "Plumbing",
+      "Mechanical",
+      "Electrical",
+      "Planning/Zoning"
+    ],
+    "required_permit_names": [
+      "Commercial Building Permit",
+      "Plumbing Permit",
+      "Mechanical Permit",
+      "Electrical Permit",
+      "Zoning / Land Use Permit"
+    ],
+    "required_permit_segments": [
+      "commercial"
+    ],
+    "required_permit_summary": "Required permit package: Commercial Building Permit; Plumbing Permit; Mechanical Permit; Electrical Permit; Zoning / Land Use Permit.",
+    "source_confidence": "AHJ_DIRECT",
+    "source_support": {
+      "apply_url_known": true,
+      "apply_url_source_confidence": "FILING_PATH_DEGRADED",
+      "confidence_tier": "AHJ_DIRECT",
+      "context_source_count": 0,
+      "decision_mutation_allowed": false,
+      "degraded_sources": false,
+      "display_source_count": 1,
+      "exact_form_known": true,
+      "filing_path_state": "HONEST_FALLBACK",
+      "filing_source_count": 0,
+      "has_official_source": true,
+      "has_source_backed_evidence": false,
+      "local_decision_evidence_urls": [
+        "https://www.vah.com/government/permits___licenses_/index.php"
+      ],
+      "local_form_known": true,
+      "primary_filing_source_tier": "none",
+      "primary_requirement_source_tier": "local_ahj",
+      "requirement_source_count": 1,
+      "source_confidence": "AHJ_DIRECT"
+    },
+    "source_urls": [
+      "https://www.vah.com/government/permits___licenses_/index.php"
+    ],
+    "sources": [
+      {
+        "publisher": "Arlington Heights",
+        "snippet": "t=202602161005080 Alteration, Remodel, Repair - Commercial, Industrial, Multi-Family document Header Alteration, Remodel, Repair - Commercial, Industrial, Multi-Family Any interior remodeling or altering of a space.",
+        "title": "Official building department source",
+        "url": "https://www.vah.com/government/permits___licenses_/index.php"
+      }
+    ],
+    "summary": "Required permit package: Commercial Building Permit; Plumbing Permit; Mechanical Permit; Electrical Permit; Zoning / Land Use Permit.",
+    "warnings": [
+      "Commercial scope detected; primary permit was repaired or forced away from residential/trade-only leakage. confirm the exact permit name and form title with the building department before filing.",
+      "Commercial scope may require companion reviews/permits not fully proven here: electrical, mechanical, plumbing.",
+      "Filing path degraded: exact local online filing portal was not verified; permit decision preserved."
+    ]
+  },
+  "requested_model": "NONE",
+  "requested_provider": "permitassist-local-engine",
+  "requested_runtime": "engine",
+  "response_id": null,
+  "runtime": "api.server Decision Cell + finalize + customer egress"
+}

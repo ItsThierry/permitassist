@@ -1,0 +1,78 @@
+{
+  "observed_model": "x-ai/grok-4.5",
+  "observed_provider": "openrouter",
+  "path_proof": {
+    "adapter": "grok",
+    "engine_called": false,
+    "engine_result_supplied_to_model": false,
+    "model_call_count": 1
+  },
+  "provider": "openrouter",
+  "provider_response": {
+    "choices": [
+      {
+        "finish_reason": "stop",
+        "index": 0,
+        "logprobs": null,
+        "message": {
+          "content": "{\"companion_permits\":[],\"contradictions\":[],\"filing\":{\"authority_id\":\"us-ny-new_york_city\",\"destination_url\":\"https://www.nyc.gov/site/buildings/property-or-business-owner/fences-backyard-sheds.page\",\"office\":\"New York City Department of Buildings\",\"url_role\":\"REQUIREMENT_EVIDENCE\"},\"jurisdiction\":{\"jurisdiction_id\":\"us-ny-new_york_city\",\"name\":\"New York City Department of Buildings\",\"state\":\"NY\",\"type\":\"city_or_local_authority\"},\"permit_decision\":\"CONDITIONAL\",\"primary_permit_family\":\"BUILDING\",\"project_family\":\"accessory_structure\",\"source_support\":{\"evidence\":[{\"role\":\"REQUIREMENT_EVIDENCE\",\"url\":\"https://www.nyc.gov/site/buildings/property-or-business-owner/fences-backyard-sheds.page\"}],\"state\":\"OFFICIAL_SOURCE_SUPPORTED\",\"strength\":\"STRONG\"}}",
+          "reasoning": "The user wants me to evaluate one permit lookup using ONLY the supplied official-source evidence packet and return exactly one JSON object conforming to MODEL_SCHEMA.\n{\n  \"companion_permits\": [\n    {\n      \"family\": \"PLANNING_ZONING\",\n      \"status\": \"CONDITIONAL\"\n    }\n  ],\n  \"contradictions\": [],\n  \"filing\": {\n    \"authority_id\": \"us-ny-new_york_city\",\n    \"destination_url \": \"https://www.nyc.gov/site/buildings/property-or-business-owner/fences-backyard-sheds.",
+          "reasoning_details": [
+            {
+              "format": "xai-responses-v1",
+              "index": 0,
+              "summary": "The user wants me to evaluate one permit lookup using ONLY the supplied official-source evidence packet and return exactly one JSON object conforming to MODEL_SCHEMA.\n{\n  \"companion_permits\": [\n    {\n      \"family\": \"PLANNING_ZONING\",\n      \"status\": \"CONDITIONAL\"\n    }\n  ],\n  \"contradictions\": [],\n  \"filing\": {\n    \"authority_id\": \"us-ny-new_york_city\",\n    \"destination_url \": \"https://www.nyc.gov/site/buildings/property-or-business-owner/fences-backyard-sheds.",
+              "type": "reasoning.summary"
+            },
+            {
+              "data": "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",
+              "format": "xai-responses-v1",
+              "id": "rs_06226662-fb67-9ea1-bcea-02047ec68580",
+              "index": 1,
+              "type": "reasoning.encrypted"
+            }
+          ],
+          "refusal": null,
+          "role": "assistant"
+        },
+        "native_finish_reason": "completed"
+      }
+    ],
+    "created": 1785168766,
+    "id": "gen-1785168766-BrCCMGKUiNBkvxLoUb38",
+    "model": "x-ai/grok-4.5",
+    "object": "chat.completion",
+    "provider": "xAI",
+    "service_tier": "default",
+    "system_fingerprint": null,
+    "usage": {
+      "completion_tokens": 1271,
+      "completion_tokens_details": {
+        "audio_tokens": 0,
+        "image_tokens": 0,
+        "reasoning_tokens": 1042
+      },
+      "cost": 0.0100084,
+      "cost_details": {
+        "upstream_inference_completions_cost": 0.007626,
+        "upstream_inference_cost": 0.0100084,
+        "upstream_inference_prompt_cost": 0.0023824
+      },
+      "is_byok": false,
+      "prompt_tokens": 1300,
+      "prompt_tokens_details": {
+        "audio_tokens": 0,
+        "cache_write_tokens": 0,
+        "cached_tokens": 128,
+        "video_tokens": 0
+      },
+      "total_tokens": 2571
+    }
+  },
+  "raw_text": "{\"companion_permits\":[],\"contradictions\":[],\"filing\":{\"authority_id\":\"us-ny-new_york_city\",\"destination_url\":\"https://www.nyc.gov/site/buildings/property-or-business-owner/fences-backyard-sheds.page\",\"office\":\"New York City Department of Buildings\",\"url_role\":\"REQUIREMENT_EVIDENCE\"},\"jurisdiction\":{\"jurisdiction_id\":\"us-ny-new_york_city\",\"name\":\"New York City Department of Buildings\",\"state\":\"NY\",\"type\":\"city_or_local_authority\"},\"permit_decision\":\"CONDITIONAL\",\"primary_permit_family\":\"BUILDING\",\"project_family\":\"accessory_structure\",\"source_support\":{\"evidence\":[{\"role\":\"REQUIREMENT_EVIDENCE\",\"url\":\"https://www.nyc.gov/site/buildings/property-or-business-owner/fences-backyard-sheds.page\"}],\"state\":\"OFFICIAL_SOURCE_SUPPORTED\",\"strength\":\"STRONG\"}}",
+  "requested_model": "x-ai/grok-4.5",
+  "requested_provider": "openrouter",
+  "requested_runtime": "grok",
+  "response_id": "gen-1785168766-BrCCMGKUiNBkvxLoUb38",
+  "runtime": "OpenRouter chat/completions; upstream_provider=xAI"
+}

@@ -1,0 +1,78 @@
+{
+  "observed_model": "x-ai/grok-4.5",
+  "observed_provider": "openrouter",
+  "path_proof": {
+    "adapter": "grok",
+    "engine_called": false,
+    "engine_result_supplied_to_model": false,
+    "model_call_count": 1
+  },
+  "provider": "openrouter",
+  "provider_response": {
+    "choices": [
+      {
+        "finish_reason": "stop",
+        "index": 0,
+        "logprobs": null,
+        "message": {
+          "content": "{\"permit_decision\":\"VERIFY\",\"jurisdiction\":{\"jurisdiction_id\":\"us-nj-berkeley_twp\",\"name\":\"Berkeley Twp\",\"state\":\"NJ\",\"type\":\"city_or_local_authority\"},\"project_family\":\"residential_remodel\",\"primary_permit_family\":\"VERIFY\",\"companion_permits\":[{\"family\":\"BUILDING\",\"status\":\"VERIFY\"},{\"family\":\"ELECTRICAL\",\"status\":\"VERIFY\"},{\"family\":\"PLUMBING\",\"status\":\"VERIFY\"},{\"family\":\"MECHANICAL\",\"status\":\"VERIFY\"}],\"filing\":{\"authority_id\":\"us-nj-berkeley_twp\",\"office\":\"Construction Inspections\",\"destination_url\":\"https://www.berkeleytownship.org/190/Construction-Inspections\",\"url_role\":\"INFORMATIONAL_OFFICE\"},\"source_support\":{\"state\":\"VERIFY\",\"strength\":\"WEAK\",\"evidence\":[{\"url\":\"https://www.berkeleytownship.org/190/Construction-Inspections\",\"role\":\"INFORMATIONAL_OFFICE\"}]},\"contradictions\":[]}",
+          "reasoning": "The user wants me to evaluate one permit lookup using ONLY the supplied official-source evidence packet and return exactly one JSON object conforming to MODEL_SCHEMA.\n{\n  \"companion_permits\": [],\n  \"contradictions\": [],\n  \"filing\": {\n    \"authority_id\": null,\n    \"destination_url\": \"https://www.berkeleytownship.",
+          "reasoning_details": [
+            {
+              "format": "xai-responses-v1",
+              "index": 0,
+              "summary": "The user wants me to evaluate one permit lookup using ONLY the supplied official-source evidence packet and return exactly one JSON object conforming to MODEL_SCHEMA.\n{\n  \"companion_permits\": [],\n  \"contradictions\": [],\n  \"filing\": {\n    \"authority_id\": null,\n    \"destination_url\": \"https://www.berkeleytownship.",
+              "type": "reasoning.summary"
+            },
+            {
+              "data": "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",
+              "format": "xai-responses-v1",
+              "id": "rs_deec5cd5-420a-9557-bf5d-772315a75f55",
+              "index": 1,
+              "type": "reasoning.encrypted"
+            }
+          ],
+          "refusal": null,
+          "role": "assistant"
+        },
+        "native_finish_reason": "completed"
+      }
+    ],
+    "created": 1785166952,
+    "id": "gen-1785166952-pchNKUYR3eyyhmvX4LFm",
+    "model": "x-ai/grok-4.5",
+    "object": "chat.completion",
+    "provider": "xAI",
+    "service_tier": "default",
+    "system_fingerprint": null,
+    "usage": {
+      "completion_tokens": 1098,
+      "completion_tokens_details": {
+        "audio_tokens": 0,
+        "image_tokens": 0,
+        "reasoning_tokens": 858
+      },
+      "cost": 0.0089484,
+      "cost_details": {
+        "upstream_inference_completions_cost": 0.006588,
+        "upstream_inference_cost": 0.0089484,
+        "upstream_inference_prompt_cost": 0.0023604
+      },
+      "is_byok": false,
+      "prompt_tokens": 1289,
+      "prompt_tokens_details": {
+        "audio_tokens": 0,
+        "cache_write_tokens": 0,
+        "cached_tokens": 128,
+        "video_tokens": 0
+      },
+      "total_tokens": 2387
+    }
+  },
+  "raw_text": "{\"permit_decision\":\"VERIFY\",\"jurisdiction\":{\"jurisdiction_id\":\"us-nj-berkeley_twp\",\"name\":\"Berkeley Twp\",\"state\":\"NJ\",\"type\":\"city_or_local_authority\"},\"project_family\":\"residential_remodel\",\"primary_permit_family\":\"VERIFY\",\"companion_permits\":[{\"family\":\"BUILDING\",\"status\":\"VERIFY\"},{\"family\":\"ELECTRICAL\",\"status\":\"VERIFY\"},{\"family\":\"PLUMBING\",\"status\":\"VERIFY\"},{\"family\":\"MECHANICAL\",\"status\":\"VERIFY\"}],\"filing\":{\"authority_id\":\"us-nj-berkeley_twp\",\"office\":\"Construction Inspections\",\"destination_url\":\"https://www.berkeleytownship.org/190/Construction-Inspections\",\"url_role\":\"INFORMATIONAL_OFFICE\"},\"source_support\":{\"state\":\"VERIFY\",\"strength\":\"WEAK\",\"evidence\":[{\"url\":\"https://www.berkeleytownship.org/190/Construction-Inspections\",\"role\":\"INFORMATIONAL_OFFICE\"}]},\"contradictions\":[]}",
+  "requested_model": "x-ai/grok-4.5",
+  "requested_provider": "openrouter",
+  "requested_runtime": "grok",
+  "response_id": "gen-1785166952-pchNKUYR3eyyhmvX4LFm",
+  "runtime": "OpenRouter chat/completions; upstream_provider=xAI"
+}

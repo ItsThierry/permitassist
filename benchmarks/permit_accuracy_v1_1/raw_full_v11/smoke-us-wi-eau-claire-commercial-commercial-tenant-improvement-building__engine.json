@@ -1,0 +1,525 @@
+{
+  "observed_model": "NONE",
+  "observed_provider": "permitassist-local-engine",
+  "path_proof": {
+    "adapter": "engine",
+    "authority_recovery": null,
+    "decision_cell_reference": null,
+    "engine_called": true,
+    "engine_result_supplied_to_model": false,
+    "engine_stdout": "",
+    "model_call_count": 0
+  },
+  "provider": "permitassist-local-engine",
+  "raw_response": {
+    "apply_url": "https://www.eauclairewi.gov/government/our-divisions/inspections/applications",
+    "applying_office": "City of Eau Claire Evolve permitting / Inspection Services Division",
+    "city": "Eau Claire",
+    "companion_permits": [
+      {
+        "permit_kind": "electrical",
+        "permit_type": "Electrical Permit",
+        "required": "maybe",
+        "required_status": "VERIFY",
+        "trigger": "electrical applicability is not closed by the exact seed"
+      },
+      {
+        "permit_kind": "fire",
+        "permit_type": "Fire Permit",
+        "required": "maybe",
+        "required_status": "VERIFY",
+        "trigger": "fire applicability is not closed by the exact seed"
+      },
+      {
+        "permit_kind": "health",
+        "permit_type": "Health Permit",
+        "required": "maybe",
+        "required_status": "VERIFY",
+        "trigger": "health applicability is not closed by the exact seed"
+      },
+      {
+        "permit_kind": "liquor",
+        "permit_type": "Liquor Permit",
+        "required": "maybe",
+        "required_status": "VERIFY",
+        "trigger": "liquor applicability is not closed by the exact seed"
+      },
+      {
+        "permit_kind": "mechanical",
+        "permit_type": "Mechanical Permit",
+        "required": "maybe",
+        "required_status": "VERIFY",
+        "trigger": "mechanical applicability is not closed by the exact seed"
+      },
+      {
+        "permit_kind": "occupancy",
+        "permit_type": "Occupancy Permit",
+        "required": "maybe",
+        "required_status": "VERIFY",
+        "trigger": "occupancy applicability is not closed by the exact seed"
+      },
+      {
+        "permit_kind": "plumbing",
+        "permit_type": "Plumbing Permit",
+        "required": "maybe",
+        "required_status": "VERIFY",
+        "trigger": "plumbing applicability is not closed by the exact seed"
+      },
+      {
+        "permit_kind": "wastewater",
+        "permit_type": "Wastewater Permit",
+        "required": "maybe",
+        "required_status": "VERIFY",
+        "trigger": "wastewater applicability is not closed by the exact seed"
+      },
+      {
+        "permit_kind": "zoning",
+        "permit_type": "Zoning Permit",
+        "required": "maybe",
+        "required_status": "VERIFY",
+        "trigger": "zoning applicability is not closed by the exact seed"
+      }
+    ],
+    "coverage_reason": "source-backed exact AHJ/project row is incomplete: family closure=electrical,fire,health,liquor,mechanical,occupancy,plumbing,wastewater,zoning; authority closure=electrical,fire,health,liquor,mechanical,occupancy,plumbing,wastewater,zoning; provenance closure=electrical,fire,health,liquor,mechanical,occupancy,plumbing,wastewater,zoning",
+    "coverage_status": "validated_exact_partial",
+    "customer_headline": "Permit decision: YES",
+    "customer_next_step": "Verify unresolved permit families, then apply with City of Eau Claire Evolve permitting / Inspection Services Division.",
+    "decision_source": "sealed_permit_rule_engine_envelope",
+    "family_authority_routes": [
+      {
+        "application_route": {
+          "apply_url": "https://www.eauclairewi.gov/government/our-divisions/inspections/applications",
+          "channel": "online",
+          "office_name": "City of Eau Claire Evolve permitting / Inspection Services Division",
+          "permit_name": "Commercial Building Permit",
+          "provenance": [
+            {
+              "effective_date": null,
+              "last_verified_at": "2026-06-20T17:26:10Z",
+              "quote": "/inspections/applications The City of Eau Claire Inspections Division uses an online permitting system for permit applications, fee payments, and inspection scheduling. Paper applications are not accepted. An online permitting software is available to you for applying for permits, paying fees, and scheduling your own in-person inspections. Paper applications are not accepted. Permits, plan reviews, payment, permit searches, and inspection scheduling are handled through the City’s online permitting portal: Permit Application and Review https://evolvepublic.infovisionsoftware.com/eauclaire/. Commercial Building/HVAC Code Adoptions 2021 IBC, 2021 IECC, 2021 IMC, 2021 IFGC, 2021 IEBC, Adopted per SPS 361.05, Includes Wisconsin Amendments SPS 361–366. Commercial projects within the City of Eau Claire’s delegated review scopes must first apply for a Plan Review Application. Plan Reviews must b",
+              "source_quote": "/inspections/applications The City of Eau Claire Inspections Division uses an online permitting system for permit applications, fee payments, and inspection scheduling. Paper applications are not accepted. An online permitting software is available to you for applying for permits, paying fees, and scheduling your own in-person inspections. Paper applications are not accepted. Permits, plan reviews, payment, permit searches, and inspection scheduling are handled through the City’s online permitting portal: Permit Application and Review https://evolvepublic.infovisionsoftware.com/eauclaire/. Commercial Building/HVAC Code Adoptions 2021 IBC, 2021 IECC, 2021 IMC, 2021 IFGC, 2021 IEBC, Adopted per SPS 361.05, Includes Wisconsin Amendments SPS 361–366. Commercial projects within the City of Eau Claire’s delegated review scopes must first apply for a Plan Review Application. Plan Reviews must b",
+              "source_url": "https://www.eauclairewi.gov/government/our-divisions/inspections/applications",
+              "title": "Official jurisdiction source",
+              "url": "https://www.eauclairewi.gov/government/our-divisions/inspections/applications"
+            }
+          ],
+          "validation_issue_codes": []
+        },
+        "authority": {
+          "application_authority": "City of Eau Claire Evolve permitting / Inspection Services Division",
+          "family": "building",
+          "issuing_authority": "City of Eau Claire Inspection Services Division"
+        },
+        "family": "building"
+      }
+    ],
+    "family_decisions": [
+      {
+        "apply_url": "https://www.eauclairewi.gov/government/our-divisions/inspections/applications",
+        "authority": "City of Eau Claire Evolve permitting / Inspection Services Division",
+        "family": "building",
+        "trigger": "building_commercial_alteration_ti",
+        "validation_issue_codes": [],
+        "verdict": "REQUIRED"
+      },
+      {
+        "apply_url": "",
+        "authority": "",
+        "family": "electrical",
+        "trigger": "electrical applicability is not closed by the exact seed",
+        "validation_issue_codes": [
+          "verified_partial_dimension_unclosed"
+        ],
+        "verdict": "VERIFY"
+      },
+      {
+        "apply_url": "",
+        "authority": "",
+        "family": "fire",
+        "trigger": "fire applicability is not closed by the exact seed",
+        "validation_issue_codes": [
+          "verified_partial_dimension_unclosed"
+        ],
+        "verdict": "VERIFY"
+      },
+      {
+        "apply_url": "",
+        "authority": "",
+        "family": "health",
+        "trigger": "health applicability is not closed by the exact seed",
+        "validation_issue_codes": [
+          "verified_partial_dimension_unclosed"
+        ],
+        "verdict": "VERIFY"
+      },
+      {
+        "apply_url": "",
+        "authority": "",
+        "family": "liquor",
+        "trigger": "liquor applicability is not closed by the exact seed",
+        "validation_issue_codes": [
+          "verified_partial_dimension_unclosed"
+        ],
+        "verdict": "VERIFY"
+      },
+      {
+        "apply_url": "",
+        "authority": "",
+        "family": "mechanical",
+        "trigger": "mechanical applicability is not closed by the exact seed",
+        "validation_issue_codes": [
+          "verified_partial_dimension_unclosed"
+        ],
+        "verdict": "VERIFY"
+      },
+      {
+        "apply_url": "",
+        "authority": "",
+        "family": "occupancy",
+        "trigger": "occupancy applicability is not closed by the exact seed",
+        "validation_issue_codes": [
+          "verified_partial_dimension_unclosed"
+        ],
+        "verdict": "VERIFY"
+      },
+      {
+        "apply_url": "",
+        "authority": "",
+        "family": "plumbing",
+        "trigger": "plumbing applicability is not closed by the exact seed",
+        "validation_issue_codes": [
+          "verified_partial_dimension_unclosed"
+        ],
+        "verdict": "VERIFY"
+      },
+      {
+        "apply_url": "",
+        "authority": "",
+        "family": "wastewater",
+        "trigger": "wastewater applicability is not closed by the exact seed",
+        "validation_issue_codes": [
+          "verified_partial_dimension_unclosed"
+        ],
+        "verdict": "VERIFY"
+      },
+      {
+        "apply_url": "",
+        "authority": "",
+        "family": "zoning",
+        "trigger": "zoning applicability is not closed by the exact seed",
+        "validation_issue_codes": [
+          "verified_partial_dimension_unclosed"
+        ],
+        "verdict": "VERIFY"
+      }
+    ],
+    "jurisdiction_id": "us-wi-eau-claire",
+    "jurisdiction_name": "Eau Claire",
+    "online_application_url": "https://www.eauclairewi.gov/government/our-divisions/inspections/applications",
+    "permit_decision": "REQUIRED",
+    "permit_kind": "building",
+    "permit_name": "Building Permit",
+    "permit_required": true,
+    "permit_verdict": "YES",
+    "permits_required": [
+      {
+        "apply_url": "https://www.eauclairewi.gov/government/our-divisions/inspections/applications",
+        "applying_office": "City of Eau Claire Evolve permitting / Inspection Services Division",
+        "permit_kind": "building",
+        "permit_type": "Building Permit",
+        "required": true,
+        "required_status": "REQUIRED",
+        "trigger": "building_commercial_alteration_ti"
+      },
+      {
+        "apply_url": "",
+        "applying_office": "",
+        "permit_kind": "electrical",
+        "permit_type": "Electrical Permit",
+        "required": "maybe",
+        "required_status": "VERIFY",
+        "trigger": "electrical applicability is not closed by the exact seed"
+      },
+      {
+        "apply_url": "",
+        "applying_office": "",
+        "permit_kind": "fire",
+        "permit_type": "Fire Permit",
+        "required": "maybe",
+        "required_status": "VERIFY",
+        "trigger": "fire applicability is not closed by the exact seed"
+      },
+      {
+        "apply_url": "",
+        "applying_office": "",
+        "permit_kind": "health",
+        "permit_type": "Health Permit",
+        "required": "maybe",
+        "required_status": "VERIFY",
+        "trigger": "health applicability is not closed by the exact seed"
+      },
+      {
+        "apply_url": "",
+        "applying_office": "",
+        "permit_kind": "liquor",
+        "permit_type": "Liquor Permit",
+        "required": "maybe",
+        "required_status": "VERIFY",
+        "trigger": "liquor applicability is not closed by the exact seed"
+      },
+      {
+        "apply_url": "",
+        "applying_office": "",
+        "permit_kind": "mechanical",
+        "permit_type": "Mechanical Permit",
+        "required": "maybe",
+        "required_status": "VERIFY",
+        "trigger": "mechanical applicability is not closed by the exact seed"
+      },
+      {
+        "apply_url": "",
+        "applying_office": "",
+        "permit_kind": "occupancy",
+        "permit_type": "Occupancy Permit",
+        "required": "maybe",
+        "required_status": "VERIFY",
+        "trigger": "occupancy applicability is not closed by the exact seed"
+      },
+      {
+        "apply_url": "",
+        "applying_office": "",
+        "permit_kind": "plumbing",
+        "permit_type": "Plumbing Permit",
+        "required": "maybe",
+        "required_status": "VERIFY",
+        "trigger": "plumbing applicability is not closed by the exact seed"
+      },
+      {
+        "apply_url": "",
+        "applying_office": "",
+        "permit_kind": "wastewater",
+        "permit_type": "Wastewater Permit",
+        "required": "maybe",
+        "required_status": "VERIFY",
+        "trigger": "wastewater applicability is not closed by the exact seed"
+      },
+      {
+        "apply_url": "",
+        "applying_office": "",
+        "permit_kind": "zoning",
+        "permit_type": "Zoning Permit",
+        "required": "maybe",
+        "required_status": "VERIFY",
+        "trigger": "zoning applicability is not closed by the exact seed"
+      }
+    ],
+    "project_family": "commercial_tenant_improvement",
+    "projection_schema_version": "permitassist.customer-decision-projection.v1",
+    "related_permits": [
+      {
+        "permit_kind": "electrical",
+        "permit_type": "Electrical Permit",
+        "required": "maybe",
+        "required_status": "VERIFY",
+        "trigger": "electrical applicability is not closed by the exact seed"
+      },
+      {
+        "permit_kind": "fire",
+        "permit_type": "Fire Permit",
+        "required": "maybe",
+        "required_status": "VERIFY",
+        "trigger": "fire applicability is not closed by the exact seed"
+      },
+      {
+        "permit_kind": "health",
+        "permit_type": "Health Permit",
+        "required": "maybe",
+        "required_status": "VERIFY",
+        "trigger": "health applicability is not closed by the exact seed"
+      },
+      {
+        "permit_kind": "liquor",
+        "permit_type": "Liquor Permit",
+        "required": "maybe",
+        "required_status": "VERIFY",
+        "trigger": "liquor applicability is not closed by the exact seed"
+      },
+      {
+        "permit_kind": "mechanical",
+        "permit_type": "Mechanical Permit",
+        "required": "maybe",
+        "required_status": "VERIFY",
+        "trigger": "mechanical applicability is not closed by the exact seed"
+      },
+      {
+        "permit_kind": "occupancy",
+        "permit_type": "Occupancy Permit",
+        "required": "maybe",
+        "required_status": "VERIFY",
+        "trigger": "occupancy applicability is not closed by the exact seed"
+      },
+      {
+        "permit_kind": "plumbing",
+        "permit_type": "Plumbing Permit",
+        "required": "maybe",
+        "required_status": "VERIFY",
+        "trigger": "plumbing applicability is not closed by the exact seed"
+      },
+      {
+        "permit_kind": "wastewater",
+        "permit_type": "Wastewater Permit",
+        "required": "maybe",
+        "required_status": "VERIFY",
+        "trigger": "wastewater applicability is not closed by the exact seed"
+      },
+      {
+        "permit_kind": "zoning",
+        "permit_type": "Zoning Permit",
+        "required": "maybe",
+        "required_status": "VERIFY",
+        "trigger": "zoning applicability is not closed by the exact seed"
+      }
+    ],
+    "seed_classification": "exact_partial",
+    "source_cell_id": "us-wi-eau_claire__commercial__commercial_tenant_improvement__building",
+    "sources": [
+      {
+        "effective_date": null,
+        "last_verified_at": "2026-06-20T17:26:10Z",
+        "quote": "ons. Paper applications are not accepted. Permits, plan reviews, payment, permit searches, and inspection scheduling are handled through the City’s online permitting portal: Permit Application and Review https://evolvepublic.infovisionsoftware.com/eauclaire/. Commercial Building/HVAC Code Adoptions 2021 IBC, 2021 IECC, 2021 IMC, 2021 IFGC, 2021 IEBC, Adopted per SPS 361.05, Includes Wisconsin Amendments SPS 361–366. Commercial projects within the City of Eau Claire’s delegated review scopes must first apply for a Plan Review Application. Plan Reviews must be approved and fees must be paid prior to applying for permits. Alteration of space in a building containing less than 100,000 cubic feet of total building volume. Commercial plumbing plan reviews within the scope of Table 382.20-2 must be submitted to the City of Eau Claire for review and approval. State Plan Reviews Commercial projec",
+        "source_quote": "ons. Paper applications are not accepted. Permits, plan reviews, payment, permit searches, and inspection scheduling are handled through the City’s online permitting portal: Permit Application and Review https://evolvepublic.infovisionsoftware.com/eauclaire/. Commercial Building/HVAC Code Adoptions 2021 IBC, 2021 IECC, 2021 IMC, 2021 IFGC, 2021 IEBC, Adopted per SPS 361.05, Includes Wisconsin Amendments SPS 361–366. Commercial projects within the City of Eau Claire’s delegated review scopes must first apply for a Plan Review Application. Plan Reviews must be approved and fees must be paid prior to applying for permits. Alteration of space in a building containing less than 100,000 cubic feet of total building volume. Commercial plumbing plan reviews within the scope of Table 382.20-2 must be submitted to the City of Eau Claire for review and approval. State Plan Reviews Commercial projec",
+        "source_url": "https://www.eauclairewi.gov/government/our-divisions/inspections/applications",
+        "title": "Official jurisdiction source",
+        "url": "https://www.eauclairewi.gov/government/our-divisions/inspections/applications"
+      }
+    ],
+    "state": "WI",
+    "summary": "source-backed exact AHJ/project row is incomplete: family closure=electrical,fire,health,liquor,mechanical,occupancy,plumbing,wastewater,zoning; authority closure=electrical,fire,health,liquor,mechanical,occupancy,plumbing,wastewater,zoning; provenance closure=electrical,fire,health,liquor,mechanical,occupancy,plumbing,wastewater,zoning",
+    "verification_tasks": [
+      {
+        "action": "Verify electrical applicability, source evidence, filing authority, application route with the official permit authority before filing.",
+        "apply_url": "",
+        "authority": "",
+        "family": "electrical",
+        "unresolved_dimensions": [
+          "applicability",
+          "source evidence",
+          "filing authority",
+          "application route"
+        ]
+      },
+      {
+        "action": "Verify fire applicability, source evidence, filing authority, application route with the official permit authority before filing.",
+        "apply_url": "",
+        "authority": "",
+        "family": "fire",
+        "unresolved_dimensions": [
+          "applicability",
+          "source evidence",
+          "filing authority",
+          "application route"
+        ]
+      },
+      {
+        "action": "Verify health applicability, source evidence, filing authority, application route with the official permit authority before filing.",
+        "apply_url": "",
+        "authority": "",
+        "family": "health",
+        "unresolved_dimensions": [
+          "applicability",
+          "source evidence",
+          "filing authority",
+          "application route"
+        ]
+      },
+      {
+        "action": "Verify liquor applicability, source evidence, filing authority, application route with the official permit authority before filing.",
+        "apply_url": "",
+        "authority": "",
+        "family": "liquor",
+        "unresolved_dimensions": [
+          "applicability",
+          "source evidence",
+          "filing authority",
+          "application route"
+        ]
+      },
+      {
+        "action": "Verify mechanical applicability, source evidence, filing authority, application route with the official permit authority before filing.",
+        "apply_url": "",
+        "authority": "",
+        "family": "mechanical",
+        "unresolved_dimensions": [
+          "applicability",
+          "source evidence",
+          "filing authority",
+          "application route"
+        ]
+      },
+      {
+        "action": "Verify occupancy applicability, source evidence, filing authority, application route with the official permit authority before filing.",
+        "apply_url": "",
+        "authority": "",
+        "family": "occupancy",
+        "unresolved_dimensions": [
+          "applicability",
+          "source evidence",
+          "filing authority",
+          "application route"
+        ]
+      },
+      {
+        "action": "Verify plumbing applicability, source evidence, filing authority, application route with the official permit authority before filing.",
+        "apply_url": "",
+        "authority": "",
+        "family": "plumbing",
+        "unresolved_dimensions": [
+          "applicability",
+          "source evidence",
+          "filing authority",
+          "application route"
+        ]
+      },
+      {
+        "action": "Verify wastewater applicability, source evidence, filing authority, application route with the official permit authority before filing.",
+        "apply_url": "",
+        "authority": "",
+        "family": "wastewater",
+        "unresolved_dimensions": [
+          "applicability",
+          "source evidence",
+          "filing authority",
+          "application route"
+        ]
+      },
+      {
+        "action": "Verify zoning applicability, source evidence, filing authority, application route with the official permit authority before filing.",
+        "apply_url": "",
+        "authority": "",
+        "family": "zoning",
+        "unresolved_dimensions": [
+          "applicability",
+          "source evidence",
+          "filing authority",
+          "application route"
+        ]
+      }
+    ],
+    "warnings": [
+      "Electrical: VERIFY — verify before filing.",
+      "Fire: VERIFY — verify before filing.",
+      "Health: VERIFY — verify before filing.",
+      "Liquor: VERIFY — verify before filing.",
+      "Mechanical: VERIFY — verify before filing.",
+      "Occupancy: VERIFY — verify before filing.",
+      "Plumbing: VERIFY — verify before filing.",
+      "Wastewater: VERIFY — verify before filing.",
+      "Zoning: VERIFY — verify before filing."
+    ]
+  },
+  "requested_model": "NONE",
+  "requested_provider": "permitassist-local-engine",
+  "requested_runtime": "engine",
+  "response_id": null,
+  "runtime": "api.server Decision Cell + finalize + customer egress"
+}

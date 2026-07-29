@@ -1,0 +1,78 @@
+{
+  "observed_model": "x-ai/grok-4.5",
+  "observed_provider": "openrouter",
+  "path_proof": {
+    "adapter": "grok",
+    "engine_called": false,
+    "engine_result_supplied_to_model": false,
+    "model_call_count": 1
+  },
+  "provider": "openrouter",
+  "provider_response": {
+    "choices": [
+      {
+        "finish_reason": "stop",
+        "index": 0,
+        "logprobs": null,
+        "message": {
+          "content": "{\"permit_decision\":\"REQUIRED\",\"jurisdiction\":{\"jurisdiction_id\":\"us-vt-barre_city\",\"name\":\"Barre City\",\"state\":\"VT\",\"type\":\"city_or_local_authority\"},\"project_family\":\"commercial_tenant_improvement\",\"primary_permit_family\":\"BUILDING\",\"companion_permits\":[{\"family\":\"ELECTRICAL\",\"status\":\"VERIFY\"},{\"family\":\"PLUMBING\",\"status\":\"VERIFY\"},{\"family\":\"MECHANICAL\",\"status\":\"VERIFY\"},{\"family\":\"FIRE_LIFE_SAFETY\",\"status\":\"VERIFY\"},{\"family\":\"OCCUPANCY\",\"status\":\"VERIFY\"},{\"family\":\"PLANNING_ZONING\",\"status\":\"VERIFY\"}],\"filing\":{\"authority_id\":\"us-vt-barre_city\",\"office\":\"Barre City Permit Forms\",\"destination_url\":\"https://www.barrecity.org/permit-forms.html\",\"url_role\":\"DIRECT_FORM\"},\"source_support\":{\"state\":\"OFFICIAL_SOURCE_SUPPORTED\",\"strength\":\"MODERATE\",\"evidence\":[{\"url\":\"https://www.barrecity.org/permit-forms.html\",\"role\":\"DIRECT_FORM\"}]},\"contradictions\":[]}",
+          "reasoning": "The user wants me to evaluate a permit lookup using ONLY the supplied official-source evidence packet and return exactly one JSON object conforming to MODEL_SCHEMA. No markdown fences, commentary, etc...",
+          "reasoning_details": [
+            {
+              "format": "xai-responses-v1",
+              "index": 0,
+              "summary": "The user wants me to evaluate a permit lookup using ONLY the supplied official-source evidence packet and return exactly one JSON object conforming to MODEL_SCHEMA. No markdown fences, commentary, etc...",
+              "type": "reasoning.summary"
+            },
+            {
+              "data": "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",
+              "format": "xai-responses-v1",
+              "id": "rs_601deea5-7ce6-901e-b3d2-6468f5749d55",
+              "index": 1,
+              "type": "reasoning.encrypted"
+            }
+          ],
+          "refusal": null,
+          "role": "assistant"
+        },
+        "native_finish_reason": "completed"
+      }
+    ],
+    "created": 1785168419,
+    "id": "gen-1785168419-1JViW2WB93ZwgOBMLtEO",
+    "model": "x-ai/grok-4.5",
+    "object": "chat.completion",
+    "provider": "xAI",
+    "service_tier": "default",
+    "system_fingerprint": null,
+    "usage": {
+      "completion_tokens": 861,
+      "completion_tokens_details": {
+        "audio_tokens": 0,
+        "image_tokens": 0,
+        "reasoning_tokens": 590
+      },
+      "cost": 0.0076724,
+      "cost_details": {
+        "upstream_inference_completions_cost": 0.005166,
+        "upstream_inference_cost": 0.0076724,
+        "upstream_inference_prompt_cost": 0.0025064
+      },
+      "is_byok": false,
+      "prompt_tokens": 1362,
+      "prompt_tokens_details": {
+        "audio_tokens": 0,
+        "cache_write_tokens": 0,
+        "cached_tokens": 128,
+        "video_tokens": 0
+      },
+      "total_tokens": 2223
+    }
+  },
+  "raw_text": "{\"permit_decision\":\"REQUIRED\",\"jurisdiction\":{\"jurisdiction_id\":\"us-vt-barre_city\",\"name\":\"Barre City\",\"state\":\"VT\",\"type\":\"city_or_local_authority\"},\"project_family\":\"commercial_tenant_improvement\",\"primary_permit_family\":\"BUILDING\",\"companion_permits\":[{\"family\":\"ELECTRICAL\",\"status\":\"VERIFY\"},{\"family\":\"PLUMBING\",\"status\":\"VERIFY\"},{\"family\":\"MECHANICAL\",\"status\":\"VERIFY\"},{\"family\":\"FIRE_LIFE_SAFETY\",\"status\":\"VERIFY\"},{\"family\":\"OCCUPANCY\",\"status\":\"VERIFY\"},{\"family\":\"PLANNING_ZONING\",\"status\":\"VERIFY\"}],\"filing\":{\"authority_id\":\"us-vt-barre_city\",\"office\":\"Barre City Permit Forms\",\"destination_url\":\"https://www.barrecity.org/permit-forms.html\",\"url_role\":\"DIRECT_FORM\"},\"source_support\":{\"state\":\"OFFICIAL_SOURCE_SUPPORTED\",\"strength\":\"MODERATE\",\"evidence\":[{\"url\":\"https://www.barrecity.org/permit-forms.html\",\"role\":\"DIRECT_FORM\"}]},\"contradictions\":[]}",
+  "requested_model": "x-ai/grok-4.5",
+  "requested_provider": "openrouter",
+  "requested_runtime": "grok",
+  "response_id": "gen-1785168419-1JViW2WB93ZwgOBMLtEO",
+  "runtime": "OpenRouter chat/completions; upstream_provider=xAI"
+}

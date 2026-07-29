@@ -1,0 +1,20 @@
+{
+  "observed_model": "Gemini 3.6 Flash (High)",
+  "observed_provider": "google-antigravity-oauth",
+  "path_proof": {
+    "adapter": "gemini",
+    "capture_created_by_model": true,
+    "engine_called": false,
+    "engine_result_supplied_to_model": false,
+    "model_call_count": 1
+  },
+  "provider": "google-antigravity-oauth",
+  "provider_stderr": "",
+  "provider_stdout": "DONE\n",
+  "raw_text": "{\n  \"permit_decision\": \"REQUIRED\",\n  \"jurisdiction\": {\n    \"jurisdiction_id\": \"us-ky-mount_washington\",\n    \"name\": \"Mount Washington\",\n    \"state\": \"KY\",\n    \"type\": \"city_or_local_authority\"\n  },\n  \"project_family\": \"residential_remodel\",\n  \"primary_permit_family\": \"BUILDING\",\n  \"companion_permits\": [],\n  \"filing\": {\n    \"authority_id\": \"us-ky-mount_washington\",\n    \"office\": \"Building Code Department\",\n    \"destination_url\": \"https://www.mtwashingtonky.org/departments/building_and_housing/index.php\",\n    \"url_role\": \"INFORMATIONAL_OFFICE\"\n  },\n  \"source_support\": {\n    \"state\": \"OFFICIAL_SOURCE_SUPPORTED\",\n    \"strength\": \"STRONG\",\n    \"evidence\": [\n      {\n        \"url\": \"https://www.mtwashingtonky.org/departments/building_and_housing/index.php\",\n        \"role\": \"REQUIREMENT_EVIDENCE\"\n      }\n    ]\n  },\n  \"contradictions\": []\n}\n",
+  "requested_model": "Gemini 3.6 Flash (High)",
+  "requested_provider": "google-antigravity-oauth",
+  "requested_runtime": "gemini",
+  "response_id": null,
+  "runtime": "agy.exe 1.0.2 / language-server 1.1.7"
+}

@@ -2332,7 +2332,7 @@ def classify_rulebook_scope(job_type: str) -> str:
     job = re.sub(r"\s+", " ", (job_type or "").lower()).strip()
     if not job:
         return "unknown"
-    if any(t in job for t in ("tribal", "reservation", "sovereign land", "federal enclave")):
+    if _has_unnegated_any(job, ("tribal", "reservation", "sovereign land", "federal enclave")):
         return "edge_case"
     restaurant_scope_terms = (
         "restaurant", "commercial kitchen", "food service", "cafe", "café",
@@ -2341,39 +2341,39 @@ def classify_rulebook_scope(job_type: str) -> str:
     )
     if _has_unnegated_any(job, restaurant_scope_terms) or _restaurant_food_health_scope_present(job):
         return "restaurant_ti"
-    if any(t in job for t in ("office ti", "office tenant improvement", "office buildout")):
+    if _has_unnegated_any(job, ("office ti", "office tenant improvement", "office buildout")):
         return "office_ti"
-    if any(t in job for t in ("retail ti", "retail tenant improvement", "retail buildout", "store buildout", "boutique")):
+    if _has_unnegated_any(job, ("retail ti", "retail tenant improvement", "retail buildout", "store buildout", "boutique")):
         return "retail_ti"
-    if any(t in job for t in ("hillside adu", "hillside accessory dwelling")):
+    if _has_unnegated_any(job, ("hillside adu", "hillside accessory dwelling")):
         return "hillside_adu"
-    if any(t in job for t in ("jadu", "junior accessory")):
+    if _has_unnegated_any(job, ("jadu", "junior accessory")):
         return "jadu"
-    if any(t in job for t in ("garage conversion", "convert garage")):
+    if _has_unnegated_any(job, ("garage conversion", "convert garage")):
         return "garage_conversion"
-    if any(t in job for t in ("dadu", "detached adu", "detached accessory dwelling")):
+    if _has_unnegated_any(job, ("dadu", "detached adu", "detached accessory dwelling")):
         return "detached_adu"
-    if "adu" in job or "accessory dwelling" in job:
+    if _has_unnegated_any(job, ("adu", "accessory dwelling")):
         return "adu"
-    if "kitchen remodel" in job or "kitchen renovation" in job:
+    if _has_unnegated_any(job, ("kitchen remodel", "kitchen renovation")):
         return "kitchen_remodel"
-    if any(t in job for t in ("water heater", "tankless")):
+    if _has_unnegated_any(job, ("water heater", "tankless")):
         return "water_heater"
-    if any(t in job for t in ("hvac", "furnace", "heat pump", "condenser", "air conditioner", "a/c", "ac changeout")):
+    if _has_unnegated_any(job, ("hvac", "furnace", "heat pump", "condenser", "air conditioner", "a/c", "ac changeout")):
         return "hvac_changeout"
-    if any(t in job for t in ("reroof", "re-roof", "roof replacement", "roofing")):
+    if _has_unnegated_any(job, ("reroof", "re-roof", "roof replacement", "roofing")):
         return "reroof"
-    if "foundation" in job:
+    if _has_unnegated_any(job, ("foundation",)):
         return "foundation"
-    if any(t in job for t in ("window replacement", "replace windows", "windows")):
+    if _has_unnegated_any(job, ("window replacement", "replace windows", "windows")):
         return "window_replacement"
-    if "panel upgrade" in job or "service upgrade" in job:
+    if _has_unnegated_any(job, ("panel upgrade", "service upgrade")):
         return "panel_upgrade"
-    if "patio cover" in job or "pergola" in job:
+    if _has_unnegated_any(job, ("patio cover", "pergola")):
         return "patio_cover"
-    if "deck" in job:
+    if _has_unnegated_any(job, ("deck", "decking")):
         return "deck"
-    if any(t in job for t in ("electrical", "plumbing", "mechanical", "trade permit")):
+    if _has_unnegated_any(job, ("electrical", "plumbing", "mechanical", "trade permit")):
         return "simple_trade"
     return "unknown"
 
@@ -5611,7 +5611,7 @@ def classify_scope_required_permits(job_type: str, scope_contract: dict | None =
     has_battery = has_any_unnegated(job, ("battery", "ess", "energy storage", "powerwall"))
     is_hvac_raw = has_any_unnegated(job, ("hvac", "rtu", "rooftop unit", "roof top unit", "condenser", "air conditioner", "air conditioning", "a/c", "heat pump", "furnace", "mini split", "mini-split", "ductless", "air handler", "ductwork", "ducting", "mechanical", "economizer", "bath fan", "ventilation"))
     has_hvac_specific = has_any_unnegated(job, ("hvac", "rtu", "rooftop unit", "roof top unit", "condenser", "air conditioner", "air conditioning", "a/c", "furnace", "mini split", "mini-split", "ductless", "air handler", "ductwork", "ducting", "mechanical", "economizer", "bath fan", "ventilation"))
-    is_water_heater = contract_vertical == "water_heater" or "water heater" in job
+    is_water_heater = contract_vertical == "water_heater" or has_any_unnegated(job, ("water heater",))
     # Heat-pump water heaters include the phrase "heat pump" but are plumbing /
     # water-heater scopes. Suppress HVAC only for HPWH-only jobs, not true
     # combined HVAC + water-heater scopes.
@@ -6159,23 +6159,34 @@ def _permit_family(permit: dict) -> str:
     notes_text = str(permit.get("notes") or "").lower()
 
     def family_from(text: str) -> str:
-        if any(t in text for t in ("fire alarm", "sprinkler", "fire sprinkler", "fire suppression")):
+        def has(*terms: str) -> bool:
+            text_tokens = tuple(re.findall(r"[a-z0-9]+", text))
+            for term in terms:
+                term_tokens = tuple(re.findall(r"[a-z0-9]+", term.lower()))
+                if term_tokens and len(term_tokens) <= len(text_tokens) and any(
+                    text_tokens[index : index + len(term_tokens)] == term_tokens
+                    for index in range(len(text_tokens) - len(term_tokens) + 1)
+                ):
+                    return True
+            return False
+
+        if has("fire alarm", "sprinkler", "fire sprinkler", "fire suppression"):
             return "fire"
-        if "refrigeration" in text or "refrigerant" in text or "line set" in text or "line-set" in text:
+        if has("refrigeration", "refrigerant", "line set"):
             return "refrigeration"
-        if "roof" in text or "reroof" in text or "re-roof" in text:
+        if has("roof", "roofing", "reroof", "re roof"):
             return "roofing"
-        if "sign" in text or "signage" in text:
+        if has("sign", "signage"):
             return "sign"
-        if "mechanical" in text or "hvac" in text or re.search(r"\bduct(?:work|s|ing)?\b", text) or "ventilation" in text or "rtu" in text:
+        if has("mechanical", "hvac", "ventilation", "rtu") or re.search(r"\bduct(?:work|s|ing)?\b", text):
             return "mechanical"
-        if "gas permit" in text or "fuel gas" in text or "gas piping" in text or "gas line" in text or "gas manifold" in text:
+        if has("gas permit", "fuel gas", "gas piping", "gas line", "gas manifold"):
             return "gas"
-        if "electrical" in text or "lighting" in text or "branch circuit" in text or "panel" in text:
+        if has("electrical", "lighting", "branch circuit", "panel"):
             return "electrical"
-        if "plumb" in text or "fixture" in text or "restroom" in text or "sewer" in text:
+        if has("plumb", "plumbing", "plumber", "fixture", "restroom", "sewer"):
             return "plumbing"
-        if "building" in text or "tenant improvement" in text or "alteration" in text or "interior" in text:
+        if has("building", "tenant improvement", "alteration", "interior"):
             return "building"
         return ""
 
@@ -9128,7 +9139,38 @@ def resolve_authoritative_decision_cell_fallback(
             state,
         )
     if result is None:
-        return None
+        v24_status = str(getattr(v24_resolution.status, "value", v24_resolution.status))
+        v231_status = str(getattr(v231_resolution.status, "value", v231_resolution.status))
+        # Preserve the established resolver contract for a genuinely uncovered
+        # jurisdiction. A known AHJ with an unsupported/ambiguous project family
+        # receives a typed VERIFY envelope below; an unknown AHJ remains None so
+        # the ordinary research/timeout control path can continue unchanged.
+        if v24_status == "ahj_not_covered" and v231_status == "ahj_not_covered":
+            return None
+        return {
+            "job_summary": "The server-held Decision Cell index does not contain an exact supported AHJ/project match.",
+            "summary": "Verify the permit requirement with the issuing authority.",
+            "permit_required": None,
+            "permit_decision": "VERIFY",
+            "permit_verdict": "VERIFY",
+            "permit_name": "Permit requirement verification",
+            "permit_type": "Permit requirement verification",
+            "permits_required": [],
+            "apply_url": None,
+            "online_application_url": None,
+            "applying_office": f"{city} permit office" if city else "Local permit office",
+            "sources": [],
+            "source_urls": [],
+            "confidence": "fail_closed",
+            "confidence_reason": "No exact authenticated Decision Cell matched this AHJ and project family; no binary permit answer was invented.",
+            "needs_review": True,
+            "_decision_resolution": {
+                "status": "UNSUPPORTED_VERIFY",
+                "authoritative_binary": False,
+                "v24_status": v24_status,
+                "v231_status": v231_status,
+            },
+        }
 
     # A v2.4 fail-closed row intentionally preserves a source-backed legacy
     # binary result when one exists, so reproduce the main pipeline's v2.3.1 →
@@ -10065,17 +10107,29 @@ Return ONLY the JSON object."""
         n = re.sub(r'[^a-z0-9 ]', ' ', n)
         n = re.sub(r'\s+', ' ', n).strip()
 
-        if any(p in n for p in ["utility coordination", "utility interconnection", "interconnection"]):
+        def has(phrase: str) -> bool:
+            text_tokens = tuple(re.findall(r"[a-z0-9]+", n))
+            phrase_tokens = tuple(re.findall(r"[a-z0-9]+", phrase.lower()))
+            return bool(
+                phrase_tokens
+                and len(phrase_tokens) <= len(text_tokens)
+                and any(
+                    text_tokens[index : index + len(phrase_tokens)] == phrase_tokens
+                    for index in range(len(text_tokens) - len(phrase_tokens) + 1)
+                )
+            )
+
+        if any(has(p) for p in ["utility coordination", "utility interconnection", "interconnection"]):
             return "utility"
-        if any(p in n for p in ["plumbing", "water heater", "repipe"]):
+        if any(has(p) for p in ["plumbing", "water heater", "repipe"]):
             return "plumbing"
-        if "gas" in n:
+        if has("gas"):
             return "gas"
-        if any(p in n for p in ["mechanical", "hvac", "furnace", "air handler", "mini split"]):
+        if any(has(p) for p in ["mechanical", "hvac", "furnace", "air handler", "mini split"]):
             return "mechanical"
-        if any(p in n for p in ["electrical", "service upgrade", "disconnect", "reconnect", "temporary power", "panel replacement", "panel upgrade"]):
+        if any(has(p) for p in ["electrical", "service upgrade", "disconnect", "reconnect", "temporary power", "panel replacement", "panel upgrade"]):
             return "electrical"
-        if any(p in n for p in ["building", "structural", "racking", "roof penetration", "roof penetrations"]):
+        if any(has(p) for p in ["building", "structural", "racking", "roof penetration", "roof penetrations"]):
             return "building"
         return n
 

@@ -1,0 +1,78 @@
+{
+  "observed_model": "x-ai/grok-4.5",
+  "observed_provider": "openrouter",
+  "path_proof": {
+    "adapter": "grok",
+    "engine_called": false,
+    "engine_result_supplied_to_model": false,
+    "model_call_count": 1
+  },
+  "provider": "openrouter",
+  "provider_response": {
+    "choices": [
+      {
+        "finish_reason": "stop",
+        "index": 0,
+        "logprobs": null,
+        "message": {
+          "content": "{\"permit_decision\":\"REQUIRED\",\"jurisdiction\":{\"jurisdiction_id\":\"us-az-phoenix\",\"name\":\"Phoenix\",\"state\":\"AZ\",\"type\":\"city_or_local_authority\"},\"project_family\":\"commercial_tenant_improvement\",\"primary_permit_family\":\"BUILDING\",\"companion_permits\":[{\"family\":\"ELECTRICAL\",\"status\":\"VERIFY\"},{\"family\":\"MECHANICAL\",\"status\":\"VERIFY\"},{\"family\":\"PLUMBING\",\"status\":\"VERIFY\"},{\"family\":\"FIRE_LIFE_SAFETY\",\"status\":\"VERIFY\"},{\"family\":\"PLANNING_ZONING\",\"status\":\"VERIFY\"}],\"filing\":{\"authority_id\":\"us-az-phoenix\",\"destination_url\":\"https://www.phoenix.gov/business/construction-permits-planning.html\",\"office\":\"Phoenix Planning and Development Department\",\"url_role\":\"APPLICATION_START\"},\"source_support\":{\"state\":\"OFFICIAL_SOURCE_SUPPORTED\",\"strength\":\"STRONG\",\"evidence\":[{\"url\":\"https://www.phoenix.gov/pdd/development/permits/commercial\",\"role\":\"REQUIREMENT_EVIDENCE\"},{\"url\":\"https://www.phoenix.gov/business/construction-permits-planning.html\",\"role\":\"APPLICATION_START\"}]},\"contradictions\":[]}",
+          "reasoning": "The user wants me to evaluate one permit lookup using ONLY the supplied official-source evidence packet and return exactly one JSON object conforming to MODEL_SCHEMA. No markdown fences, commentary, e...",
+          "reasoning_details": [
+            {
+              "format": "xai-responses-v1",
+              "index": 0,
+              "summary": "The user wants me to evaluate one permit lookup using ONLY the supplied official-source evidence packet and return exactly one JSON object conforming to MODEL_SCHEMA. No markdown fences, commentary, e...",
+              "type": "reasoning.summary"
+            },
+            {
+              "data": "+qVH7IXj7LFiq+poTS2EwLJZ1GBJ6B8rPbiY795L+JojxzDJJInpY41f6GUOGMqMYKDOEMsKhhfCz107omiVNb1edNOI9ocjZh9AkPLNVOTkcLCdbGMoNpsyZh7/aJHrX7/gFOGrqU5QuoIiWlWyxTkBLzGEfrOk5Aqzqwz/9ke1iaoYJfkqZV1NE31dUrJrzCwVKRPcDDlSdnadiP3t9Ez1z/yRDuxuZtiVsFXpEr8eLYAYtvK2G4zIsWmDWDKX7vs/NM4+JIn5Ifj3sb5E56SAr27jswZF2VtaREVdRO9SXHf3e2qvh6OwOXKsUD/QNy3gvjiOPyeZjO2WQe5c2r0qhgGXerf0tb4MDr2EWHXTL6Nli8tqg8y6GeviZo5r5rrhQKQgj4+DAQpPWYReWlRCgLYvRwK5VOvjaM4gPGdDvk4P76pCv2Gdu/U6mhix1mPWAefW3M98joIbZexpPV30cKTIvl020SrB637BCgbgYi29jlX28OzZ5JOqusOPxDfbrw/8Iy6e+8W3df6sC3li9LtG6L1P52HVyl2IBJKLvpTxYdYQY2c6mvMniF5ONrG9nah5IGGwUGOlIrgirigdBKnt21tpCAQhsRaUWzmvip8qg0OzJe9unD9DhxbErQfY+OzxUZWTWAt6tk3i4cb9q4n44uT6ykMRYOzZPyi6qr5e/aO0/khz+R/pLG0VsL67a8ux0C6koGqIcwV4HBEnJjYkgMwQVlxV03wzD5IWjuF8ZjcgPDtltsLq0iVAJUy8J52vD35fMjk9VnZHWYLM7Z23MJNOHrvjjL4VwTJKQMYsa+37489Yb/gWFCLfW42u/oFlQR5CC/uG7jaPzdFw57CqNQLVhGastSif5yKSbrdGCNHnt4Nbmgm/jb2WDQrF61nJW6efiwQNmsFP2AdpBn+7tEwwtABYDM8oli8ksY40hoP1X9ldg4wu2hM2p4IQYEvxw57emGZ8jlbiUalC+WQIImnrSqdKRhyoBy9OUa/DPKafgakPf1IMCEKb2xsOjZ4OUYS70BKyNVmZmgKJn+JDPs5T9SSqHWwfTDn5tMjov0RfKUgzXUbRNB+6/nXBqy1JVVURh2C4zUpi+HjDMWQ7Rjzdc2y4WnPzDudIK6AzGA3NdrJSPcI/8uM7koXcEEyBWfWi4am9ioBoOoRoAYoMf8OgvASFyTSnrYG0YI/1CYExvFjA8rnKWFUkJh0owutbPvEKK2TY0Mfl9WogHPTZfGmZR6cTdF71Sy33ysSzilRpBwLH9uW5lSKrIR0OgsjWPg6qUovjy0Tye6eC9mvj6rpj97J96uBD9w7NRdk/NOe7feajOD0hTqsaF5BV36B9AzbnDFwPzgyyoC3n6YlmMFIbJUu3gkAP/rzzggoMNNIPEW48BWJblUEzVSrtfqeNysEbipDO/AZw1aUD2EuPV/JB3I/uJSRxeDGATk5U2d9w5hENQFQsw1DCr42LsWFsM45p4EgLrkmC7TQi1FLfa0nQif9JHdytt54IiPp8YJF6sdofrvAOoAyGheobOzLspLM1vbT8llE",
+              "format": "xai-responses-v1",
+              "id": "rs_e526c06b-8b83-9dc4-8204-ee00549b2140",
+              "index": 1,
+              "type": "reasoning.encrypted"
+            }
+          ],
+          "refusal": null,
+          "role": "assistant"
+        },
+        "native_finish_reason": "completed"
+      }
+    ],
+    "created": 1785163762,
+    "id": "gen-1785163762-c6yOI7lRkTeaEIc0a0Qc",
+    "model": "x-ai/grok-4.5",
+    "object": "chat.completion",
+    "provider": "xAI",
+    "service_tier": "default",
+    "system_fingerprint": null,
+    "usage": {
+      "completion_tokens": 524,
+      "completion_tokens_details": {
+        "audio_tokens": 0,
+        "image_tokens": 0,
+        "reasoning_tokens": 241
+      },
+      "cost": 0.00369,
+      "cost_details": {
+        "upstream_inference_completions_cost": 0.003144,
+        "upstream_inference_cost": 0.00369,
+        "upstream_inference_prompt_cost": 0.000546
+      },
+      "is_byok": false,
+      "prompt_tokens": 1361,
+      "prompt_tokens_details": {
+        "audio_tokens": 0,
+        "cache_write_tokens": 0,
+        "cached_tokens": 1280,
+        "video_tokens": 0
+      },
+      "total_tokens": 1885
+    }
+  },
+  "raw_text": "{\"permit_decision\":\"REQUIRED\",\"jurisdiction\":{\"jurisdiction_id\":\"us-az-phoenix\",\"name\":\"Phoenix\",\"state\":\"AZ\",\"type\":\"city_or_local_authority\"},\"project_family\":\"commercial_tenant_improvement\",\"primary_permit_family\":\"BUILDING\",\"companion_permits\":[{\"family\":\"ELECTRICAL\",\"status\":\"VERIFY\"},{\"family\":\"MECHANICAL\",\"status\":\"VERIFY\"},{\"family\":\"PLUMBING\",\"status\":\"VERIFY\"},{\"family\":\"FIRE_LIFE_SAFETY\",\"status\":\"VERIFY\"},{\"family\":\"PLANNING_ZONING\",\"status\":\"VERIFY\"}],\"filing\":{\"authority_id\":\"us-az-phoenix\",\"destination_url\":\"https://www.phoenix.gov/business/construction-permits-planning.html\",\"office\":\"Phoenix Planning and Development Department\",\"url_role\":\"APPLICATION_START\"},\"source_support\":{\"state\":\"OFFICIAL_SOURCE_SUPPORTED\",\"strength\":\"STRONG\",\"evidence\":[{\"url\":\"https://www.phoenix.gov/pdd/development/permits/commercial\",\"role\":\"REQUIREMENT_EVIDENCE\"},{\"url\":\"https://www.phoenix.gov/business/construction-permits-planning.html\",\"role\":\"APPLICATION_START\"}]},\"contradictions\":[]}",
+  "requested_model": "x-ai/grok-4.5",
+  "requested_provider": "openrouter",
+  "requested_runtime": "grok",
+  "response_id": "gen-1785163762-c6yOI7lRkTeaEIc0a0Qc",
+  "runtime": "OpenRouter chat/completions; upstream_provider=xAI"
+}

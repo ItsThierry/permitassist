@@ -1,0 +1,78 @@
+{
+  "observed_model": "x-ai/grok-4.5",
+  "observed_provider": "openrouter",
+  "path_proof": {
+    "adapter": "grok",
+    "engine_called": false,
+    "engine_result_supplied_to_model": false,
+    "model_call_count": 1
+  },
+  "provider": "openrouter",
+  "provider_response": {
+    "choices": [
+      {
+        "finish_reason": "stop",
+        "index": 0,
+        "logprobs": null,
+        "message": {
+          "content": "{\"permit_decision\":\"REQUIRED\",\"jurisdiction\":{\"jurisdiction_id\":\"us-az-flagstaff\",\"name\":\"Flagstaff\",\"state\":\"AZ\",\"type\":\"city_or_local_authority\"},\"project_family\":\"reroof\",\"primary_permit_family\":\"BUILDING\",\"companion_permits\":[],\"filing\":{\"authority_id\":\"us-az-flagstaff\",\"destination_url\":\"https://www.flagstaff.az.gov/5140/Building-Permits\",\"office\":\"City of Flagstaff Building Permits\",\"url_role\":\"APPLICATION_START\"},\"source_support\":{\"state\":\"OFFICIAL_SOURCE_SUPPORTED\",\"strength\":\"STRONG\",\"evidence\":[{\"url\":\"https://www.flagstaff.az.gov/5140/Building-Permits\",\"role\":\"REQUIREMENT_EVIDENCE\"}]},\"contradictions\":[]}",
+          "reasoning": "The user wants me to evaluate one permit lookup using ONLY the supplied official-source evidence packet and return exactly one JSON object conforming to MODEL_SCHEMA. No Markdown fences, commentary, e...",
+          "reasoning_details": [
+            {
+              "format": "xai-responses-v1",
+              "index": 0,
+              "summary": "The user wants me to evaluate one permit lookup using ONLY the supplied official-source evidence packet and return exactly one JSON object conforming to MODEL_SCHEMA. No Markdown fences, commentary, e...",
+              "type": "reasoning.summary"
+            },
+            {
+              "data": "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",
+              "format": "xai-responses-v1",
+              "id": "rs_ff8062b4-5a09-9bab-88a3-f7843f7c35d3",
+              "index": 1,
+              "type": "reasoning.encrypted"
+            }
+          ],
+          "refusal": null,
+          "role": "assistant"
+        },
+        "native_finish_reason": "completed"
+      }
+    ],
+    "created": 1785164370,
+    "id": "gen-1785164370-bT7F52KMaIPzM2VhtOEA",
+    "model": "x-ai/grok-4.5",
+    "object": "chat.completion",
+    "provider": "xAI",
+    "service_tier": "default",
+    "system_fingerprint": null,
+    "usage": {
+      "completion_tokens": 891,
+      "completion_tokens_details": {
+        "audio_tokens": 0,
+        "image_tokens": 0,
+        "reasoning_tokens": 699
+      },
+      "cost": 0.0078504,
+      "cost_details": {
+        "upstream_inference_completions_cost": 0.005346,
+        "upstream_inference_cost": 0.0078504,
+        "upstream_inference_prompt_cost": 0.0025044
+      },
+      "is_byok": false,
+      "prompt_tokens": 1361,
+      "prompt_tokens_details": {
+        "audio_tokens": 0,
+        "cache_write_tokens": 0,
+        "cached_tokens": 128,
+        "video_tokens": 0
+      },
+      "total_tokens": 2252
+    }
+  },
+  "raw_text": "{\"permit_decision\":\"REQUIRED\",\"jurisdiction\":{\"jurisdiction_id\":\"us-az-flagstaff\",\"name\":\"Flagstaff\",\"state\":\"AZ\",\"type\":\"city_or_local_authority\"},\"project_family\":\"reroof\",\"primary_permit_family\":\"BUILDING\",\"companion_permits\":[],\"filing\":{\"authority_id\":\"us-az-flagstaff\",\"destination_url\":\"https://www.flagstaff.az.gov/5140/Building-Permits\",\"office\":\"City of Flagstaff Building Permits\",\"url_role\":\"APPLICATION_START\"},\"source_support\":{\"state\":\"OFFICIAL_SOURCE_SUPPORTED\",\"strength\":\"STRONG\",\"evidence\":[{\"url\":\"https://www.flagstaff.az.gov/5140/Building-Permits\",\"role\":\"REQUIREMENT_EVIDENCE\"}]},\"contradictions\":[]}",
+  "requested_model": "x-ai/grok-4.5",
+  "requested_provider": "openrouter",
+  "requested_runtime": "grok",
+  "response_id": "gen-1785164370-bT7F52KMaIPzM2VhtOEA",
+  "runtime": "OpenRouter chat/completions; upstream_provider=xAI"
+}

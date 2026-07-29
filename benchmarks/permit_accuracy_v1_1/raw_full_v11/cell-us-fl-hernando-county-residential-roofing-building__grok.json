@@ -1,0 +1,78 @@
+{
+  "observed_model": "x-ai/grok-4.5",
+  "observed_provider": "openrouter",
+  "path_proof": {
+    "adapter": "grok",
+    "engine_called": false,
+    "engine_result_supplied_to_model": false,
+    "model_call_count": 1
+  },
+  "provider": "openrouter",
+  "provider_response": {
+    "choices": [
+      {
+        "finish_reason": "stop",
+        "index": 0,
+        "logprobs": null,
+        "message": {
+          "content": "{\"permit_decision\":\"REQUIRED\",\"jurisdiction\":{\"jurisdiction_id\":\"us-fl-hernando_county\",\"name\":\"Hernando County\",\"state\":\"FL\",\"type\":\"county\"},\"project_family\":\"reroof\",\"primary_permit_family\":\"BUILDING\",\"companion_permits\":[{\"family\":\"ELECTRICAL\",\"status\":\"VERIFY\"},{\"family\":\"PLUMBING\",\"status\":\"VERIFY\"},{\"family\":\"MECHANICAL\",\"status\":\"VERIFY\"}],\"filing\":{\"authority_id\":\"us-fl-hernando_county\",\"destination_url\":\"https://www.hernandocounty.us/media/ep5jseaj/residential-roofing-permit.pdf\",\"office\":\"Hernando County Building Division\",\"url_role\":\"DIRECT_FORM\"},\"source_support\":{\"state\":\"OFFICIAL_SOURCE_SUPPORTED\",\"strength\":\"STRONG\",\"evidence\":[{\"url\":\"https://www.hernandocounty.us/media/ep5jseaj/residential-roofing-permit.pdf\",\"role\":\"DIRECT_FORM\"}]},\"contradictions\":[]}",
+          "reasoning": "The user wants me to evaluate one permit lookup using ONLY the supplied official-source evidence packet and return exactly one JSON object conforming to MODEL_SCHEMA. No Markdown fences, commentary, e...",
+          "reasoning_details": [
+            {
+              "format": "xai-responses-v1",
+              "index": 0,
+              "summary": "The user wants me to evaluate one permit lookup using ONLY the supplied official-source evidence packet and return exactly one JSON object conforming to MODEL_SCHEMA. No Markdown fences, commentary, e...",
+              "type": "reasoning.summary"
+            },
+            {
+              "data": "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",
+              "format": "xai-responses-v1",
+              "id": "rs_dbf64235-9b0a-9e59-8777-371a072fadfb",
+              "index": 1,
+              "type": "reasoning.encrypted"
+            }
+          ],
+          "refusal": null,
+          "role": "assistant"
+        },
+        "native_finish_reason": "completed"
+      }
+    ],
+    "created": 1785164973,
+    "id": "gen-1785164973-S3I8Soz8zT0SR9MrhhvI",
+    "model": "x-ai/grok-4.5",
+    "object": "chat.completion",
+    "provider": "xAI",
+    "service_tier": "default",
+    "system_fingerprint": null,
+    "usage": {
+      "completion_tokens": 713,
+      "completion_tokens_details": {
+        "audio_tokens": 0,
+        "image_tokens": 0,
+        "reasoning_tokens": 473
+      },
+      "cost": 0.00705,
+      "cost_details": {
+        "upstream_inference_completions_cost": 0.004278,
+        "upstream_inference_cost": 0.00705,
+        "upstream_inference_prompt_cost": 0.002772
+      },
+      "is_byok": false,
+      "prompt_tokens": 1386,
+      "prompt_tokens_details": {
+        "audio_tokens": 0,
+        "cache_write_tokens": 0,
+        "cached_tokens": 0,
+        "video_tokens": 0
+      },
+      "total_tokens": 2099
+    }
+  },
+  "raw_text": "{\"permit_decision\":\"REQUIRED\",\"jurisdiction\":{\"jurisdiction_id\":\"us-fl-hernando_county\",\"name\":\"Hernando County\",\"state\":\"FL\",\"type\":\"county\"},\"project_family\":\"reroof\",\"primary_permit_family\":\"BUILDING\",\"companion_permits\":[{\"family\":\"ELECTRICAL\",\"status\":\"VERIFY\"},{\"family\":\"PLUMBING\",\"status\":\"VERIFY\"},{\"family\":\"MECHANICAL\",\"status\":\"VERIFY\"}],\"filing\":{\"authority_id\":\"us-fl-hernando_county\",\"destination_url\":\"https://www.hernandocounty.us/media/ep5jseaj/residential-roofing-permit.pdf\",\"office\":\"Hernando County Building Division\",\"url_role\":\"DIRECT_FORM\"},\"source_support\":{\"state\":\"OFFICIAL_SOURCE_SUPPORTED\",\"strength\":\"STRONG\",\"evidence\":[{\"url\":\"https://www.hernandocounty.us/media/ep5jseaj/residential-roofing-permit.pdf\",\"role\":\"DIRECT_FORM\"}]},\"contradictions\":[]}",
+  "requested_model": "x-ai/grok-4.5",
+  "requested_provider": "openrouter",
+  "requested_runtime": "grok",
+  "response_id": "gen-1785164973-S3I8Soz8zT0SR9MrhhvI",
+  "runtime": "OpenRouter chat/completions; upstream_provider=xAI"
+}

@@ -1,0 +1,78 @@
+{
+  "observed_model": "x-ai/grok-4.5",
+  "observed_provider": "openrouter",
+  "path_proof": {
+    "adapter": "grok",
+    "engine_called": false,
+    "engine_result_supplied_to_model": false,
+    "model_call_count": 1
+  },
+  "provider": "openrouter",
+  "provider_response": {
+    "choices": [
+      {
+        "finish_reason": "stop",
+        "index": 0,
+        "logprobs": null,
+        "message": {
+          "content": "{\"permit_decision\":\"REQUIRED\",\"jurisdiction\":{\"jurisdiction_id\":\"us-ok-bixby\",\"name\":\"Bixby\",\"state\":\"OK\",\"type\":\"city_or_local_authority\"},\"project_family\":\"residential_remodel\",\"primary_permit_family\":\"BUILDING\",\"companion_permits\":[{\"family\":\"ELECTRICAL\",\"status\":\"VERIFY\"},{\"family\":\"PLUMBING\",\"status\":\"VERIFY\"},{\"family\":\"MECHANICAL\",\"status\":\"VERIFY\"},{\"family\":\"FIRE_LIFE_SAFETY\",\"status\":\"VERIFY\"}],\"filing\":{\"authority_id\":\"us-ok-bixby\",\"destination_url\":\"https://www.bixbyok.gov/302/Building-Permit-Process\",\"office\":\"Bixby Building Permit Process\",\"url_role\":\"REQUIREMENT_EVIDENCE\"},\"source_support\":{\"state\":\"OFFICIAL_SOURCE_SUPPORTED\",\"strength\":\"MODERATE\",\"evidence\":[{\"url\":\"https://www.bixbyok.gov/302/Building-Permit-Process\",\"role\":\"REQUIREMENT_EVIDENCE\"}]},\"contradictions\":[]}",
+          "reasoning": "The user wants me to evaluate one permit lookup using ONLY the supplied official-source evidence packet and return exactly one JSON object conforming to MODEL_SCHEMA. No Markdown fences, commentary, o...",
+          "reasoning_details": [
+            {
+              "format": "xai-responses-v1",
+              "index": 0,
+              "summary": "The user wants me to evaluate one permit lookup using ONLY the supplied official-source evidence packet and return exactly one JSON object conforming to MODEL_SCHEMA. No Markdown fences, commentary, o...",
+              "type": "reasoning.summary"
+            },
+            {
+              "data": "hoDPxMZ+E/708uLBYRkicBlOTaR5TSIGZvp2PMqavXT+Ip46uHKXivhnJLA67hIIY4Af43fWQY3aKYdhAiaRDOUz9Yhs5ZroBXtVv79PFhzd46GqotKPDhoF/RwUDfTOGA7DeUXO2izAZlcuJ4FnH6r/n92Em83jbSSwMB9RkIMa1ygwZpGAEepn/Sfs0JhjS1VF10n9tYHFePHMG8lf1irmxxUotCNFt4zrpnBkfw7QelvpGHyPFq91Ox95865BhRbkTIqhyc+u7HnpNQrt2s3i1nVgrc4Z2DofMlMmIuD+3WfCUYacFygxG2lFHM3ai4FwbWtLnyDySXpgsib0mFacw7vazkUqA/FXWpmlnfG64lpvFZwOaBISGU1W+JT9NNgCpVDn2tnHli+fRZymsoHtt5Qj46GGnTbUwbhWU/tOd0Pkn8Z/kLQAGAd9TqAkYI/vJaWhLU0v+shUNvweK6evkoN0BoaVM5o2qDM5T5ZtSMFugqxky+X2yezD2odeZP3/sX0nkVLQnFH/qQ1Cw/UBl2qa/yyHISZkv7y0Zo8cbwB4psqFCYUtfyVR/RTeKl11/SK1IZUzW4ctQzYV7NzRlIwI1nzV4T0dAelOXDKAjTACdeBzwYMmmML2bM+IzcYtw5iMUoLE2QXwwPD21Lb/F0eZvEBfBWfLwFFytO+ONscY1IbP2AiVJBuLwjD+paYnNndMBElXkuZbWcWM5EDnKXgPJGsSlvjdqMlUyFXw/Xqo1a9tKmTW3CEh0otYKLi9+TEt5Kgusn9c+VY+r7D0r17erhhY78MtMsqUp1ISrLtuiYs+Q+YpaVqTm56e+KV01ApLWd5R91oIfShMvdyzYyDv5etz4GeYc9thaY0H9FVHMNpBUVfOO2rnAtuKx1Qm1OI0TxNyM+SC0rUnH1N1SO+bhgwwhZ0HKi73G/ZBZbPuk66SFcA2MtKSd247lQ1IcMWDfQEns01zi8BKTkj9N8CSB7qEqyjZeFA/gWclxTbQKG81YUKiGReCzNfJ4ZK+4r899gBvh+Boz36hKHHVaOEcYNcm90w2QhuIJlFQj61QY+oF11i3e4Ra2kpfVHCNk3ib/qiwsytl2cUr1tKpK4pcGkj7T78wx7wAvMDGc8p6iCwppXKaD+/UU2jxPPu3gffa19wYnAbZQti9spophCPVHUGy8G6hp7xQjx89/yVSHpKiNP0TxEG30g3HDkH0V8oJ/m1dMH1DiO9Km6AjGUqbU3/UY93oGJLmz8H92lErQCEfRCOGSmwHGapPF5Z3IQAGAfZ1U7PA2Zniyjhu8R6JJ4bxmYXMedH7HiB9rSZYbfYVB1rQSx+5Mo+/KrfG34mt+w/PTVpRw+vRt03+A6yhnu7nIYNHOY+qHzQjdmuVyJ4Wdc35EgKJOPum15ettQSfmEFRrD3nTYhddrLnwuKivQ0xGkj23btuBqHigdIhrKs6iFaGzNUHuwJaveUYHeHGYX35tKnrDJYVVMED7PkGv3W0zGpU+c++kINw7+wwbgi8YuSIvq7RSFvgoifEvAncgVzXvOHCdj1+N72kEg+8UNVEpzvRzPPwATTe6SH+qMXK9YkxKs7gKUhThKaNJvLvE3na5skiFCAkgMvARH/6LexRzzujkLHKdOb8ARAuPMH9jO5GQVlfnK52cXzS4ZM6dZjGX2igLglc8J3akdA+Ir4PInjKaUlr7Sk",
+              "format": "xai-responses-v1",
+              "id": "rs_ddc51b37-a9f8-956c-a82c-d21b46cfbd9c",
+              "index": 1,
+              "type": "reasoning.encrypted"
+            }
+          ],
+          "refusal": null,
+          "role": "assistant"
+        },
+        "native_finish_reason": "completed"
+      }
+    ],
+    "created": 1785167343,
+    "id": "gen-1785167343-W5k8SWtrtFGmba3pJzjz",
+    "model": "x-ai/grok-4.5",
+    "object": "chat.completion",
+    "provider": "xAI",
+    "service_tier": "default",
+    "system_fingerprint": null,
+    "usage": {
+      "completion_tokens": 504,
+      "completion_tokens_details": {
+        "audio_tokens": 0,
+        "image_tokens": 0,
+        "reasoning_tokens": 250
+      },
+      "cost": 0.0054164,
+      "cost_details": {
+        "upstream_inference_completions_cost": 0.003024,
+        "upstream_inference_cost": 0.0054164,
+        "upstream_inference_prompt_cost": 0.0023924
+      },
+      "is_byok": false,
+      "prompt_tokens": 1305,
+      "prompt_tokens_details": {
+        "audio_tokens": 0,
+        "cache_write_tokens": 0,
+        "cached_tokens": 128,
+        "video_tokens": 0
+      },
+      "total_tokens": 1809
+    }
+  },
+  "raw_text": "{\"permit_decision\":\"REQUIRED\",\"jurisdiction\":{\"jurisdiction_id\":\"us-ok-bixby\",\"name\":\"Bixby\",\"state\":\"OK\",\"type\":\"city_or_local_authority\"},\"project_family\":\"residential_remodel\",\"primary_permit_family\":\"BUILDING\",\"companion_permits\":[{\"family\":\"ELECTRICAL\",\"status\":\"VERIFY\"},{\"family\":\"PLUMBING\",\"status\":\"VERIFY\"},{\"family\":\"MECHANICAL\",\"status\":\"VERIFY\"},{\"family\":\"FIRE_LIFE_SAFETY\",\"status\":\"VERIFY\"}],\"filing\":{\"authority_id\":\"us-ok-bixby\",\"destination_url\":\"https://www.bixbyok.gov/302/Building-Permit-Process\",\"office\":\"Bixby Building Permit Process\",\"url_role\":\"REQUIREMENT_EVIDENCE\"},\"source_support\":{\"state\":\"OFFICIAL_SOURCE_SUPPORTED\",\"strength\":\"MODERATE\",\"evidence\":[{\"url\":\"https://www.bixbyok.gov/302/Building-Permit-Process\",\"role\":\"REQUIREMENT_EVIDENCE\"}]},\"contradictions\":[]}",
+  "requested_model": "x-ai/grok-4.5",
+  "requested_provider": "openrouter",
+  "requested_runtime": "grok",
+  "response_id": "gen-1785167343-W5k8SWtrtFGmba3pJzjz",
+  "runtime": "OpenRouter chat/completions; upstream_provider=xAI"
+}

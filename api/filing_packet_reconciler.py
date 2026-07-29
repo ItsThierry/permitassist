@@ -460,10 +460,10 @@ def _family_from_existing_row(row: dict[str, Any], target_families: set[str]) ->
     for family_id in ordered:
         family = FILING_FAMILIES[family_id]
         if _contains_any(text, family.aliases + family.advisory_terms):
-            if family_id == "building_ti" and "building_adu" in target_families and "commercial" not in text and "tenant" not in text:
+            if family_id == "building_ti" and "building_adu" in target_families and not _contains_any(text, ("commercial", "tenant")):
                 continue
             return family_id
-    if "building" in text or "permit" in text:
+    if _contains_any(text, ("building", "permit")):
         if "building_adu" in target_families:
             return "building_adu"
         if "building_ti" in target_families:

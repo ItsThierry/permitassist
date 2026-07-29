@@ -1,0 +1,6 @@
+PermitAssist independently adjudicated official filing route
+Official source URL: https://www.niagarafallsny.gov/Documents/Government/Department/Code%20Enforcement/Permit/Interior%20Permit%20Application.pdf
+Official filing URL: https://www.niagarafallsny.gov/Documents/Government/Department/Code%20Enforcement/Permit/Interior%20Permit%20Application.pdf
+Verification boundary: PASS_WEB_EXTRACT_20260728
+Exact official quote:
+What type of building permit are you requesting? Residential □ Commercial □ Industrial □

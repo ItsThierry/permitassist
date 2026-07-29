@@ -1,0 +1,346 @@
+{
+  "observed_model": "gpt-5.6-luna",
+  "observed_provider": "openai-codex",
+  "path_proof": {
+    "adapter": "engine_luna",
+    "authority_recovery": null,
+    "decision_cell_reference": null,
+    "engine_called": true,
+    "engine_result_supplied_to_model": false,
+    "engine_stdout": "[url_check] Dead URL detected: https://www.eauclairewi.gov/government/our-divisions/inspections/applications\n",
+    "local_merge_customer_path_called": true,
+    "model_call_count": 1
+  },
+  "provider": "openai-codex",
+  "provider_terminal_event": {
+    "response": {
+      "background": false,
+      "completed_at": 1785163751,
+      "created_at": 1785163740,
+      "error": null,
+      "frequency_penalty": 0.0,
+      "id": "resp_01b293265beed3a6016a676fdc96dc8194b1cf118c0b36c854",
+      "incomplete_details": null,
+      "instructions": "Follow the user request exactly. Do not call tools.",
+      "max_output_tokens": null,
+      "max_tool_calls": null,
+      "metadata": {},
+      "model": "gpt-5.6-luna",
+      "moderation": null,
+      "object": "response",
+      "output": [],
+      "parallel_tool_calls": true,
+      "presence_penalty": 0.0,
+      "previous_response_id": null,
+      "prompt_cache_key": "875f2598-e39c-492d-831d-b48d4cb03b08",
+      "prompt_cache_retention": "24h",
+      "reasoning": {
+        "context": "all_turns",
+        "effort": "medium",
+        "mode": "standard",
+        "summary": null
+      },
+      "safety_identifier": "user-FQ7sI0yp0Qqn6wWdqzy9mZic",
+      "service_tier": "default",
+      "status": "completed",
+      "store": false,
+      "temperature": 1.0,
+      "text": {
+        "format": {
+          "type": "text"
+        },
+        "verbosity": "medium"
+      },
+      "tool_choice": "auto",
+      "tool_usage": {
+        "image_gen": {
+          "input_tokens": 0,
+          "input_tokens_details": {
+            "image_tokens": 0,
+            "text_tokens": 0
+          },
+          "output_tokens": 0,
+          "output_tokens_details": {
+            "image_tokens": 0,
+            "text_tokens": 0
+          },
+          "total_tokens": 0
+        },
+        "web_search": {
+          "num_requests": 0
+        }
+      },
+      "tools": [],
+      "top_logprobs": 0,
+      "top_p": 0.98,
+      "truncation": "disabled",
+      "usage": {
+        "input_tokens": 1166,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 0
+        },
+        "output_tokens": 578,
+        "output_tokens_details": {
+          "reasoning_tokens": 375
+        },
+        "total_tokens": 1744
+      },
+      "user": null
+    },
+    "sequence_number": 207,
+    "type": "response.completed"
+  },
+  "raw_model_text": "{\"permit_decision\":\"CONDITIONAL\",\"jurisdiction\":{\"jurisdiction_id\":\"us-wi-eau-claire\",\"name\":\"Eau Claire\",\"state\":\"WI\",\"type\":\"city_or_local_authority\"},\"project_family\":\"commercial_tenant_improvement\",\"primary_permit_family\":\"BUILDING\",\"companion_permits\":[],\"filing\":{\"authority_id\":\"us-wi-eau-claire\",\"office\":\"City of Eau Claire Inspections\",\"destination_url\":\"https://evolvepublic.infovisionsoftware.com/eauclaire/\",\"url_role\":\"APPLICATION_START\"},\"source_support\":{\"state\":\"OFFICIAL_SOURCE_SUPPORTED\",\"strength\":\"MODERATE\",\"evidence\":[{\"url\":\"https://www.eauclairewi.gov/government/our-divisions/inspections/applications\",\"role\":\"REQUIREMENT_EVIDENCE\"},{\"url\":\"https://evolvepublic.infovisionsoftware.com/eauclaire/\",\"role\":\"APPLICATION_START\"}]},\"contradictions\":[]}",
+  "raw_response": {
+    "apply_path": {
+      "channel": "contact_ahj",
+      "documents_to_prepare": [
+        "scope of work",
+        "plans/drawings if required",
+        "contractor license",
+        "valuation",
+        "owner authorization"
+      ],
+      "office_name": "City of Eau Claire Evolve permitting / Inspection Services Division",
+      "permit_category": "Permit package",
+      "permit_type": "Required permit package — Commercial Building Permit",
+      "portal_url": "https://www.eauclairewi.gov/government/our-divisions/inspections/applications",
+      "primary_filing_source_tier": "none",
+      "primary_requirement_source_tier": "local_ahj",
+      "state": "HONEST_FALLBACK",
+      "steps": [
+        "Open the listed permit portal or contact the permit office",
+        "Select the closest category to: Required permit package — Commercial Building Permit",
+        "Confirm exact portal subcategories before final submission"
+      ],
+      "support_level": "not available",
+      "verification_note": "Confirm the exact portal category with the listed permit office before filing"
+    },
+    "apply_url": "https://www.eauclairewi.gov/government/our-divisions/inspections/applications",
+    "apply_url_known": true,
+    "applying_office": "City of Eau Claire Evolve permitting / Inspection Services Division",
+    "companion_permits": [
+      {
+        "certainty": "likely",
+        "condition_text": "Verify whether Accessibility / ADA path-of-travel verification is triggered for this project when the building department confirms the relevant accessibility / ada path-of-travel verification scope condition.",
+        "permit_type": "Accessibility / ADA path-of-travel verification",
+        "rationale": "Commercial tenant improvements commonly trigger accessible route, restroom, door/hardware, counter, parking, or 20% disproportionality review.",
+        "reason": "Commercial tenant improvements commonly trigger accessible route, restroom, door/hardware, counter, parking, or 20% disproportionality review.",
+        "trigger_condition": "Verify whether Accessibility / ADA path-of-travel verification is triggered for this project when the building department confirms the relevant accessibility / ada path-of-travel verification scope condition."
+      }
+    ],
+    "customer_first_screen_summary": {
+      "ahj_department": "City of Eau Claire Evolve permitting / Inspection Services Division",
+      "decision": "REQUIRED",
+      "kind_category": "Commercial Building / Tenant Improvement",
+      "next_action": "File the required permit categories with City of Eau Claire Evolve permitting / Inspection Services Division: Commercial Building Permit, Plumbing Permit. Confirm exact portal subcategories before final submission.",
+      "source_cue": "Official sources attached for 2 required permit categories."
+    },
+    "customer_headline": "Permit required: Required permit package — Commercial Building Permit.",
+    "customer_next_step": "File the required permit categories with City of Eau Claire Evolve permitting / Inspection Services Division: Commercial Building Permit, Plumbing Permit. Confirm exact portal subcategories before final submission.",
+    "customer_result_summary": {
+      "ahj_department": "City of Eau Claire Evolve permitting / Inspection Services Division",
+      "fee_cost_caveat": "Fees depend on valuation, trade scope, plan-review fees, and the current local fee schedule; verify before quoting.",
+      "freshness_label": "Checked 2026-07-27",
+      "jurisdiction": "Eau Claire, WI",
+      "next_step": "File the required permit categories with City of Eau Claire Evolve permitting / Inspection Services Division: Commercial Building Permit, Plumbing Permit. Confirm exact portal subcategories before final submission.",
+      "permit_decision": "REQUIRED",
+      "permit_kind": "Commercial Building / Tenant Improvement",
+      "permit_name": "Required permit package — Commercial Building Permit",
+      "source_cue": "Official sources attached for 2 required permit categories."
+    },
+    "degraded_sources": false,
+    "job_summary": "Required permit package: Commercial Building Permit; Plumbing Permit.",
+    "local_form_known": true,
+    "online_application_url": null,
+    "permit_decision": "REQUIRED",
+    "permit_kind": "Commercial Building / Tenant Improvement",
+    "permit_name": "Required permit package — Commercial Building Permit",
+    "permit_required": true,
+    "permit_type": "Required permit package — Commercial Building Permit",
+    "permit_verdict": "YES",
+    "permits_required": [
+      {
+        "approval_type": "Commercial Building Permit",
+        "decision": "REQUIRED",
+        "display_family": "Building",
+        "family": "building",
+        "filing_family": "building",
+        "kind": "Building",
+        "permit_kind": "building",
+        "permit_name": "Commercial Building Permit",
+        "permit_type": "Commercial Building Permit",
+        "portal_selection": "Commercial Building Permit",
+        "required": true,
+        "segment": "commercial",
+        "status": "REQUIRED"
+      },
+      {
+        "ahj_name": "Eau Claire permit office",
+        "application_authority_name": "Eau Claire permit office",
+        "approval_type": "Plumbing Permit",
+        "decision": "REQUIRED",
+        "display_family": "Plumbing",
+        "family": "plumbing",
+        "filing_family": "plumbing",
+        "kind": "Plumbing",
+        "notes": "Required because the described scope triggers Plumbing Permit. Confirm the exact portal category with the listed permit office before filing.",
+        "permit_name": "Plumbing Permit",
+        "permit_type": "Plumbing Permit",
+        "rationale": "Required because the described scope triggers Plumbing Permit. Confirm the exact portal category with the listed permit office before filing.",
+        "required": true,
+        "scope_trigger": "plumbing_explicit_scope",
+        "segment": "commercial",
+        "status": "REQUIRED"
+      }
+    ],
+    "permits_required_logic": [
+      {
+        "filing_family": "building",
+        "included_because": "Official permit rule: Required because the described scope triggers Building review.",
+        "permit_type": "Commercial Building Permit",
+        "scope_trigger": "building_scope",
+        "segment": "commercial"
+      },
+      {
+        "filing_family": "plumbing",
+        "included_because": "Official permit rule: Required because the described scope triggers Plumbing Permit. Confirm the exact portal category with the listed permit office before filing.",
+        "permit_type": "Plumbing Permit",
+        "scope_trigger": "plumbing_explicit_scope",
+        "segment": "commercial"
+      }
+    ],
+    "related_permit_families": [
+      "Planning/Zoning",
+      "Certificate of Occupancy",
+      "Other"
+    ],
+    "related_permit_names": [
+      "Planning/Zoning Use Verification",
+      "Certificate of Occupancy / Change-of-Occupancy Verification",
+      "Accessibility / ADA path-of-travel verification"
+    ],
+    "related_permit_segments": [
+      "commercial"
+    ],
+    "related_permits": [
+      {
+        "approval_type": "Planning/Zoning Use Verification",
+        "condition_text": "Verify planning/zoning only if the TI changes use, signage, parking, exterior conditions, or zoning-sensitive operations.",
+        "decision": "CONDITIONAL",
+        "display_family": "Planning/Zoning",
+        "family": "planning",
+        "filing_family": "planning",
+        "kind": "Planning/Zoning",
+        "permit_name": "Planning/Zoning Use Verification",
+        "permit_type": "Planning/Zoning Use Verification",
+        "rationale": "Verify planning/zoning only if the TI changes use, signage, parking, exterior conditions, or zoning-sensitive operations.",
+        "required": false,
+        "required_if": "Verify planning/zoning only if the TI changes use, signage, parking, exterior conditions, or zoning-sensitive operations.",
+        "segment": "commercial",
+        "source_url": "https://www.eauclairewi.gov/government/our-divisions/inspections/applications",
+        "status": "CONDITIONAL"
+      },
+      {
+        "approval_type": "Certificate of Occupancy / Change-of-Occupancy Verification",
+        "condition_text": "Verify certificate-of-occupancy/change-of-occupancy review if the TI changes use, occupant load, occupancy group, or business operation.",
+        "decision": "CONDITIONAL",
+        "display_family": "Certificate of Occupancy",
+        "family": "co",
+        "filing_family": "co",
+        "kind": "Certificate of Occupancy",
+        "permit_name": "Certificate of Occupancy / Change-of-Occupancy Verification",
+        "permit_type": "Certificate of Occupancy / Change-of-Occupancy Verification",
+        "rationale": "Verify certificate-of-occupancy/change-of-occupancy review if the TI changes use, occupant load, occupancy group, or business operation.",
+        "required": false,
+        "required_if": "Verify certificate-of-occupancy/change-of-occupancy review if the TI changes use, occupant load, occupancy group, or business operation.",
+        "segment": "commercial",
+        "source_url": "https://www.eauclairewi.gov/government/our-divisions/inspections/applications",
+        "status": "CONDITIONAL"
+      },
+      {
+        "approval_type": "Accessibility / ADA path-of-travel verification",
+        "condition_text": "Verify whether Accessibility / ADA path-of-travel verification is triggered for this project when the building department confirms the relevant accessibility / ada path-of-travel verification scope condition.",
+        "decision": "VERIFY",
+        "display_family": "Other",
+        "family": "other",
+        "filing_family": "other",
+        "kind": "Other",
+        "permit_name": "Accessibility / ADA path-of-travel verification",
+        "permit_type": "Accessibility / ADA path-of-travel verification",
+        "rationale": "Commercial tenant improvements commonly trigger accessible route, restroom, door/hardware, counter, parking, or 20% disproportionality review.",
+        "reason": "Commercial tenant improvements commonly trigger accessible route, restroom, door/hardware, counter, parking, or 20% disproportionality review.",
+        "required": false,
+        "segment": "commercial",
+        "status": "VERIFY",
+        "trigger_condition": "Verify whether Accessibility / ADA path-of-travel verification is triggered for this project when the building department confirms the relevant accessibility / ada path-of-travel verification scope condition."
+      }
+    ],
+    "required_permit_families": [
+      "Building",
+      "Plumbing"
+    ],
+    "required_permit_names": [
+      "Commercial Building Permit",
+      "Plumbing Permit"
+    ],
+    "required_permit_segments": [
+      "commercial"
+    ],
+    "required_permit_summary": "Required permit package: Commercial Building Permit; Plumbing Permit.",
+    "source_confidence": "AHJ_DIRECT",
+    "source_support": {
+      "apply_url_known": true,
+      "apply_url_source_confidence": "FILING_PATH_DEGRADED",
+      "context_source_count": 0,
+      "decision_mutation_allowed": false,
+      "degraded_sources": false,
+      "display_source_count": 1,
+      "evidence": [
+        {
+          "role": "REQUIREMENT_EVIDENCE"
+        },
+        {
+          "role": "APPLICATION_START"
+        }
+      ],
+      "filing_path_state": "HONEST_FALLBACK",
+      "filing_source_count": 0,
+      "has_source_backed_evidence": true,
+      "local_decision_evidence_urls": [
+        "https://www.eauclairewi.gov/government/our-divisions/inspections/applications"
+      ],
+      "local_form_known": true,
+      "primary_filing_source_tier": "none",
+      "primary_requirement_source_tier": "local_ahj",
+      "requirement_source_count": 1,
+      "source_confidence": "AHJ_DIRECT",
+      "state": "OFFICIAL_SOURCE_SUPPORTED",
+      "strength": "MODERATE"
+    },
+    "source_urls": [
+      "https://www.eauclairewi.gov/government/our-divisions/inspections/applications"
+    ],
+    "sources": [
+      {
+        "publisher": "City of Eau Claire Evolve permitting / Inspection Services Division",
+        "snippet": "ons. Paper applications are not accepted. Permits, plan reviews, payment, permit searches, and inspection scheduling are handled through the City’s online permitting portal: Permit Application and Review https://evolvepublic.infovisionsoftware.com/eauclaire/. Commercial Building/HVAC Code Adoptions 2021 IBC, 2021 IECC, 2021 IMC, 2021 IFGC, 2021 IEBC, Adopted per SPS 361.05, Includes Wisconsin Amendments SPS 361–366. Commercial projects within the City of Eau Claire’s delegated review scopes must",
+        "title": "Official building department source",
+        "url": "https://www.eauclairewi.gov/government/our-divisions/inspections/applications"
+      }
+    ],
+    "summary": "Required permit package: Commercial Building Permit; Plumbing Permit.",
+    "warnings": [
+      "Permit decision preserved, but a non-local/generic filing URL was removed; use building department-specific source evidence for the application path.",
+      "Commercial scope detected; primary permit was repaired or forced away from residential/trade-only leakage. confirm the exact permit name and form title with the building department before filing.",
+      "Commercial scope may require companion reviews/permits not fully proven here: electrical, mechanical.",
+      "Filing path degraded: exact local online filing portal was not verified; permit decision preserved."
+    ]
+  },
+  "requested_model": "gpt-5.6-luna",
+  "requested_provider": "openai-codex",
+  "requested_runtime": "engine_luna",
+  "response_id": "resp_01b293265beed3a6016a676fdc96dc8194b1cf118c0b36c854",
+  "runtime": "openai-codex responses SSE + api.server real local finalize/customer path"
+}

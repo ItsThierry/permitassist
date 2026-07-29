@@ -1,0 +1,78 @@
+{
+  "observed_model": "x-ai/grok-4.5",
+  "observed_provider": "openrouter",
+  "path_proof": {
+    "adapter": "grok",
+    "engine_called": false,
+    "engine_result_supplied_to_model": false,
+    "model_call_count": 1
+  },
+  "provider": "openrouter",
+  "provider_response": {
+    "choices": [
+      {
+        "finish_reason": "stop",
+        "index": 0,
+        "logprobs": null,
+        "message": {
+          "content": "{\"permit_decision\":\"REQUIRED\",\"jurisdiction\":{\"jurisdiction_id\":\"us-nv-boulder_city\",\"name\":\"Boulder City\",\"state\":\"NV\",\"type\":\"city_or_local_authority\"},\"project_family\":\"commercial_tenant_improvement\",\"primary_permit_family\":\"BUILDING\",\"companion_permits\":[{\"family\":\"ELECTRICAL\",\"status\":\"CONDITIONAL\"},{\"family\":\"PLUMBING\",\"status\":\"CONDITIONAL\"},{\"family\":\"MECHANICAL\",\"status\":\"CONDITIONAL\"},{\"family\":\"FIRE_LIFE_SAFETY\",\"status\":\"CONDITIONAL\"},{\"family\":\"OCCUPANCY\",\"status\":\"VERIFY\"},{\"family\":\"PLANNING_ZONING\",\"status\":\"VERIFY\"}],\"filing\":{\"authority_id\":\"us-nv-boulder_city\",\"office\":\"Community Development Department\",\"destination_url\":\"https://www.bcnv.org/334/Development-Services\",\"url_role\":\"APPLICATION_START\"},\"source_support\":{\"state\":\"OFFICIAL_SOURCE_SUPPORTED\",\"strength\":\"MODERATE\",\"evidence\":[{\"url\":\"https://www.bcnv.org/771/Permit-Submittal-Checklists\",\"role\":\"REQUIREMENT_EVIDENCE\"},{\"url\":\"https://www.bcnv.org/334/Development-Services\",\"role\":\"APPLICATION_START\"}]},\"contradictions\":[]}",
+          "reasoning": "The user wants me to evaluate one permit lookup using ONLY the supplied official-source evidence packet and return exactly one JSON object conforming to MODEL_SCHEMA.\n",
+          "reasoning_details": [
+            {
+              "format": "xai-responses-v1",
+              "index": 0,
+              "summary": "The user wants me to evaluate one permit lookup using ONLY the supplied official-source evidence packet and return exactly one JSON object conforming to MODEL_SCHEMA.\n",
+              "type": "reasoning.summary"
+            },
+            {
+              "data": "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",
+              "format": "xai-responses-v1",
+              "id": "rs_eb7621eb-0bf8-91a7-95a1-2cb8d83a9577",
+              "index": 1,
+              "type": "reasoning.encrypted"
+            }
+          ],
+          "refusal": null,
+          "role": "assistant"
+        },
+        "native_finish_reason": "completed"
+      }
+    ],
+    "created": 1785167058,
+    "id": "gen-1785167058-qtautv79O4rEGmLOuAiA",
+    "model": "x-ai/grok-4.5",
+    "object": "chat.completion",
+    "provider": "xAI",
+    "service_tier": "default",
+    "system_fingerprint": null,
+    "usage": {
+      "completion_tokens": 1507,
+      "completion_tokens_details": {
+        "audio_tokens": 0,
+        "image_tokens": 0,
+        "reasoning_tokens": 1201
+      },
+      "cost": 0.0119164,
+      "cost_details": {
+        "upstream_inference_completions_cost": 0.009042,
+        "upstream_inference_cost": 0.0119164,
+        "upstream_inference_prompt_cost": 0.0028744
+      },
+      "is_byok": false,
+      "prompt_tokens": 1546,
+      "prompt_tokens_details": {
+        "audio_tokens": 0,
+        "cache_write_tokens": 0,
+        "cached_tokens": 128,
+        "video_tokens": 0
+      },
+      "total_tokens": 3053
+    }
+  },
+  "raw_text": "{\"permit_decision\":\"REQUIRED\",\"jurisdiction\":{\"jurisdiction_id\":\"us-nv-boulder_city\",\"name\":\"Boulder City\",\"state\":\"NV\",\"type\":\"city_or_local_authority\"},\"project_family\":\"commercial_tenant_improvement\",\"primary_permit_family\":\"BUILDING\",\"companion_permits\":[{\"family\":\"ELECTRICAL\",\"status\":\"CONDITIONAL\"},{\"family\":\"PLUMBING\",\"status\":\"CONDITIONAL\"},{\"family\":\"MECHANICAL\",\"status\":\"CONDITIONAL\"},{\"family\":\"FIRE_LIFE_SAFETY\",\"status\":\"CONDITIONAL\"},{\"family\":\"OCCUPANCY\",\"status\":\"VERIFY\"},{\"family\":\"PLANNING_ZONING\",\"status\":\"VERIFY\"}],\"filing\":{\"authority_id\":\"us-nv-boulder_city\",\"office\":\"Community Development Department\",\"destination_url\":\"https://www.bcnv.org/334/Development-Services\",\"url_role\":\"APPLICATION_START\"},\"source_support\":{\"state\":\"OFFICIAL_SOURCE_SUPPORTED\",\"strength\":\"MODERATE\",\"evidence\":[{\"url\":\"https://www.bcnv.org/771/Permit-Submittal-Checklists\",\"role\":\"REQUIREMENT_EVIDENCE\"},{\"url\":\"https://www.bcnv.org/334/Development-Services\",\"role\":\"APPLICATION_START\"}]},\"contradictions\":[]}",
+  "requested_model": "x-ai/grok-4.5",
+  "requested_provider": "openrouter",
+  "requested_runtime": "grok",
+  "response_id": "gen-1785167058-qtautv79O4rEGmLOuAiA",
+  "runtime": "OpenRouter chat/completions; upstream_provider=xAI"
+}

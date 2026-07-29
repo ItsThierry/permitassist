@@ -1,0 +1,78 @@
+{
+  "observed_model": "x-ai/grok-4.5",
+  "observed_provider": "openrouter",
+  "path_proof": {
+    "adapter": "grok",
+    "engine_called": false,
+    "engine_result_supplied_to_model": false,
+    "model_call_count": 1
+  },
+  "provider": "openrouter",
+  "provider_response": {
+    "choices": [
+      {
+        "finish_reason": "stop",
+        "index": 0,
+        "logprobs": null,
+        "message": {
+          "content": "{\"permit_decision\":\"REQUIRED\",\"jurisdiction\":{\"jurisdiction_id\":\"us-al-alabaster\",\"name\":\"Alabaster\",\"state\":\"AL\",\"type\":\"city_or_local_authority\"},\"project_family\":\"commercial_tenant_improvement\",\"primary_permit_family\":\"BUILDING\",\"companion_permits\":[{\"family\":\"ELECTRICAL\",\"status\":\"REQUIRED\"},{\"family\":\"PLUMBING\",\"status\":\"REQUIRED\"},{\"family\":\"MECHANICAL\",\"status\":\"REQUIRED\"},{\"family\":\"GAS\",\"status\":\"VERIFY\"},{\"family\":\"FIRE_LIFE_SAFETY\",\"status\":\"VERIFY\"},{\"family\":\"OCCUPANCY\",\"status\":\"REQUIRED\"},{\"family\":\"PLANNING_ZONING\",\"status\":\"VERIFY\"}],\"filing\":{\"authority_id\":\"us-al-alabaster\",\"office\":\"Building and Engineering Services\",\"destination_url\":\"https://alabaster.onlama.com/\",\"url_role\":\"APPLICATION_START\"},\"source_support\":{\"state\":\"OFFICIAL_SOURCE_SUPPORTED\",\"strength\":\"STRONG\",\"evidence\":[{\"url\":\"https://www.cityofalabaster.com/DocumentCenter/View/5686/Permitting-Procedure-Handbook-v22-PDF\",\"role\":\"REQUIREMENT_EVIDENCE\"},{\"url\":\"https://www.cityofalabaster.com/178/Building-and-Engineering-Services\",\"role\":\"INFORMATIONAL_OFFICE\"},{\"url\":\"https://alabaster.onlama.com/\",\"role\":\"APPLICATION_START\"}]},\"contradictions\":[]}",
+          "reasoning": "The user wants me to evaluate one permit lookup using ONLY the supplied official-source evidence packet and return exactly one JSON object conforming to MODEL_SCHEMA.\n",
+          "reasoning_details": [
+            {
+              "format": "xai-responses-v1",
+              "index": 0,
+              "summary": "The user wants me to evaluate one permit lookup using ONLY the supplied official-source evidence packet and return exactly one JSON object conforming to MODEL_SCHEMA.\n",
+              "type": "reasoning.summary"
+            },
+            {
+              "data": "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",
+              "format": "xai-responses-v1",
+              "id": "rs_5473eda2-031d-9fd0-ba97-52398e960ce1",
+              "index": 1,
+              "type": "reasoning.encrypted"
+            }
+          ],
+          "refusal": null,
+          "role": "assistant"
+        },
+        "native_finish_reason": "completed"
+      }
+    ],
+    "created": 1785164055,
+    "id": "gen-1785164055-8Tc184TtFfvpDSxPj8j3",
+    "model": "x-ai/grok-4.5",
+    "object": "chat.completion",
+    "provider": "xAI",
+    "service_tier": "default",
+    "system_fingerprint": null,
+    "usage": {
+      "completion_tokens": 1205,
+      "completion_tokens_details": {
+        "audio_tokens": 0,
+        "image_tokens": 0,
+        "reasoning_tokens": 854
+      },
+      "cost": 0.0099464,
+      "cost_details": {
+        "upstream_inference_completions_cost": 0.00723,
+        "upstream_inference_cost": 0.0099464,
+        "upstream_inference_prompt_cost": 0.0027164
+      },
+      "is_byok": false,
+      "prompt_tokens": 1467,
+      "prompt_tokens_details": {
+        "audio_tokens": 0,
+        "cache_write_tokens": 0,
+        "cached_tokens": 128,
+        "video_tokens": 0
+      },
+      "total_tokens": 2672
+    }
+  },
+  "raw_text": "{\"permit_decision\":\"REQUIRED\",\"jurisdiction\":{\"jurisdiction_id\":\"us-al-alabaster\",\"name\":\"Alabaster\",\"state\":\"AL\",\"type\":\"city_or_local_authority\"},\"project_family\":\"commercial_tenant_improvement\",\"primary_permit_family\":\"BUILDING\",\"companion_permits\":[{\"family\":\"ELECTRICAL\",\"status\":\"REQUIRED\"},{\"family\":\"PLUMBING\",\"status\":\"REQUIRED\"},{\"family\":\"MECHANICAL\",\"status\":\"REQUIRED\"},{\"family\":\"GAS\",\"status\":\"VERIFY\"},{\"family\":\"FIRE_LIFE_SAFETY\",\"status\":\"VERIFY\"},{\"family\":\"OCCUPANCY\",\"status\":\"REQUIRED\"},{\"family\":\"PLANNING_ZONING\",\"status\":\"VERIFY\"}],\"filing\":{\"authority_id\":\"us-al-alabaster\",\"office\":\"Building and Engineering Services\",\"destination_url\":\"https://alabaster.onlama.com/\",\"url_role\":\"APPLICATION_START\"},\"source_support\":{\"state\":\"OFFICIAL_SOURCE_SUPPORTED\",\"strength\":\"STRONG\",\"evidence\":[{\"url\":\"https://www.cityofalabaster.com/DocumentCenter/View/5686/Permitting-Procedure-Handbook-v22-PDF\",\"role\":\"REQUIREMENT_EVIDENCE\"},{\"url\":\"https://www.cityofalabaster.com/178/Building-and-Engineering-Services\",\"role\":\"INFORMATIONAL_OFFICE\"},{\"url\":\"https://alabaster.onlama.com/\",\"role\":\"APPLICATION_START\"}]},\"contradictions\":[]}",
+  "requested_model": "x-ai/grok-4.5",
+  "requested_provider": "openrouter",
+  "requested_runtime": "grok",
+  "response_id": "gen-1785164055-8Tc184TtFfvpDSxPj8j3",
+  "runtime": "OpenRouter chat/completions; upstream_provider=xAI"
+}

@@ -1,0 +1,78 @@
+{
+  "observed_model": "x-ai/grok-4.5",
+  "observed_provider": "openrouter",
+  "path_proof": {
+    "adapter": "grok",
+    "engine_called": false,
+    "engine_result_supplied_to_model": false,
+    "model_call_count": 1
+  },
+  "provider": "openrouter",
+  "provider_response": {
+    "choices": [
+      {
+        "finish_reason": "stop",
+        "index": 0,
+        "logprobs": null,
+        "message": {
+          "content": "{\"permit_decision\":\"CONDITIONAL\",\"jurisdiction\":{\"jurisdiction_id\":\"us-wa-shoreline\",\"name\":\"Shoreline\",\"state\":\"WA\",\"type\":\"city_or_local_authority\"},\"project_family\":\"residential_remodel\",\"primary_permit_family\":\"BUILDING\",\"companion_permits\":[{\"family\":\"ELECTRICAL\",\"status\":\"VERIFY\"},{\"family\":\"PLUMBING\",\"status\":\"CONDITIONAL\"},{\"family\":\"MECHANICAL\",\"status\":\"CONDITIONAL\"}],\"filing\":{\"authority_id\":\"us-wa-shoreline\",\"destination_url\":\"https://www.shorelinewa.gov/government/departments/planning-community-development/forms-application-checklists-development-information/residential-projects/interior-remodel\",\"office\":\"Shoreline Planning & Community Development\",\"url_role\":\"REQUIREMENT_EVIDENCE\"},\"source_support\":{\"state\":\"OFFICIAL_SOURCE_SUPPORTED\",\"strength\":\"STRONG\",\"evidence\":[{\"url\":\"https://www.shorelinewa.gov/government/departments/planning-community-development/forms-application-checklists-development-information/residential-projects/interior-remodel\",\"role\":\"REQUIREMENT_EVIDENCE\"}]},\"contradictions\":[]}",
+          "reasoning": "The user wants me to evaluate one permit lookup using ONLY the supplied official-source evidence packet and return exactly one JSON object conforming to MODEL_SCHEMA.\n",
+          "reasoning_details": [
+            {
+              "format": "xai-responses-v1",
+              "index": 0,
+              "summary": "The user wants me to evaluate one permit lookup using ONLY the supplied official-source evidence packet and return exactly one JSON object conforming to MODEL_SCHEMA.\n",
+              "type": "reasoning.summary"
+            },
+            {
+              "data": "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",
+              "format": "xai-responses-v1",
+              "id": "rs_5eea1df2-07ce-961e-8738-5c887b5023f3",
+              "index": 1,
+              "type": "reasoning.encrypted"
+            }
+          ],
+          "refusal": null,
+          "role": "assistant"
+        },
+        "native_finish_reason": "completed"
+      }
+    ],
+    "created": 1785168543,
+    "id": "gen-1785168543-1hmTVEZHCS9nEDn26LxV",
+    "model": "x-ai/grok-4.5",
+    "object": "chat.completion",
+    "provider": "xAI",
+    "service_tier": "default",
+    "system_fingerprint": null,
+    "usage": {
+      "completion_tokens": 883,
+      "completion_tokens_details": {
+        "audio_tokens": 0,
+        "image_tokens": 0,
+        "reasoning_tokens": 606
+      },
+      "cost": 0.0063392,
+      "cost_details": {
+        "upstream_inference_completions_cost": 0.005298,
+        "upstream_inference_cost": 0.0063392,
+        "upstream_inference_prompt_cost": 0.0010412
+      },
+      "is_byok": false,
+      "prompt_tokens": 1391,
+      "prompt_tokens_details": {
+        "audio_tokens": 0,
+        "cache_write_tokens": 0,
+        "cached_tokens": 1024,
+        "video_tokens": 0
+      },
+      "total_tokens": 2274
+    }
+  },
+  "raw_text": "{\"permit_decision\":\"CONDITIONAL\",\"jurisdiction\":{\"jurisdiction_id\":\"us-wa-shoreline\",\"name\":\"Shoreline\",\"state\":\"WA\",\"type\":\"city_or_local_authority\"},\"project_family\":\"residential_remodel\",\"primary_permit_family\":\"BUILDING\",\"companion_permits\":[{\"family\":\"ELECTRICAL\",\"status\":\"VERIFY\"},{\"family\":\"PLUMBING\",\"status\":\"CONDITIONAL\"},{\"family\":\"MECHANICAL\",\"status\":\"CONDITIONAL\"}],\"filing\":{\"authority_id\":\"us-wa-shoreline\",\"destination_url\":\"https://www.shorelinewa.gov/government/departments/planning-community-development/forms-application-checklists-development-information/residential-projects/interior-remodel\",\"office\":\"Shoreline Planning & Community Development\",\"url_role\":\"REQUIREMENT_EVIDENCE\"},\"source_support\":{\"state\":\"OFFICIAL_SOURCE_SUPPORTED\",\"strength\":\"STRONG\",\"evidence\":[{\"url\":\"https://www.shorelinewa.gov/government/departments/planning-community-development/forms-application-checklists-development-information/residential-projects/interior-remodel\",\"role\":\"REQUIREMENT_EVIDENCE\"}]},\"contradictions\":[]}",
+  "requested_model": "x-ai/grok-4.5",
+  "requested_provider": "openrouter",
+  "requested_runtime": "grok",
+  "response_id": "gen-1785168543-1hmTVEZHCS9nEDn26LxV",
+  "runtime": "OpenRouter chat/completions; upstream_provider=xAI"
+}

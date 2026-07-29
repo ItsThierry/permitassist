@@ -1,0 +1,20 @@
+{
+  "observed_model": "Gemini 3.6 Flash (High)",
+  "observed_provider": "google-antigravity-oauth",
+  "path_proof": {
+    "adapter": "gemini",
+    "capture_created_by_model": true,
+    "engine_called": false,
+    "engine_result_supplied_to_model": false,
+    "model_call_count": 1
+  },
+  "provider": "google-antigravity-oauth",
+  "provider_stderr": "",
+  "provider_stdout": "DONE\n",
+  "raw_text": "{\n  \"companion_permits\": [],\n  \"contradictions\": [],\n  \"filing\": {\n    \"authority_id\": \"us-sd-huron\",\n    \"destination_url\": \"https://www.huronsd.gov/165/Inspections-Planning\",\n    \"office\": \"City of Huron Inspections Department\",\n    \"url_role\": \"INFORMATIONAL_OFFICE\"\n  },\n  \"jurisdiction\": {\n    \"jurisdiction_id\": \"us-sd-huron\",\n    \"name\": \"City of Huron Inspections Department\",\n    \"state\": \"SD\",\n    \"type\": \"city_or_local_authority\"\n  },\n  \"permit_decision\": \"REQUIRED\",\n  \"primary_permit_family\": \"BUILDING\",\n  \"project_family\": \"reroof\",\n  \"source_support\": {\n    \"evidence\": [\n      {\n        \"role\": \"REQUIREMENT_EVIDENCE\",\n        \"url\": \"https://www.huronsd.gov/165/Inspections-Planning\"\n      }\n    ],\n    \"state\": \"OFFICIAL_SOURCE_SUPPORTED\",\n    \"strength\": \"STRONG\"\n  }\n}\n",
+  "requested_model": "Gemini 3.6 Flash (High)",
+  "requested_provider": "google-antigravity-oauth",
+  "requested_runtime": "gemini",
+  "response_id": null,
+  "runtime": "agy.exe 1.0.2 / language-server 1.1.7"
+}

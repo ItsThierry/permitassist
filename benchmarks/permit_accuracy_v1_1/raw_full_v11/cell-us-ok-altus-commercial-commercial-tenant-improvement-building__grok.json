@@ -1,0 +1,78 @@
+{
+  "observed_model": "x-ai/grok-4.5",
+  "observed_provider": "openrouter",
+  "path_proof": {
+    "adapter": "grok",
+    "engine_called": false,
+    "engine_result_supplied_to_model": false,
+    "model_call_count": 1
+  },
+  "provider": "openrouter",
+  "provider_response": {
+    "choices": [
+      {
+        "finish_reason": "stop",
+        "index": 0,
+        "logprobs": null,
+        "message": {
+          "content": "{\"permit_decision\":\"VERIFY\",\"jurisdiction\":{\"jurisdiction_id\":\"us-ok-altus\",\"name\":\"Altus\",\"state\":\"OK\",\"type\":\"city_or_local_authority\"},\"project_family\":\"commercial_tenant_improvement\",\"primary_permit_family\":\"BUILDING\",\"companion_permits\":[{\"family\":\"ELECTRICAL\",\"status\":\"VERIFY\"},{\"family\":\"PLUMBING\",\"status\":\"VERIFY\"},{\"family\":\"MECHANICAL\",\"status\":\"VERIFY\"},{\"family\":\"FIRE_LIFE_SAFETY\",\"status\":\"VERIFY\"},{\"family\":\"OCCUPANCY\",\"status\":\"VERIFY\"},{\"family\":\"PLANNING_ZONING\",\"status\":\"VERIFY\"}],\"filing\":{\"authority_id\":\"us-ok-altus\",\"destination_url\":\"https://www.altusok.gov/o/coa/page/planning-development\",\"office\":\"Altus Planning and Development Department\",\"url_role\":\"INFORMATIONAL_OFFICE\"},\"source_support\":{\"evidence\":[{\"url\":\"https://www.altusok.gov/o/coa/page/planning-development\",\"role\":\"INFORMATIONAL_OFFICE\"}],\"state\":\"OFFICIAL_SOURCE_SUPPORTED\",\"strength\":\"WEAK\"},\"contradictions\":[]}",
+          "reasoning": "The user wants me to evaluate one permit lookup using ONLY the supplied official-source evidence packet and return exactly one JSON object conforming to MODEL_SCHEMA.\n",
+          "reasoning_details": [
+            {
+              "format": "xai-responses-v1",
+              "index": 0,
+              "summary": "The user wants me to evaluate one permit lookup using ONLY the supplied official-source evidence packet and return exactly one JSON object conforming to MODEL_SCHEMA.\n",
+              "type": "reasoning.summary"
+            },
+            {
+              "data": "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",
+              "format": "xai-responses-v1",
+              "id": "rs_bc3964c4-e5a7-925b-b9c1-c48a145eae53",
+              "index": 1,
+              "type": "reasoning.encrypted"
+            }
+          ],
+          "refusal": null,
+          "role": "assistant"
+        },
+        "native_finish_reason": "completed"
+      }
+    ],
+    "created": 1785167299,
+    "id": "gen-1785167299-4PXQXkXFhk85SkTsuEiZ",
+    "model": "x-ai/grok-4.5",
+    "object": "chat.completion",
+    "provider": "xAI",
+    "service_tier": "default",
+    "system_fingerprint": null,
+    "usage": {
+      "completion_tokens": 1310,
+      "completion_tokens_details": {
+        "audio_tokens": 0,
+        "image_tokens": 0,
+        "reasoning_tokens": 1027
+      },
+      "cost": 0.0089332,
+      "cost_details": {
+        "upstream_inference_completions_cost": 0.00786,
+        "upstream_inference_cost": 0.0089332,
+        "upstream_inference_prompt_cost": 0.0010732
+      },
+      "is_byok": false,
+      "prompt_tokens": 1407,
+      "prompt_tokens_details": {
+        "audio_tokens": 0,
+        "cache_write_tokens": 0,
+        "cached_tokens": 1024,
+        "video_tokens": 0
+      },
+      "total_tokens": 2717
+    }
+  },
+  "raw_text": "{\"permit_decision\":\"VERIFY\",\"jurisdiction\":{\"jurisdiction_id\":\"us-ok-altus\",\"name\":\"Altus\",\"state\":\"OK\",\"type\":\"city_or_local_authority\"},\"project_family\":\"commercial_tenant_improvement\",\"primary_permit_family\":\"BUILDING\",\"companion_permits\":[{\"family\":\"ELECTRICAL\",\"status\":\"VERIFY\"},{\"family\":\"PLUMBING\",\"status\":\"VERIFY\"},{\"family\":\"MECHANICAL\",\"status\":\"VERIFY\"},{\"family\":\"FIRE_LIFE_SAFETY\",\"status\":\"VERIFY\"},{\"family\":\"OCCUPANCY\",\"status\":\"VERIFY\"},{\"family\":\"PLANNING_ZONING\",\"status\":\"VERIFY\"}],\"filing\":{\"authority_id\":\"us-ok-altus\",\"destination_url\":\"https://www.altusok.gov/o/coa/page/planning-development\",\"office\":\"Altus Planning and Development Department\",\"url_role\":\"INFORMATIONAL_OFFICE\"},\"source_support\":{\"evidence\":[{\"url\":\"https://www.altusok.gov/o/coa/page/planning-development\",\"role\":\"INFORMATIONAL_OFFICE\"}],\"state\":\"OFFICIAL_SOURCE_SUPPORTED\",\"strength\":\"WEAK\"},\"contradictions\":[]}",
+  "requested_model": "x-ai/grok-4.5",
+  "requested_provider": "openrouter",
+  "requested_runtime": "grok",
+  "response_id": "gen-1785167299-4PXQXkXFhk85SkTsuEiZ",
+  "runtime": "OpenRouter chat/completions; upstream_provider=xAI"
+}

@@ -1,0 +1,78 @@
+{
+  "observed_model": "x-ai/grok-4.5",
+  "observed_provider": "openrouter",
+  "path_proof": {
+    "adapter": "grok",
+    "engine_called": false,
+    "engine_result_supplied_to_model": false,
+    "model_call_count": 1
+  },
+  "provider": "openrouter",
+  "provider_response": {
+    "choices": [
+      {
+        "finish_reason": "stop",
+        "index": 0,
+        "logprobs": null,
+        "message": {
+          "content": "{\"permit_decision\":\"REQUIRED\",\"jurisdiction\":{\"jurisdiction_id\":\"us-in-anderson\",\"name\":\"Anderson\",\"state\":\"IN\",\"type\":\"city_or_local_authority\"},\"project_family\":\"commercial_tenant_improvement\",\"primary_permit_family\":\"BUILDING\",\"companion_permits\":[{\"family\":\"ELECTRICAL\",\"status\":\"REQUIRED\"},{\"family\":\"MECHANICAL\",\"status\":\"REQUIRED\"},{\"family\":\"PLUMBING\",\"status\":\"REQUIRED\"},{\"family\":\"FIRE_LIFE_SAFETY\",\"status\":\"VERIFY\"},{\"family\":\"OCCUPANCY\",\"status\":\"VERIFY\"},{\"family\":\"PLANNING_ZONING\",\"status\":\"VERIFY\"}],\"filing\":{\"authority_id\":\"us-in-anderson\",\"destination_url\":\"https://www.cityofanderson.com/292/Permit-Center\",\"office\":\"Permit Center\",\"url_role\":\"INFORMATIONAL_OFFICE\"},\"source_support\":{\"evidence\":[{\"url\":\"https://www.cityofanderson.com/292/Permit-Center\",\"role\":\"INFORMATIONAL_OFFICE\"},{\"url\":\"https://www.cityofanderson.com/292/Permit-Center\",\"role\":\"REQUIREMENT_EVIDENCE\"}],\"state\":\"OFFICIAL_SOURCE_SUPPORTED\",\"strength\":\"MODERATE\"},\"contradictions\":[]}",
+          "reasoning": "The user wants me to evaluate one permit lookup using ONLY the supplied official-source evidence packet and return exactly one JSON object conforming to MODEL_SCHEMA.\n",
+          "reasoning_details": [
+            {
+              "format": "xai-responses-v1",
+              "index": 0,
+              "summary": "The user wants me to evaluate one permit lookup using ONLY the supplied official-source evidence packet and return exactly one JSON object conforming to MODEL_SCHEMA.\n",
+              "type": "reasoning.summary"
+            },
+            {
+              "data": "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",
+              "format": "xai-responses-v1",
+              "id": "rs_88ec2fc8-f974-901a-8779-27df369f7893",
+              "index": 1,
+              "type": "reasoning.encrypted"
+            }
+          ],
+          "refusal": null,
+          "role": "assistant"
+        },
+        "native_finish_reason": "completed"
+      }
+    ],
+    "created": 1785165715,
+    "id": "gen-1785165715-n94OfkFvTx3OxxpOsqFW",
+    "model": "x-ai/grok-4.5",
+    "object": "chat.completion",
+    "provider": "xAI",
+    "service_tier": "default",
+    "system_fingerprint": null,
+    "usage": {
+      "completion_tokens": 1406,
+      "completion_tokens_details": {
+        "audio_tokens": 0,
+        "image_tokens": 0,
+        "reasoning_tokens": 1107
+      },
+      "cost": 0.0109504,
+      "cost_details": {
+        "upstream_inference_completions_cost": 0.008436,
+        "upstream_inference_cost": 0.0109504,
+        "upstream_inference_prompt_cost": 0.0025144
+      },
+      "is_byok": false,
+      "prompt_tokens": 1366,
+      "prompt_tokens_details": {
+        "audio_tokens": 0,
+        "cache_write_tokens": 0,
+        "cached_tokens": 128,
+        "video_tokens": 0
+      },
+      "total_tokens": 2772
+    }
+  },
+  "raw_text": "{\"permit_decision\":\"REQUIRED\",\"jurisdiction\":{\"jurisdiction_id\":\"us-in-anderson\",\"name\":\"Anderson\",\"state\":\"IN\",\"type\":\"city_or_local_authority\"},\"project_family\":\"commercial_tenant_improvement\",\"primary_permit_family\":\"BUILDING\",\"companion_permits\":[{\"family\":\"ELECTRICAL\",\"status\":\"REQUIRED\"},{\"family\":\"MECHANICAL\",\"status\":\"REQUIRED\"},{\"family\":\"PLUMBING\",\"status\":\"REQUIRED\"},{\"family\":\"FIRE_LIFE_SAFETY\",\"status\":\"VERIFY\"},{\"family\":\"OCCUPANCY\",\"status\":\"VERIFY\"},{\"family\":\"PLANNING_ZONING\",\"status\":\"VERIFY\"}],\"filing\":{\"authority_id\":\"us-in-anderson\",\"destination_url\":\"https://www.cityofanderson.com/292/Permit-Center\",\"office\":\"Permit Center\",\"url_role\":\"INFORMATIONAL_OFFICE\"},\"source_support\":{\"evidence\":[{\"url\":\"https://www.cityofanderson.com/292/Permit-Center\",\"role\":\"INFORMATIONAL_OFFICE\"},{\"url\":\"https://www.cityofanderson.com/292/Permit-Center\",\"role\":\"REQUIREMENT_EVIDENCE\"}],\"state\":\"OFFICIAL_SOURCE_SUPPORTED\",\"strength\":\"MODERATE\"},\"contradictions\":[]}",
+  "requested_model": "x-ai/grok-4.5",
+  "requested_provider": "openrouter",
+  "requested_runtime": "grok",
+  "response_id": "gen-1785165715-n94OfkFvTx3OxxpOsqFW",
+  "runtime": "OpenRouter chat/completions; upstream_provider=xAI"
+}

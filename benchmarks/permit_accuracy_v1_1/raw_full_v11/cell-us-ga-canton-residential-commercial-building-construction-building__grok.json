@@ -1,0 +1,78 @@
+{
+  "observed_model": "x-ai/grok-4.5",
+  "observed_provider": "openrouter",
+  "path_proof": {
+    "adapter": "grok",
+    "engine_called": false,
+    "engine_result_supplied_to_model": false,
+    "model_call_count": 1
+  },
+  "provider": "openrouter",
+  "provider_response": {
+    "choices": [
+      {
+        "finish_reason": "stop",
+        "index": 0,
+        "logprobs": null,
+        "message": {
+          "content": "{\"permit_decision\":\"VERIFY\",\"jurisdiction\":{\"jurisdiction_id\":\"us-ga-canton\",\"name\":\"Canton\",\"state\":\"GA\",\"type\":\"city_or_local_authority\"},\"project_family\":\"residential_remodel\",\"primary_permit_family\":\"BUILDING\",\"companion_permits\":[{\"family\":\"ELECTRICAL\",\"status\":\"VERIFY\"},{\"family\":\"PLUMBING\",\"status\":\"VERIFY\"},{\"family\":\"MECHANICAL\",\"status\":\"VERIFY\"},{\"family\":\"BUILDING\",\"status\":\"VERIFY\"}],\"filing\":{\"authority_id\":\"us-ga-canton\",\"destination_url\":\"https://www.cantonga.gov/government/departments/building-safety-services\",\"office\":\"Building & Safety Services Department\",\"url_role\":\"INFORMATIONAL_OFFICE\"},\"source_support\":{\"state\":\"OFFICIAL_SOURCE_SUPPORTED\",\"strength\":\"MODERATE\",\"evidence\":[{\"url\":\"https://www.cantonga.gov/government/departments/building-safety-services\",\"role\":\"INFORMATIONAL_OFFICE\"},{\"url\":\"https://www.cantonga.gov/government/departments/building-safety-services\",\"role\":\"REQUIREMENT_EVIDENCE\"}]},\"contradictions\":[]}",
+          "reasoning": "The user wants me to return exactly one JSON object conforming to MODEL_SCHEMA based on the evidence packet. No markdown fences, commentary, etc. Output JSON only.\n{\n  \"companion_permits\": [\n    {\n      \"family\": \"BUILDING\",\n      \"status\": \"REQUIRED\"\n    },\n    {\n      \"family\": \"ELECTRICAL\",\n      \"status\": \"REQUIRED\"\n    },\n    {\n      \"family\": \"PLUMBING\",\n      \"status\": \" REQUIRED\"\n    },\n    {\n      \"family\": \"MECHANICAL\",\n      \"status\": \"REQUIRED\"\n    }\n  ],\n  \"contradictions\": [],\n  \"filing\": {\n    \"authority_id\": null,\n    \"destination_url\": \"https://www.cantonga.",
+          "reasoning_details": [
+            {
+              "format": "xai-responses-v1",
+              "index": 0,
+              "summary": "The user wants me to return exactly one JSON object conforming to MODEL_SCHEMA based on the evidence packet. No markdown fences, commentary, etc. Output JSON only.\n{\n  \"companion_permits\": [\n    {\n      \"family\": \"BUILDING\",\n      \"status\": \"REQUIRED\"\n    },\n    {\n      \"family\": \"ELECTRICAL\",\n      \"status\": \"REQUIRED\"\n    },\n    {\n      \"family\": \"PLUMBING\",\n      \"status\": \" REQUIRED\"\n    },\n    {\n      \"family\": \"MECHANICAL\",\n      \"status\": \"REQUIRED\"\n    }\n  ],\n  \"contradictions\": [],\n  \"filing\": {\n    \"authority_id\": null,\n    \"destination_url\": \"https://www.cantonga.",
+              "type": "reasoning.summary"
+            },
+            {
+              "data": "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",
+              "format": "xai-responses-v1",
+              "id": "rs_9475af64-2983-9f28-88d8-aae4e65a24c6",
+              "index": 1,
+              "type": "reasoning.encrypted"
+            }
+          ],
+          "refusal": null,
+          "role": "assistant"
+        },
+        "native_finish_reason": "completed"
+      }
+    ],
+    "created": 1785165334,
+    "id": "gen-1785165334-i5xqFT1J9vGo39AsFALn",
+    "model": "x-ai/grok-4.5",
+    "object": "chat.completion",
+    "provider": "xAI",
+    "service_tier": "default",
+    "system_fingerprint": null,
+    "usage": {
+      "completion_tokens": 1258,
+      "completion_tokens_details": {
+        "audio_tokens": 0,
+        "image_tokens": 0,
+        "reasoning_tokens": 978
+      },
+      "cost": 0.0100464,
+      "cost_details": {
+        "upstream_inference_completions_cost": 0.007548,
+        "upstream_inference_cost": 0.0100464,
+        "upstream_inference_prompt_cost": 0.0024984
+      },
+      "is_byok": false,
+      "prompt_tokens": 1358,
+      "prompt_tokens_details": {
+        "audio_tokens": 0,
+        "cache_write_tokens": 0,
+        "cached_tokens": 128,
+        "video_tokens": 0
+      },
+      "total_tokens": 2616
+    }
+  },
+  "raw_text": "{\"permit_decision\":\"VERIFY\",\"jurisdiction\":{\"jurisdiction_id\":\"us-ga-canton\",\"name\":\"Canton\",\"state\":\"GA\",\"type\":\"city_or_local_authority\"},\"project_family\":\"residential_remodel\",\"primary_permit_family\":\"BUILDING\",\"companion_permits\":[{\"family\":\"ELECTRICAL\",\"status\":\"VERIFY\"},{\"family\":\"PLUMBING\",\"status\":\"VERIFY\"},{\"family\":\"MECHANICAL\",\"status\":\"VERIFY\"},{\"family\":\"BUILDING\",\"status\":\"VERIFY\"}],\"filing\":{\"authority_id\":\"us-ga-canton\",\"destination_url\":\"https://www.cantonga.gov/government/departments/building-safety-services\",\"office\":\"Building & Safety Services Department\",\"url_role\":\"INFORMATIONAL_OFFICE\"},\"source_support\":{\"state\":\"OFFICIAL_SOURCE_SUPPORTED\",\"strength\":\"MODERATE\",\"evidence\":[{\"url\":\"https://www.cantonga.gov/government/departments/building-safety-services\",\"role\":\"INFORMATIONAL_OFFICE\"},{\"url\":\"https://www.cantonga.gov/government/departments/building-safety-services\",\"role\":\"REQUIREMENT_EVIDENCE\"}]},\"contradictions\":[]}",
+  "requested_model": "x-ai/grok-4.5",
+  "requested_provider": "openrouter",
+  "requested_runtime": "grok",
+  "response_id": "gen-1785165334-i5xqFT1J9vGo39AsFALn",
+  "runtime": "OpenRouter chat/completions; upstream_provider=xAI"
+}

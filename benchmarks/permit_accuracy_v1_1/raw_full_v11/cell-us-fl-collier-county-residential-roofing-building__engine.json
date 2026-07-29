@@ -1,0 +1,152 @@
+{
+  "observed_model": "NONE",
+  "observed_provider": "permitassist-local-engine",
+  "path_proof": {
+    "adapter": "engine",
+    "authority_recovery": null,
+    "decision_cell_reference": null,
+    "engine_called": true,
+    "engine_result_supplied_to_model": false,
+    "engine_stdout": "[url_check] Dead URL detected: https://www.collier.gov/files/assets/county/v/1/building-plan-review/documents/forms/prrf-roo.pdf\n",
+    "model_call_count": 0
+  },
+  "provider": "permitassist-local-engine",
+  "raw_response": {
+    "apply_path": {
+      "channel": "online_portal",
+      "documents_to_prepare": [
+        "scope of work",
+        "plans/drawings if required",
+        "contractor license",
+        "valuation",
+        "owner authorization"
+      ],
+      "office_name": "Collier County Building Plan Review and Inspection",
+      "permit_category": "Building",
+      "permit_type": "Building Permit",
+      "platform": "PDF / paper form",
+      "portal_url": "https://www.collier.gov/files/assets/county/v/1/building-plan-review/documents/forms/prrf-roo.pdf",
+      "primary_filing_source_tier": "local_ahj",
+      "primary_requirement_source_tier": "local_ahj",
+      "state": "RESOLVED_PORTAL",
+      "steps": [
+        "Open the listed permit portal or contact the permit office",
+        "Select the closest category to: Building Permit",
+        "Confirm exact portal subcategories before final submission"
+      ],
+      "support_level": "needs verification",
+      "verification_note": "Confirm the exact portal category with the listed permit office before filing"
+    },
+    "apply_url": "https://www.collier.gov/files/assets/county/v/1/building-plan-review/documents/forms/prrf-roo.pdf",
+    "apply_url_known": true,
+    "applying_office": "Collier County Building Plan Review and Inspection",
+    "confidence": "high",
+    "confidence_reason": "Official building department official-source permit decision for this exact jurisdiction and project type.",
+    "customer_first_screen_summary": {
+      "ahj_department": "Collier County Building Plan Review and Inspection",
+      "decision": "REQUIRED",
+      "kind_category": "Building",
+      "next_action": "File the required permit categories with Collier County Building Plan Review and Inspection: Building Permit. Confirm exact portal subcategories before final submission.",
+      "source_cue": "Official source: Official building department source"
+    },
+    "customer_headline": "Permit required: Building Permit.",
+    "customer_next_step": "File the required permit categories with Collier County Building Plan Review and Inspection: Building Permit. Confirm exact portal subcategories before final submission.",
+    "customer_result_summary": {
+      "ahj_department": "Collier County Building Plan Review and Inspection",
+      "fee_cost_caveat": "Fees depend on valuation, trade scope, plan-review fees, and the current local fee schedule; verify before quoting.",
+      "freshness_label": "Checked 2026-07-27",
+      "jurisdiction": "Collier County, FL",
+      "next_step": "File the required permit categories with Collier County Building Plan Review and Inspection: Building Permit. Confirm exact portal subcategories before final submission.",
+      "permit_decision": "REQUIRED",
+      "permit_kind": "Building",
+      "permit_name": "Building Permit",
+      "source_cue": "Official source: Official building department source"
+    },
+    "degraded_sources": false,
+    "job_summary": "Permit required: Building Permit.",
+    "local_form_known": true,
+    "online_application_url": "https://www.collier.gov/files/assets/county/v/1/building-plan-review/documents/forms/prrf-roo.pdf",
+    "permit_decision": "REQUIRED",
+    "permit_kind": "Building",
+    "permit_name": "Building Permit",
+    "permit_required": true,
+    "permit_type": "Building Permit",
+    "permit_verdict": "YES",
+    "permits_required": [
+      {
+        "approval_type": "Building Permit",
+        "decision": "REQUIRED",
+        "display_family": "Building",
+        "family": "building",
+        "filing_family": "building",
+        "kind": "Building",
+        "permit_kind": "building",
+        "permit_name": "Building Permit",
+        "permit_type": "Building Permit",
+        "portal_selection": "Building Permit",
+        "required": true,
+        "segment": "residential",
+        "status": "REQUIRED"
+      }
+    ],
+    "permits_required_logic": [
+      {
+        "filing_family": "building",
+        "included_because": "Official permit rule: Required because the described scope triggers Building review.",
+        "permit_type": "Building Permit",
+        "scope_trigger": "building_scope",
+        "segment": "residential"
+      }
+    ],
+    "required_permit_families": [
+      "Building"
+    ],
+    "required_permit_names": [
+      "Building Permit"
+    ],
+    "required_permit_segments": [
+      "residential"
+    ],
+    "required_permit_summary": "Permit required: Building Permit.",
+    "source_confidence": "AHJ_DIRECT",
+    "source_support": {
+      "apply_url_known": true,
+      "apply_url_source_confidence": "AHJ_VERIFIED",
+      "confidence_tier": "AHJ_DIRECT",
+      "context_source_count": 0,
+      "decision_mutation_allowed": false,
+      "degraded_sources": false,
+      "display_source_count": 1,
+      "exact_form_known": true,
+      "filing_path_state": "RESOLVED_PORTAL",
+      "filing_source_count": 1,
+      "has_official_source": true,
+      "has_source_backed_evidence": true,
+      "local_decision_evidence_urls": [
+        "https://www.collier.gov/files/assets/county/v/1/building-plan-review/documents/forms/prrf-roo.pdf"
+      ],
+      "local_form_known": true,
+      "primary_filing_source_tier": "local_ahj",
+      "primary_requirement_source_tier": "local_ahj",
+      "requirement_source_count": 1,
+      "source_confidence": "AHJ_DIRECT"
+    },
+    "source_urls": [
+      "https://www.collier.gov/files/assets/county/v/1/building-plan-review/documents/forms/prrf-roo.pdf"
+    ],
+    "sources": [
+      {
+        "publisher": "Collier County Building Plan Review and Inspection",
+        "snippet": "APPLICATION REQUIREMENTS – Roof PRRF GMCD Public Portal 1&2 Family, Multi-Family, and Commercial – Roof Replacement, Repair, or Recover Submittal Requirements The submittal items below must have documents submitted for review as required by the scope of work. For reroofing permits with existing photovoltaic panels, see Bulletin #4: Solar Photovoltaic Inspection Process. For solar roof installations an electrical subcontractor will be required. • Index Sheet: List of Florida Product Approvals or",
+        "title": "Official building department source",
+        "url": "https://www.collier.gov/files/assets/county/v/1/building-plan-review/documents/forms/prrf-roo.pdf"
+      }
+    ],
+    "summary": "Permit required: Building Permit."
+  },
+  "requested_model": "NONE",
+  "requested_provider": "permitassist-local-engine",
+  "requested_runtime": "engine",
+  "response_id": null,
+  "runtime": "api.server Decision Cell + finalize + customer egress"
+}

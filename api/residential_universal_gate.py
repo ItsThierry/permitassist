@@ -231,21 +231,33 @@ def _filter_water_heater_sources(result: dict[str, Any], ledger: list[dict[str, 
 
 def _family_for_row(row: dict[str, Any]) -> str:
     value = _norm(" ".join(str(row.get(k) or "") for k in ("filing_family", "permit_type", "approval_type", "portal_selection", "title", "name")))
-    if "fire" in value:
+    value_tokens = tuple(re.findall(r"[a-z0-9]+", value))
+
+    def has(*phrases: str) -> bool:
+        for phrase in phrases:
+            phrase_tokens = tuple(re.findall(r"[a-z0-9]+", phrase.lower()))
+            if phrase_tokens and len(phrase_tokens) <= len(value_tokens) and any(
+                value_tokens[index : index + len(phrase_tokens)] == phrase_tokens
+                for index in range(len(value_tokens) - len(phrase_tokens) + 1)
+            ):
+                return True
+        return False
+
+    if has("fire"):
         return "fire"
-    if "certificate of occupancy" in value or re.search(r"\bco\b", value):
+    if has("certificate of occupancy") or re.search(r"\bco\b", value):
         return "co_change"
-    if "planning" in value or "zoning" in value or "setback" in value:
+    if has("planning", "zoning", "setback"):
         return "planning"
-    if "adu" in value or "accessory dwelling" in value:
+    if has("adu", "accessory dwelling"):
         return "building_adu"
-    if "electrical" in value or "electric" in value:
+    if has("electrical", "electric"):
         return "electrical"
-    if "plumbing" in value or "water heater" in value:
+    if has("plumbing", "water heater"):
         return "plumbing"
-    if "mechanical" in value or "hvac" in value or "bath fan" in value or "ventilation" in value:
+    if has("mechanical", "hvac", "bath fan", "ventilation"):
         return "mechanical"
-    if "building" in value or "shed" in value or "basement" in value:
+    if has("building", "shed", "basement"):
         return "building"
     return str(row.get("filing_family") or row.get("permit_type") or "").lower()
 

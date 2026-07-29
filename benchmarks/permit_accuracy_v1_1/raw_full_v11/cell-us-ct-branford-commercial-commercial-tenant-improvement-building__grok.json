@@ -1,0 +1,78 @@
+{
+  "observed_model": "x-ai/grok-4.5",
+  "observed_provider": "openrouter",
+  "path_proof": {
+    "adapter": "grok",
+    "engine_called": false,
+    "engine_result_supplied_to_model": false,
+    "model_call_count": 1
+  },
+  "provider": "openrouter",
+  "provider_response": {
+    "choices": [
+      {
+        "finish_reason": "stop",
+        "index": 0,
+        "logprobs": null,
+        "message": {
+          "content": "{\"permit_decision\":\"REQUIRED\",\"jurisdiction\":{\"jurisdiction_id\":\"us-ct-branford\",\"name\":\"Branford\",\"state\":\"CT\",\"type\":\"city_or_local_authority\"},\"project_family\":\"commercial_tenant_improvement\",\"primary_permit_family\":\"BUILDING\",\"companion_permits\":[{\"family\":\"ELECTRICAL\",\"status\":\"REQUIRED\"},{\"family\":\"PLUMBING\",\"status\":\"REQUIRED\"},{\"family\":\"MECHANICAL\",\"status\":\"REQUIRED\"},{\"family\":\"GAS\",\"status\":\"REQUIRED\"},{\"family\":\"OCCUPANCY\",\"status\":\"REQUIRED\"},{\"family\":\"FIRE_LIFE_SAFETY\",\"status\":\"VERIFY\"},{\"family\":\"PLANNING_ZONING\",\"status\":\"VERIFY\"}],\"filing\":{\"authority_id\":\"us-ct-branford\",\"office\":\"Building Department\",\"destination_url\":\"https://www.branford-ct.gov/200/Building-Department\",\"url_role\":\"INFORMATIONAL_OFFICE\"},\"source_support\":{\"state\":\"OFFICIAL_SOURCE_SUPPORTED\",\"strength\":\"STRONG\",\"evidence\":[{\"url\":\"https://www.branford-ct.gov/200/Building-Department\",\"role\":\"REQUIREMENT_EVIDENCE\"}]},\"contradictions\":[]}",
+          "reasoning": "The user wants me to evaluate one permit lookup using ONLY the supplied official-source evidence packet and return exactly one JSON object conforming to MODEL_SCHEMA.\n",
+          "reasoning_details": [
+            {
+              "format": "xai-responses-v1",
+              "index": 0,
+              "summary": "The user wants me to evaluate one permit lookup using ONLY the supplied official-source evidence packet and return exactly one JSON object conforming to MODEL_SCHEMA.\n",
+              "type": "reasoning.summary"
+            },
+            {
+              "data": "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",
+              "format": "xai-responses-v1",
+              "id": "rs_b455ee98-e2a7-9469-a94b-7223121a6eb3",
+              "index": 1,
+              "type": "reasoning.encrypted"
+            }
+          ],
+          "refusal": null,
+          "role": "assistant"
+        },
+        "native_finish_reason": "completed"
+      }
+    ],
+    "created": 1785164604,
+    "id": "gen-1785164604-gitTDjksT7SiKd7KFKH3",
+    "model": "x-ai/grok-4.5",
+    "object": "chat.completion",
+    "provider": "xAI",
+    "service_tier": "default",
+    "system_fingerprint": null,
+    "usage": {
+      "completion_tokens": 1303,
+      "completion_tokens_details": {
+        "audio_tokens": 0,
+        "image_tokens": 0,
+        "reasoning_tokens": 1018
+      },
+      "cost": 0.0103584,
+      "cost_details": {
+        "upstream_inference_completions_cost": 0.007818,
+        "upstream_inference_cost": 0.0103584,
+        "upstream_inference_prompt_cost": 0.0025404
+      },
+      "is_byok": false,
+      "prompt_tokens": 1379,
+      "prompt_tokens_details": {
+        "audio_tokens": 0,
+        "cache_write_tokens": 0,
+        "cached_tokens": 128,
+        "video_tokens": 0
+      },
+      "total_tokens": 2682
+    }
+  },
+  "raw_text": "{\"permit_decision\":\"REQUIRED\",\"jurisdiction\":{\"jurisdiction_id\":\"us-ct-branford\",\"name\":\"Branford\",\"state\":\"CT\",\"type\":\"city_or_local_authority\"},\"project_family\":\"commercial_tenant_improvement\",\"primary_permit_family\":\"BUILDING\",\"companion_permits\":[{\"family\":\"ELECTRICAL\",\"status\":\"REQUIRED\"},{\"family\":\"PLUMBING\",\"status\":\"REQUIRED\"},{\"family\":\"MECHANICAL\",\"status\":\"REQUIRED\"},{\"family\":\"GAS\",\"status\":\"REQUIRED\"},{\"family\":\"OCCUPANCY\",\"status\":\"REQUIRED\"},{\"family\":\"FIRE_LIFE_SAFETY\",\"status\":\"VERIFY\"},{\"family\":\"PLANNING_ZONING\",\"status\":\"VERIFY\"}],\"filing\":{\"authority_id\":\"us-ct-branford\",\"office\":\"Building Department\",\"destination_url\":\"https://www.branford-ct.gov/200/Building-Department\",\"url_role\":\"INFORMATIONAL_OFFICE\"},\"source_support\":{\"state\":\"OFFICIAL_SOURCE_SUPPORTED\",\"strength\":\"STRONG\",\"evidence\":[{\"url\":\"https://www.branford-ct.gov/200/Building-Department\",\"role\":\"REQUIREMENT_EVIDENCE\"}]},\"contradictions\":[]}",
+  "requested_model": "x-ai/grok-4.5",
+  "requested_provider": "openrouter",
+  "requested_runtime": "grok",
+  "response_id": "gen-1785164604-gitTDjksT7SiKd7KFKH3",
+  "runtime": "OpenRouter chat/completions; upstream_provider=xAI"
+}

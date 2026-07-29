@@ -1,0 +1,356 @@
+{
+  "observed_model": "gpt-5.6-luna",
+  "observed_provider": "openai-codex",
+  "path_proof": {
+    "adapter": "engine_luna",
+    "authority_recovery": null,
+    "decision_cell_reference": null,
+    "engine_called": true,
+    "engine_result_supplied_to_model": false,
+    "engine_stdout": "[url_check] Dead URL detected: https://www.mesaaz.gov/Business-Development/Development-Services/Building-Permit-Plan-Review/Commercial-Construction\n",
+    "local_merge_customer_path_called": true,
+    "model_call_count": 1
+  },
+  "provider": "openai-codex",
+  "provider_terminal_event": {
+    "response": {
+      "background": false,
+      "completed_at": 1785164476,
+      "created_at": 1785164463,
+      "error": null,
+      "frequency_penalty": 0.0,
+      "id": "resp_04ed0d00cec0059c016a6772afb56c819589c6409b2896a33a",
+      "incomplete_details": null,
+      "instructions": "Follow the user request exactly. Do not call tools.",
+      "max_output_tokens": null,
+      "max_tool_calls": null,
+      "metadata": {},
+      "model": "gpt-5.6-luna",
+      "moderation": null,
+      "object": "response",
+      "output": [],
+      "parallel_tool_calls": true,
+      "presence_penalty": 0.0,
+      "previous_response_id": null,
+      "prompt_cache_key": "fd0f1571-a900-4b24-b937-83567ff70ab3",
+      "prompt_cache_retention": "24h",
+      "reasoning": {
+        "context": "all_turns",
+        "effort": "medium",
+        "mode": "standard",
+        "summary": null
+      },
+      "safety_identifier": "user-FQ7sI0yp0Qqn6wWdqzy9mZic",
+      "service_tier": "default",
+      "status": "completed",
+      "store": false,
+      "temperature": 1.0,
+      "text": {
+        "format": {
+          "type": "text"
+        },
+        "verbosity": "medium"
+      },
+      "tool_choice": "auto",
+      "tool_usage": {
+        "image_gen": {
+          "input_tokens": 0,
+          "input_tokens_details": {
+            "image_tokens": 0,
+            "text_tokens": 0
+          },
+          "output_tokens": 0,
+          "output_tokens_details": {
+            "image_tokens": 0,
+            "text_tokens": 0
+          },
+          "total_tokens": 0
+        },
+        "web_search": {
+          "num_requests": 0
+        }
+      },
+      "tools": [],
+      "top_logprobs": 0,
+      "top_p": 0.98,
+      "truncation": "disabled",
+      "usage": {
+        "input_tokens": 1168,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 0
+        },
+        "output_tokens": 702,
+        "output_tokens_details": {
+          "reasoning_tokens": 419
+        },
+        "total_tokens": 1870
+      },
+      "user": null
+    },
+    "sequence_number": 286,
+    "type": "response.completed"
+  },
+  "raw_model_text": "{\"permit_decision\":\"VERIFY\",\"jurisdiction\":{\"jurisdiction_id\":\"us-az-mesa\",\"name\":\"Mesa\",\"state\":\"AZ\",\"type\":\"city_or_local_authority\"},\"project_family\":\"residential_remodel\",\"primary_permit_family\":\"VERIFY\",\"companion_permits\":[{\"family\":\"BUILDING\",\"status\":\"VERIFY\"},{\"family\":\"ELECTRICAL\",\"status\":\"VERIFY\"},{\"family\":\"PLUMBING\",\"status\":\"VERIFY\"},{\"family\":\"MECHANICAL\",\"status\":\"VERIFY\"},{\"family\":\"OTHER\",\"status\":\"VERIFY\"}],\"filing\":{\"authority_id\":\"us-az-mesa\",\"office\":\"Mesa Development Services\",\"destination_url\":\"https://www.mesaaz.gov/Business-Development/Development-Services/Building-Permit-Plan-Review/Commercial-Construction\",\"url_role\":\"VERIFY\"},\"source_support\":{\"state\":\"VERIFY\",\"strength\":\"VERIFY\",\"evidence\":[{\"url\":\"https://www.mesaaz.gov/Business-Development/Development-Services/Building-Permit-Plan-Review/Commercial-Construction\",\"role\":\"VERIFY\"}]},\"contradictions\":[\"The supplied official-source URL is for Commercial Construction, while its excerpt refers to applying for a Residential Construction Permit; applicability to this residential interior remodel is therefore unverified.\",\"The packet mentions possible wall, electrical, plumbing, mechanical, and limited demolition work but does not establish which permits are required.\"]}",
+  "raw_response": {
+    "apply_path": {
+      "channel": "contact_ahj",
+      "documents_to_prepare": [
+        "scope of work",
+        "plans/drawings if required",
+        "contractor license",
+        "valuation",
+        "owner authorization"
+      ],
+      "office_name": "City of Mesa Development Services",
+      "permit_category": "Permit package",
+      "permit_type": "Required permit package — Residential Construction Permit",
+      "primary_filing_source_tier": "none",
+      "primary_requirement_source_tier": "none",
+      "state": "HONEST_FALLBACK",
+      "steps": [
+        "Open the listed permit portal or contact the permit office",
+        "Select the closest category to: Required permit package — Residential Construction Permit",
+        "Confirm exact portal subcategories before final submission"
+      ],
+      "support_level": "not available",
+      "verification_note": "Confirm the exact portal category with the listed permit office before filing"
+    },
+    "apply_url": "https://www.mesaaz.gov/Business-Development/Development-Services/Building-Permit-Plan-Review/Commercial-Construction",
+    "apply_url_known": false,
+    "applying_office": "City of Mesa Development Services",
+    "customer_first_screen_summary": {
+      "ahj_department": "City of Mesa Development Services",
+      "decision": "REQUIRED",
+      "kind_category": "Building",
+      "next_action": "File the required permit categories with City of Mesa Development Services: Residential Construction Permit, Plumbing Permit — Residential Remodel / Addition, Mechanical Permit — Residential Remodel / Addition, Electrical Permit — Residential Remodel / Addition. Confirm exact portal subcategories before final submission.",
+      "source_cue": "Official sources attached for 4 required permit categories."
+    },
+    "customer_headline": "Permit required: Required permit package — Residential Construction Permit.",
+    "customer_next_step": "File the required permit categories with City of Mesa Development Services: Residential Construction Permit, Plumbing Permit — Residential Remodel / Addition, Mechanical Permit — Residential Remodel / Addition, Electrical Permit — Residential Remodel / Addition. Confirm exact portal subcategories before final submission.",
+    "customer_result_summary": {
+      "ahj_department": "City of Mesa Development Services",
+      "fee_cost_caveat": "Fees depend on valuation, trade scope, plan-review fees, and the current local fee schedule; verify before quoting.",
+      "freshness_label": "Checked 2026-07-27",
+      "jurisdiction": "Mesa, AZ",
+      "next_step": "File the required permit categories with City of Mesa Development Services: Residential Construction Permit, Plumbing Permit — Residential Remodel / Addition, Mechanical Permit — Residential Remodel / Addition, Electrical Permit — Residential Remodel / Addition. Confirm exact portal subcategories before final submission.",
+      "permit_decision": "REQUIRED",
+      "permit_kind": "Building",
+      "permit_name": "Required permit package — Residential Construction Permit",
+      "source_cue": "Official sources attached for 4 required permit categories."
+    },
+    "degraded_sources": false,
+    "job_summary": "Required permit package: Residential Construction Permit; Plumbing Permit — Residential Remodel / Addition; Mechanical Permit — Residential Remodel / Addition; Electrical Permit — Residential Remodel / Addition.",
+    "local_form_known": true,
+    "online_application_url": null,
+    "permit_decision": "REQUIRED",
+    "permit_kind": "Building",
+    "permit_name": "Required permit package — Residential Construction Permit",
+    "permit_required": true,
+    "permit_type": "Required permit package — Residential Construction Permit",
+    "permit_verdict": "YES",
+    "permits_required": [
+      {
+        "approval_type": "Residential Construction Permit",
+        "decision": "REQUIRED",
+        "display_family": "Building",
+        "family": "building",
+        "filing_family": "building",
+        "kind": "Building",
+        "permit_kind": "building",
+        "permit_name": "Residential Construction Permit",
+        "permit_type": "Residential Construction Permit",
+        "portal_selection": "Residential Construction Permit",
+        "required": true,
+        "segment": "residential",
+        "status": "REQUIRED"
+      },
+      {
+        "ahj_name": "Mesa permit office",
+        "application_authority_name": "Mesa permit office",
+        "approval_type": "Plumbing Permit",
+        "decision": "REQUIRED",
+        "display_family": "Plumbing",
+        "family": "plumbing",
+        "filing_family": "plumbing",
+        "kind": "Plumbing",
+        "notes": "Related plumbing permit for fixture, DWV, water-supply, bathroom, kitchen, or rough/final plumbing work included in the remodel/addition. Required because the described scope triggers Plumbing Permit.",
+        "permit_name": "Plumbing Permit — Residential Remodel / Addition",
+        "permit_type": "Plumbing Permit — Residential Remodel / Addition",
+        "portal_selection": "Plumbing - Residential Alteration",
+        "rationale": "Related plumbing permit for fixture, DWV, water-supply, bathroom, kitchen, or rough/final plumbing work included in the remodel/addition. Required because the described scope triggers Plumbing Permit.",
+        "required": true,
+        "scope_trigger": "plumbing_explicit_scope",
+        "segment": "residential",
+        "status": "REQUIRED"
+      },
+      {
+        "ahj_name": "Mesa permit office",
+        "application_authority_name": "Mesa permit office",
+        "approval_type": "Mechanical Permit",
+        "decision": "REQUIRED",
+        "display_family": "Mechanical",
+        "family": "mechanical",
+        "filing_family": "mechanical",
+        "kind": "Mechanical",
+        "notes": "Related mechanical permit for HVAC, duct relocation, ventilation, or rough/final mechanical work included in the remodel/addition. Required because the described scope triggers Mechanical Permit.",
+        "permit_name": "Mechanical Permit — Residential Remodel / Addition",
+        "permit_type": "Mechanical Permit — Residential Remodel / Addition",
+        "portal_selection": "Mechanical - Residential Alteration",
+        "rationale": "Related mechanical permit for HVAC, duct relocation, ventilation, or rough/final mechanical work included in the remodel/addition. Required because the described scope triggers Mechanical Permit.",
+        "required": true,
+        "scope_trigger": "mechanical_explicit_scope",
+        "segment": "residential",
+        "status": "REQUIRED"
+      },
+      {
+        "ahj_name": "Mesa permit office",
+        "application_authority_name": "Mesa permit office",
+        "approval_type": "Electrical Permit",
+        "decision": "REQUIRED",
+        "display_family": "Electrical",
+        "family": "electrical",
+        "filing_family": "electrical",
+        "kind": "Electrical",
+        "notes": "Related electrical permit for circuits, lighting, receptacles, panel work, or rough/final electrical inspections included in the remodel/addition. Required because the described scope triggers Electrical Permit.",
+        "permit_name": "Electrical Permit — Residential Remodel / Addition",
+        "permit_type": "Electrical Permit — Residential Remodel / Addition",
+        "portal_selection": "Electrical - Residential Alteration",
+        "rationale": "Related electrical permit for circuits, lighting, receptacles, panel work, or rough/final electrical inspections included in the remodel/addition. Required because the described scope triggers Electrical Permit.",
+        "required": true,
+        "scope_trigger": "electrical_explicit_scope",
+        "segment": "residential",
+        "status": "REQUIRED"
+      }
+    ],
+    "permits_required_logic": [
+      {
+        "filing_family": "building",
+        "included_because": "Official permit rule: Required because the described scope triggers Building review.",
+        "permit_type": "Residential Construction Permit",
+        "scope_trigger": "building_scope",
+        "segment": "residential"
+      },
+      {
+        "filing_family": "plumbing",
+        "included_because": "Official permit rule: Related plumbing permit for fixture, DWV, water-supply, bathroom, kitchen, or rough/final plumbing work included in the remodel/addition. Required because the described scope triggers Plumbing Permit.",
+        "permit_type": "Plumbing Permit — Residential Remodel / Addition",
+        "scope_trigger": "plumbing_explicit_scope",
+        "segment": "residential"
+      },
+      {
+        "filing_family": "mechanical",
+        "included_because": "Official permit rule: Related mechanical permit for HVAC, duct relocation, ventilation, or rough/final mechanical work included in the remodel/addition. Required because the described scope triggers Mechanical Permit.",
+        "permit_type": "Mechanical Permit — Residential Remodel / Addition",
+        "scope_trigger": "mechanical_explicit_scope",
+        "segment": "residential"
+      },
+      {
+        "filing_family": "electrical",
+        "included_because": "Official permit rule: Related electrical permit for circuits, lighting, receptacles, panel work, or rough/final electrical inspections included in the remodel/addition. Required because the described scope triggers Electrical Permit.",
+        "permit_type": "Electrical Permit — Residential Remodel / Addition",
+        "scope_trigger": "electrical_explicit_scope",
+        "segment": "residential"
+      }
+    ],
+    "related_permit_families": [
+      "Building"
+    ],
+    "related_permit_names": [
+      "Building Permit"
+    ],
+    "related_permit_segments": [
+      "residential"
+    ],
+    "related_permits": [
+      {
+        "approval_type": "Building Permit",
+        "condition_text": "Verify whether permit is triggered for this project when the building department confirms the relevant permit scope condition.",
+        "decision": "VERIFY",
+        "display_family": "Building",
+        "family": "building",
+        "filing_family": "building",
+        "kind": "Building",
+        "permit_name": "Building Permit",
+        "permit_type": "Building Permit",
+        "rationale": "permit may apply to this scope",
+        "required": false,
+        "segment": "residential",
+        "status": "VERIFY",
+        "trigger_condition": "Verify whether permit is triggered for this project when the building department confirms the relevant permit scope condition."
+      }
+    ],
+    "required_permit_families": [
+      "Building",
+      "Plumbing",
+      "Mechanical",
+      "Electrical"
+    ],
+    "required_permit_names": [
+      "Residential Construction Permit",
+      "Plumbing Permit — Residential Remodel / Addition",
+      "Mechanical Permit — Residential Remodel / Addition",
+      "Electrical Permit — Residential Remodel / Addition"
+    ],
+    "required_permit_segments": [
+      "residential"
+    ],
+    "required_permit_summary": "Required permit package: Residential Construction Permit; Plumbing Permit — Residential Remodel / Addition; Mechanical Permit — Residential Remodel / Addition; Electrical Permit — Residential Remodel / Addition.",
+    "source_confidence": "AHJ_DIRECT",
+    "source_support": {
+      "apply_url_known": false,
+      "apply_url_source_confidence": "NEEDS_AHJ_SOURCE",
+      "context_source_count": 1,
+      "decision_mutation_allowed": false,
+      "degraded_sources": false,
+      "demoted_nonlocal_apply_urls": [
+        "https://www.mesaaz.gov/Business-Development/Development-Services/Building-Permit-Plan-Review/Commercial-Construction"
+      ],
+      "display_source_count": 1,
+      "evidence": [
+        {
+          "role": "VERIFY"
+        }
+      ],
+      "filing_path_state": "HONEST_FALLBACK",
+      "filing_source_count": 0,
+      "has_source_backed_evidence": true,
+      "local_decision_evidence_urls": [
+        "https://www.mesaaz.gov/Business-Development/Development-Services/Building-Permit-Plan-Review/Commercial-Construction"
+      ],
+      "local_form_known": true,
+      "primary_filing_source_tier": "none",
+      "primary_requirement_source_tier": "none",
+      "requirement_source_count": 0,
+      "source_confidence": "AHJ_DIRECT",
+      "state": "VERIFY",
+      "strength": "VERIFY"
+    },
+    "source_urls": [
+      "https://www.mesaaz.gov/Business-Development/Development-Services/Building-Permit-Plan-Review/Commercial-Construction"
+    ],
+    "sources": [
+      {
+        "publisher": "City of Mesa Development Services",
+        "snippet": "Grading, drainage, and utilities plan (if applicable) Electrical, plumbing, and mechanical plans Apply for a Permit and Submit Plans Online Use the DIMES system to apply for a Residential Construction Permit. Visit DIMES : Create your account, upload required documents and submit your permit application online. Pay Deposit : Pay the required deposit through the DIMES system. DIMES Help : Check out the DIMES How To Guides . Accuracy Alert : Applicants are responsible for the accuracy and complete",
+        "title": "Official building department source",
+        "url": "https://www.mesaaz.gov/Business-Development/Development-Services/Building-Permit-Plan-Review/Commercial-Construction"
+      }
+    ],
+    "summary": "Required permit package: Residential Construction Permit; Plumbing Permit — Residential Remodel / Addition; Mechanical Permit — Residential Remodel / Addition; Electrical Permit — Residential Remodel / Addition.",
+    "warnings": [
+      "Permit decision preserved, but a non-local/generic filing URL was removed; use building department-specific source evidence for the application path.",
+      "Permit decision preserved, but a non-local/generic filing URL was removed; use building department-specific source evidence for the application path.",
+      "Filing path degraded: exact local online filing portal was not verified; permit decision preserved.",
+      "Permit decision preserved, but a non-local/generic filing URL was removed; use building department-specific source evidence for the application path.",
+      "Permit decision preserved, but a non-local/generic filing URL was removed; use building department-specific source evidence for the application path.",
+      "Customer-boundary filing rows were normalized so only hard scope-triggered permits appear as required; address-dependent companion reviews are shown separately.",
+      "Permit decision preserved, but a non-local/generic filing URL was removed; use building department-specific source evidence for the application path."
+    ]
+  },
+  "requested_model": "gpt-5.6-luna",
+  "requested_provider": "openai-codex",
+  "requested_runtime": "engine_luna",
+  "response_id": "resp_04ed0d00cec0059c016a6772afb56c819589c6409b2896a33a",
+  "runtime": "openai-codex responses SSE + api.server real local finalize/customer path"
+}

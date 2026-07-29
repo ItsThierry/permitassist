@@ -1,0 +1,78 @@
+{
+  "observed_model": "x-ai/grok-4.5",
+  "observed_provider": "openrouter",
+  "path_proof": {
+    "adapter": "grok",
+    "engine_called": false,
+    "engine_result_supplied_to_model": false,
+    "model_call_count": 1
+  },
+  "provider": "openrouter",
+  "provider_response": {
+    "choices": [
+      {
+        "finish_reason": "stop",
+        "index": 0,
+        "logprobs": null,
+        "message": {
+          "content": "{\"permit_decision\":\"REQUIRED\",\"jurisdiction\":{\"jurisdiction_id\":\"us-ar-arkadelphia\",\"name\":\"Arkadelphia\",\"state\":\"AR\",\"type\":\"city_or_local_authority\"},\"project_family\":\"commercial_tenant_improvement\",\"primary_permit_family\":\"BUILDING\",\"companion_permits\":[{\"family\":\"ELECTRICAL\",\"status\":\"VERIFY\"},{\"family\":\"PLUMBING\",\"status\":\"VERIFY\"},{\"family\":\"MECHANICAL\",\"status\":\"VERIFY\"},{\"family\":\"FIRE_LIFE_SAFETY\",\"status\":\"VERIFY\"},{\"family\":\"OCCUPANCY\",\"status\":\"REQUIRED\"},{\"family\":\"PLANNING_ZONING\",\"status\":\"VERIFY\"}],\"filing\":{\"authority_id\":\"us-ar-arkadelphia\",\"office\":\"Building\",\"destination_url\":\"https://arkadelphia.gov/building/\",\"url_role\":\"APPLICATION_START\"},\"source_support\":{\"state\":\"OFFICIAL_SOURCE_SUPPORTED\",\"strength\":\"MODERATE\",\"evidence\":[{\"url\":\"https://www.arkadelphia.gov/DocumentCenter/View/276/Unified-Development-Code-PDF\",\"role\":\"REQUIREMENT_EVIDENCE\"},{\"url\":\"https://arkadelphia.gov/building/\",\"role\":\"APPLICATION_START\"}]},\"contradictions\":[]}",
+          "reasoning": "The user wants me to evaluate one permit lookup using ONLY the supplied official-source evidence packet and return exactly one JSON object conforming to MODEL_SCHEMA. No markdown fences, commentary, e...",
+          "reasoning_details": [
+            {
+              "format": "xai-responses-v1",
+              "index": 0,
+              "summary": "The user wants me to evaluate one permit lookup using ONLY the supplied official-source evidence packet and return exactly one JSON object conforming to MODEL_SCHEMA. No markdown fences, commentary, e...",
+              "type": "reasoning.summary"
+            },
+            {
+              "data": "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",
+              "format": "xai-responses-v1",
+              "id": "rs_7f61a55c-c77f-9546-851a-7ff0df9e8707",
+              "index": 1,
+              "type": "reasoning.encrypted"
+            }
+          ],
+          "refusal": null,
+          "role": "assistant"
+        },
+        "native_finish_reason": "completed"
+      }
+    ],
+    "created": 1785164256,
+    "id": "gen-1785164256-wOrR2iziqOYohEnp4GGG",
+    "model": "x-ai/grok-4.5",
+    "object": "chat.completion",
+    "provider": "xAI",
+    "service_tier": "default",
+    "system_fingerprint": null,
+    "usage": {
+      "completion_tokens": 1513,
+      "completion_tokens_details": {
+        "audio_tokens": 0,
+        "image_tokens": 0,
+        "reasoning_tokens": 1222
+      },
+      "cost": 0.0118664,
+      "cost_details": {
+        "upstream_inference_completions_cost": 0.009078,
+        "upstream_inference_cost": 0.0118664,
+        "upstream_inference_prompt_cost": 0.0027884
+      },
+      "is_byok": false,
+      "prompt_tokens": 1503,
+      "prompt_tokens_details": {
+        "audio_tokens": 0,
+        "cache_write_tokens": 0,
+        "cached_tokens": 128,
+        "video_tokens": 0
+      },
+      "total_tokens": 3016
+    }
+  },
+  "raw_text": "{\"permit_decision\":\"REQUIRED\",\"jurisdiction\":{\"jurisdiction_id\":\"us-ar-arkadelphia\",\"name\":\"Arkadelphia\",\"state\":\"AR\",\"type\":\"city_or_local_authority\"},\"project_family\":\"commercial_tenant_improvement\",\"primary_permit_family\":\"BUILDING\",\"companion_permits\":[{\"family\":\"ELECTRICAL\",\"status\":\"VERIFY\"},{\"family\":\"PLUMBING\",\"status\":\"VERIFY\"},{\"family\":\"MECHANICAL\",\"status\":\"VERIFY\"},{\"family\":\"FIRE_LIFE_SAFETY\",\"status\":\"VERIFY\"},{\"family\":\"OCCUPANCY\",\"status\":\"REQUIRED\"},{\"family\":\"PLANNING_ZONING\",\"status\":\"VERIFY\"}],\"filing\":{\"authority_id\":\"us-ar-arkadelphia\",\"office\":\"Building\",\"destination_url\":\"https://arkadelphia.gov/building/\",\"url_role\":\"APPLICATION_START\"},\"source_support\":{\"state\":\"OFFICIAL_SOURCE_SUPPORTED\",\"strength\":\"MODERATE\",\"evidence\":[{\"url\":\"https://www.arkadelphia.gov/DocumentCenter/View/276/Unified-Development-Code-PDF\",\"role\":\"REQUIREMENT_EVIDENCE\"},{\"url\":\"https://arkadelphia.gov/building/\",\"role\":\"APPLICATION_START\"}]},\"contradictions\":[]}",
+  "requested_model": "x-ai/grok-4.5",
+  "requested_provider": "openrouter",
+  "requested_runtime": "grok",
+  "response_id": "gen-1785164256-wOrR2iziqOYohEnp4GGG",
+  "runtime": "OpenRouter chat/completions; upstream_provider=xAI"
+}

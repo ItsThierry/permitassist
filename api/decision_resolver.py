@@ -1,9 +1,8 @@
 """Pure CustomerDecisionDTO resolver for PermitAssist customer surfaces.
 
 This module is intentionally IO-free. It converts any valid lookup context — even
-legacy UNKNOWN/FAIL_CLOSED/cache rows or source-starved fresh results — into the
-only two customer-facing decisions PermitAssist is allowed to serialize:
-REQUIRED or NOT_REQUIRED.
+legacy UNKNOWN/FAIL_CLOSED/cache rows or source-starved fresh results — into a
+typed customer decision: REQUIRED, NOT_REQUIRED, CONDITIONAL, or VERIFY.
 """
 
 from __future__ import annotations
@@ -13,6 +12,8 @@ from typing import Any
 
 PERMIT_DECISION_REQUIRED = "REQUIRED"
 PERMIT_DECISION_NOT_REQUIRED = "NOT_REQUIRED"
+PERMIT_DECISION_CONDITIONAL = "CONDITIONAL"
+PERMIT_DECISION_VERIFY = "VERIFY"
 
 _REQUIRED_KIND_RULES: tuple[tuple[str, tuple[str, ...]], ...] = (
     ("ADU / Accessory Dwelling Unit", ("adu", "accessory dwelling", "garage conversion", "in-law suite", "granny flat")),
@@ -500,12 +501,35 @@ def resolve_customer_decision(ctx: dict[str, Any] | None) -> dict[str, Any]:
     not_required_allowed_for_segment = (not commercial_default) or source_backed_exemption_evidence
     source_adjudicated_not_required_reason = _source_adjudicated_not_required_reason(city, state, job_text)
     explicit_not_required = supplied_decision == PERMIT_DECISION_NOT_REQUIRED or supplied_required is False or supplied_verdict in {"NO", "NOT_REQUIRED"}
+    explicit_nonbinary = supplied_decision if supplied_decision in {PERMIT_DECISION_CONDITIONAL, PERMIT_DECISION_VERIFY} else ""
 
+    # Preserve an explicit non-binary answer when no authenticated Decision Cell
+    # has replaced it upstream. Generic scope classification may enrich the
+    # permit family and next action, but it must never invent REQUIRED from
+    # CONDITIONAL/VERIFY input.
+    if explicit_nonbinary:
+        decision = explicit_nonbinary
+        existing_names = _existing_required_permit_names(result)
+        kinds = _kinds_from_text(job_type, commercial_default=commercial_default)
+        if not kinds:
+            kinds = _kinds_from_text(" ".join([job_scope_text, " ".join(existing_names)]), commercial_default=commercial_default)
+        if not kinds:
+            kinds = ["Commercial Building / Tenant Improvement" if commercial_default else "Building"]
+        permit_names = _permit_names_for_kinds(kinds, existing_names)
+        reason = ""
+        department = _norm(result.get("applying_office") or result.get("building_dept_name")) or f"{city} {state} Building Department".strip() or "the local building department"
+        if decision == PERMIT_DECISION_CONDITIONAL:
+            headline = f"Permit requirement depends on a verified threshold: {permit_names[0]}."
+            next_step = _norm(result.get("customer_next_step")) or f"Confirm the source-backed trigger or threshold with {department}; file under {permit_names[0]} if it applies."
+        else:
+            headline = "Permit requirement needs verification."
+            next_step = f"Verify the permit requirement and filing category with {department} before work starts."
+        confidence_tier = "AHJ_DIRECT" if _has_official_source(result) else "SCOPE_DEFAULT"
     # Only honor NOT_REQUIRED when the current scope is genuinely trivial/cosmetic
     # or an upstream source/rule explicitly classified it as NOT_REQUIRED. Legacy
     # UNKNOWN/FAIL_CLOSED/null never survive this boundary. Commercial scopes need
     # source-backed exemption evidence; cosmetic defaults alone are residential-only.
-    if (source_adjudicated_not_required_reason and not_required_allowed_for_segment) or (trivial_not_required and not_required_allowed_for_segment) or (explicit_not_required and not _has_affirmative_structural_or_trade(scope_text) and not_required_allowed_for_segment):
+    elif (source_adjudicated_not_required_reason and not_required_allowed_for_segment) or (trivial_not_required and not_required_allowed_for_segment) or (explicit_not_required and not _has_affirmative_structural_or_trade(scope_text) and not_required_allowed_for_segment):
         decision = PERMIT_DECISION_NOT_REQUIRED
         kinds: list[str] = []
         permit_names: list[str] = []
@@ -598,15 +622,26 @@ def resolve_customer_decision(ctx: dict[str, Any] | None) -> dict[str, Any]:
 
     primary_kind = kinds[0] if kinds else "Building"
     primary_name = permit_names[0] if permit_names else ""
-    display_kind = _display_permit_kind(primary_kind, kinds, result) if decision == PERMIT_DECISION_REQUIRED else "Other"
+    display_kind = _display_permit_kind(primary_kind, kinds, result) if decision in {PERMIT_DECISION_REQUIRED, PERMIT_DECISION_CONDITIONAL} else "Other"
     permits_required = _permit_payloads_for_names(permit_names, kinds, result)
 
+    permit_required_value = (
+        True if decision == PERMIT_DECISION_REQUIRED
+        else False if decision == PERMIT_DECISION_NOT_REQUIRED
+        else None
+    )
+    permit_name_value = (
+        primary_name if decision in {PERMIT_DECISION_REQUIRED, PERMIT_DECISION_CONDITIONAL}
+        else "No permit required" if decision == PERMIT_DECISION_NOT_REQUIRED
+        else "Permit requirement verification"
+    )
+
     return {
-        "permit_required": decision == PERMIT_DECISION_REQUIRED,
+        "permit_required": permit_required_value,
         "permit_decision": decision,
         "permit_kind": display_kind,
         "permit_kinds": kinds,
-        "permit_name": primary_name if decision == PERMIT_DECISION_REQUIRED else "No permit required",
+        "permit_name": permit_name_value,
         "permits_required": permits_required if decision == PERMIT_DECISION_REQUIRED else [],
         "not_required_reason": reason if decision == PERMIT_DECISION_NOT_REQUIRED else "",
         "customer_headline": headline,
@@ -618,16 +653,35 @@ def resolve_customer_decision(ctx: dict[str, Any] | None) -> dict[str, Any]:
     }
 
 
-def contains_legacy_unknown_state(value: Any) -> bool:
+def contains_legacy_unknown_state(value: Any, *, _root: bool = True) -> bool:
     """Return True for cached/public data that must be re-resolved or ignored."""
     if isinstance(value, dict):
+        if _root and not any(not str(key).startswith("_") for key in value):
+            return True
         decision = _norm(value.get("permit_decision")).upper()
         verdict = _norm(value.get("permit_verdict")).upper()
-        if (("permit_decision" in value and decision in _BAD_DECISION_VALUES) or verdict == "UNKNOWN" or ("permit_required" in value and value.get("permit_required") is None)):
+        nonbinary_states = {
+            _norm(value.get(field)).upper()
+            for field in ("permit_decision", "permit_verdict", "decision", "status", "required_status")
+        }
+        valid_nonbinary = bool(nonbinary_states & {PERMIT_DECISION_CONDITIONAL, PERMIT_DECISION_VERIFY})
+        if (
+            ("permit_decision" in value and decision in _BAD_DECISION_VALUES)
+            or verdict == "UNKNOWN"
+            or (
+                "permit_required" in value
+                and value.get("permit_required") is None
+                and not valid_nonbinary
+            )
+        ):
             return True
-        return any(contains_legacy_unknown_state(v) for k, v in value.items() if not str(k).startswith("_"))
+        return any(
+            contains_legacy_unknown_state(v, _root=False)
+            for k, v in value.items()
+            if not str(k).startswith("_")
+        )
     if isinstance(value, list):
-        return any(contains_legacy_unknown_state(item) for item in value)
+        return any(contains_legacy_unknown_state(item, _root=False) for item in value)
     if isinstance(value, str):
         text = value.upper()
         return "FAIL_CLOSED_UNSUPPORTED_OR_NO_EVIDENCE" in text or text.strip() == "UNKNOWN"

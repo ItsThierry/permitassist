@@ -1,0 +1,78 @@
+{
+  "observed_model": "x-ai/grok-4.5",
+  "observed_provider": "openrouter",
+  "path_proof": {
+    "adapter": "grok",
+    "engine_called": false,
+    "engine_result_supplied_to_model": false,
+    "model_call_count": 1
+  },
+  "provider": "openrouter",
+  "provider_response": {
+    "choices": [
+      {
+        "finish_reason": "stop",
+        "index": 0,
+        "logprobs": null,
+        "message": {
+          "content": "{\"permit_decision\":\"REQUIRED\",\"jurisdiction\":{\"jurisdiction_id\":\"us-nj-bayonne_city\",\"name\":\"Bayonne City\",\"state\":\"NJ\",\"type\":\"city_or_local_authority\"},\"project_family\":\"commercial_tenant_improvement\",\"primary_permit_family\":\"BUILDING\",\"companion_permits\":[{\"family\":\"ELECTRICAL\",\"status\":\"REQUIRED\"},{\"family\":\"PLUMBING\",\"status\":\"REQUIRED\"},{\"family\":\"MECHANICAL\",\"status\":\"REQUIRED\"},{\"family\":\"FIRE_LIFE_SAFETY\",\"status\":\"REQUIRED\"},{\"family\":\"OCCUPANCY\",\"status\":\"REQUIRED\"},{\"family\":\"PLANNING_ZONING\",\"status\":\"CONDITIONAL\"}],\"filing\":{\"authority_id\":\"us-nj-bayonne_city\",\"office\":\"Bayonne City Building Department\",\"destination_url\":\"https://www.bayonnenj.org/Departments/building-department\",\"url_role\":\"APPLICATION_START\"},\"source_support\":{\"state\":\"OFFICIAL_SOURCE_SUPPORTED\",\"strength\":\"MODERATE\",\"evidence\":[{\"url\":\"https://www.nj.gov/dca/codes/codreg/pdf_regs/njac_5_23_2.pdf\",\"role\":\"REQUIREMENT_EVIDENCE\"},{\"url\":\"https://www.bayonnenj.org/Departments/building-department\",\"role\":\"APPLICATION_START\"}]},\"contradictions\":[]}",
+          "reasoning": "The user wants me to return exactly one JSON object conforming to MODEL_SCHEMA based on the evidence packet. No markdown fences, commentary, etc. Output JSON only.\n",
+          "reasoning_details": [
+            {
+              "format": "xai-responses-v1",
+              "index": 0,
+              "summary": "The user wants me to return exactly one JSON object conforming to MODEL_SCHEMA based on the evidence packet. No markdown fences, commentary, etc. Output JSON only.\n",
+              "type": "reasoning.summary"
+            },
+            {
+              "data": "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",
+              "format": "xai-responses-v1",
+              "id": "rs_023d361e-800b-9f3e-98e1-6ea582d6fbbd",
+              "index": 1,
+              "type": "reasoning.encrypted"
+            }
+          ],
+          "refusal": null,
+          "role": "assistant"
+        },
+        "native_finish_reason": "completed"
+      }
+    ],
+    "created": 1785166904,
+    "id": "gen-1785166904-9PPewSaND1nOISvE9KhK",
+    "model": "x-ai/grok-4.5",
+    "object": "chat.completion",
+    "provider": "xAI",
+    "service_tier": "default",
+    "system_fingerprint": null,
+    "usage": {
+      "completion_tokens": 1026,
+      "completion_tokens_details": {
+        "audio_tokens": 0,
+        "image_tokens": 0,
+        "reasoning_tokens": 705
+      },
+      "cost": 0.0071752,
+      "cost_details": {
+        "upstream_inference_completions_cost": 0.006156,
+        "upstream_inference_cost": 0.0071752,
+        "upstream_inference_prompt_cost": 0.0010192
+      },
+      "is_byok": false,
+      "prompt_tokens": 1380,
+      "prompt_tokens_details": {
+        "audio_tokens": 0,
+        "cache_write_tokens": 0,
+        "cached_tokens": 1024,
+        "video_tokens": 0
+      },
+      "total_tokens": 2406
+    }
+  },
+  "raw_text": "{\"permit_decision\":\"REQUIRED\",\"jurisdiction\":{\"jurisdiction_id\":\"us-nj-bayonne_city\",\"name\":\"Bayonne City\",\"state\":\"NJ\",\"type\":\"city_or_local_authority\"},\"project_family\":\"commercial_tenant_improvement\",\"primary_permit_family\":\"BUILDING\",\"companion_permits\":[{\"family\":\"ELECTRICAL\",\"status\":\"REQUIRED\"},{\"family\":\"PLUMBING\",\"status\":\"REQUIRED\"},{\"family\":\"MECHANICAL\",\"status\":\"REQUIRED\"},{\"family\":\"FIRE_LIFE_SAFETY\",\"status\":\"REQUIRED\"},{\"family\":\"OCCUPANCY\",\"status\":\"REQUIRED\"},{\"family\":\"PLANNING_ZONING\",\"status\":\"CONDITIONAL\"}],\"filing\":{\"authority_id\":\"us-nj-bayonne_city\",\"office\":\"Bayonne City Building Department\",\"destination_url\":\"https://www.bayonnenj.org/Departments/building-department\",\"url_role\":\"APPLICATION_START\"},\"source_support\":{\"state\":\"OFFICIAL_SOURCE_SUPPORTED\",\"strength\":\"MODERATE\",\"evidence\":[{\"url\":\"https://www.nj.gov/dca/codes/codreg/pdf_regs/njac_5_23_2.pdf\",\"role\":\"REQUIREMENT_EVIDENCE\"},{\"url\":\"https://www.bayonnenj.org/Departments/building-department\",\"role\":\"APPLICATION_START\"}]},\"contradictions\":[]}",
+  "requested_model": "x-ai/grok-4.5",
+  "requested_provider": "openrouter",
+  "requested_runtime": "grok",
+  "response_id": "gen-1785166904-9PPewSaND1nOISvE9KhK",
+  "runtime": "OpenRouter chat/completions; upstream_provider=xAI"
+}

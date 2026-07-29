@@ -1,0 +1,227 @@
+{
+  "observed_model": "gpt-5.6-luna",
+  "observed_provider": "openai-codex",
+  "path_proof": {
+    "adapter": "engine_luna",
+    "authority_recovery": null,
+    "decision_cell_reference": null,
+    "engine_called": true,
+    "engine_result_supplied_to_model": false,
+    "engine_stdout": "[url_check] URL verified: https://www.seattle.gov/sdci/permits/permits-we-issue-(a-z)/re-roof-permit\n",
+    "local_merge_customer_path_called": true,
+    "model_call_count": 1
+  },
+  "provider": "openai-codex",
+  "provider_terminal_event": {
+    "response": {
+      "background": false,
+      "completed_at": 1785168841,
+      "created_at": 1785168834,
+      "error": null,
+      "frequency_penalty": 0.0,
+      "id": "resp_0fa80eaaf955398b016a6783c2df148195b6a4ed520a88c5ae",
+      "incomplete_details": null,
+      "instructions": "Follow the user request exactly. Do not call tools.",
+      "max_output_tokens": null,
+      "max_tool_calls": null,
+      "metadata": {},
+      "model": "gpt-5.6-luna",
+      "moderation": null,
+      "object": "response",
+      "output": [],
+      "parallel_tool_calls": true,
+      "presence_penalty": 0.0,
+      "previous_response_id": null,
+      "prompt_cache_key": "6f4c9ea4-4183-4d2a-93da-6527611de87a",
+      "prompt_cache_retention": "24h",
+      "reasoning": {
+        "context": "all_turns",
+        "effort": "medium",
+        "mode": "standard",
+        "summary": null
+      },
+      "safety_identifier": "user-FQ7sI0yp0Qqn6wWdqzy9mZic",
+      "service_tier": "default",
+      "status": "completed",
+      "store": false,
+      "temperature": 1.0,
+      "text": {
+        "format": {
+          "type": "text"
+        },
+        "verbosity": "medium"
+      },
+      "tool_choice": "auto",
+      "tool_usage": {
+        "image_gen": {
+          "input_tokens": 0,
+          "input_tokens_details": {
+            "image_tokens": 0,
+            "text_tokens": 0
+          },
+          "output_tokens": 0,
+          "output_tokens_details": {
+            "image_tokens": 0,
+            "text_tokens": 0
+          },
+          "total_tokens": 0
+        },
+        "web_search": {
+          "num_requests": 0
+        }
+      },
+      "tools": [],
+      "top_logprobs": 0,
+      "top_p": 0.98,
+      "truncation": "disabled",
+      "usage": {
+        "input_tokens": 1062,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 0
+        },
+        "output_tokens": 352,
+        "output_tokens_details": {
+          "reasoning_tokens": 154
+        },
+        "total_tokens": 1414
+      },
+      "user": null
+    },
+    "sequence_number": 202,
+    "type": "response.completed"
+  },
+  "raw_model_text": "{\"permit_decision\":\"CONDITIONAL\",\"jurisdiction\":{\"jurisdiction_id\":\"us-wa-seattle\",\"name\":\"Seattle Department of Construction and Inspections\",\"state\":\"WA\",\"type\":\"city_or_local_authority\"},\"project_family\":\"reroof\",\"primary_permit_family\":\"BUILDING\",\"companion_permits\":[],\"filing\":{\"authority_id\":\"us-wa-seattle\",\"office\":\"Seattle Department of Construction and Inspections\",\"destination_url\":\"https://www.seattle.gov/sdci/permits/permits-we-issue-(a-z)/re-roof-permit\",\"url_role\":\"REQUIREMENT_EVIDENCE\"},\"source_support\":{\"state\":\"OFFICIAL_SOURCE_SUPPORTED\",\"strength\":\"STRONG\",\"evidence\":[{\"url\":\"https://www.seattle.gov/sdci/permits/permits-we-issue-(a-z)/re-roof-permit\",\"role\":\"REQUIREMENT_EVIDENCE\"}]},\"contradictions\":[]}",
+  "raw_response": {
+    "apply_path": {
+      "channel": "contact_ahj",
+      "documents_to_prepare": [
+        "scope of work",
+        "plans/drawings if required",
+        "contractor license",
+        "valuation",
+        "owner authorization"
+      ],
+      "office_name": "Seattle Department of Construction and Inspections",
+      "permit_category": "Commercial Building / Tenant Improvement",
+      "permit_type": "Commercial Building / Tenant Improvement Permit",
+      "primary_filing_source_tier": "none",
+      "primary_requirement_source_tier": "local_ahj",
+      "state": "HONEST_FALLBACK",
+      "steps": [
+        "Contact the listed permit office or start from its official permit page",
+        "Ask for the filing category closest to: Commercial Building / Tenant Improvement Permit",
+        "Confirm exact portal subcategories before final submission"
+      ],
+      "support_level": "not available",
+      "verification_note": "Exact online filing portal is unresolved; permit decision and visible required row are preserved while filing-path confidence is degraded"
+    },
+    "apply_url": null,
+    "apply_url_known": false,
+    "applying_office": "Seattle Department of Construction and Inspections",
+    "companion_permits_or_reviews": [],
+    "customer_first_screen_summary": {
+      "ahj_department": "Seattle Department of Construction and Inspections",
+      "decision": "REQUIRED",
+      "kind_category": "Commercial Building / Tenant Improvement",
+      "next_action": "Permit required. No exact local filing portal is attached; contact Seattle Department of Construction and Inspections to file under Commercial Building / Tenant Improvement Permit before starting work.",
+      "source_cue": "Official source: Official Seattle source"
+    },
+    "customer_headline": "Permit requirement depends on a verified threshold: Commercial Building / Tenant Improvement Permit.",
+    "customer_next_step": "Permit required. No exact local filing portal is attached; contact Seattle Department of Construction and Inspections to file under Commercial Building / Tenant Improvement Permit before starting work.",
+    "customer_result_summary": {
+      "ahj_department": "Seattle Department of Construction and Inspections",
+      "fee_cost_caveat": "Fees depend on valuation, trade scope, plan-review fees, and the current local fee schedule; verify before quoting.",
+      "freshness_label": "Checked 2026-07-27",
+      "jurisdiction": "Seattle, WA",
+      "next_step": "Permit required. No exact local filing portal is attached; contact Seattle Department of Construction and Inspections to file under Commercial Building / Tenant Improvement Permit before starting work.",
+      "permit_decision": "REQUIRED",
+      "permit_kind": "Commercial Building / Tenant Improvement",
+      "permit_name": "Commercial Building / Tenant Improvement Permit",
+      "source_cue": "Official source: Official Seattle source"
+    },
+    "degraded_sources": false,
+    "inspection_booking": "Schedule online at Confirm the inspection advance-notice window when booking.",
+    "job_summary": "Permit required: Commercial Building / Tenant Improvement Permit.",
+    "local_form_known": true,
+    "online_application_url": null,
+    "permit_decision": "CONDITIONAL",
+    "permit_kind": "Commercial Building / Tenant Improvement",
+    "permit_name": "Commercial Building / Tenant Improvement Permit",
+    "permit_required": null,
+    "permit_type": "Commercial Building / Tenant Improvement Permit",
+    "permit_verdict": "CONDITIONAL",
+    "permits_required": [],
+    "permits_required_logic": [
+      {
+        "filing_family": "building",
+        "included_because": "Official permit rule: Required because the described scope triggers Commercial Building / Tenant Improvement Permit. Confirm the exact portal category with the listed permit office before filing.",
+        "permit_type": "Commercial Building / Tenant Improvement Permit",
+        "scope_trigger": "building_explicit_scope",
+        "segment": "commercial"
+      }
+    ],
+    "required_permit_families": [
+      "Building"
+    ],
+    "required_permit_names": [
+      "Commercial Building / Tenant Improvement Permit"
+    ],
+    "required_permit_segments": [
+      "commercial"
+    ],
+    "required_permit_summary": "Permit required: Commercial Building / Tenant Improvement Permit.",
+    "source_confidence": "AHJ_DIRECT",
+    "source_support": {
+      "apply_url_known": false,
+      "apply_url_source_confidence": "FILING_PATH_DEGRADED",
+      "context_source_count": 0,
+      "decision_mutation_allowed": false,
+      "degraded_sources": false,
+      "display_source_count": 1,
+      "evidence": [
+        {
+          "role": "REQUIREMENT_EVIDENCE"
+        }
+      ],
+      "filing_path_state": "HONEST_FALLBACK",
+      "filing_source_count": 0,
+      "has_source_backed_evidence": true,
+      "local_decision_evidence_urls": [
+        "https://www.seattle.gov/sdci/permits/permits-we-issue-(a-z)/re-roof-permit"
+      ],
+      "local_form_known": true,
+      "primary_filing_source_tier": "none",
+      "primary_requirement_source_tier": "local_ahj",
+      "requirement_source_count": 1,
+      "source_confidence": "AHJ_DIRECT",
+      "state": "OFFICIAL_SOURCE_SUPPORTED",
+      "strength": "STRONG"
+    },
+    "source_urls": [
+      "https://www.seattle.gov/sdci/permits/permits-we-issue-(a-z)/re-roof-permit"
+    ],
+    "sources": [
+      {
+        "jurisdiction": "Seattle, WA",
+        "publisher": "Official Seattle source",
+        "source_type": "official_local",
+        "title": "Official Seattle source",
+        "url": "https://www.seattle.gov/sdci/permits/permits-we-issue-(a-z)/re-roof-permit"
+      }
+    ],
+    "summary": "Permit required: Commercial Building / Tenant Improvement Permit.",
+    "trade_permits": [],
+    "warnings": [
+      "Commercial scope detected; primary permit was repaired or forced away from residential/trade-only leakage. confirm the exact permit name and form title with the building department before filing.",
+      "Commercial scope may require companion reviews/permits not fully proven here: electrical, mechanical, plumbing.",
+      "Some report claims do not yet have quoted source snippets; use the listed building department source before relying on them.",
+      "Filing path degraded: exact local online filing portal was not verified; permit decision preserved."
+    ]
+  },
+  "requested_model": "gpt-5.6-luna",
+  "requested_provider": "openai-codex",
+  "requested_runtime": "engine_luna",
+  "response_id": "resp_0fa80eaaf955398b016a6783c2df148195b6a4ed520a88c5ae",
+  "runtime": "openai-codex responses SSE + api.server real local finalize/customer path"
+}

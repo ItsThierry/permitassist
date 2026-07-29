@@ -154,6 +154,33 @@ def test_allowlisted_uncovered_project_returns_sealed_fail_closed_not_legacy(
     assert public["permit_required"] is None
 
 
+def test_exact_ahj_display_name_activates_stable_allowlisted_jurisdiction(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Do not reject an exact indexed AHJ because its display name is not its ID slug."""
+    monkeypatch.setenv(pre.CORE_SETTING, "active")
+    monkeypatch.setenv(pre.CORE_ALLOWLIST_SETTING, "us-fl-pasco_county")
+    monkeypatch.setenv("PERMITASSIST_V24_MODE", "active")
+    monkeypatch.setenv("PERMITASSIST_V24_MANIFEST_SHA256", MANIFEST_SHA256)
+    _reset_v24_cache(monkeypatch)
+
+    result = pre.build_active_core_first_result(
+        job_type="Residential reroof. Replace the existing roof covering.",
+        city="Pasco County Building Construction Services",
+        state="FL",
+        job_category="residential",
+    )
+
+    assert result is not None
+    projected = pre.extract_sealed_public_projection(
+        result,
+        city="Pasco County Building Construction Services",
+        state="FL",
+    )
+    assert projected is not None
+    assert projected["jurisdiction_id"] == "us-fl-pasco-county"
+
+
 def test_allowlisted_missing_core_envelope_raises_typed_failure(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:

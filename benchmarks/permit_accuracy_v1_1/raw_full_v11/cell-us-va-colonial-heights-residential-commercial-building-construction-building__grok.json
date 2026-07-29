@@ -1,0 +1,78 @@
+{
+  "observed_model": "x-ai/grok-4.5",
+  "observed_provider": "openrouter",
+  "path_proof": {
+    "adapter": "grok",
+    "engine_called": false,
+    "engine_result_supplied_to_model": false,
+    "model_call_count": 1
+  },
+  "provider": "openrouter",
+  "provider_response": {
+    "choices": [
+      {
+        "finish_reason": "stop",
+        "index": 0,
+        "logprobs": null,
+        "message": {
+          "content": "{\"permit_decision\":\"VERIFY\",\"jurisdiction\":{\"jurisdiction_id\":\"us-va-colonial_heights\",\"name\":\"Colonial Heights\",\"state\":\"VA\",\"type\":\"city_or_local_authority\"},\"project_family\":\"residential_remodel\",\"primary_permit_family\":\"BUILDING\",\"companion_permits\":[{\"family\":\"ELECTRICAL\",\"status\":\"VERIFY\"},{\"family\":\"PLUMBING\",\"status\":\"VERIFY\"},{\"family\":\"MECHANICAL\",\"status\":\"VERIFY\"}],\"filing\":{\"authority_id\":\"us-va-colonial_heights\",\"destination_url\":\"http://colonialheightsva.gov/510/Building-Permit-Applications\",\"office\":\"Colonial Heights Building Permit Applications\",\"url_role\":\"APPLICATION_START\"},\"source_support\":{\"state\":\"OFFICIAL_SOURCE_SUPPORTED\",\"strength\":\"MODERATE\",\"evidence\":[{\"url\":\"http://colonialheightsva.gov/510/Building-Permit-Applications\",\"role\":\"APPLICATION_START\"}]},\"contradictions\":[]}",
+          "reasoning": "The user wants me to evaluate one permit lookup using ONLY the supplied official-source evidence packet and return exactly one JSON object conforming to MODEL_SCHEMA. No Markdown fences, commentary, o...{\n  \"permit_decision\": \"REQUIRED\",\n  \"jurisdiction\": {\n    \"jurisdiction_id\": \"us-va-colonial_heights\",\n    \"name\": \"Colonial Heights\",\n    \"state\": \"VA\",\n    \"type\": \"city_or_local_authority\"\n  },\n  \"project_family\": \" residential_remodel\",\n  \"primary_permit_family\": \"BUILDING\",\n  \"companion_permits\": [\n    {\n      \"family\": \"ELECTRICAL\",\n      \"status\": \"REQUIRED\"\n    },\n    {\n      \"family\": \"PLUMBING\",\n      \"status\": \"REQUIRED\"\n    },\n    {\n      \"family\": \"MECHANICAL\",\n      \"status\": \"REQUIRED\"\n    }\n  ],\n  \"filing\": {\n    \"authority_id\": \"us-va-colonial_heights\",\n    \"destination_url\": \"http://colonialheightsva.gov/510/Building-Permit-Applications\",\n    \"office\": \"Colonial Heights Building Department\",\n    \"url_role\": \"APPLICATION_START\"\n  },\n  \"source_support\": {\n    \"state\": \"OFFICIAL_SOURCE_SUPPORTED\",\n    \"strength\": \"MODERATE\",\n    \"evidence\": [\n      {\n        \"url\": \"http://colonialheightsva.",
+          "reasoning_details": [
+            {
+              "format": "xai-responses-v1",
+              "index": 0,
+              "summary": "The user wants me to evaluate one permit lookup using ONLY the supplied official-source evidence packet and return exactly one JSON object conforming to MODEL_SCHEMA. No Markdown fences, commentary, o...{\n  \"permit_decision\": \"REQUIRED\",\n  \"jurisdiction\": {\n    \"jurisdiction_id\": \"us-va-colonial_heights\",\n    \"name\": \"Colonial Heights\",\n    \"state\": \"VA\",\n    \"type\": \"city_or_local_authority\"\n  },\n  \"project_family\": \" residential_remodel\",\n  \"primary_permit_family\": \"BUILDING\",\n  \"companion_permits\": [\n    {\n      \"family\": \"ELECTRICAL\",\n      \"status\": \"REQUIRED\"\n    },\n    {\n      \"family\": \"PLUMBING\",\n      \"status\": \"REQUIRED\"\n    },\n    {\n      \"family\": \"MECHANICAL\",\n      \"status\": \"REQUIRED\"\n    }\n  ],\n  \"filing\": {\n    \"authority_id\": \"us-va-colonial_heights\",\n    \"destination_url\": \"http://colonialheightsva.gov/510/Building-Permit-Applications\",\n    \"office\": \"Colonial Heights Building Department\",\n    \"url_role\": \"APPLICATION_START\"\n  },\n  \"source_support\": {\n    \"state\": \"OFFICIAL_SOURCE_SUPPORTED\",\n    \"strength\": \"MODERATE\",\n    \"evidence\": [\n      {\n        \"url\": \"http://colonialheightsva.",
+              "type": "reasoning.summary"
+            },
+            {
+              "data": "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",
+              "format": "xai-responses-v1",
+              "id": "rs_a92a4670-64d3-99ea-aa65-521d47f0e985",
+              "index": 1,
+              "type": "reasoning.encrypted"
+            }
+          ],
+          "refusal": null,
+          "role": "assistant"
+        },
+        "native_finish_reason": "completed"
+      }
+    ],
+    "created": 1785168363,
+    "id": "gen-1785168363-j2moPpybQGMGCmeiV9mC",
+    "model": "x-ai/grok-4.5",
+    "object": "chat.completion",
+    "provider": "xAI",
+    "service_tier": "default",
+    "system_fingerprint": null,
+    "usage": {
+      "completion_tokens": 1515,
+      "completion_tokens_details": {
+        "audio_tokens": 0,
+        "image_tokens": 0,
+        "reasoning_tokens": 1292
+      },
+      "cost": 0.0115304,
+      "cost_details": {
+        "upstream_inference_completions_cost": 0.00909,
+        "upstream_inference_cost": 0.0115304,
+        "upstream_inference_prompt_cost": 0.0024404
+      },
+      "is_byok": false,
+      "prompt_tokens": 1329,
+      "prompt_tokens_details": {
+        "audio_tokens": 0,
+        "cache_write_tokens": 0,
+        "cached_tokens": 128,
+        "video_tokens": 0
+      },
+      "total_tokens": 2844
+    }
+  },
+  "raw_text": "{\"permit_decision\":\"VERIFY\",\"jurisdiction\":{\"jurisdiction_id\":\"us-va-colonial_heights\",\"name\":\"Colonial Heights\",\"state\":\"VA\",\"type\":\"city_or_local_authority\"},\"project_family\":\"residential_remodel\",\"primary_permit_family\":\"BUILDING\",\"companion_permits\":[{\"family\":\"ELECTRICAL\",\"status\":\"VERIFY\"},{\"family\":\"PLUMBING\",\"status\":\"VERIFY\"},{\"family\":\"MECHANICAL\",\"status\":\"VERIFY\"}],\"filing\":{\"authority_id\":\"us-va-colonial_heights\",\"destination_url\":\"http://colonialheightsva.gov/510/Building-Permit-Applications\",\"office\":\"Colonial Heights Building Permit Applications\",\"url_role\":\"APPLICATION_START\"},\"source_support\":{\"state\":\"OFFICIAL_SOURCE_SUPPORTED\",\"strength\":\"MODERATE\",\"evidence\":[{\"url\":\"http://colonialheightsva.gov/510/Building-Permit-Applications\",\"role\":\"APPLICATION_START\"}]},\"contradictions\":[]}",
+  "requested_model": "x-ai/grok-4.5",
+  "requested_provider": "openrouter",
+  "requested_runtime": "grok",
+  "response_id": "gen-1785168363-j2moPpybQGMGCmeiV9mC",
+  "runtime": "OpenRouter chat/completions; upstream_provider=xAI"
+}

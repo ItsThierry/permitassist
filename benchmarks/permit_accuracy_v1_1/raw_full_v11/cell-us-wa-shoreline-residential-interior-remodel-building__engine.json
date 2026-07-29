@@ -1,0 +1,393 @@
+{
+  "observed_model": "NONE",
+  "observed_provider": "permitassist-local-engine",
+  "path_proof": {
+    "adapter": "engine",
+    "authority_recovery": null,
+    "decision_cell_reference": null,
+    "engine_called": true,
+    "engine_result_supplied_to_model": false,
+    "engine_stdout": "[url_check] Dead URL detected: https://www.shorelinewa.gov/government/departments/planning-community-development/forms-application-checklists-development-information/residential-projects/interior-remodel\n",
+    "model_call_count": 0
+  },
+  "provider": "permitassist-local-engine",
+  "raw_response": {
+    "apply_path": {
+      "channel": "contact_ahj",
+      "documents_to_prepare": [
+        "scope of work",
+        "plans/drawings if required",
+        "contractor license",
+        "valuation",
+        "owner authorization"
+      ],
+      "office_name": "Permit office",
+      "permit_category": "Permit package",
+      "permit_type": "Required permit package — Building Permit",
+      "portal_url": "https://www.shorelinewa.gov/government/departments/planning-community-development/forms-application-checklists-development-information/residential-projects/interior-remodel",
+      "primary_filing_source_tier": "none",
+      "primary_requirement_source_tier": "local_ahj",
+      "state": "HONEST_FALLBACK",
+      "steps": [
+        "Open the listed permit portal or contact the permit office",
+        "Select the closest category to: Required permit package — Building Permit",
+        "Confirm exact portal subcategories before final submission"
+      ],
+      "support_level": "not available",
+      "verification_note": "Confirm the exact portal category with the listed permit office before filing"
+    },
+    "apply_url": "https://www.shorelinewa.gov/government/departments/planning-community-development/forms-application-checklists-development-information/residential-projects/interior-remodel",
+    "apply_url_known": true,
+    "applying_office": "Permit office",
+    "confidence": "high",
+    "confidence_reason": "Official building department official-source permit decision for this exact jurisdiction and project type.",
+    "customer_first_screen_summary": {
+      "ahj_department": "Permit office",
+      "decision": "REQUIRED",
+      "kind_category": "Building",
+      "next_action": "File the required permit categories with Permit office: Building Permit, Plumbing Permit — Residential Remodel / Addition, Mechanical Permit — Residential Remodel / Addition, Electrical Permit — Residential Remodel / Addition. Confirm exact portal subcategories before final submission.",
+      "source_cue": "Official sources attached for 4 required permit categories."
+    },
+    "customer_headline": "Permit required: Required permit package — Building Permit.",
+    "customer_next_step": "File the required permit categories with Permit office: Building Permit, Plumbing Permit — Residential Remodel / Addition, Mechanical Permit — Residential Remodel / Addition, Electrical Permit — Residential Remodel / Addition. Confirm exact portal subcategories before final submission.",
+    "customer_result_summary": {
+      "ahj_department": "Permit office",
+      "fee_cost_caveat": "Fees depend on valuation, trade scope, plan-review fees, and the current local fee schedule; verify before quoting.",
+      "freshness_label": "Checked 2026-07-27",
+      "jurisdiction": "Shoreline, WA",
+      "next_step": "File the required permit categories with Permit office: Building Permit, Plumbing Permit — Residential Remodel / Addition, Mechanical Permit — Residential Remodel / Addition, Electrical Permit — Residential Remodel / Addition. Confirm exact portal subcategories before final submission.",
+      "permit_decision": "REQUIRED",
+      "permit_kind": "Building",
+      "permit_name": "Required permit package — Building Permit",
+      "source_cue": "Official sources attached for 4 required permit categories."
+    },
+    "degraded_sources": false,
+    "job_summary": "Required permit package: Building Permit; Plumbing Permit — Residential Remodel / Addition; Mechanical Permit — Residential Remodel / Addition; Electrical Permit — Residential Remodel / Addition.",
+    "jurisdiction_routing_summary": "Electrical: WA L&I · Mechanical / HVAC, Plumbing, Building / Tenant Improvement: Permit office",
+    "local_form_known": true,
+    "online_application_url": null,
+    "permit_authority_cards": [
+      {
+        "authority": "Washington State Department of Labor & Industries (L&I)",
+        "authority_level": "state",
+        "authority_short": "WA L&I",
+        "inspections": [
+          {
+            "authority_scope": "electrical",
+            "description": "Schedule with the routed electrical authority for service, feeder, panel/switchgear, grounding, and rough-in inspection.",
+            "stage": "Electrical rough-in / service equipment"
+          },
+          {
+            "authority_scope": "electrical",
+            "description": "Final electrical inspection/approval must come from the routed electrical authority before energizing or closing the trade scope.",
+            "stage": "Final electrical"
+          }
+        ],
+        "notes": [
+          "Electrical work in Washington requires the correct electrical permit/inspection authority. L&I handles most jobsites unless an official city/delegated program or Tacoma Power service-area source says otherwise."
+        ],
+        "permit_types": [
+          "Electrical Permit / Electrical Inspections"
+        ],
+        "scopes": [
+          "electrical"
+        ],
+        "source_refs": [
+          {
+            "binding": "state_overlay",
+            "snippet": "Electrical work in Washington requires the correct electrical permit/inspection authority. L&I handles most jobsites unless an official city/delegated program or Tacoma Power service-area source says otherwise.",
+            "title": "Washington L&I — Electrical Permits, Fees & Inspections",
+            "url": "https://lni.wa.gov/licensing-permits/electrical/electrical-permits-fees-and-inspections/"
+          }
+        ]
+      },
+      {
+        "authority": "Permit office",
+        "authority_level": "city",
+        "authority_short": "Permit office",
+        "inspections": [
+          {
+            "authority_scope": "mechanical",
+            "description": "Ducting, RTU/curb, dryer exhaust, combustion air, and makeup-air work before cover.",
+            "stage": "Mechanical rough-in"
+          },
+          {
+            "authority_scope": "mechanical",
+            "description": "Final equipment, controls, exhaust/makeup air, and startup inspection.",
+            "stage": "Final mechanical"
+          },
+          {
+            "authority_scope": "plumbing",
+            "description": "Water, waste, floor drains, fixtures, and backflow protection before cover.",
+            "stage": "Plumbing rough-in"
+          },
+          {
+            "authority_scope": "plumbing",
+            "description": "Final fixture, water heater, drainage, and backflow inspection.",
+            "stage": "Final plumbing"
+          },
+          {
+            "authority_scope": "building",
+            "description": "Tenant-improvement framing, accessibility, restroom, egress, and final building inspection.",
+            "stage": "Building / accessibility inspection"
+          }
+        ],
+        "notes": [
+          "Primary local permitting authority for building/TI scopes unless a scope-specific routing source overrides a trade."
+        ],
+        "permit_types": [
+          "Mechanical / HVAC permit/review",
+          "Plumbing permit/review",
+          "Building Permit"
+        ],
+        "scopes": [
+          "mechanical",
+          "plumbing",
+          "building"
+        ],
+        "source_refs": [
+          {
+            "binding": "base_jurisdiction",
+            "snippet": "Primary local permitting authority for building/TI scopes unless a scope-specific routing source overrides a trade.",
+            "title": "Local building department / primary permit source"
+          }
+        ]
+      }
+    ],
+    "permit_decision": "REQUIRED",
+    "permit_kind": "Building",
+    "permit_name": "Required permit package — Building Permit",
+    "permit_required": true,
+    "permit_routing_map": {
+      "building": {
+        "authority": "Permit office",
+        "authority_level": "city",
+        "authority_short": "Permit office",
+        "confidence": "base_jurisdiction",
+        "permit_type": "Building Permit",
+        "routing_note": "Primary local permitting authority for building/TI scopes unless a scope-specific routing source overrides a trade.",
+        "scope": "building",
+        "scope_label": "Building / Tenant Improvement",
+        "source_ref": {
+          "binding": "base_jurisdiction",
+          "snippet": "Primary local permitting authority for building/TI scopes unless a scope-specific routing source overrides a trade.",
+          "title": "Local building department / primary permit source"
+        }
+      },
+      "electrical": {
+        "authority": "Washington State Department of Labor & Industries (L&I)",
+        "authority_level": "state",
+        "authority_short": "WA L&I",
+        "confidence": "state_overlay",
+        "permit_type": "Electrical Permit / Electrical Inspections",
+        "routing_note": "Electrical work in Washington requires the correct electrical permit/inspection authority. L&I handles most jobsites unless an official city/delegated program or Tacoma Power service-area source says otherwise.",
+        "scope": "electrical",
+        "scope_label": "Electrical",
+        "source_ref": {
+          "binding": "state_overlay",
+          "snippet": "Electrical work in Washington requires the correct electrical permit/inspection authority. L&I handles most jobsites unless an official city/delegated program or Tacoma Power service-area source says otherwise.",
+          "title": "Washington L&I — Electrical Permits, Fees & Inspections",
+          "url": "https://lni.wa.gov/licensing-permits/electrical/electrical-permits-fees-and-inspections/"
+        }
+      },
+      "mechanical": {
+        "authority": "Permit office",
+        "authority_level": "city",
+        "authority_short": "Permit office",
+        "confidence": "base_jurisdiction",
+        "permit_type": "Mechanical / HVAC permit/review",
+        "routing_note": "Primary local permitting authority for building/TI scopes unless a scope-specific routing source overrides a trade.",
+        "scope": "mechanical",
+        "scope_label": "Mechanical / HVAC",
+        "source_ref": {
+          "binding": "base_jurisdiction",
+          "snippet": "Primary local permitting authority for building/TI scopes unless a scope-specific routing source overrides a trade.",
+          "title": "Local building department / primary permit source"
+        }
+      },
+      "plumbing": {
+        "authority": "Permit office",
+        "authority_level": "city",
+        "authority_short": "Permit office",
+        "confidence": "base_jurisdiction",
+        "permit_type": "Plumbing permit/review",
+        "routing_note": "Primary local permitting authority for building/TI scopes unless a scope-specific routing source overrides a trade.",
+        "scope": "plumbing",
+        "scope_label": "Plumbing",
+        "source_ref": {
+          "binding": "base_jurisdiction",
+          "snippet": "Primary local permitting authority for building/TI scopes unless a scope-specific routing source overrides a trade.",
+          "title": "Local building department / primary permit source"
+        }
+      }
+    },
+    "permit_type": "Required permit package — Building Permit",
+    "permit_verdict": "YES",
+    "permits_required": [
+      {
+        "approval_type": "Building Permit",
+        "decision": "REQUIRED",
+        "display_family": "Building",
+        "family": "building",
+        "filing_family": "building",
+        "kind": "Building",
+        "permit_kind": "building",
+        "permit_name": "Building Permit",
+        "permit_type": "Building Permit",
+        "portal_selection": "Building Permit",
+        "required": true,
+        "segment": "residential",
+        "status": "REQUIRED"
+      },
+      {
+        "ahj_name": "Shoreline permit office",
+        "application_authority_name": "Shoreline permit office",
+        "approval_type": "Plumbing Permit",
+        "decision": "REQUIRED",
+        "display_family": "Plumbing",
+        "family": "plumbing",
+        "filing_family": "plumbing",
+        "kind": "Plumbing",
+        "notes": "Related plumbing permit for fixture, DWV, water-supply, bathroom, kitchen, or rough/final plumbing work included in the remodel/addition. Required because the described scope triggers Plumbing Permit.",
+        "permit_name": "Plumbing Permit — Residential Remodel / Addition",
+        "permit_type": "Plumbing Permit — Residential Remodel / Addition",
+        "portal_selection": "Plumbing - Residential Alteration",
+        "rationale": "Related plumbing permit for fixture, DWV, water-supply, bathroom, kitchen, or rough/final plumbing work included in the remodel/addition. Required because the described scope triggers Plumbing Permit.",
+        "required": true,
+        "scope_trigger": "plumbing_explicit_scope",
+        "segment": "residential",
+        "status": "REQUIRED"
+      },
+      {
+        "ahj_name": "Shoreline permit office",
+        "application_authority_name": "Shoreline permit office",
+        "approval_type": "Mechanical Permit",
+        "decision": "REQUIRED",
+        "display_family": "Mechanical",
+        "family": "mechanical",
+        "filing_family": "mechanical",
+        "kind": "Mechanical",
+        "notes": "Related mechanical permit for HVAC, duct relocation, ventilation, or rough/final mechanical work included in the remodel/addition. Required because the described scope triggers Mechanical Permit.",
+        "permit_name": "Mechanical Permit — Residential Remodel / Addition",
+        "permit_type": "Mechanical Permit — Residential Remodel / Addition",
+        "portal_selection": "Mechanical - Residential Alteration",
+        "rationale": "Related mechanical permit for HVAC, duct relocation, ventilation, or rough/final mechanical work included in the remodel/addition. Required because the described scope triggers Mechanical Permit.",
+        "required": true,
+        "scope_trigger": "mechanical_explicit_scope",
+        "segment": "residential",
+        "status": "REQUIRED"
+      },
+      {
+        "ahj_name": "Shoreline permit office",
+        "application_authority_name": "Shoreline permit office",
+        "approval_type": "Electrical Permit",
+        "authority": "Washington State Department of Labor & Industries (L&I)",
+        "authority_level": "state",
+        "decision": "REQUIRED",
+        "display_family": "Electrical",
+        "family": "electrical",
+        "filing_family": "electrical",
+        "kind": "Electrical",
+        "notes": "Related electrical permit for circuits, lighting, receptacles, panel work, or rough/final electrical inspections included in the remodel/addition. Required because the described scope triggers Electrical Permit.",
+        "permit_name": "Electrical Permit — Residential Remodel / Addition",
+        "permit_type": "Electrical Permit — Residential Remodel / Addition",
+        "portal_selection": "Electrical - Residential Alteration",
+        "rationale": "Related electrical permit for circuits, lighting, receptacles, panel work, or rough/final electrical inspections included in the remodel/addition. Required because the described scope triggers Electrical Permit.",
+        "required": true,
+        "scope_trigger": "electrical_explicit_scope",
+        "segment": "residential",
+        "source_url": "https://lni.wa.gov/licensing-permits/electrical/electrical-permits-fees-and-inspections/",
+        "status": "REQUIRED"
+      }
+    ],
+    "permits_required_logic": [
+      {
+        "filing_family": "building",
+        "included_because": "Official permit rule: Required because the described scope triggers Building review.",
+        "permit_type": "Building Permit",
+        "scope_trigger": "building_scope",
+        "segment": "residential"
+      },
+      {
+        "filing_family": "plumbing",
+        "included_because": "Official permit rule: Related plumbing permit for fixture, DWV, water-supply, bathroom, kitchen, or rough/final plumbing work included in the remodel/addition. Required because the described scope triggers Plumbing Permit.",
+        "permit_type": "Plumbing Permit — Residential Remodel / Addition",
+        "scope_trigger": "plumbing_explicit_scope",
+        "segment": "residential"
+      },
+      {
+        "filing_family": "mechanical",
+        "included_because": "Official permit rule: Related mechanical permit for HVAC, duct relocation, ventilation, or rough/final mechanical work included in the remodel/addition. Required because the described scope triggers Mechanical Permit.",
+        "permit_type": "Mechanical Permit — Residential Remodel / Addition",
+        "scope_trigger": "mechanical_explicit_scope",
+        "segment": "residential"
+      },
+      {
+        "filing_family": "electrical",
+        "included_because": "Official permit rule: Related electrical permit for circuits, lighting, receptacles, panel work, or rough/final electrical inspections included in the remodel/addition. Required because the described scope triggers Electrical Permit.",
+        "permit_type": "Electrical Permit — Residential Remodel / Addition",
+        "scope_trigger": "electrical_explicit_scope",
+        "segment": "residential"
+      }
+    ],
+    "required_permit_families": [
+      "Building",
+      "Plumbing",
+      "Mechanical",
+      "Electrical"
+    ],
+    "required_permit_names": [
+      "Building Permit",
+      "Plumbing Permit — Residential Remodel / Addition",
+      "Mechanical Permit — Residential Remodel / Addition",
+      "Electrical Permit — Residential Remodel / Addition"
+    ],
+    "required_permit_segments": [
+      "residential"
+    ],
+    "required_permit_summary": "Required permit package: Building Permit; Plumbing Permit — Residential Remodel / Addition; Mechanical Permit — Residential Remodel / Addition; Electrical Permit — Residential Remodel / Addition.",
+    "source_confidence": "AHJ_DIRECT",
+    "source_support": {
+      "apply_url_known": true,
+      "apply_url_source_confidence": "FILING_PATH_DEGRADED",
+      "confidence_tier": "AHJ_DIRECT",
+      "context_source_count": 0,
+      "decision_mutation_allowed": false,
+      "degraded_sources": false,
+      "display_source_count": 1,
+      "exact_form_known": true,
+      "filing_path_state": "HONEST_FALLBACK",
+      "filing_source_count": 0,
+      "has_official_source": true,
+      "has_source_backed_evidence": true,
+      "local_decision_evidence_urls": [
+        "https://www.shorelinewa.gov/government/departments/planning-community-development/forms-application-checklists-development-information/residential-projects/interior-remodel"
+      ],
+      "local_form_known": true,
+      "primary_filing_source_tier": "none",
+      "primary_requirement_source_tier": "local_ahj",
+      "requirement_source_count": 2,
+      "source_confidence": "AHJ_DIRECT"
+    },
+    "source_urls": [
+      "https://www.shorelinewa.gov/government/departments/planning-community-development/forms-application-checklists-development-information/residential-projects/interior-remodel"
+    ],
+    "sources": [
+      {
+        "publisher": "Permit office",
+        "snippet": "This checklist covers submittal requirements for a building permit for interior-only remodel work. Painting, papering, tiling, carpeting, cabinets, countertops, limited siding repair and similar finish work does not require a building permit. It also does not include finishing unfinished space, such as garages or existing unfinished basements. Those projects must follow the Residential New Build or Residential Additions building permit checklists, respectively. Examples include: - Work that incl",
+        "title": "Official building department source",
+        "url": "https://www.shorelinewa.gov/government/departments/planning-community-development/forms-application-checklists-development-information/residential-projects/interior-remodel"
+      }
+    ],
+    "summary": "Required permit package: Building Permit; Plumbing Permit — Residential Remodel / Addition; Mechanical Permit — Residential Remodel / Addition; Electrical Permit — Residential Remodel / Addition.",
+    "warnings": [
+      "Filing path degraded: exact local online filing portal was not verified; permit decision preserved."
+    ]
+  },
+  "requested_model": "NONE",
+  "requested_provider": "permitassist-local-engine",
+  "requested_runtime": "engine",
+  "response_id": null,
+  "runtime": "api.server Decision Cell + finalize + customer egress"
+}

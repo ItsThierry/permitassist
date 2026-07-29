@@ -1,0 +1,172 @@
+{
+  "artifact": "fresh_live_diagnostic_v1_1_offline_rescore_from_preserved_raw",
+  "integrity_issues": [],
+  "paths": {
+    "engine": {
+      "attempts": 100,
+      "composite_dimension_denominator": 900,
+      "composite_dimension_passes": 655,
+      "end_to_end_success": 1,
+      "error_classes": {
+        "none": 1,
+        "semantic_answer_failure": 99
+      },
+      "format_schema_valid": 100,
+      "identities": [
+        [
+          "permitassist-local-engine",
+          "permitassist-local-engine",
+          "NONE",
+          "NONE",
+          ""
+        ]
+      ],
+      "metric_passes": {
+        "companion_status_exact": 39,
+        "contradiction_free": 100,
+        "decision_exact": 96,
+        "filing_authority_identity": 81,
+        "filing_destination_exact": 98,
+        "filing_url_role_exact": 99,
+        "jurisdiction_identity": 4,
+        "official_source_support": 96,
+        "primary_permit_family_exact": 42
+      },
+      "provider_transport_success": 100,
+      "runtime_typed_result_coverage": 100
+    },
+    "engine_luna": {
+      "attempts": 100,
+      "composite_dimension_denominator": 900,
+      "composite_dimension_passes": 637,
+      "end_to_end_success": 0,
+      "error_classes": {
+        "semantic_answer_failure": 100
+      },
+      "format_schema_valid": 100,
+      "identities": [
+        [
+          "openai-codex",
+          "openai-codex",
+          "gpt-5.6-luna",
+          "gpt-5.6-luna",
+          ""
+        ]
+      ],
+      "metric_passes": {
+        "companion_status_exact": 18,
+        "contradiction_free": 100,
+        "decision_exact": 99,
+        "filing_authority_identity": 83,
+        "filing_destination_exact": 98,
+        "filing_url_role_exact": 99,
+        "jurisdiction_identity": 0,
+        "official_source_support": 99,
+        "primary_permit_family_exact": 41
+      },
+      "provider_transport_success": 100,
+      "runtime_typed_result_coverage": 100
+    },
+    "gemini": {
+      "attempts": 100,
+      "composite_dimension_denominator": 900,
+      "composite_dimension_passes": 593,
+      "end_to_end_success": 2,
+      "error_classes": {
+        "none": 2,
+        "semantic_answer_failure": 98
+      },
+      "format_schema_valid": 100,
+      "identities": [
+        [
+          "google-antigravity-oauth",
+          "google-antigravity-oauth",
+          "Gemini 3.6 Flash (High)",
+          "Gemini 3.6 Flash (High)",
+          ""
+        ]
+      ],
+      "metric_passes": {
+        "companion_status_exact": 69,
+        "contradiction_free": 99,
+        "decision_exact": 54,
+        "filing_authority_identity": 14,
+        "filing_destination_exact": 84,
+        "filing_url_role_exact": 20,
+        "jurisdiction_identity": 100,
+        "official_source_support": 100,
+        "primary_permit_family_exact": 53
+      },
+      "provider_transport_success": 100,
+      "runtime_typed_result_coverage": 100
+    },
+    "grok": {
+      "attempts": 100,
+      "composite_dimension_denominator": 900,
+      "composite_dimension_passes": 602,
+      "end_to_end_success": 0,
+      "error_classes": {
+        "semantic_answer_failure": 100
+      },
+      "format_schema_valid": 100,
+      "identities": [
+        [
+          "openrouter",
+          "openrouter",
+          "x-ai/grok-4.5",
+          "x-ai/grok-4.5",
+          "xAI"
+        ]
+      ],
+      "metric_passes": {
+        "companion_status_exact": 15,
+        "contradiction_free": 93,
+        "decision_exact": 64,
+        "filing_authority_identity": 24,
+        "filing_destination_exact": 87,
+        "filing_url_role_exact": 34,
+        "jurisdiction_identity": 100,
+        "official_source_support": 100,
+        "primary_permit_family_exact": 85
+      },
+      "provider_transport_success": 100,
+      "runtime_typed_result_coverage": 100
+    },
+    "luna": {
+      "attempts": 100,
+      "composite_dimension_denominator": 900,
+      "composite_dimension_passes": 561,
+      "end_to_end_success": 1,
+      "error_classes": {
+        "none": 1,
+        "semantic_answer_failure": 99
+      },
+      "format_schema_valid": 100,
+      "identities": [
+        [
+          "openai-codex",
+          "openai-codex",
+          "gpt-5.6-luna",
+          "gpt-5.6-luna",
+          ""
+        ]
+      ],
+      "metric_passes": {
+        "companion_status_exact": 20,
+        "contradiction_free": 92,
+        "decision_exact": 45,
+        "filing_authority_identity": 23,
+        "filing_destination_exact": 78,
+        "filing_url_role_exact": 45,
+        "jurisdiction_identity": 100,
+        "official_source_support": 100,
+        "primary_permit_family_exact": 58
+      },
+      "provider_transport_success": 100,
+      "runtime_typed_result_coverage": 100
+    }
+  },
+  "raw_files": 500,
+  "rows": 500,
+  "unique_cases": 100
+}

@@ -1,0 +1,78 @@
+{
+  "observed_model": "x-ai/grok-4.5",
+  "observed_provider": "openrouter",
+  "path_proof": {
+    "adapter": "grok",
+    "engine_called": false,
+    "engine_result_supplied_to_model": false,
+    "model_call_count": 1
+  },
+  "provider": "openrouter",
+  "provider_response": {
+    "choices": [
+      {
+        "finish_reason": "stop",
+        "index": 0,
+        "logprobs": null,
+        "message": {
+          "content": "{\"permit_decision\":\"REQUIRED\",\"jurisdiction\":{\"jurisdiction_id\":\"us-la-covington\",\"name\":\"Covington\",\"state\":\"LA\",\"type\":\"city_or_local_authority\"},\"project_family\":\"residential_remodel\",\"primary_permit_family\":\"BUILDING\",\"companion_permits\":[{\"family\":\"ELECTRICAL\",\"status\":\"VERIFY\"},{\"family\":\"PLUMBING\",\"status\":\"VERIFY\"},{\"family\":\"MECHANICAL\",\"status\":\"VERIFY\"},{\"family\":\"FIRE_LIFE_SAFETY\",\"status\":\"VERIFY\"}],\"filing\":{\"authority_id\":\"us-la-covington\",\"destination_url\":\"https://www.covla.com/city-departments/building-permits/\",\"office\":\"Building Permit Department\",\"url_role\":\"INFORMATIONAL_OFFICE\"},\"source_support\":{\"state\":\"OFFICIAL_SOURCE_SUPPORTED\",\"strength\":\"MODERATE\",\"evidence\":[{\"url\":\"https://www.covla.com/city-departments/building-permits/\",\"role\":\"REQUIREMENT_EVIDENCE\"}]},\"contradictions\":[]}",
+          "reasoning": "The user wants me to return exactly one JSON object conforming to MODEL_SCHEMA based on the evidence packet. No markdown fences, commentary, etc. Output JSON only.\n",
+          "reasoning_details": [
+            {
+              "format": "xai-responses-v1",
+              "index": 0,
+              "summary": "The user wants me to return exactly one JSON object conforming to MODEL_SCHEMA based on the evidence packet. No markdown fences, commentary, etc. Output JSON only.\n",
+              "type": "reasoning.summary"
+            },
+            {
+              "data": "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",
+              "format": "xai-responses-v1",
+              "id": "rs_e2ace57c-ae70-9407-9a5d-92a1271f48b1",
+              "index": 1,
+              "type": "reasoning.encrypted"
+            }
+          ],
+          "refusal": null,
+          "role": "assistant"
+        },
+        "native_finish_reason": "completed"
+      }
+    ],
+    "created": 1785166029,
+    "id": "gen-1785166029-hIgBDU2fExIUEyCXta8s",
+    "model": "x-ai/grok-4.5",
+    "object": "chat.completion",
+    "provider": "xAI",
+    "service_tier": "default",
+    "system_fingerprint": null,
+    "usage": {
+      "completion_tokens": 950,
+      "completion_tokens_details": {
+        "audio_tokens": 0,
+        "image_tokens": 0,
+        "reasoning_tokens": 702
+      },
+      "cost": 0.0081384,
+      "cost_details": {
+        "upstream_inference_completions_cost": 0.0057,
+        "upstream_inference_cost": 0.0081384,
+        "upstream_inference_prompt_cost": 0.0024384
+      },
+      "is_byok": false,
+      "prompt_tokens": 1328,
+      "prompt_tokens_details": {
+        "audio_tokens": 0,
+        "cache_write_tokens": 0,
+        "cached_tokens": 128,
+        "video_tokens": 0
+      },
+      "total_tokens": 2278
+    }
+  },
+  "raw_text": "{\"permit_decision\":\"REQUIRED\",\"jurisdiction\":{\"jurisdiction_id\":\"us-la-covington\",\"name\":\"Covington\",\"state\":\"LA\",\"type\":\"city_or_local_authority\"},\"project_family\":\"residential_remodel\",\"primary_permit_family\":\"BUILDING\",\"companion_permits\":[{\"family\":\"ELECTRICAL\",\"status\":\"VERIFY\"},{\"family\":\"PLUMBING\",\"status\":\"VERIFY\"},{\"family\":\"MECHANICAL\",\"status\":\"VERIFY\"},{\"family\":\"FIRE_LIFE_SAFETY\",\"status\":\"VERIFY\"}],\"filing\":{\"authority_id\":\"us-la-covington\",\"destination_url\":\"https://www.covla.com/city-departments/building-permits/\",\"office\":\"Building Permit Department\",\"url_role\":\"INFORMATIONAL_OFFICE\"},\"source_support\":{\"state\":\"OFFICIAL_SOURCE_SUPPORTED\",\"strength\":\"MODERATE\",\"evidence\":[{\"url\":\"https://www.covla.com/city-departments/building-permits/\",\"role\":\"REQUIREMENT_EVIDENCE\"}]},\"contradictions\":[]}",
+  "requested_model": "x-ai/grok-4.5",
+  "requested_provider": "openrouter",
+  "requested_runtime": "grok",
+  "response_id": "gen-1785166029-hIgBDU2fExIUEyCXta8s",
+  "runtime": "OpenRouter chat/completions; upstream_provider=xAI"
+}

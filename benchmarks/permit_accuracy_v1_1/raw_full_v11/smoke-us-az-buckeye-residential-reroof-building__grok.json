@@ -1,0 +1,78 @@
+{
+  "observed_model": "x-ai/grok-4.5",
+  "observed_provider": "openrouter",
+  "path_proof": {
+    "adapter": "grok",
+    "engine_called": false,
+    "engine_result_supplied_to_model": false,
+    "model_call_count": 1
+  },
+  "provider": "openrouter",
+  "provider_response": {
+    "choices": [
+      {
+        "finish_reason": "stop",
+        "index": 0,
+        "logprobs": null,
+        "message": {
+          "content": "{\"permit_decision\":\"REQUIRED\",\"jurisdiction\":{\"jurisdiction_id\":\"us-az-buckeye\",\"name\":\"Buckeye\",\"state\":\"AZ\",\"type\":\"city_or_local_authority\"},\"project_family\":\"reroof\",\"primary_permit_family\":\"BUILDING\",\"companion_permits\":[],\"filing\":{\"authority_id\":\"us-az-buckeye\",\"destination_url\":\"https://www.buckeyeaz.gov/business/development-services/permit-center\",\"office\":\"Buckeye Permit Center\",\"url_role\":\"REQUIREMENT_EVIDENCE\"},\"source_support\":{\"state\":\"OFFICIAL_SOURCE_SUPPORTED\",\"strength\":\"STRONG\",\"evidence\":[{\"url\":\"https://www.buckeyeaz.gov/business/development-services/permit-center\",\"role\":\"REQUIREMENT_EVIDENCE\"}]},\"contradictions\":[]}",
+          "reasoning": "The user wants me to evaluate one permit lookup using ONLY the supplied official-source evidence packet and return exactly one JSON object conforming to MODEL_SCHEMA.\n",
+          "reasoning_details": [
+            {
+              "format": "xai-responses-v1",
+              "index": 0,
+              "summary": "The user wants me to evaluate one permit lookup using ONLY the supplied official-source evidence packet and return exactly one JSON object conforming to MODEL_SCHEMA.\n",
+              "type": "reasoning.summary"
+            },
+            {
+              "data": "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",
+              "format": "xai-responses-v1",
+              "id": "rs_b64ec2b1-a643-99ab-acbc-0afe9307c4bf",
+              "index": 1,
+              "type": "reasoning.encrypted"
+            }
+          ],
+          "refusal": null,
+          "role": "assistant"
+        },
+        "native_finish_reason": "completed"
+      }
+    ],
+    "created": 1785163548,
+    "id": "gen-1785163548-9M85RU0v4bQnPw44pMVM",
+    "model": "x-ai/grok-4.5",
+    "object": "chat.completion",
+    "provider": "xAI",
+    "service_tier": "default",
+    "system_fingerprint": null,
+    "usage": {
+      "completion_tokens": 689,
+      "completion_tokens_details": {
+        "audio_tokens": 0,
+        "image_tokens": 0,
+        "reasoning_tokens": 487
+      },
+      "cost": 0.004706,
+      "cost_details": {
+        "upstream_inference_completions_cost": 0.004134,
+        "upstream_inference_cost": 0.004706,
+        "upstream_inference_prompt_cost": 0.000572
+      },
+      "is_byok": false,
+      "prompt_tokens": 1374,
+      "prompt_tokens_details": {
+        "audio_tokens": 0,
+        "cache_write_tokens": 0,
+        "cached_tokens": 1280,
+        "video_tokens": 0
+      },
+      "total_tokens": 2063
+    }
+  },
+  "raw_text": "{\"permit_decision\":\"REQUIRED\",\"jurisdiction\":{\"jurisdiction_id\":\"us-az-buckeye\",\"name\":\"Buckeye\",\"state\":\"AZ\",\"type\":\"city_or_local_authority\"},\"project_family\":\"reroof\",\"primary_permit_family\":\"BUILDING\",\"companion_permits\":[],\"filing\":{\"authority_id\":\"us-az-buckeye\",\"destination_url\":\"https://www.buckeyeaz.gov/business/development-services/permit-center\",\"office\":\"Buckeye Permit Center\",\"url_role\":\"REQUIREMENT_EVIDENCE\"},\"source_support\":{\"state\":\"OFFICIAL_SOURCE_SUPPORTED\",\"strength\":\"STRONG\",\"evidence\":[{\"url\":\"https://www.buckeyeaz.gov/business/development-services/permit-center\",\"role\":\"REQUIREMENT_EVIDENCE\"}]},\"contradictions\":[]}",
+  "requested_model": "x-ai/grok-4.5",
+  "requested_provider": "openrouter",
+  "requested_runtime": "grok",
+  "response_id": "gen-1785163548-9M85RU0v4bQnPw44pMVM",
+  "runtime": "OpenRouter chat/completions; upstream_provider=xAI"
+}

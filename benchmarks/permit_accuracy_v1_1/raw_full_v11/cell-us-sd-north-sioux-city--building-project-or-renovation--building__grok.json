@@ -1,0 +1,78 @@
+{
+  "observed_model": "x-ai/grok-4.5",
+  "observed_provider": "openrouter",
+  "path_proof": {
+    "adapter": "grok",
+    "engine_called": false,
+    "engine_result_supplied_to_model": false,
+    "model_call_count": 1
+  },
+  "provider": "openrouter",
+  "provider_response": {
+    "choices": [
+      {
+        "finish_reason": "stop",
+        "index": 0,
+        "logprobs": null,
+        "message": {
+          "content": "{\"permit_decision\":\"REQUIRED\",\"jurisdiction\":{\"jurisdiction_id\":\"us-sd-north_sioux_city\",\"name\":\"North Sioux City\",\"state\":\"SD\",\"type\":\"city_or_local_authority\"},\"project_family\":\"residential_remodel\",\"primary_permit_family\":\"BUILDING\",\"companion_permits\":[{\"family\":\"ELECTRICAL\",\"status\":\"VERIFY\"},{\"family\":\"PLUMBING\",\"status\":\"VERIFY\"},{\"family\":\"MECHANICAL\",\"status\":\"VERIFY\"},{\"family\":\"FIRE_LIFE_SAFETY\",\"status\":\"VERIFY\"}],\"filing\":{\"authority_id\":\"us-sd-north_sioux_city\",\"office\":\"Planning and Zoning\",\"destination_url\":\"https://northsiouxcity-sd.gov/departments/planning-zoning/\",\"url_role\":\"REQUIREMENT_EVIDENCE\"},\"source_support\":{\"state\":\"OFFICIAL_SOURCE_SUPPORTED\",\"strength\":\"MODERATE\",\"evidence\":[{\"url\":\"https://northsiouxcity-sd.gov/departments/planning-zoning/\",\"role\":\"REQUIREMENT_EVIDENCE\"}]},\"contradictions\":[]}",
+          "reasoning": "The user wants me to evaluate one permit lookup using ONLY the supplied official-source evidence packet and return exactly one JSON object conforming to MODEL_SCHEMA. No Markdown fences, commentary, e...{\n  \"permit_decision\": \"REQUIRED\",\n  \"jurisdiction\": {\n    \"jurisdiction_id\": \"us-sd-north_sioux_city\",\n    \"name\": \"North Sioux City\",\n    \"state\": \"SD\",\n    \"type\": \"city_or_local_authority\"\n  },\n  \"project_family \": \"residential_remodel\",\n  \"primary_permit_family\": \"BUILDING\",\n  \"companion_permits\": [\n    {\n      \"family\": \"ELECTRICAL\",\n      \"status\": \"VERIFY\"\n    },\n    {\n      \"family\": \"PLUMBING\",\n      \"status\": \"VERIFY\"\n    },\n    {\n      \"family\": \"MECHANICAL\",\n      \"status\": \"VERIFY\"\n    }\n  ],\n  \"filing\": {\n    \"authority_id\": \"us-sd-north_sioux_city\",\n    \"destination_url\": \"https://northsiouxcity-sd.",
+          "reasoning_details": [
+            {
+              "format": "xai-responses-v1",
+              "index": 0,
+              "summary": "The user wants me to evaluate one permit lookup using ONLY the supplied official-source evidence packet and return exactly one JSON object conforming to MODEL_SCHEMA. No Markdown fences, commentary, e...{\n  \"permit_decision\": \"REQUIRED\",\n  \"jurisdiction\": {\n    \"jurisdiction_id\": \"us-sd-north_sioux_city\",\n    \"name\": \"North Sioux City\",\n    \"state\": \"SD\",\n    \"type\": \"city_or_local_authority\"\n  },\n  \"project_family \": \"residential_remodel\",\n  \"primary_permit_family\": \"BUILDING\",\n  \"companion_permits\": [\n    {\n      \"family\": \"ELECTRICAL\",\n      \"status\": \"VERIFY\"\n    },\n    {\n      \"family\": \"PLUMBING\",\n      \"status\": \"VERIFY\"\n    },\n    {\n      \"family\": \"MECHANICAL\",\n      \"status\": \"VERIFY\"\n    }\n  ],\n  \"filing\": {\n    \"authority_id\": \"us-sd-north_sioux_city\",\n    \"destination_url\": \"https://northsiouxcity-sd.",
+              "type": "reasoning.summary"
+            },
+            {
+              "data": "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",
+              "format": "xai-responses-v1",
+              "id": "rs_ae458e45-db3a-9e4f-81cc-cd4a2f39200e",
+              "index": 1,
+              "type": "reasoning.encrypted"
+            }
+          ],
+          "refusal": null,
+          "role": "assistant"
+        },
+        "native_finish_reason": "completed"
+      }
+    ],
+    "created": 1785167886,
+    "id": "gen-1785167886-wQk13TWFJgQSDAWJW5lW",
+    "model": "x-ai/grok-4.5",
+    "object": "chat.completion",
+    "provider": "xAI",
+    "service_tier": "default",
+    "system_fingerprint": null,
+    "usage": {
+      "completion_tokens": 1303,
+      "completion_tokens_details": {
+        "audio_tokens": 0,
+        "image_tokens": 0,
+        "reasoning_tokens": 1046
+      },
+      "cost": 0.0103464,
+      "cost_details": {
+        "upstream_inference_completions_cost": 0.007818,
+        "upstream_inference_cost": 0.0103464,
+        "upstream_inference_prompt_cost": 0.0025284
+      },
+      "is_byok": false,
+      "prompt_tokens": 1373,
+      "prompt_tokens_details": {
+        "audio_tokens": 0,
+        "cache_write_tokens": 0,
+        "cached_tokens": 128,
+        "video_tokens": 0
+      },
+      "total_tokens": 2676
+    }
+  },
+  "raw_text": "{\"permit_decision\":\"REQUIRED\",\"jurisdiction\":{\"jurisdiction_id\":\"us-sd-north_sioux_city\",\"name\":\"North Sioux City\",\"state\":\"SD\",\"type\":\"city_or_local_authority\"},\"project_family\":\"residential_remodel\",\"primary_permit_family\":\"BUILDING\",\"companion_permits\":[{\"family\":\"ELECTRICAL\",\"status\":\"VERIFY\"},{\"family\":\"PLUMBING\",\"status\":\"VERIFY\"},{\"family\":\"MECHANICAL\",\"status\":\"VERIFY\"},{\"family\":\"FIRE_LIFE_SAFETY\",\"status\":\"VERIFY\"}],\"filing\":{\"authority_id\":\"us-sd-north_sioux_city\",\"office\":\"Planning and Zoning\",\"destination_url\":\"https://northsiouxcity-sd.gov/departments/planning-zoning/\",\"url_role\":\"REQUIREMENT_EVIDENCE\"},\"source_support\":{\"state\":\"OFFICIAL_SOURCE_SUPPORTED\",\"strength\":\"MODERATE\",\"evidence\":[{\"url\":\"https://northsiouxcity-sd.gov/departments/planning-zoning/\",\"role\":\"REQUIREMENT_EVIDENCE\"}]},\"contradictions\":[]}",
+  "requested_model": "x-ai/grok-4.5",
+  "requested_provider": "openrouter",
+  "requested_runtime": "grok",
+  "response_id": "gen-1785167886-wQk13TWFJgQSDAWJW5lW",
+  "runtime": "OpenRouter chat/completions; upstream_provider=xAI"
+}

@@ -1,0 +1,78 @@
+{
+  "observed_model": "x-ai/grok-4.5",
+  "observed_provider": "openrouter",
+  "path_proof": {
+    "adapter": "grok",
+    "engine_called": false,
+    "engine_result_supplied_to_model": false,
+    "model_call_count": 1
+  },
+  "provider": "openrouter",
+  "provider_response": {
+    "choices": [
+      {
+        "finish_reason": "stop",
+        "index": 0,
+        "logprobs": null,
+        "message": {
+          "content": "{\"permit_decision\":\"VERIFY\",\"jurisdiction\":{\"jurisdiction_id\":\"us-fl-st_johns_county\",\"name\":\"St Johns County\",\"state\":\"FL\",\"type\":\"county\"},\"project_family\":\"residential_remodel\",\"primary_permit_family\":\"BUILDING\",\"companion_permits\":[{\"family\":\"ELECTRICAL\",\"status\":\"VERIFY\"},{\"family\":\"PLUMBING\",\"status\":\"VERIFY\"},{\"family\":\"MECHANICAL\",\"status\":\"VERIFY\"},{\"family\":\"BUILDING\",\"status\":\"VERIFY\"}],\"filing\":{\"authority_id\":null,\"office\":\"Building Permits\",\"destination_url\":\"https://www.sjcfl.us/building-permits/\",\"url_role\":\"REQUIREMENT_EVIDENCE\"},\"source_support\":{\"state\":\"OFFICIAL_SOURCE_SUPPORTED\",\"strength\":\"WEAK\",\"evidence\":[{\"url\":\"https://www.sjcfl.us/building-permits/\",\"role\":\"REQUIREMENT_EVIDENCE\"}]},\"contradictions\":[]}",
+          "reasoning": "The user wants me to evaluate one permit lookup using ONLY the supplied official-source evidence packet and return exactly one JSON object conforming to MODEL_SCHEMA.\n{\n  \"companion_permits\": [\n    {\n      \"family\": \"BUILDING\",\n      \"status\": \"REQUIRED\"\n    },\n    {\n      \"family\": \"ELECTRICAL\",\n      \"status\": \"REQUIRED\"\n    },\n    {\n      \"family\": \"PLUMBING\",\n      \"status\": \" REQUIRED\"\n    },\n    {\n      \"family\": \"MECHANICAL\",\n      \"status\": \"REQUIRED\"\n    }\n  ],\n  \"contradictions\": [],\n  \"filing\": {\n    \"authority_id\": null,\n    \"destination_url\": \"https://www.sjcfl.",
+          "reasoning_details": [
+            {
+              "format": "xai-responses-v1",
+              "index": 0,
+              "summary": "The user wants me to evaluate one permit lookup using ONLY the supplied official-source evidence packet and return exactly one JSON object conforming to MODEL_SCHEMA.\n{\n  \"companion_permits\": [\n    {\n      \"family\": \"BUILDING\",\n      \"status\": \"REQUIRED\"\n    },\n    {\n      \"family\": \"ELECTRICAL\",\n      \"status\": \"REQUIRED\"\n    },\n    {\n      \"family\": \"PLUMBING\",\n      \"status\": \" REQUIRED\"\n    },\n    {\n      \"family\": \"MECHANICAL\",\n      \"status\": \"REQUIRED\"\n    }\n  ],\n  \"contradictions\": [],\n  \"filing\": {\n    \"authority_id\": null,\n    \"destination_url\": \"https://www.sjcfl.",
+              "type": "reasoning.summary"
+            },
+            {
+              "data": "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",
+              "format": "xai-responses-v1",
+              "id": "rs_e2b2cdfc-3fdb-92bf-8737-df4ee039608c",
+              "index": 1,
+              "type": "reasoning.encrypted"
+            }
+          ],
+          "refusal": null,
+          "role": "assistant"
+        },
+        "native_finish_reason": "completed"
+      }
+    ],
+    "created": 1785165219,
+    "id": "gen-1785165219-yBjWpuYktvC7vy2VOtKE",
+    "model": "x-ai/grok-4.5",
+    "object": "chat.completion",
+    "provider": "xAI",
+    "service_tier": "default",
+    "system_fingerprint": null,
+    "usage": {
+      "completion_tokens": 1568,
+      "completion_tokens_details": {
+        "audio_tokens": 0,
+        "image_tokens": 0,
+        "reasoning_tokens": 1342
+      },
+      "cost": 0.0117104,
+      "cost_details": {
+        "upstream_inference_completions_cost": 0.009408,
+        "upstream_inference_cost": 0.0117104,
+        "upstream_inference_prompt_cost": 0.0023024
+      },
+      "is_byok": false,
+      "prompt_tokens": 1260,
+      "prompt_tokens_details": {
+        "audio_tokens": 0,
+        "cache_write_tokens": 0,
+        "cached_tokens": 128,
+        "video_tokens": 0
+      },
+      "total_tokens": 2828
+    }
+  },
+  "raw_text": "{\"permit_decision\":\"VERIFY\",\"jurisdiction\":{\"jurisdiction_id\":\"us-fl-st_johns_county\",\"name\":\"St Johns County\",\"state\":\"FL\",\"type\":\"county\"},\"project_family\":\"residential_remodel\",\"primary_permit_family\":\"BUILDING\",\"companion_permits\":[{\"family\":\"ELECTRICAL\",\"status\":\"VERIFY\"},{\"family\":\"PLUMBING\",\"status\":\"VERIFY\"},{\"family\":\"MECHANICAL\",\"status\":\"VERIFY\"},{\"family\":\"BUILDING\",\"status\":\"VERIFY\"}],\"filing\":{\"authority_id\":null,\"office\":\"Building Permits\",\"destination_url\":\"https://www.sjcfl.us/building-permits/\",\"url_role\":\"REQUIREMENT_EVIDENCE\"},\"source_support\":{\"state\":\"OFFICIAL_SOURCE_SUPPORTED\",\"strength\":\"WEAK\",\"evidence\":[{\"url\":\"https://www.sjcfl.us/building-permits/\",\"role\":\"REQUIREMENT_EVIDENCE\"}]},\"contradictions\":[]}",
+  "requested_model": "x-ai/grok-4.5",
+  "requested_provider": "openrouter",
+  "requested_runtime": "grok",
+  "response_id": "gen-1785165219-yBjWpuYktvC7vy2VOtKE",
+  "runtime": "OpenRouter chat/completions; upstream_provider=xAI"
+}

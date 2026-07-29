@@ -1,0 +1,6 @@
+PermitAssist independently adjudicated official filing route
+Official source URL: https://www.sandiego.gov/development-services/permits/building-permit
+Official filing URL: https://aca.accela.com/SANDIEGO
+Verification boundary: PASS_OFFICIAL_PAGE_WEB_EXTRACT_20260728
+Exact official quote:
+Apply for a Permit

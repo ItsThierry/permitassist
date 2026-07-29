@@ -1,0 +1,78 @@
+{
+  "observed_model": "x-ai/grok-4.5",
+  "observed_provider": "openrouter",
+  "path_proof": {
+    "adapter": "grok",
+    "engine_called": false,
+    "engine_result_supplied_to_model": false,
+    "model_call_count": 1
+  },
+  "provider": "openrouter",
+  "provider_response": {
+    "choices": [
+      {
+        "finish_reason": "stop",
+        "index": 0,
+        "logprobs": null,
+        "message": {
+          "content": "{\"permit_decision\":\"REQUIRED\",\"jurisdiction\":{\"jurisdiction_id\":\"us-mt-anaconda_deer_lodge\",\"name\":\"Anaconda Deer Lodge\",\"state\":\"MT\",\"type\":\"city_or_local_authority\"},\"project_family\":\"commercial_tenant_improvement\",\"primary_permit_family\":\"BUILDING\",\"companion_permits\":[{\"family\":\"ELECTRICAL\",\"status\":\"REQUIRED\"},{\"family\":\"PLUMBING\",\"status\":\"REQUIRED\"},{\"family\":\"MECHANICAL\",\"status\":\"REQUIRED\"},{\"family\":\"FIRE_LIFE_SAFETY\",\"status\":\"VERIFY\"},{\"family\":\"OCCUPANCY\",\"status\":\"VERIFY\"},{\"family\":\"PLANNING_ZONING\",\"status\":\"VERIFY\"}],\"filing\":{\"authority_id\":\"us-mt-anaconda_deer_lodge\",\"office\":\"Anaconda-Deer Lodge County Building Inspector\",\"destination_url\":\"https://www.adlc.us/153/Building-Inspector\",\"url_role\":\"INFORMATIONAL_OFFICE\"},\"source_support\":{\"state\":\"OFFICIAL_SOURCE_SUPPORTED\",\"strength\":\"MODERATE\",\"evidence\":[{\"url\":\"https://www.adlc.us/153/Building-Inspector\",\"role\":\"REQUIREMENT_EVIDENCE\"},{\"url\":\"https://www.adlc.us/153/Building-Inspector\",\"role\":\"INFORMATIONAL_OFFICE\"},{\"url\":\"https://adlc.us/187/Planning\",\"role\":\"APPLICATION_START\"}]},\"contradictions\":[\"Local Building Inspector requires building permits countywide but explicitly does not handle electrical, plumbing, or mechanical inspection and permitting, which are functions of the Montana Department of Labor and Industry.\"]}",
+          "reasoning": "The user wants me to evaluate a permit lookup using only the supplied evidence packet and return exactly one JSON object conforming to MODEL_SCHEMA. No markdown fences, commentary, etc. - JSON only.\n\n...{\n  \"companion_permits\": [\n    {\n      \"family\": \"ELECTRICAL\",\n      \"status\": \"REQUIRED\"\n    },\n    {\n      \"family\": \"PLUMBING\",\n      \"status\": \"REQUIRED\"\n    },\n    {\n      \"family\": \"MECHANICAL\",\n      \"status\": \"REQUIRED\"\n    },\n    {\n      \"family\": \"FIRE_LIFE_SAFETY\",\n      \"status\": \"VERIFY\"\n    },\n    {\n      \"family\": \"OCCUPANCY\",\n      \"status\": \"VERIFY\"\n    },\n    {\n      \"family\": \"PLANNING_ZONING\",\n      \" status\": \"VERIFY\"\n    }\n  ],\n  \"contradictions\": [],\n  \"filing\": {\n    \"authority_id\": \"us-mt-anaconda_deer_lodge\",\n    \"destination_url\": \"https://www.adlc.",
+          "reasoning_details": [
+            {
+              "format": "xai-responses-v1",
+              "index": 0,
+              "summary": "The user wants me to evaluate a permit lookup using only the supplied evidence packet and return exactly one JSON object conforming to MODEL_SCHEMA. No markdown fences, commentary, etc. - JSON only.\n\n...{\n  \"companion_permits\": [\n    {\n      \"family\": \"ELECTRICAL\",\n      \"status\": \"REQUIRED\"\n    },\n    {\n      \"family\": \"PLUMBING\",\n      \"status\": \"REQUIRED\"\n    },\n    {\n      \"family\": \"MECHANICAL\",\n      \"status\": \"REQUIRED\"\n    },\n    {\n      \"family\": \"FIRE_LIFE_SAFETY\",\n      \"status\": \"VERIFY\"\n    },\n    {\n      \"family\": \"OCCUPANCY\",\n      \"status\": \"VERIFY\"\n    },\n    {\n      \"family\": \"PLANNING_ZONING\",\n      \" status\": \"VERIFY\"\n    }\n  ],\n  \"contradictions\": [],\n  \"filing\": {\n    \"authority_id\": \"us-mt-anaconda_deer_lodge\",\n    \"destination_url\": \"https://www.adlc.",
+              "type": "reasoning.summary"
+            },
+            {
+              "data": "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",
+              "format": "xai-responses-v1",
+              "id": "rs_9e86914b-8499-973c-828a-28f2b601d42b",
+              "index": 1,
+              "type": "reasoning.encrypted"
+            }
+          ],
+          "refusal": null,
+          "role": "assistant"
+        },
+        "native_finish_reason": "completed"
+      }
+    ],
+    "created": 1785166622,
+    "id": "gen-1785166622-lssKy6U1qMWFhGyBt2xq",
+    "model": "x-ai/grok-4.5",
+    "object": "chat.completion",
+    "provider": "xAI",
+    "service_tier": "default",
+    "system_fingerprint": null,
+    "usage": {
+      "completion_tokens": 1314,
+      "completion_tokens_details": {
+        "audio_tokens": 0,
+        "image_tokens": 0,
+        "reasoning_tokens": 942
+      },
+      "cost": 0.0091632,
+      "cost_details": {
+        "upstream_inference_completions_cost": 0.007884,
+        "upstream_inference_cost": 0.0091632,
+        "upstream_inference_prompt_cost": 0.0012792
+      },
+      "is_byok": false,
+      "prompt_tokens": 1510,
+      "prompt_tokens_details": {
+        "audio_tokens": 0,
+        "cache_write_tokens": 0,
+        "cached_tokens": 1024,
+        "video_tokens": 0
+      },
+      "total_tokens": 2824
+    }
+  },
+  "raw_text": "{\"permit_decision\":\"REQUIRED\",\"jurisdiction\":{\"jurisdiction_id\":\"us-mt-anaconda_deer_lodge\",\"name\":\"Anaconda Deer Lodge\",\"state\":\"MT\",\"type\":\"city_or_local_authority\"},\"project_family\":\"commercial_tenant_improvement\",\"primary_permit_family\":\"BUILDING\",\"companion_permits\":[{\"family\":\"ELECTRICAL\",\"status\":\"REQUIRED\"},{\"family\":\"PLUMBING\",\"status\":\"REQUIRED\"},{\"family\":\"MECHANICAL\",\"status\":\"REQUIRED\"},{\"family\":\"FIRE_LIFE_SAFETY\",\"status\":\"VERIFY\"},{\"family\":\"OCCUPANCY\",\"status\":\"VERIFY\"},{\"family\":\"PLANNING_ZONING\",\"status\":\"VERIFY\"}],\"filing\":{\"authority_id\":\"us-mt-anaconda_deer_lodge\",\"office\":\"Anaconda-Deer Lodge County Building Inspector\",\"destination_url\":\"https://www.adlc.us/153/Building-Inspector\",\"url_role\":\"INFORMATIONAL_OFFICE\"},\"source_support\":{\"state\":\"OFFICIAL_SOURCE_SUPPORTED\",\"strength\":\"MODERATE\",\"evidence\":[{\"url\":\"https://www.adlc.us/153/Building-Inspector\",\"role\":\"REQUIREMENT_EVIDENCE\"},{\"url\":\"https://www.adlc.us/153/Building-Inspector\",\"role\":\"INFORMATIONAL_OFFICE\"},{\"url\":\"https://adlc.us/187/Planning\",\"role\":\"APPLICATION_START\"}]},\"contradictions\":[\"Local Building Inspector requires building permits countywide but explicitly does not handle electrical, plumbing, or mechanical inspection and permitting, which are functions of the Montana Department of Labor and Industry.\"]}",
+  "requested_model": "x-ai/grok-4.5",
+  "requested_provider": "openrouter",
+  "requested_runtime": "grok",
+  "response_id": "gen-1785166622-lssKy6U1qMWFhGyBt2xq",
+  "runtime": "OpenRouter chat/completions; upstream_provider=xAI"
+}

@@ -1,0 +1,78 @@
+{
+  "observed_model": "x-ai/grok-4.5",
+  "observed_provider": "openrouter",
+  "path_proof": {
+    "adapter": "grok",
+    "engine_called": false,
+    "engine_result_supplied_to_model": false,
+    "model_call_count": 1
+  },
+  "provider": "openrouter",
+  "provider_response": {
+    "choices": [
+      {
+        "finish_reason": "stop",
+        "index": 0,
+        "logprobs": null,
+        "message": {
+          "content": "{\"permit_decision\":\"REQUIRED\",\"jurisdiction\":{\"jurisdiction_id\":\"us-ky-mount_washington\",\"name\":\"Mount Washington\",\"state\":\"KY\",\"type\":\"city_or_local_authority\"},\"project_family\":\"residential_remodel\",\"primary_permit_family\":\"BUILDING\",\"companion_permits\":[{\"family\":\"ELECTRICAL\",\"status\":\"CONDITIONAL\"},{\"family\":\"PLUMBING\",\"status\":\"CONDITIONAL\"},{\"family\":\"MECHANICAL\",\"status\":\"CONDITIONAL\"},{\"family\":\"VERIFY\",\"status\":\"VERIFY\"}],\"filing\":{\"authority_id\":\"us-ky-mount_washington\",\"office\":\"City of Mt. Washington Building Code Department\",\"destination_url\":\"https://www.mtwashingtonky.org/departments/building_and_housing/index.php\",\"url_role\":\"INFORMATIONAL_OFFICE\"},\"source_support\":{\"state\":\"OFFICIAL_SOURCE_SUPPORTED\",\"strength\":\"MODERATE\",\"evidence\":[{\"url\":\"https://www.mtwashingtonky.org/departments/building_and_housing/index.php\",\"role\":\"REQUIREMENT_EVIDENCE\"}]},\"contradictions\":[]}",
+          "reasoning": "The user wants me to return exactly one JSON object conforming to MODEL_SCHEMA based on the evidence packet. No markdown fences, commentary, or JSON repair conventions. Output JSON only.\n",
+          "reasoning_details": [
+            {
+              "format": "xai-responses-v1",
+              "index": 0,
+              "summary": "The user wants me to return exactly one JSON object conforming to MODEL_SCHEMA based on the evidence packet. No markdown fences, commentary, or JSON repair conventions. Output JSON only.\n",
+              "type": "reasoning.summary"
+            },
+            {
+              "data": "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",
+              "format": "xai-responses-v1",
+              "id": "rs_be52308a-10c5-9cfb-8e94-dafa1705946a",
+              "index": 1,
+              "type": "reasoning.encrypted"
+            }
+          ],
+          "refusal": null,
+          "role": "assistant"
+        },
+        "native_finish_reason": "completed"
+      }
+    ],
+    "created": 1785165933,
+    "id": "gen-1785165933-Ax7Pt5cBnLvkVCnH3meY",
+    "model": "x-ai/grok-4.5",
+    "object": "chat.completion",
+    "provider": "xAI",
+    "service_tier": "default",
+    "system_fingerprint": null,
+    "usage": {
+      "completion_tokens": 954,
+      "completion_tokens_details": {
+        "audio_tokens": 0,
+        "image_tokens": 0,
+        "reasoning_tokens": 696
+      },
+      "cost": 0.0081204,
+      "cost_details": {
+        "upstream_inference_completions_cost": 0.005724,
+        "upstream_inference_cost": 0.0081204,
+        "upstream_inference_prompt_cost": 0.0023964
+      },
+      "is_byok": false,
+      "prompt_tokens": 1307,
+      "prompt_tokens_details": {
+        "audio_tokens": 0,
+        "cache_write_tokens": 0,
+        "cached_tokens": 128,
+        "video_tokens": 0
+      },
+      "total_tokens": 2261
+    }
+  },
+  "raw_text": "{\"permit_decision\":\"REQUIRED\",\"jurisdiction\":{\"jurisdiction_id\":\"us-ky-mount_washington\",\"name\":\"Mount Washington\",\"state\":\"KY\",\"type\":\"city_or_local_authority\"},\"project_family\":\"residential_remodel\",\"primary_permit_family\":\"BUILDING\",\"companion_permits\":[{\"family\":\"ELECTRICAL\",\"status\":\"CONDITIONAL\"},{\"family\":\"PLUMBING\",\"status\":\"CONDITIONAL\"},{\"family\":\"MECHANICAL\",\"status\":\"CONDITIONAL\"},{\"family\":\"VERIFY\",\"status\":\"VERIFY\"}],\"filing\":{\"authority_id\":\"us-ky-mount_washington\",\"office\":\"City of Mt. Washington Building Code Department\",\"destination_url\":\"https://www.mtwashingtonky.org/departments/building_and_housing/index.php\",\"url_role\":\"INFORMATIONAL_OFFICE\"},\"source_support\":{\"state\":\"OFFICIAL_SOURCE_SUPPORTED\",\"strength\":\"MODERATE\",\"evidence\":[{\"url\":\"https://www.mtwashingtonky.org/departments/building_and_housing/index.php\",\"role\":\"REQUIREMENT_EVIDENCE\"}]},\"contradictions\":[]}",
+  "requested_model": "x-ai/grok-4.5",
+  "requested_provider": "openrouter",
+  "requested_runtime": "grok",
+  "response_id": "gen-1785165933-Ax7Pt5cBnLvkVCnH3meY",
+  "runtime": "OpenRouter chat/completions; upstream_provider=xAI"
+}

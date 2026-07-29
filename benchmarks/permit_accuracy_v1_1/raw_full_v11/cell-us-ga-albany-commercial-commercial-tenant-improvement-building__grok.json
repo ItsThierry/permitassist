@@ -1,0 +1,78 @@
+{
+  "observed_model": "x-ai/grok-4.5",
+  "observed_provider": "openrouter",
+  "path_proof": {
+    "adapter": "grok",
+    "engine_called": false,
+    "engine_result_supplied_to_model": false,
+    "model_call_count": 1
+  },
+  "provider": "openrouter",
+  "provider_response": {
+    "choices": [
+      {
+        "finish_reason": "stop",
+        "index": 0,
+        "logprobs": null,
+        "message": {
+          "content": "{\"permit_decision\":\"VERIFY\",\"jurisdiction\":{\"jurisdiction_id\":\"us-ga-albany\",\"name\":\"Albany\",\"state\":\"GA\",\"type\":\"city_or_local_authority\"},\"project_family\":\"commercial_tenant_improvement\",\"primary_permit_family\":\"BUILDING\",\"companion_permits\":[{\"family\":\"ELECTRICAL\",\"status\":\"VERIFY\"},{\"family\":\"PLUMBING\",\"status\":\"VERIFY\"},{\"family\":\"MECHANICAL\",\"status\":\"VERIFY\"},{\"family\":\"FIRE_LIFE_SAFETY\",\"status\":\"VERIFY\"},{\"family\":\"OCCUPANCY\",\"status\":\"VERIFY\"},{\"family\":\"PLANNING_ZONING\",\"status\":\"VERIFY\"}],\"filing\":{\"authority_id\":\"us-ga-albany\",\"office\":\"Development Services\",\"destination_url\":\"https://www.albanyga.gov/City-Departments/Planning-Development/Development-Services\",\"url_role\":\"INFORMATIONAL_OFFICE\"},\"source_support\":{\"state\":\"OFFICIAL_SOURCE_SUPPORTED\",\"strength\":\"WEAK\",\"evidence\":[{\"url\":\"https://www.albanyga.gov/City-Departments/Planning-Development/Development-Services/Development-Services-Documents\",\"role\":\"REQUIREMENT_EVIDENCE\"},{\"url\":\"https://www.albanyga.gov/City-Departments/Planning-Development/Development-Services\",\"role\":\"INFORMATIONAL_OFFICE\"}]},\"contradictions\":[]}",
+          "reasoning": "The user wants me to evaluate one permit lookup using ONLY the supplied official-source evidence packet and return exactly one JSON object conforming to MODEL_SCHEMA. No markdown fences, commentary, e...",
+          "reasoning_details": [
+            {
+              "format": "xai-responses-v1",
+              "index": 0,
+              "summary": "The user wants me to evaluate one permit lookup using ONLY the supplied official-source evidence packet and return exactly one JSON object conforming to MODEL_SCHEMA. No markdown fences, commentary, e...",
+              "type": "reasoning.summary"
+            },
+            {
+              "data": "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",
+              "format": "xai-responses-v1",
+              "id": "rs_63987c9b-3ae0-93d1-95ec-3015037455a2",
+              "index": 1,
+              "type": "reasoning.encrypted"
+            }
+          ],
+          "refusal": null,
+          "role": "assistant"
+        },
+        "native_finish_reason": "completed"
+      }
+    ],
+    "created": 1785165278,
+    "id": "gen-1785165278-xcFZDCDKyJUtaPYI2c0H",
+    "model": "x-ai/grok-4.5",
+    "object": "chat.completion",
+    "provider": "xAI",
+    "service_tier": "default",
+    "system_fingerprint": null,
+    "usage": {
+      "completion_tokens": 1468,
+      "completion_tokens_details": {
+        "audio_tokens": 0,
+        "image_tokens": 0,
+        "reasoning_tokens": 1146
+      },
+      "cost": 0.0117284,
+      "cost_details": {
+        "upstream_inference_completions_cost": 0.008808,
+        "upstream_inference_cost": 0.0117284,
+        "upstream_inference_prompt_cost": 0.0029204
+      },
+      "is_byok": false,
+      "prompt_tokens": 1569,
+      "prompt_tokens_details": {
+        "audio_tokens": 0,
+        "cache_write_tokens": 0,
+        "cached_tokens": 128,
+        "video_tokens": 0
+      },
+      "total_tokens": 3037
+    }
+  },
+  "raw_text": "{\"permit_decision\":\"VERIFY\",\"jurisdiction\":{\"jurisdiction_id\":\"us-ga-albany\",\"name\":\"Albany\",\"state\":\"GA\",\"type\":\"city_or_local_authority\"},\"project_family\":\"commercial_tenant_improvement\",\"primary_permit_family\":\"BUILDING\",\"companion_permits\":[{\"family\":\"ELECTRICAL\",\"status\":\"VERIFY\"},{\"family\":\"PLUMBING\",\"status\":\"VERIFY\"},{\"family\":\"MECHANICAL\",\"status\":\"VERIFY\"},{\"family\":\"FIRE_LIFE_SAFETY\",\"status\":\"VERIFY\"},{\"family\":\"OCCUPANCY\",\"status\":\"VERIFY\"},{\"family\":\"PLANNING_ZONING\",\"status\":\"VERIFY\"}],\"filing\":{\"authority_id\":\"us-ga-albany\",\"office\":\"Development Services\",\"destination_url\":\"https://www.albanyga.gov/City-Departments/Planning-Development/Development-Services\",\"url_role\":\"INFORMATIONAL_OFFICE\"},\"source_support\":{\"state\":\"OFFICIAL_SOURCE_SUPPORTED\",\"strength\":\"WEAK\",\"evidence\":[{\"url\":\"https://www.albanyga.gov/City-Departments/Planning-Development/Development-Services/Development-Services-Documents\",\"role\":\"REQUIREMENT_EVIDENCE\"},{\"url\":\"https://www.albanyga.gov/City-Departments/Planning-Development/Development-Services\",\"role\":\"INFORMATIONAL_OFFICE\"}]},\"contradictions\":[]}",
+  "requested_model": "x-ai/grok-4.5",
+  "requested_provider": "openrouter",
+  "requested_runtime": "grok",
+  "response_id": "gen-1785165278-xcFZDCDKyJUtaPYI2c0H",
+  "runtime": "OpenRouter chat/completions; upstream_provider=xAI"
+}

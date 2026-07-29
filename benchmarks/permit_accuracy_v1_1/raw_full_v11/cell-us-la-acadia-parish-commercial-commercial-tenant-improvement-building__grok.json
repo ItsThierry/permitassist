@@ -1,0 +1,78 @@
+{
+  "observed_model": "x-ai/grok-4.5",
+  "observed_provider": "openrouter",
+  "path_proof": {
+    "adapter": "grok",
+    "engine_called": false,
+    "engine_result_supplied_to_model": false,
+    "model_call_count": 1
+  },
+  "provider": "openrouter",
+  "provider_response": {
+    "choices": [
+      {
+        "finish_reason": "stop",
+        "index": 0,
+        "logprobs": null,
+        "message": {
+          "content": "{\"permit_decision\":\"VERIFY\",\"jurisdiction\":{\"jurisdiction_id\":\"us-la-acadia_parish\",\"name\":\"Acadia Parish\",\"state\":\"LA\",\"type\":\"city_or_local_authority\"},\"project_family\":\"commercial_tenant_improvement\",\"primary_permit_family\":\"BUILDING\",\"companion_permits\":[{\"family\":\"ELECTRICAL\",\"status\":\"VERIFY\"},{\"family\":\"PLUMBING\",\"status\":\"VERIFY\"},{\"family\":\"MECHANICAL\",\"status\":\"VERIFY\"},{\"family\":\"FIRE_LIFE_SAFETY\",\"status\":\"VERIFY\"},{\"family\":\"OCCUPANCY\",\"status\":\"VERIFY\"},{\"family\":\"PLANNING_ZONING\",\"status\":\"VERIFY\"}],\"filing\":{\"authority_id\":\"us-la-acadia_parish\",\"office\":\"Acadia Parish Police Jury\",\"destination_url\":\"https://appj.org/building-permits/\",\"url_role\":\"INFORMATIONAL_OFFICE\"},\"source_support\":{\"state\":\"OFFICIAL_SOURCE_SUPPORTED\",\"strength\":\"WEAK\",\"evidence\":[{\"url\":\"https://appj.org/building-permits/\",\"role\":\"INFORMATIONAL_OFFICE\"}]},\"contradictions\":[]}",
+          "reasoning": "The user wants me to evaluate one permit lookup using ONLY the supplied official-source evidence packet and return exactly one JSON object conforming to MODEL_SCHEMA.\n",
+          "reasoning_details": [
+            {
+              "format": "xai-responses-v1",
+              "index": 0,
+              "summary": "The user wants me to evaluate one permit lookup using ONLY the supplied official-source evidence packet and return exactly one JSON object conforming to MODEL_SCHEMA.\n",
+              "type": "reasoning.summary"
+            },
+            {
+              "data": "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",
+              "format": "xai-responses-v1",
+              "id": "rs_d113c461-5ca1-9abd-a7d2-41b615a139b4",
+              "index": 1,
+              "type": "reasoning.encrypted"
+            }
+          ],
+          "refusal": null,
+          "role": "assistant"
+        },
+        "native_finish_reason": "completed"
+      }
+    ],
+    "created": 1785165978,
+    "id": "gen-1785165978-tv1iMAXZ29F5kZi1RrzO",
+    "model": "x-ai/grok-4.5",
+    "object": "chat.completion",
+    "provider": "xAI",
+    "service_tier": "default",
+    "system_fingerprint": null,
+    "usage": {
+      "completion_tokens": 1158,
+      "completion_tokens_details": {
+        "audio_tokens": 0,
+        "image_tokens": 0,
+        "reasoning_tokens": 887
+      },
+      "cost": 0.0096584,
+      "cost_details": {
+        "upstream_inference_completions_cost": 0.006948,
+        "upstream_inference_cost": 0.0096584,
+        "upstream_inference_prompt_cost": 0.0027104
+      },
+      "is_byok": false,
+      "prompt_tokens": 1464,
+      "prompt_tokens_details": {
+        "audio_tokens": 0,
+        "cache_write_tokens": 0,
+        "cached_tokens": 128,
+        "video_tokens": 0
+      },
+      "total_tokens": 2622
+    }
+  },
+  "raw_text": "{\"permit_decision\":\"VERIFY\",\"jurisdiction\":{\"jurisdiction_id\":\"us-la-acadia_parish\",\"name\":\"Acadia Parish\",\"state\":\"LA\",\"type\":\"city_or_local_authority\"},\"project_family\":\"commercial_tenant_improvement\",\"primary_permit_family\":\"BUILDING\",\"companion_permits\":[{\"family\":\"ELECTRICAL\",\"status\":\"VERIFY\"},{\"family\":\"PLUMBING\",\"status\":\"VERIFY\"},{\"family\":\"MECHANICAL\",\"status\":\"VERIFY\"},{\"family\":\"FIRE_LIFE_SAFETY\",\"status\":\"VERIFY\"},{\"family\":\"OCCUPANCY\",\"status\":\"VERIFY\"},{\"family\":\"PLANNING_ZONING\",\"status\":\"VERIFY\"}],\"filing\":{\"authority_id\":\"us-la-acadia_parish\",\"office\":\"Acadia Parish Police Jury\",\"destination_url\":\"https://appj.org/building-permits/\",\"url_role\":\"INFORMATIONAL_OFFICE\"},\"source_support\":{\"state\":\"OFFICIAL_SOURCE_SUPPORTED\",\"strength\":\"WEAK\",\"evidence\":[{\"url\":\"https://appj.org/building-permits/\",\"role\":\"INFORMATIONAL_OFFICE\"}]},\"contradictions\":[]}",
+  "requested_model": "x-ai/grok-4.5",
+  "requested_provider": "openrouter",
+  "requested_runtime": "grok",
+  "response_id": "gen-1785165978-tv1iMAXZ29F5kZi1RrzO",
+  "runtime": "OpenRouter chat/completions; upstream_provider=xAI"
+}

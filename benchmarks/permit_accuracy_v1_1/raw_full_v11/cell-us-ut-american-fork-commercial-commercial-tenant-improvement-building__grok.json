@@ -1,0 +1,78 @@
+{
+  "observed_model": "x-ai/grok-4.5",
+  "observed_provider": "openrouter",
+  "path_proof": {
+    "adapter": "grok",
+    "engine_called": false,
+    "engine_result_supplied_to_model": false,
+    "model_call_count": 1
+  },
+  "provider": "openrouter",
+  "provider_response": {
+    "choices": [
+      {
+        "finish_reason": "stop",
+        "index": 0,
+        "logprobs": null,
+        "message": {
+          "content": "{\"permit_decision\":\"REQUIRED\",\"jurisdiction\":{\"jurisdiction_id\":\"us-ut-american_fork\",\"name\":\"American Fork\",\"state\":\"UT\",\"type\":\"city_or_local_authority\"},\"project_family\":\"commercial_tenant_improvement\",\"primary_permit_family\":\"BUILDING\",\"companion_permits\":[{\"family\":\"ELECTRICAL\",\"status\":\"VERIFY\"},{\"family\":\"PLUMBING\",\"status\":\"VERIFY\"},{\"family\":\"MECHANICAL\",\"status\":\"VERIFY\"},{\"family\":\"FIRE_LIFE_SAFETY\",\"status\":\"VERIFY\"},{\"family\":\"OCCUPANCY\",\"status\":\"VERIFY\"},{\"family\":\"PLANNING_ZONING\",\"status\":\"VERIFY\"}],\"filing\":{\"authority_id\":\"us-ut-american_fork\",\"office\":\"American Fork Building Department\",\"destination_url\":\"https://www.americanfork.gov/173/Building-Department\",\"url_role\":\"INFORMATIONAL_OFFICE\"},\"source_support\":{\"state\":\"OFFICIAL_SOURCE_SUPPORTED\",\"strength\":\"WEAK\",\"evidence\":[{\"url\":\"https://www.americanfork.gov/173/Building-Department\",\"role\":\"REQUIREMENT_EVIDENCE\"}]},\"contradictions\":[]}",
+          "reasoning": "The user wants me to evaluate one permit lookup using ONLY the supplied official-source evidence packet and return exactly one JSON object conforming to MODEL_SCHEMA.\n",
+          "reasoning_details": [
+            {
+              "format": "xai-responses-v1",
+              "index": 0,
+              "summary": "The user wants me to evaluate one permit lookup using ONLY the supplied official-source evidence packet and return exactly one JSON object conforming to MODEL_SCHEMA.\n",
+              "type": "reasoning.summary"
+            },
+            {
+              "data": "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",
+              "format": "xai-responses-v1",
+              "id": "rs_b2d9f11a-d1b8-948a-8b3f-b59c51955470",
+              "index": 1,
+              "type": "reasoning.encrypted"
+            }
+          ],
+          "refusal": null,
+          "role": "assistant"
+        },
+        "native_finish_reason": "completed"
+      }
+    ],
+    "created": 1785168199,
+    "id": "gen-1785168199-Mgrs4GWegZr0UuyAvKuz",
+    "model": "x-ai/grok-4.5",
+    "object": "chat.completion",
+    "provider": "xAI",
+    "service_tier": "default",
+    "system_fingerprint": null,
+    "usage": {
+      "completion_tokens": 1234,
+      "completion_tokens_details": {
+        "audio_tokens": 0,
+        "image_tokens": 0,
+        "reasoning_tokens": 961
+      },
+      "cost": 0.0098884,
+      "cost_details": {
+        "upstream_inference_completions_cost": 0.007404,
+        "upstream_inference_cost": 0.0098884,
+        "upstream_inference_prompt_cost": 0.0024844
+      },
+      "is_byok": false,
+      "prompt_tokens": 1351,
+      "prompt_tokens_details": {
+        "audio_tokens": 0,
+        "cache_write_tokens": 0,
+        "cached_tokens": 128,
+        "video_tokens": 0
+      },
+      "total_tokens": 2585
+    }
+  },
+  "raw_text": "{\"permit_decision\":\"REQUIRED\",\"jurisdiction\":{\"jurisdiction_id\":\"us-ut-american_fork\",\"name\":\"American Fork\",\"state\":\"UT\",\"type\":\"city_or_local_authority\"},\"project_family\":\"commercial_tenant_improvement\",\"primary_permit_family\":\"BUILDING\",\"companion_permits\":[{\"family\":\"ELECTRICAL\",\"status\":\"VERIFY\"},{\"family\":\"PLUMBING\",\"status\":\"VERIFY\"},{\"family\":\"MECHANICAL\",\"status\":\"VERIFY\"},{\"family\":\"FIRE_LIFE_SAFETY\",\"status\":\"VERIFY\"},{\"family\":\"OCCUPANCY\",\"status\":\"VERIFY\"},{\"family\":\"PLANNING_ZONING\",\"status\":\"VERIFY\"}],\"filing\":{\"authority_id\":\"us-ut-american_fork\",\"office\":\"American Fork Building Department\",\"destination_url\":\"https://www.americanfork.gov/173/Building-Department\",\"url_role\":\"INFORMATIONAL_OFFICE\"},\"source_support\":{\"state\":\"OFFICIAL_SOURCE_SUPPORTED\",\"strength\":\"WEAK\",\"evidence\":[{\"url\":\"https://www.americanfork.gov/173/Building-Department\",\"role\":\"REQUIREMENT_EVIDENCE\"}]},\"contradictions\":[]}",
+  "requested_model": "x-ai/grok-4.5",
+  "requested_provider": "openrouter",
+  "requested_runtime": "grok",
+  "response_id": "gen-1785168199-Mgrs4GWegZr0UuyAvKuz",
+  "runtime": "OpenRouter chat/completions; upstream_provider=xAI"
+}

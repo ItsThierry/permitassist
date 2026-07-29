@@ -1,0 +1,78 @@
+{
+  "observed_model": "x-ai/grok-4.5",
+  "observed_provider": "openrouter",
+  "path_proof": {
+    "adapter": "grok",
+    "engine_called": false,
+    "engine_result_supplied_to_model": false,
+    "model_call_count": 1
+  },
+  "provider": "openrouter",
+  "provider_response": {
+    "choices": [
+      {
+        "finish_reason": "stop",
+        "index": 0,
+        "logprobs": null,
+        "message": {
+          "content": "{\"permit_decision\":\"VERIFY\",\"jurisdiction\":{\"jurisdiction_id\":\"us-ne-atkinson\",\"name\":\"Atkinson\",\"state\":\"NE\",\"type\":\"city_or_local_authority\"},\"project_family\":\"commercial_tenant_improvement\",\"primary_permit_family\":\"VERIFY\",\"companion_permits\":[{\"family\":\"BUILDING\",\"status\":\"VERIFY\"},{\"family\":\"ELECTRICAL\",\"status\":\"VERIFY\"},{\"family\":\"PLUMBING\",\"status\":\"VERIFY\"},{\"family\":\"MECHANICAL\",\"status\":\"VERIFY\"},{\"family\":\"FIRE_LIFE_SAFETY\",\"status\":\"VERIFY\"},{\"family\":\"OCCUPANCY\",\"status\":\"VERIFY\"},{\"family\":\"PLANNING_ZONING\",\"status\":\"VERIFY\"}],\"filing\":{\"authority_id\":\"us-ne-atkinson\",\"office\":\"City of Atkinson\",\"destination_url\":\"https://atkinsonne.com/how-do-i/\",\"url_role\":\"INFORMATIONAL_OFFICE\"},\"source_support\":{\"state\":\"VERIFY\",\"strength\":\"WEAK\",\"evidence\":[{\"url\":\"https://atkinsonne.com/how-do-i/\",\"role\":\"INFORMATIONAL_OFFICE\"}]},\"contradictions\":[]}",
+          "reasoning": "The user wants me to evaluate one permit lookup using ONLY the supplied official-source evidence packet and return exactly one JSON object conforming to MODEL_SCHEMA.\n",
+          "reasoning_details": [
+            {
+              "format": "xai-responses-v1",
+              "index": 0,
+              "summary": "The user wants me to evaluate one permit lookup using ONLY the supplied official-source evidence packet and return exactly one JSON object conforming to MODEL_SCHEMA.\n",
+              "type": "reasoning.summary"
+            },
+            {
+              "data": "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",
+              "format": "xai-responses-v1",
+              "id": "rs_77c57aac-6b3b-93f2-ada8-581f4e7c90d7",
+              "index": 1,
+              "type": "reasoning.encrypted"
+            }
+          ],
+          "refusal": null,
+          "role": "assistant"
+        },
+        "native_finish_reason": "completed"
+      }
+    ],
+    "created": 1785166791,
+    "id": "gen-1785166791-XhctBNIB6dkz2HBv5P3t",
+    "model": "x-ai/grok-4.5",
+    "object": "chat.completion",
+    "provider": "xAI",
+    "service_tier": "default",
+    "system_fingerprint": null,
+    "usage": {
+      "completion_tokens": 1743,
+      "completion_tokens_details": {
+        "audio_tokens": 0,
+        "image_tokens": 0,
+        "reasoning_tokens": 1467
+      },
+      "cost": 0.0114332,
+      "cost_details": {
+        "upstream_inference_completions_cost": 0.010458,
+        "upstream_inference_cost": 0.0114332,
+        "upstream_inference_prompt_cost": 0.0009752
+      },
+      "is_byok": false,
+      "prompt_tokens": 1358,
+      "prompt_tokens_details": {
+        "audio_tokens": 0,
+        "cache_write_tokens": 0,
+        "cached_tokens": 1024,
+        "video_tokens": 0
+      },
+      "total_tokens": 3101
+    }
+  },
+  "raw_text": "{\"permit_decision\":\"VERIFY\",\"jurisdiction\":{\"jurisdiction_id\":\"us-ne-atkinson\",\"name\":\"Atkinson\",\"state\":\"NE\",\"type\":\"city_or_local_authority\"},\"project_family\":\"commercial_tenant_improvement\",\"primary_permit_family\":\"VERIFY\",\"companion_permits\":[{\"family\":\"BUILDING\",\"status\":\"VERIFY\"},{\"family\":\"ELECTRICAL\",\"status\":\"VERIFY\"},{\"family\":\"PLUMBING\",\"status\":\"VERIFY\"},{\"family\":\"MECHANICAL\",\"status\":\"VERIFY\"},{\"family\":\"FIRE_LIFE_SAFETY\",\"status\":\"VERIFY\"},{\"family\":\"OCCUPANCY\",\"status\":\"VERIFY\"},{\"family\":\"PLANNING_ZONING\",\"status\":\"VERIFY\"}],\"filing\":{\"authority_id\":\"us-ne-atkinson\",\"office\":\"City of Atkinson\",\"destination_url\":\"https://atkinsonne.com/how-do-i/\",\"url_role\":\"INFORMATIONAL_OFFICE\"},\"source_support\":{\"state\":\"VERIFY\",\"strength\":\"WEAK\",\"evidence\":[{\"url\":\"https://atkinsonne.com/how-do-i/\",\"role\":\"INFORMATIONAL_OFFICE\"}]},\"contradictions\":[]}",
+  "requested_model": "x-ai/grok-4.5",
+  "requested_provider": "openrouter",
+  "requested_runtime": "grok",
+  "response_id": "gen-1785166791-XhctBNIB6dkz2HBv5P3t",
+  "runtime": "OpenRouter chat/completions; upstream_provider=xAI"
+}

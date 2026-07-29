@@ -110,6 +110,7 @@ def test_all_frozen_wi_commercial_ti_cells_keep_source_backed_family_routes(
     assert index is not None
 
     observed_rows: list[str] = []
+    fail_closed_routes: list[str] = []
     for case in frozen_wi_route_contract["cases"]:
         cell_key = case["cell_key"]
         cell = index[cell_key]
@@ -159,16 +160,24 @@ def test_all_frozen_wi_commercial_ti_cells_keep_source_backed_family_routes(
             assert route.authority.issuing_authority
             assert route.authority.application_authority
             assert route.application_route.office_name
-            assert route.application_route.apply_url.startswith("https://")
-            assert route.application_route.provenance
-            assert any(
-                pre._publishable_provenance(record)
-                for record in route.application_route.provenance
-            )
-            assert any(
-                record.source_url in case["official_source_urls"]
-                for record in route.application_route.provenance
-            )
+            if route.application_route.apply_url:
+                assert route.application_route.apply_url.startswith("https://")
+                assert route.application_route.provenance
+                assert any(
+                    pre._publishable_provenance(record)
+                    for record in route.application_route.provenance
+                )
+                assert any(
+                    record.source_url in case["official_source_urls"]
+                    for record in route.application_route.provenance
+                )
+            else:
+                assert route.application_route.channel == "verify"
+                assert not route.application_route.provenance
+                assert "application_route_role_not_proven" in (
+                    route.application_route.validation_issue_codes
+                )
+                fail_closed_routes.append(f"{cell_key}|{route.family}")
 
         public_projection = json.loads(envelope.sealed_projection.payload_json)
         public_routes = {
@@ -176,7 +185,22 @@ def test_all_frozen_wi_commercial_ti_cells_keep_source_backed_family_routes(
             for row in public_projection["family_authority_routes"]
         }
         assert set(public_routes) == expected_families
-        assert all(row["apply_url"].startswith("https://") for row in public_routes.values())
+        assert all(
+            row["apply_url"].startswith("https://")
+            or (
+                not row["apply_url"]
+                and row["channel"] == "verify"
+                and "application_route_role_not_proven"
+                in row["validation_issue_codes"]
+            )
+            for row in public_routes.values()
+        )
         observed_rows.append(f"{cell_key}|{','.join(sorted(expected_families))}")
 
     assert observed_rows == frozen_wi_route_contract["expected_blocker_rows"]
+    assert fail_closed_routes == [
+        "WI|us_wi_fond_du_lac|commercial_tenant_improvement|building",
+        "WI|us_wi_west_allis|commercial_tenant_improvement|electrical",
+        "WI|us_wi_west_allis|commercial_tenant_improvement|occupancy",
+        "WI|us_wi_west_allis|commercial_tenant_improvement|plumbing",
+    ]

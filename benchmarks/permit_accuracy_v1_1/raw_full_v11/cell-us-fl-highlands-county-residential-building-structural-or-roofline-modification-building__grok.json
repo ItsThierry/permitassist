@@ -1,0 +1,78 @@
+{
+  "observed_model": "x-ai/grok-4.5",
+  "observed_provider": "openrouter",
+  "path_proof": {
+    "adapter": "grok",
+    "engine_called": false,
+    "engine_result_supplied_to_model": false,
+    "model_call_count": 1
+  },
+  "provider": "openrouter",
+  "provider_response": {
+    "choices": [
+      {
+        "finish_reason": "stop",
+        "index": 0,
+        "logprobs": null,
+        "message": {
+          "content": "{\"permit_decision\":\"VERIFY\",\"jurisdiction\":{\"jurisdiction_id\":\"us-fl-highlands_county\",\"name\":\"Highlands County\",\"state\":\"FL\",\"type\":\"county\"},\"project_family\":\"reroof\",\"primary_permit_family\":\"BUILDING\",\"companion_permits\":[],\"filing\":{\"authority_id\":\"us-fl-highlands_county\",\"destination_url\":\"https://www.highlandsfl.gov/departments/development_services/building/when_is_a_permit_needed.php\",\"office\":\"Highlands County Development Services Building\",\"url_role\":\"REQUIREMENT_EVIDENCE\"},\"source_support\":{\"state\":\"OFFICIAL_SOURCE_SUPPORTED\",\"strength\":\"WEAK\",\"evidence\":[{\"url\":\"https://www.highlandsfl.gov/departments/development_services/building/when_is_a_permit_needed.php\",\"role\":\"REQUIREMENT_EVIDENCE\"}]},\"contradictions\":[]}",
+          "reasoning": "The user wants me to evaluate a permit lookup using only the supplied evidence packet and return exactly one JSON object conforming to MODEL_SCHEMA.\n{\n  \"companion_permits\": [],\n  \"contradictions\": [],\n  \"filing\": {\n    \"authority_id\": \"us-fl-highlands_county\",\n    \"destination_url\": \"https://www.highlandsfl.gov/departments/development_services/building/when_is_a_permit_needed.php\",\n    \" office\": \"Development Services\",\n    \"url_role\": \"REQUIREMENT_EVIDENCE\"\n  },\n  \"jurisdiction\": {\n    \"jurisdiction_id\": \"us-fl-highlands_county\",\n    \"name\": \"Highlands County\",\n    \"state\": \"FL\",\n    \"type\": \"county\"\n  },\n  \"permit_decision\": \"VERIFY\",\n  \"primary_permit_family\": \"BUILDING\",\n  \"project_family\": \"reroof\",\n  \"source_support\": {\n    \"evidence\": [\n      {\n        \"url\": \"https://www.highlandsfl.",
+          "reasoning_details": [
+            {
+              "format": "xai-responses-v1",
+              "index": 0,
+              "summary": "The user wants me to evaluate a permit lookup using only the supplied evidence packet and return exactly one JSON object conforming to MODEL_SCHEMA.\n{\n  \"companion_permits\": [],\n  \"contradictions\": [],\n  \"filing\": {\n    \"authority_id\": \"us-fl-highlands_county\",\n    \"destination_url\": \"https://www.highlandsfl.gov/departments/development_services/building/when_is_a_permit_needed.php\",\n    \" office\": \"Development Services\",\n    \"url_role\": \"REQUIREMENT_EVIDENCE\"\n  },\n  \"jurisdiction\": {\n    \"jurisdiction_id\": \"us-fl-highlands_county\",\n    \"name\": \"Highlands County\",\n    \"state\": \"FL\",\n    \"type\": \"county\"\n  },\n  \"permit_decision\": \"VERIFY\",\n  \"primary_permit_family\": \"BUILDING\",\n  \"project_family\": \"reroof\",\n  \"source_support\": {\n    \"evidence\": [\n      {\n        \"url\": \"https://www.highlandsfl.",
+              "type": "reasoning.summary"
+            },
+            {
+              "data": "d275cLrzGYouk2IdxEsh322o8l2BqqMj/jf1jnT8KY2bJtuzqs7c6DGfSF8NqBtf685B17+zWErGq+lSKwdJXOaAMxn9Bepi3eEStEp+x6s08baLcma0t6gnsUdJSE6vbpW1FqOlvWxaPx+pjtvJpU4oIKJnPv423k8cRAUsQJOJJ49hy+v+ozymC3cp46gfgTJKnAdEpMzPabLqLNCDp0H9sh+8R47+PjC6eYJA5GQ3iB6UMVH8KaWjb2smVVuw3uCpNRk4kuFbuExqI6MMzHk1bNpLuKKtjK1x3U+HDZ3TNsQFzZFO1AL/sWQdJGqUb4yH+iRzFISb/hnkKML5mYoEKLZnaySu8/oa3PlvPyEHzKfbiz5comp+Ky4R50PpF3/V25htk1AyotGvXVjS7oYSIOumzRFPXn2SRpPZd1owX9SQWojoUs+a5tei6C+/29lKGiIw+wzY0XhJcJRQtKrd+qFrfncTj0D9WQHODrEXPZGvqYQa7K3BfwOem+IKhHIFMQivqugYlpV3NpZeQGwOnfLtPnuzh5bDifSOiO7dZffnMg9r/fsm8zeUj2E7V77d8VJOjBllM5g2fDT/HEsSs+k3EzjSd8aSfuDETv+StoSulmiERf97+AdF4QkA519fbTX2FMG28FmDhsxBYHuvi9V7DmYq3P8HUPc3ubkxVw/RtpZie9HlZwKFtiLqbnSMlGj9HDt9oWFnKnk5Y1z1i6Sd+lx++Dzf+lDtdaRyDG7KJm2QU1dzftUumf+oVfNTH/xEtqzd3lK30tNU8a1IypvgPsCXESUKzp5DM9uFvEW83YnQFRHM4XEbZkDwPfuAlg4y2Nv4YZXkVBbQjAa6XOwSGZ+3223l9DnvOBCOSmNrnVFmVUvBQNN+cApid5GAVcexhL7crqRvSUVr26Z79iYXQqoGVENWchraRc/fPGpZKuyj7NYIueLv2L1PY3jPEW/Ixaka9Js9qby9Owvl7lIQ7sC7qoDlVZJC9QCQMJ+pCrJVkPmh2X1fe6WYs7goCUMGpwCvcS7I7uumhDDVIjnwmvalO6hh3uGNIerKP3IC4JjimcYlp/vMX2nyUfAl6z2D7+8U4H3GCIXZGi2ls243TaD+3zcZ6E9tRTak5lb0/SXz9SZz9tla9Brmd9fmWRiC6SiWed4/ReZlGpTHTvz2mTn/IgaHg3uysQvOslzSd6qIpPqUkfbTntWfvUhI/knzCWdF7kL05wKTX2JwKsU9RGBe7cu60QkAS6OSNpgVd0nxJnegP+xZHdIQMo8r1luKfgbXrI5n10RJKrmlbxoKbreuTCRYLKHD4cvooYrm+YFpWYOsgFuG3MWcSCD4tujWUsBF/ZN+uIcnlTfj7soAm0UiXwlhmXFX3GaGk0c0z5NHrAwafU1BzldomWMIqW3uuhUI1ZQpdWIe00ciRlkck1Hb3PQ+6KhnR5WNScVLZF/SYnjPS2LvqJiGUI/49/FtbRM/fvEiDDR2As1FcFNbMzIe2Qp9BQigcmlM9l89E9f6+EX6cXX1L/a+L4/CS2YNQPqtO5j/ArdmsT7XBmGX7j2QAlxvflLfym1pxOM/WqeifuMOl5pfNuFX7ZT8Ud5seeonllxhIlny8hJDY21494ZLsWCV4WY8swHNtcj58SzRopWCZLc6Jvx/lrfteMo5rXQyUU8eR3up7QDQ4YOzz1SHziOWRlRCNG22FL/xN2s34LTt0VVLGE7R8XcHvTDDGhXaxnosrjqiD9IN9gLF4chBX6bos+JyPLTGZrkT2I5khPTxHD6RCIr3+MJVRa9x4ZogkPf9mj6c3SltOP+rAQLrbwWwCl6yN12nEcoOZ3W7fzPdsA7Cns+hV8i6559ntvPamMAtowXgwvq3KMnOPY168tqDEUGhp9LNd6PQVQVFsFJmzdoj0+aUFpXuRYAIjM36+OxT9P4zw2Zu6XCckMlPdA+lzOhHIUVhBmU0+0uG1Y8Kjeqxr31R1/4kkbQlteTayJhb6blE1QH5ATfxMQDrtxGe9Om012K4clxPdIlK4PSm79+IyaHrUCLlQhRrltEIdExl0PdOnZDlleFiy58f1P8f3L9W/egJ6bcYP6Q+jmkwTB63sRvI9PUQC7/cbXcOUBDnx3pCwYYWLp6fV710TOhLQXXzXe70qAelQa5mm+AuGD3xO/iLkj+X3pr5Mg7arDNHNF96qVZqKG+A2OWdDeLj+lsghDpMxdJXK8fkNlDHa2y9/4XtmdT2HMZVS1bhO8P96vyt2JWSZCd64OReR3z6kzyQhpezGpBujHOtAdWuNM+vAQwHuFX+ehdh5tcaFWy7RKPkyJQjSaasXOabEg1GxM0w4tuUQVLiM2DkAqJTfX88Lw0hXqH50XD6pygZTUdI5KR/HmCuZEXNZx9X9SRA2SHP0rsAJiNOamPD8diNV4Uc9JmgoR1NbHJijYdJW33/Mu5VPFxsAj8BQNXdwHGcPFfOoxaa/+KO3iWMY9nDiclPxEuUIQNdcYjCVBk3zP1XzohcRvd1Dr8kqqxgL/q48cblk/EZAiKrAByCsJKx7SFJS+oxI9niwcqGBB1kd472f20sC3m+dsYL/ZrpbkUVLk3aoH5rhZpfDSjsOWwzBBUMuz1i81LxrELKhDJqmNRLdJcYYc7J61siW3hJrTNUHBGLQPI/BewVfVvgMjphsHw/ehezUKreJXDFs8f9kQ6mbECxAzKiRNeV5Y2Ctba4/lpDZvS3sE/XIxJABBXLN1P/bhhcJEy8fUgVzaRJ9cMkcE1ENyxLE79xW3JZYQKvR+3jSW0PouuSUtRGR+b/6pFjjq9d10Z1flJbMbZa9m31aFytbe+N0HzU29dUj5zn1afsrY+tRRMq6pXZyBILf/pUoNqbCgx4Ycnm0cbCqH8uh08WzdYApsC7kq8RpZf75fU4LOJdRibUHNTXOKq6+FbTwh9WhHsgFfmyM9SoZKi9LI8kWLYBJkN4M7ZdBVvBBGhS6OIS1qKxp05vNQolvA3StHwKEKM+2raKcNXJM/F6MZXOx8H7ntwtlLNxAW8ydXWTOj/ExSrP4GbhVl47vr1gatPEOJ/LN4/eQGhMM9Fr13XqjtxG4SFVjCoLqtoIJWUdE1ToTqoLgQo0tHoCqyv7wj+zPk7I3O3eB7rBwzFTXgBnxFQ9K6ZkumhGIlk+a3eJWZ2UsS4m7JUfeh8Q4cqiGXQkqyE3fFimlo22r3Tstb3S5a/Kq4/F0++sMRw6D2QV9s96KJWLnKrLCCbb3B5TgKStCsiiNC16kbq6qBrL8eii5PZ5W0fTpMA9PVgjsq5mVVKmX2u+RaYLneWtnBNlHoy8aaWuzHoovWJ034aIgcWgPHYoDyyxEls+GAhQ+vpcGphIrkurtRhnJtt1GHClQcR63naUj4mwWrjvMuPQ9LL3u183qszccAJfIxOZOSwgYRCD9wmQ33vDrJy7PtTFOwOLU4iZqtoL8eg4mWla3s2rwjozxmSzQ1s//hFXlkRLpx7fmvDvMUfvqE35b2V0qdRzD3VR8p9SJGycrrrzJRDMZWJmE3ViEpSkU1hO2yjEaz+ZjOxYQ/XzTx390NJ7d2NEvPBOocHVhV54Nbvm5J8lpao5pyW8jZ1psCfv1OgZ82pOotdlZbTbP0cVOSEkWAyNQHS4NuhoD+x5Ky9hfxBOJZmMh5TrnviMee2SOPFuB+uz8wrt1QaUQVhvtt2flLseOrMV+0Ya0AQdqtAvFVO3oJI6UBLuhcbHFCGW6Hevyc8iZFWbrZxEPqGsB7p1N1NEKrL/VWzKA92wFArEs3M+XnlBnLcqmySl0jQRHuwCGZlbRsWkigyYhjR2u6T1Era8Pm33adyBYgaXmrC1xpcqk1JUyM0A00djtQLxd1cC3WVaBibuu4CEib3a4Qp12Giv15/wfmTjqbIvkBsXl/qtvqkNMZF7/pHCNSce7VsHEiDef7NFtfvbUtK11xxPl3FqLJnrO3c1Dfo95BeNY09v+WGpptd/zsOiwoNjgt33XYJwiAg8cTVnZsgC8LtsPny3wW/b0mHbeSo/STNbE+pbEazx0/7/SfBmCDPvX+f2KqsvL4YabXtJjjxYsKIk3F4lqOphVdjxY5nwjbzYbNefmKeyuTs69FnRLgr1wAHA58udYzCh01R4BLqNUCA4ryh/GgRxtb//HVjuGBpcqx+UWefqfUjVt/tbkSahj1TyxbOyL3DVQW2kMpTNq/i9+nPzOhTnOvY7BrmHWnRX7v/lX66ZjPQDTa23UBrdwINC93Bk4vVBT/oJS21JUkBrb9O2SAKUhvv72kK8KoFJAzirIvlEzh7FMRgQGeY1bFeRfMqkSPk9pkdLM3Aus4ZS9K/6uzbyTLSVYZsDek86TJG+S0csS8q6WhckxXssja4tRVkRHwz7DtlTW3RTJM53ih7qd6A3GoCvnO8v6gP1/38RQtRVBtgC+NLNKnI1Ok8nA6n2ol/HWqqMNvwl47PMNuebHLkOsnhV9ostZjZhBZNEbescgxY1yy7AOFkMFeQjUB4u1qUu1AoXmNLp8qyVBedfBpHfZWhLOfZn/qNzRcHQsO0VDABcWCyNgiQJ7Kk9bLabCM6f0brkUo6wuzR7ngdl42EDY/vudAhGaSWBE7hktVGmEJQyobIaNpyePT2jqkmrukLwXNbicbKq600N2XQafDsQ8pqiszyXTr6Vw2qAUThUNsZHFdvnXjgVqyfR6es/p5VD/pNyfyZb4jL6NzSp18OW9TPbNxAsMPWsnOkWSWIpitdkjr7t2Qe62gMA9BM4ykiXtciNMEcuXiBVA61C54CHHMOLHN28IC6k3T8mzCRrvVkEam9ayZA3+oa1xwI42REwZ4eY+DfIKNjR8qpyogHN+P75rIVVlEvZeDi7b/Q90FDEp+rSlcyRQvwISic6uH1P8QPOd0afXmVkpqbPWOSCoqp2An+tbvLy3sD3IWVCn/Ye16C8ZE/mCek1EWvQWYMTR57OXjUF36OQtzjqOsnwVo2x4PqjYNltb645Qe8cIMP2fgr2uH/k+FECTzkh0Ivh/XzM4DAJIU9GZcRi/csJU4i0PfPhO1/2fiJO1Z+9Kce6TyJiTJdd6tXN2QNbAieq4QDHeWjvtv/bLXncUP0bMclv5/Yr1W47kr4JjBQ1sjb6BoKzOQ60ZJTwcZdRA6QCBhETD6jPw2Mt1CwKYJFfnjNRIvs/8x9aCkKs40Od6/s78Br/vPiPaTcDfUbGFPAJGlKTJfroBR3vOMVm4aOA6xVyhJz03X0smFuEqe8IWVk3cLqpOwCBOHS/5TUmLy4nkzrzuLfermN0mckOcntQp55d8BNIs/Bhy72EaGuyYc16UvSZkG2LrRFp2XXPuPOG2YPjQp4URWRD8KHW7OU0Z+TRQ3lot2LiXLygQjBsCxqNG29PecA9GViDPO4sdd3KqdN2d3sXFE7n8DTB7tOa+Tt/Xqg5ADvi2/cj39JL/fVp38cSAf+hefP1Xqnqa2/1goHd5GlRBd8Q2za9E6mQyeh92WfIQrgiZrgDGG34fpvp5BMvNFdUhPGSwDRVCFG0ZGwWMu/W7nnw+B45jwfukt9s63DAZZhVpry07srL0S4tCy4qZZhd/MFjS6K/+dclHEshQJmfET+8hWd0nGshIeYRF1Tru4c6BDkiamYi9hNp/arqxeOJEpJD5yg+Zz6yG/xt9nbwEWV5Mr2ptEwAJUsNThwi+UtA2fc+Qu2orV2/CzFJT1nd8HYkxDzitZItVsqNHdtUIz+IM3v0FqL0JQ7jZ9YR3S/2JSUeTbaheknLN91O3tDw0qKPMJ6Jl++18Ai9x+EjR+wiNtdgD2FF9YINlNKkqSGLc+Qw1AUGWUipL/JXihL6zQSwt2b/RmgmzEJfywwdiRUTqi0QZniokXBMmoZcv01Tzp56VxNf3uYDgqBkr9ACr8QzDLGrvzkE6HDJW0bEv8wDTij9xE5bwAAQVTybSASmxkYUEW6oIIsDCZXP9J78DG13/9dGkf7o/pkhkrec8lfyjvKdrOXwTvUgd0M4Yj7x2GtrcSSBuOUNE6CrBm2nw+A4dpQnUdS8GpCJKRU3Bb9X9MevAN7b9nGnwCkVnGt8VjYuI1GPkJrwbXbZH+wqRxtqwVgJb9aOIFXWBuW9VF7Q6OFx2TuR33aWJ6YYmTxBL6YSHF3U15ASFpeJ7muvLZkMSA",
+              "format": "xai-responses-v1",
+              "id": "rs_58e3a0f1-f4d4-9a83-b140-7d25ade17715",
+              "index": 1,
+              "type": "reasoning.encrypted"
+            }
+          ],
+          "refusal": null,
+          "role": "assistant"
+        },
+        "native_finish_reason": "completed"
+      }
+    ],
+    "created": 1785165021,
+    "id": "gen-1785165021-bjyqRzJyupxZ0y4lls03",
+    "model": "x-ai/grok-4.5",
+    "object": "chat.completion",
+    "provider": "xAI",
+    "service_tier": "default",
+    "system_fingerprint": null,
+    "usage": {
+      "completion_tokens": 1285,
+      "completion_tokens_details": {
+        "audio_tokens": 0,
+        "image_tokens": 0,
+        "reasoning_tokens": 1070
+      },
+      "cost": 0.0100924,
+      "cost_details": {
+        "upstream_inference_completions_cost": 0.00771,
+        "upstream_inference_cost": 0.0100924,
+        "upstream_inference_prompt_cost": 0.0023824
+      },
+      "is_byok": false,
+      "prompt_tokens": 1300,
+      "prompt_tokens_details": {
+        "audio_tokens": 0,
+        "cache_write_tokens": 0,
+        "cached_tokens": 128,
+        "video_tokens": 0
+      },
+      "total_tokens": 2585
+    }
+  },
+  "raw_text": "{\"permit_decision\":\"VERIFY\",\"jurisdiction\":{\"jurisdiction_id\":\"us-fl-highlands_county\",\"name\":\"Highlands County\",\"state\":\"FL\",\"type\":\"county\"},\"project_family\":\"reroof\",\"primary_permit_family\":\"BUILDING\",\"companion_permits\":[],\"filing\":{\"authority_id\":\"us-fl-highlands_county\",\"destination_url\":\"https://www.highlandsfl.gov/departments/development_services/building/when_is_a_permit_needed.php\",\"office\":\"Highlands County Development Services Building\",\"url_role\":\"REQUIREMENT_EVIDENCE\"},\"source_support\":{\"state\":\"OFFICIAL_SOURCE_SUPPORTED\",\"strength\":\"WEAK\",\"evidence\":[{\"url\":\"https://www.highlandsfl.gov/departments/development_services/building/when_is_a_permit_needed.php\",\"role\":\"REQUIREMENT_EVIDENCE\"}]},\"contradictions\":[]}",
+  "requested_model": "x-ai/grok-4.5",
+  "requested_provider": "openrouter",
+  "requested_runtime": "grok",
+  "response_id": "gen-1785165021-bjyqRzJyupxZ0y4lls03",
+  "runtime": "OpenRouter chat/completions; upstream_provider=xAI"
+}

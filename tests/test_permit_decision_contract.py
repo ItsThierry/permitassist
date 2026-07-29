@@ -216,7 +216,7 @@ def test_not_required_requires_positive_exemption_evidence_and_customer_step():
     assert result["customer_headline"].startswith(("Permit not required", "No permit required"))
 
 
-def test_source_threshold_scope_resolves_to_required_not_conditional_customer_state():
+def test_source_threshold_scope_preserves_conditional_customer_state_until_threshold_is_known():
     result = server.finalize_permit_lookup_result(
         {
             "permit_decision": "CONDITIONAL",
@@ -234,9 +234,13 @@ def test_source_threshold_scope_resolves_to_required_not_conditional_customer_st
         "CA",
     )
 
-    _assert_clean_customer_contract(result, decision="REQUIRED", expected_kind_fragment="Roofing")
-    assert result["customer_headline"].startswith("Permit required:")
-    assert result["permit_decision"] in {"REQUIRED", "NOT_REQUIRED"}
+    contract = result["permit_decision_contract"]
+    assert contract["permit_decision"] == "CONDITIONAL"
+    assert contract["permit_required"] is None
+    assert "roofing" in contract["permit_kind"].lower()
+    assert contract["source_evidence_floor"]["threshold_evidence"] is True
+    assert result["customer_headline"].startswith("Permit requirement depends on a verified threshold:")
+    assert "100 square feet" in result["customer_next_step"]
 
 
 def test_missing_evidence_or_fake_ahj_rejects_invalid_jurisdiction_without_pending_or_likely_language():

@@ -1,0 +1,78 @@
+{
+  "observed_model": "x-ai/grok-4.5",
+  "observed_provider": "openrouter",
+  "path_proof": {
+    "adapter": "grok",
+    "engine_called": false,
+    "engine_result_supplied_to_model": false,
+    "model_call_count": 1
+  },
+  "provider": "openrouter",
+  "provider_response": {
+    "choices": [
+      {
+        "finish_reason": "stop",
+        "index": 0,
+        "logprobs": null,
+        "message": {
+          "content": "{\"permit_decision\":\"VERIFY\",\"jurisdiction\":{\"jurisdiction_id\":\"us-de-bethany_beach\",\"name\":\"Bethany Beach\",\"state\":\"DE\",\"type\":\"city_or_local_authority\"},\"project_family\":\"commercial_tenant_improvement\",\"primary_permit_family\":\"BUILDING\",\"companion_permits\":[{\"family\":\"ELECTRICAL\",\"status\":\"VERIFY\"},{\"family\":\"PLUMBING\",\"status\":\"VERIFY\"},{\"family\":\"MECHANICAL\",\"status\":\"VERIFY\"},{\"family\":\"FIRE_LIFE_SAFETY\",\"status\":\"VERIFY\"},{\"family\":\"OCCUPANCY\",\"status\":\"VERIFY\"},{\"family\":\"PLANNING_ZONING\",\"status\":\"VERIFY\"},{\"family\":\"BUILDING\",\"status\":\"VERIFY\"}],\"filing\":{\"authority_id\":null,\"office\":\"Sussex County Building Permits and Licenses\",\"destination_url\":\"https://sussexcountyde.gov/building-permits-and-licenses\",\"url_role\":\"INFORMATIONAL_OFFICE\"},\"source_support\":{\"state\":\"OFFICIAL_SOURCE_SUPPORTED\",\"strength\":\"WEAK\",\"evidence\":[{\"url\":\"https://sussexcountyde.gov/building-code\",\"role\":\"REQUIREMENT_EVIDENCE\"},{\"url\":\"https://sussexcountyde.gov/building-permits-and-licenses\",\"role\":\"INFORMATIONAL_OFFICE\"}]},\"contradictions\":[\"Input jurisdiction is City of Bethany Beach while supplied official evidence only addresses Sussex County building permits and related pages, without packet-supported confirmation of municipal versus county permitting authority for this location.\"]}",
+          "reasoning": "The user wants me to evaluate one permit lookup using ONLY the supplied official-source evidence packet and return exactly one JSON object conforming to MODEL_SCHEMA.\n",
+          "reasoning_details": [
+            {
+              "format": "xai-responses-v1",
+              "index": 0,
+              "summary": "The user wants me to evaluate one permit lookup using ONLY the supplied official-source evidence packet and return exactly one JSON object conforming to MODEL_SCHEMA.\n",
+              "type": "reasoning.summary"
+            },
+            {
+              "data": "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",
+              "format": "xai-responses-v1",
+              "id": "rs_a8b381b4-cade-9c35-9dae-b933e64c3825",
+              "index": 1,
+              "type": "reasoning.encrypted"
+            }
+          ],
+          "refusal": null,
+          "role": "assistant"
+        },
+        "native_finish_reason": "completed"
+      }
+    ],
+    "created": 1785164729,
+    "id": "gen-1785164729-QgkjspG9jdVo0dApsK4T",
+    "model": "x-ai/grok-4.5",
+    "object": "chat.completion",
+    "provider": "xAI",
+    "service_tier": "default",
+    "system_fingerprint": null,
+    "usage": {
+      "completion_tokens": 1392,
+      "completion_tokens_details": {
+        "audio_tokens": 0,
+        "image_tokens": 0,
+        "reasoning_tokens": 1043
+      },
+      "cost": 0.0111264,
+      "cost_details": {
+        "upstream_inference_completions_cost": 0.008352,
+        "upstream_inference_cost": 0.0111264,
+        "upstream_inference_prompt_cost": 0.0027744
+      },
+      "is_byok": false,
+      "prompt_tokens": 1496,
+      "prompt_tokens_details": {
+        "audio_tokens": 0,
+        "cache_write_tokens": 0,
+        "cached_tokens": 128,
+        "video_tokens": 0
+      },
+      "total_tokens": 2888
+    }
+  },
+  "raw_text": "{\"permit_decision\":\"VERIFY\",\"jurisdiction\":{\"jurisdiction_id\":\"us-de-bethany_beach\",\"name\":\"Bethany Beach\",\"state\":\"DE\",\"type\":\"city_or_local_authority\"},\"project_family\":\"commercial_tenant_improvement\",\"primary_permit_family\":\"BUILDING\",\"companion_permits\":[{\"family\":\"ELECTRICAL\",\"status\":\"VERIFY\"},{\"family\":\"PLUMBING\",\"status\":\"VERIFY\"},{\"family\":\"MECHANICAL\",\"status\":\"VERIFY\"},{\"family\":\"FIRE_LIFE_SAFETY\",\"status\":\"VERIFY\"},{\"family\":\"OCCUPANCY\",\"status\":\"VERIFY\"},{\"family\":\"PLANNING_ZONING\",\"status\":\"VERIFY\"},{\"family\":\"BUILDING\",\"status\":\"VERIFY\"}],\"filing\":{\"authority_id\":null,\"office\":\"Sussex County Building Permits and Licenses\",\"destination_url\":\"https://sussexcountyde.gov/building-permits-and-licenses\",\"url_role\":\"INFORMATIONAL_OFFICE\"},\"source_support\":{\"state\":\"OFFICIAL_SOURCE_SUPPORTED\",\"strength\":\"WEAK\",\"evidence\":[{\"url\":\"https://sussexcountyde.gov/building-code\",\"role\":\"REQUIREMENT_EVIDENCE\"},{\"url\":\"https://sussexcountyde.gov/building-permits-and-licenses\",\"role\":\"INFORMATIONAL_OFFICE\"}]},\"contradictions\":[\"Input jurisdiction is City of Bethany Beach while supplied official evidence only addresses Sussex County building permits and related pages, without packet-supported confirmation of municipal versus county permitting authority for this location.\"]}",
+  "requested_model": "x-ai/grok-4.5",
+  "requested_provider": "openrouter",
+  "requested_runtime": "grok",
+  "response_id": "gen-1785164729-QgkjspG9jdVo0dApsK4T",
+  "runtime": "OpenRouter chat/completions; upstream_provider=xAI"
+}
