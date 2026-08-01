@@ -23,7 +23,7 @@ OLD_CONTRACT_PATH = ROOT / "tests" / "fixtures" / "live_customer_100_50_50_fix_c
 
 
 def server_module():
-    import server  # noqa: WPS433
+    from api import server  # noqa: WPS433
     return server
 
 
@@ -249,10 +249,10 @@ def assert_row_coherence(public: dict[str, Any], case_id: str) -> None:
 
 def assert_basic_public_invariants(case: dict[str, Any], public: dict[str, Any]) -> None:
     decision = str(public.get("permit_decision") or "").upper()
-    assert decision in {"REQUIRED", "NOT_REQUIRED", "UNKNOWN"}, {"case": case["case_id"], "decision": decision}
-    if decision == "UNKNOWN":
+    assert decision in {"REQUIRED", "NOT_REQUIRED", "CONDITIONAL", "VERIFY", "NEEDS_INPUT"}, {"case": case["case_id"], "decision": decision}
+    if decision in {"CONDITIONAL", "VERIFY", "NEEDS_INPUT"}:
         assert public.get("permit_required") is None, {"case": case["case_id"], "permit_required": public.get("permit_required")}
-        assert str(public.get("permit_verdict") or "").upper() in {"VERIFY", "CONTACT_AHJ"}
+        assert str(public.get("permit_verdict") or "").upper() in {"CONDITIONAL", "VERIFY", "NEEDS_INPUT"}
         assert not required_rows(public)
     else:
         assert public.get("permit_required") in {True, False}, {"case": case["case_id"], "permit_required": public.get("permit_required")}
@@ -278,7 +278,7 @@ def assert_contract_satisfied(contract: dict[str, Any], public: dict[str, Any]) 
     forbidden_required = set(contract.get("forbidden_required_families") or [])
     assert not (forbidden_required & required_families(public)), {"case": case_id, "forbidden_required": sorted(forbidden_required & required_families(public)), "required_families": sorted(required_families(public))}
     expected_primary = contract.get("expected_primary_family")
-    if expected_primary:
+    if expected_primary and expected_decision in {"REQUIRED", "NOT_REQUIRED"}:
         rows = required_rows(public)
         assert rows, {"case": case_id, "expected_primary": expected_primary, "permit_name": public.get("permit_name")}
         actual_primary = family_from_row(rows[0])

@@ -50,8 +50,9 @@ def test_sf_adu_garage_conversion_subpanel_injects_electrical_required_row():
 
     assert "electrical" in _families(out)
     electrical = _row(out, "electrical")
-    assert electrical["required"] is True
-    assert electrical["decision"] == "REQUIRED"
+    # Scope establishes a candidate filing lane, not jurisdiction authority.
+    assert electrical["required"] is False
+    assert electrical["decision"] == "VERIFY"
     assert "new_subpanel_or_service_upgrade" in electrical["trigger_signal_ids"]
     assert electrical["apply_url_status"] in {"needs_verification", "needs_reverification", "verified"}
     assert out["_filing_packet_reconciler_version"] == FILING_PACKET_RECONCILER_VERSION
@@ -103,7 +104,7 @@ def test_phoenix_taqueria_bar_ti_requires_full_filing_packet_and_bans_bad_anchor
     }.issubset(_families(out))
     assert _row(out, "health_food_establishment")["ahj_name"] == "Maricopa County Environmental Services"
     assert "liquor" in _row(out, "liquor_license")["permit_type"].lower()
-    assert _row(out, "wastewater_pretreatment_fog")["decision"] == "REQUIRED"
+    assert _row(out, "wastewater_pretreatment_fog")["decision"] == "VERIFY"
     text = _surface(out)
     assert "aca-prod.accela.com/phoenix" not in text
     assert "$558" not in text
@@ -138,14 +139,17 @@ def test_not_just_phrase_does_not_negate_required_trade_families():
     assert {"electrical", "plumbing", "mechanical", "fire_suppression"}.issubset(mapped)
 
 
-def test_advisory_mentions_inject_structured_rows_without_deleting_advisory_text():
+def test_advisory_mentions_do_not_author_regulated_rows_and_text_is_preserved():
     result = {
         "permits_required": [{"permit_type": "Building Permit", "required": True}],
         "checklist": ["Before opening, obtain the health department food establishment permit."],
         "common_mistakes": ["Forgetting the liquor license can delay bar opening."],
     }
     out = ensure_required_filing_rows(result, "restaurant tenant improvement", "Seattle", "WA")
-    assert {"health_food_establishment", "liquor_license"}.issubset(_families(out))
+    # Restaurant scope exposes the health lane, but warning prose that merely
+    # mentions liquor cannot create a regulated liquor-license row.
+    assert "health_food_establishment" in _families(out)
+    assert "liquor_license" not in _families(out)
     assert "health department food establishment permit" in _surface(out)
     assert "forgetting the liquor license" in _surface(out)
 
@@ -265,9 +269,14 @@ ADVERSARIAL_GOLDENS = [
 ]
 
 
-def test_adversarial_non_phoenix_sf_golden_cases_keep_required_families_visible():
+def test_adversarial_non_phoenix_sf_golden_cases_keep_scope_families_visible_without_heuristic_hard_requirements():
     for job, city, state, expected in ADVERSARIAL_GOLDENS:
         out = ensure_required_filing_rows({"permits_required": []}, job, city, state)
         assert expected.issubset(_families(out)), (job, _families(out))
         for family in expected:
-            assert _row(out, family)["decision"] in {"REQUIRED", "CONDITIONAL_REQUIRED"}
+            row = _row(out, family)
+            if row["decision"] == "REQUIRED":
+                assert row.get("source_status") == "verified"
+                assert row.get("source_url")
+            else:
+                assert row["decision"] == "VERIFY"

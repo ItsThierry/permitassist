@@ -113,8 +113,10 @@ def test_source_backed_product_contracts_end_to_end(monkeypatch) -> None:
                 _normalized_url(value) for value in case["accepted_route_urls"]
             }
 
-            # The pure manifest projection is byte-stable on re-entry.
-            assert build_permit_manifest_projection(public)["permit_manifest"] == manifest
+            # Public egress keeps an inert signature-free display Manifest, but
+            # it cannot be re-authenticated as a bearer authority capability.
+            assert "authority_tag" not in manifest
+            assert "permit_manifest" not in build_permit_manifest_projection(public)
 
             # A stripped public DTO is not authenticated server-held state. If it
             # is sent back through trusted egress, it must fail closed rather than
@@ -126,7 +128,7 @@ def test_source_backed_product_contracts_end_to_end(monkeypatch) -> None:
                 case["state"],
                 job_category=case["job_category"],
             )
-            assert _token(untrusted_reentry["permit_decision"]) == "UNKNOWN"
+            assert _token(untrusted_reentry["permit_decision"]) == "VERIFY"
             assert untrusted_reentry["permit_required"] is None
         except Exception as exc:  # aggregate all contract failures in one report
             failures.append({

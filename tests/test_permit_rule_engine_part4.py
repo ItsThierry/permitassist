@@ -161,7 +161,7 @@ def test_part4_tampered_active_payload_fails_closed_without_legacy_fallback(
     assert projection["family_decisions"] == [
         {
             "family": "building",
-            "verdict": "ABSTAIN",
+            "verdict": "NEEDS_INPUT",
             "trigger": "decision_integrity_validation_failed",
             "authority": "",
             "apply_url": "",
@@ -208,7 +208,7 @@ def test_part4_tampered_w4_keeps_all_ten_lanes_visible_as_abstain(monkeypatch: p
     expected_families = _fixture()["w4_family_order"]
     assert [row["family"] for row in projection["family_decisions"]] == expected_families
     assert [row["family"] for row in projection["verification_tasks"]] == expected_families
-    assert {row["verdict"] for row in projection["family_decisions"]} == {"ABSTAIN"}
+    assert {row["verdict"] for row in projection["family_decisions"]} == {"NEEDS_INPUT"}
     assert len(projection["permits_required"]) == 10
     _assert_no_poison(projection)
 
@@ -276,13 +276,13 @@ def test_part4_unsupported_scope_survives_second_customer_projection_without_leg
         "residential",
     )
 
-    assert first_projection["permit_decision"] == "UNKNOWN"
+    assert first_projection["permit_decision"] == "NEEDS_INPUT"
     assert cached_projection == first_projection
-    assert second_projection["permit_decision"] == "UNKNOWN"
+    assert second_projection["permit_decision"] == "NEEDS_INPUT"
     assert second_projection["permit_required"] is None
     assert second_projection["permit_verdict"] == "VERIFY"
     assert [row["family"] for row in second_projection["family_decisions"]] == sorted(pre._CORE_FAMILIES)
-    assert {row["verdict"] for row in second_projection["family_decisions"]} == {"ABSTAIN"}
+    assert {row["verdict"] for row in second_projection["family_decisions"]} == {"NEEDS_INPUT"}
     assert len(second_projection["verification_tasks"]) == len(pre._CORE_FAMILIES)
     _assert_no_poison(second_projection)
 
@@ -304,9 +304,9 @@ def test_part4_unsupported_scope_survives_second_customer_projection_without_leg
         "AZ",
         job_category="residential",
     )
-    assert unsupported_projection["permit_decision"] == "UNKNOWN"
+    assert unsupported_projection["permit_decision"] == "NEEDS_INPUT"
     assert [row["family"] for row in unsupported_projection["family_decisions"]] == sorted(pre._CORE_FAMILIES)
-    assert {row["verdict"] for row in unsupported_projection["family_decisions"]} == {"ABSTAIN"}
+    assert {row["verdict"] for row in unsupported_projection["family_decisions"]} == {"NEEDS_INPUT"}
     _assert_no_poison(unsupported_projection)
 
 
@@ -364,7 +364,7 @@ def test_part4_customer_not_required_source_floor_demotes_unbound_official_urls(
         "NC",
         "residential",
     )
-    assert cache_hit_view["permit_decision"] == "UNKNOWN"
+    assert cache_hit_view["permit_decision"] == "VERIFY"
     assert cache_hit_view["permit_required"] is None
     cache_hit_view_again = server.build_customer_permit_view_model(
         cache_hit_view,
@@ -376,7 +376,7 @@ def test_part4_customer_not_required_source_floor_demotes_unbound_official_urls(
     assert cache_hit_view_again == cache_hit_view
     view = views[0]
 
-    assert view["permit_decision"] == "UNKNOWN"
+    assert view["permit_decision"] == "VERIFY"
     assert view["permit_required"] is None
     assert view["permit_verdict"] == "VERIFY"
     assert view.get("claim_citations") in (None, [])
@@ -395,7 +395,7 @@ def test_part4_customer_not_required_source_floor_demotes_unbound_official_urls(
         assert stale_claim not in serialized
 
 
-def test_part4_customer_not_required_source_floor_preserves_claim_linked_official_decision(
+def test_part4_customer_not_required_source_floor_preserves_claim_linked_official_decision_but_demotes_stripped_reentry(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     from api import server
@@ -455,13 +455,17 @@ def test_part4_customer_not_required_source_floor_preserves_claim_linked_officia
         "AZ",
         "residential",
     )
-    assert first_public["permit_decision"] == "NOT_REQUIRED"
-    assert first_public["permit_required"] is False
-    assert second_public["permit_decision"] == "NOT_REQUIRED"
-    assert second_public["permit_required"] is False
+    # Caller-shaped quotations and citations are not authenticated provenance.
+    # The first customer-boundary pass must therefore abstain, and clean typed
+    # nonbinary re-entry remains byte-stable.
+    assert first_public["permit_decision"] == "VERIFY"
+    assert first_public["permit_required"] is None
+    assert second_public["permit_decision"] == "VERIFY"
+    assert second_public["permit_required"] is None
+    assert second_public == first_public
 
 
-def test_part4_authoritative_not_required_cell_remains_idempotent_after_public_cache_projection() -> None:
+def test_part4_caller_shaped_not_required_lock_fails_closed_and_remains_idempotent() -> None:
     from api import server
 
     url = "https://www.buckeyeaz.gov/business/development-services/permit-center"
@@ -502,16 +506,14 @@ def test_part4_authoritative_not_required_cell_remains_idempotent_after_public_c
         "residential",
     )
 
-    assert first["permit_decision"] == "NOT_REQUIRED"
-    assert first["permit_required"] is False
-    assert first["data_source"] == "Official permit authority decision rule"
+    # An ordinary mapping cannot authenticate itself with a private-looking
+    # decision-cell lock or official-looking URL. It must abstain, and that
+    # clean typed public DTO must remain byte-stable on re-entry.
+    assert first["permit_decision"] == "VERIFY"
+    assert first["permit_required"] is None
     assert first["source_urls"] == [url]
-    assert second["permit_decision"] == "NOT_REQUIRED"
-    assert second["permit_required"] is False
-    assert second["data_source"] == "Official permit authority decision rule"
-    assert third["permit_decision"] == "NOT_REQUIRED"
-    assert third["permit_required"] is False
-    assert third["data_source"] == "Official permit authority decision rule"
+    assert second == first
+    assert third == first
 
 
 def test_part4_ambiguous_jurisdiction_never_activates(monkeypatch: pytest.MonkeyPatch) -> None:

@@ -329,10 +329,10 @@ def generate(output_dir: Path, source_commit: str) -> dict[str, Any]:
                 }
                 row["passed"] = bool(
                     projected
-                    and row["permit_decision"] == "UNKNOWN"
-                    and row["permit_verdict"] == "CONTACT_AHJ"
+                    and row["permit_decision"] == "NEEDS_INPUT"
+                    and row["permit_verdict"] == "NEEDS_INPUT"
                     and row["family_count"] == 10
-                    and row["family_verdicts"] == ["ABSTAIN"]
+                    and row["family_verdicts"] == ["NEEDS_INPUT"]
                     and row["api_equals_core_projection"]
                     and row["checklist_family_count"] == 10
                 )

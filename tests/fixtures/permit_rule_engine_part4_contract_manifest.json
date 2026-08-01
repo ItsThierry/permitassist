@@ -1,10 +1,10 @@
 {
-  "schema_version": "permitassist.rule-engine-part4-integrated-customer-boundary-contract-manifest.v2",
-  "frozen_before_behavior_change": false,
-  "contract_correction": "Current-request Decision Cell values are authoritative only through the unforgeable in-process _ServerOwnedResult type; customer round trips require authenticated server-held snapshot continuity. Public share storage and report embedding apply the universal default-deny customer egress projection to plain submitted dictionaries; claim_citations, proof hashes/digests, and private diagnostics remain excluded from customer surfaces.",
   "base_checkpoint_sha": "594ab25125e1b6f6c0598d08c316d78ebecaea24",
+  "contract_correction": "Five-status migration: customer-visible fail-closed output uses VERIFY or NEEDS_INPUT; UNKNOWN, CONTACT_AHJ, and ABSTAIN remain accepted only as legacy/internal inputs and are not emitted at customer projection boundaries.",
+  "frozen_before_behavior_change": false,
+  "schema_version": "permitassist.rule-engine-part4-integrated-customer-boundary-contract-manifest.v3",
   "sha256": {
-    "tests/test_permit_rule_engine_part4.py": "c97e339754435b172b07f0391601457b1e28606da6283f2eae514d26bf42846f",
-    "tests/fixtures/permit_rule_engine_part4_contract.json": "428abb68e1eba8657544b8bb46271da10eff681cfd6bcf8a0949a817145799e3"
+    "tests/fixtures/permit_rule_engine_part4_contract.json": "4835bb43c864746de864fd03e3480bb86566899c1ff9e24c045a164afe67ee23",
+    "tests/test_permit_rule_engine_part4.py": "e189601f2c951dd5dab41e1fffdf46a1d1bbff049639e304b7074022a7890310"
   }
 }

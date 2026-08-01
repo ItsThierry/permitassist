@@ -217,7 +217,7 @@ def generate(repo_root: Path, output_dir: Path, source_commit: str) -> dict[str,
             pre.SeedClassification.JURISDICTION_HOLD,
             pre.SeedClassification.UNSUPPORTED_SCOPE,
         } and not canonical_alias_reconciliation:
-            if payload["permit_decision"] != "UNKNOWN" or payload["permit_required"] is not None:
+            if payload["permit_decision"] not in {"VERIFY", "NEEDS_INPUT"} or payload["permit_required"] is not None:
                 issues.append("unsafe_top_line_binary")
             if any(row["verdict"] in {"REQUIRED", "NOT_REQUIRED"} for row in payload["family_decisions"]):
                 issues.append("unsafe_family_binary")
@@ -367,7 +367,7 @@ def generate(repo_root: Path, output_dir: Path, source_commit: str) -> dict[str,
             "source_index_key": "synthetic-token-distinct-jurisdictions",
             "classification": ambiguous_projection["seed_classification"],
             "permit_decision": ambiguous_projection["permit_decision"],
-            "passed": ambiguous_projection["seed_classification"] == "jurisdiction_hold" and ambiguous_projection["permit_decision"] == "UNKNOWN",
+            "passed": ambiguous_projection["seed_classification"] == "jurisdiction_hold" and ambiguous_projection["permit_decision"] in {"VERIFY", "NEEDS_INPUT"},
         }
     )
     original_classifier = pre.classify_v24_seed

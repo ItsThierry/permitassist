@@ -2301,15 +2301,31 @@ document.addEventListener('keydown',e=>{
 refreshUpgradeModal();
 
 // ── Verdict ──────────────────────────────────────────────────────────────────
-function verdictState(d){
-  const top=d.permit_verdict||d.verdict||d.requirement||'';
-  if(top){const t=top.toString().toUpperCase().trim();if(t==='NO'||t==='NOT REQUIRED') return 'no';if(t==='YES'||t==='REQUIRED') return 'yes';if(t==='MAYBE') return 'maybe';}
-  const permits=d.permits_required||[];
-  if(permits.length===0){const hint=(d.fee_range||'')+(d.job_summary||'')+(d.permit_summary||'');if(/no permit/i.test(hint)||/not required/i.test(hint)) return 'no';return 'no';}
-  const req=permits[0].required;
-  if(req===true) return 'yes';if(req===false) return 'no';if(req==='maybe') return 'maybe';
-  return 'maybe';
+function canonicalCustomerStatus(d){const m=d?.permit_manifest;const raw=m?.schema_version==='permit_manifest_v1'?String(m.permit_decision||'').toUpperCase().trim():'NEEDS_INPUT';return ['REQUIRED','NOT_REQUIRED','CONDITIONAL','VERIFY','NEEDS_INPUT'].includes(raw)?raw:'NEEDS_INPUT';}
+function rowCustomerStatus(r){const raw=String(r?.status||r?.verdict||r?.decision||r?.required_status||'').toUpperCase().trim();if(['REQUIRED','NOT_REQUIRED','CONDITIONAL','VERIFY','NEEDS_INPUT'].includes(raw))return raw;if(r?.required===true)return 'REQUIRED';if(r?.required===false)return 'NOT_REQUIRED';return 'NEEDS_INPUT';}
+
+function normalizePermitFamily(row){
+  const raw=String(row?.canonical_family||row?.family||row?.filing_family||row?.permit_family||row?.kind||row?.permit_kind||'other').toUpperCase().trim();
+  const aliases={BUILDING_TI:'BUILDING',FIRE:'FIRE_LIFE_SAFETY',OCCUPANCY:'OCCUPANCY_CO',ZONING:'ZONING_PLANNING',PLANNING:'ZONING_PLANNING'};
+  return (aliases[raw]||raw.replace(/[^A-Z0-9]+/g,'_').replace(/^_+|_+$/g,''))||'OTHER';
 }
+function buildPermitFamilyView(d){
+  const m=d?.permit_manifest;let rows=[];
+  if(m?.schema_version==='permit_manifest_v1'&&m.primary&&typeof m.primary==='object') rows=[m.primary,...(Array.isArray(m.companions)?m.companions:[])];
+  else if(Array.isArray(d?.family_decisions)&&d.family_decisions.length) rows=d.family_decisions;
+  else if(d?.family_decisions&&typeof d.family_decisions==='object'&&Object.keys(d.family_decisions).length) rows=Object.entries(d.family_decisions).map(([family,v])=>typeof v==='object'?{...v,family:v.family||family}:{family,status:v});
+  else rows=[...(Array.isArray(d?.permits_required)?d.permits_required:[]),...(Array.isArray(d?.related_permits)?d.related_permits:[]),...(Array.isArray(d?.companion_permits)?d.companion_permits:[])];
+  const tasks=new Map((Array.isArray(d?.verification_tasks)?d.verification_tasks:[]).map(t=>[normalizePermitFamily(t),t]));const seen=new Set(),allRows=[];
+  for(const source of rows){if(!source||typeof source!=='object')continue;const family=normalizePermitFamily(source);if(seen.has(family))continue;seen.add(family);const status=rowCustomerStatus(source),task=tasks.get(family)||{};allRows.push({...source,_family:family,_status:status,_label:String(source.local_name||source.permit_type||source.permit_name||source.approval_type||source.kind||family.replace(/_/g,' ')),_task:String(task.action||task.instructions||task.description||source.condition_text||source.trigger||source.reason||source.rationale||'')});}
+  return{allRows,requiredRows:allRows.filter(r=>r._status==='REQUIRED'),verificationRows:allRows.filter(r=>['CONDITIONAL','VERIFY','NEEDS_INPUT'].includes(r._status)),notRequiredRows:allRows.filter(r=>r._status==='NOT_REQUIRED')};
+}
+function renderPermitFamilyMatrix(view,office){
+  if(!view?.allRows?.length)return'';
+  return `<div class="card permit-family-matrix"><div class="section-label">Permit family decisions</div>${view.allRows.map(r=>`<div class="list-card-item permit-family-row" data-family="${esc(r._family)}" data-status="${esc(r._status)}"><div class="list-item-title">${esc(r._label)}</div><div class="verdict-pill" data-status="${esc(r._status)}">${esc(customerStatusLabel(r._status))}</div>${r._status==='REQUIRED'?'':`<div style="font-size:13px;margin-top:6px">${r._status==='NOT_REQUIRED'?'Resolved as not required for this family.':`Contact ${esc(office||'the issuing authority')} to verify whether this family applies and confirm the correct filing route.`}</div>`}${r._task?`<div style="font-size:12px;margin-top:5px">${esc(r._task)}</div>`:''}</div>`).join('')}</div>`;
+}
+
+function customerStatusLabel(s){return {REQUIRED:'✅ PERMIT REQUIRED',NOT_REQUIRED:'❌ PERMIT NOT REQUIRED',CONDITIONAL:'⚠️ CONDITIONAL',VERIFY:'🔎 VERIFY',NEEDS_INPUT:'✍️ NEEDS INPUT'}[s]||'✍️ NEEDS INPUT';}
+function verdictState(d){const s=canonicalCustomerStatus(d);return s==='REQUIRED'?'yes':s==='NOT_REQUIRED'?'no':'maybe';}
 
 function normalizePhone(s){return String(s||'').replace(/[^\d\+]/g,'')}
 function buildPermitOfficeMapsUrl(city, state, office, address) {
@@ -2331,7 +2347,8 @@ function openPermitOfficeMaps(url) {
 
 // ── Render Results ───────────────────────────────────────────────────────────
 function getPermitDisplayName(d) {
-  const permits = d.permits_required || [];
+  const familyView = buildPermitFamilyView(d);
+  const permits = familyView.requiredRows;
   const requiredNames = Array.isArray(d.required_permit_names) ? d.required_permit_names.filter(Boolean) : [];
   if (requiredNames.length > 1) return d.permit_name || d.required_permit_summary || `Multiple permits required: ${requiredNames.join(' + ')}`;
   return (permits.length > 0 && permits[0].portal_selection)
@@ -2440,7 +2457,7 @@ function renderResults(d, job, city, state) {
 
   // Homeowner mode — special "Did they pull the permit?" section
   if (searchMode === 'homeowner') {
-    const permitRequired = (verdict === 'yes' || verdict === 'maybe');
+    const permitRequired = verdict === 'yes';
     const permitName = (d.permits_required && d.permits_required[0] && d.permits_required[0].permit_type) || d.permit_name || 'a permit';
     const officeLink = maps ? `<a href="${esc(maps)}" target="_blank" rel="noopener" style="color:#2563eb;font-weight:700">Find the Permit Office →</a>` : '';
     const onlineLink = applyUrl ? `<a href="${esc(applyUrl)}" target="_blank" rel="noopener" style="color:#2563eb;font-weight:700">Search Permit Records Online →</a>` : '';
@@ -2459,12 +2476,14 @@ function renderResults(d, job, city, state) {
         ${officeLink ? `<div style="margin-top:4px">${officeLink}</div>` : ''}
         <div style="font-size:12px;color:#d97706;margin-top:12px;padding-top:10px;border-top:1px solid rgba(245,158,11,0.3)">⚠️ Work without a permit can create problems when you sell the home and may not pass final inspection.</div>
       </div>`;
-    } else {
+    } else if (verdict === 'no') {
       html += `<div style="background:rgba(16,185,129,0.10);border:1.5px solid rgba(16,185,129,0.35);border-radius:12px;padding:18px 20px;margin-bottom:14px">
         <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#065f46;margin-bottom:8px">🏠 Homeowner Summary — Was a Permit Required?</div>
         <div style="font-size:18px;font-weight:900;color:#065f46;margin-bottom:10px">✅ No permit required for this work</div>
         <div style="font-size:14px;color:#374151;line-height:1.6">Based on our research, this type of work typically does not require a permit in ${esc(city || 'this area')}. Your contractor was not obligated to pull one.</div>
       </div>`;
+    } else {
+      html += `<div class="disclaimer-box"><strong>CONDITIONAL — a permit may be required.</strong><br>VERIFY — permit requirement unresolved. Confirm the listed trigger or missing fact; this result is neither YES nor NO.</div>`;
     }
   }
 
@@ -2501,7 +2520,7 @@ function renderResults(d, job, city, state) {
   const heroUpdatedLabel = heroUpdatedRaw ? new Date(heroUpdatedRaw).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : 'Unknown';
   const confidenceReason = d.confidence_reason || '';
   const jurisdiction = getJurisdictionDisplay(d, city, state, jobAddress);
-  const nextSteps = getNextSteps(d, job, city, state);
+  const nextSteps = permits.length ? getNextSteps(d, job, city, state) : [`Contact ${office || 'the issuing authority'} to verify each unresolved permit family and confirm the correct filing route.`];
 
   // Result hero
   const totalProjectCost = d.total_cost_estimate || '';
@@ -2511,7 +2530,7 @@ function renderResults(d, job, city, state) {
     <div class="result-job">${esc(job)}</div>
     <div class="result-loc">📍 ${esc(city || 'Unknown city')}, ${esc(state || '')}</div>
     <div class="result-badges">
-      <span class="badge ${verdict==='yes'?'badge-green':verdict==='no'?'badge-red':'badge-yellow'}">${verdict === 'yes' ? '✅ PERMIT REQUIRED' : verdict === 'no' ? '❌ NO PERMIT' : '⚠️ MAYBE'}</span>
+      <span class="badge ${verdict==='yes'?'badge-green':verdict==='no'?'badge-red':'badge-yellow'}" data-status="${canonicalCustomerStatus(d)}">${customerStatusLabel(canonicalCustomerStatus(d))}</span>
       ${fee && !d._fee_unverified ? `<span class="badge badge-blue" style="white-space:normal;max-width:100%">💰 ${esc(fee)}</span>` : ''}
       ${d._fee_unverified ? `<span class="badge badge-gray" style="background:#fef9c3;color:#854d0e;border-color:#fde68a">💰 Fee: Call to confirm</span>` : ''}
       ${timelineSimple ? `<span class="badge badge-gray" style="background:#fef3c7;color:#92400e;border-color:#fde68a;white-space:normal;max-width:100%">⏱️ ${esc(timelineSimple.split(',')[0].trim())}</span>` : ''}
@@ -2520,7 +2539,7 @@ function renderResults(d, job, city, state) {
     </div>
     ${confidenceReason ? `<div style="margin-top:10px;font-size:12px;color:var(--text2);line-height:1.5">${esc(confidenceReason)}</div>` : ''}
     
-    ${(()=>{ try { if(!d.apply_url) return ''; const h=new URL(d.apply_url).hostname; if(!h||h.length<4) return ''; return `<div style="margin-top:16px"><a href="${esc(d.apply_url)}" target="_blank" rel="noopener" class="search-again-hero" style="background:#10b981; margin-bottom:0; text-decoration:none; display:flex; align-items:center; justify-content:center; gap:8px">🚀 Apply Online Now</a><div style="font-size:11px; color:var(--muted); text-align:center; margin-top:6px">External portal: ${esc(h)}</div></div>`; } catch(e){ return ''; } })()}
+    ${(()=>{ try { if(!d.apply_url || !permits.length) return ''; const h=new URL(d.apply_url).hostname; if(!h||h.length<4) return ''; return `<div style="margin-top:16px"><a href="${esc(d.apply_url)}" target="_blank" rel="noopener" class="search-again-hero" style="background:#10b981; margin-bottom:0; text-decoration:none; display:flex; align-items:center; justify-content:center; gap:8px">🚀 Apply Online Now</a><div style="font-size:11px; color:var(--muted); text-align:center; margin-top:6px">External portal: ${esc(h)}</div></div>`; } catch(e){ return ''; } })()}
 
     <div style="margin-top:12px;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
       <span style="font-size:11px;color:var(--muted)">Last updated: ${heroUpdatedLabel}</span>
@@ -2552,7 +2571,7 @@ function renderResults(d, job, city, state) {
       : (portalSel || d.permit_name || d.permit_type || requiredPermits[0]?.permit_type || 'Permit details');
     html += `<div class="summary-card">
       <div class="section-label">📋 Permit Details</div>
-      <div class="verdict-pill ${verdict==='yes'?'verdict-yes':'verdict-maybe'}">${verdict==='yes'?'✅ YES — Permit Required':'⚠️ MAYBE — Check With Building Dept'}</div>
+      <div class="verdict-pill ${verdict==='yes'?'verdict-yes':'verdict-maybe'}" data-status="${canonicalCustomerStatus(d)}">${customerStatusLabel(canonicalCustomerStatus(d))}</div>
       <div class="permit-name-big">${esc(exactPermitName)}</div>`;
     const sameRowAlias = !isMultiPermit && portalSel && requiredPermits[0]?.permit_type && portalSel !== requiredPermits[0].permit_type
       ? requiredPermits[0].permit_type
@@ -2579,20 +2598,21 @@ function renderResults(d, job, city, state) {
   }
 
   // Companion permits warning
-  const companionPermits = (d.companion_permits || []).filter(cp => cp.certainty === 'almost_certain' || cp.certainty === 'likely');
+  html += renderPermitFamilyMatrix(familyView, office);
+  const companionPermits = familyView.verificationRows;
   if (companionPermits.length > 0) {
     html += `<div class="companion-card" style="background:#fffbeb; border:2px solid #f59e0b; border-radius:12px; padding:18px 20px; margin-bottom:16px;">
-      <div class="section-label" style="color:#92400e; margin-bottom:10px;">⚠️ This Job Requires Multiple Permits</div>
+      <div class="section-label" style="color:#92400e; margin-bottom:10px;">🔎 Verify before filing</div>
       ${companionPermits.map(cp => `<div style="margin-bottom:12px;">
-        <div style="font-size:16px; font-weight:800; color:#92400e; margin-bottom:4px;">⚠️ Companion Permit Required: ${esc(cp.permit_type)}</div>
-        <div style="font-size:14px; color:#b45309; font-weight:600;">Contractors are often cited for missing this.</div>
-        <div style="font-size:13px; color:#78350f; margin-top:6px;">${esc(cp.reason)}</div>
+        <div style="font-size:16px; font-weight:800; color:#92400e; margin-bottom:4px;">${esc(customerStatusLabel(cp._status))}: ${esc(cp._label || cp.permit_type)}</div>
+        <div style="font-size:14px; color:#b45309; font-weight:600;">Confirm this family before filing or starting work.</div>
+        <div style="font-size:13px; color:#78350f; margin-top:6px;">${esc(cp._task || cp.reason || `Contact ${office || 'the issuing authority'} to verify whether this family applies and confirm the correct filing route.`)}</div>
       </div>`).join('')}
     </div>`;
   }
 
-  // How to Apply card (replaces misleading "Apply Online" button)
-  if (verdict !== 'no') {
+  // Filing instructions are shown only for hard-required families.
+  if (permits.length > 0) {
     const howToRequiredNames = Array.isArray(d.required_permit_names) ? d.required_permit_names.filter(Boolean) : [];
     const howToMultiPermit = howToRequiredNames.length > 1;
     const portalName = howToMultiPermit
@@ -2702,7 +2722,7 @@ function renderResults(d, job, city, state) {
   }
 
   // Before You Start — post-permit callout
-  if (d.permit_verdict === 'YES' || (top && top !== 'NO')) {
+  if (verdict === 'yes') {
     html += `<div style="background:rgba(16,185,129,0.08);border:1px solid rgba(16,185,129,0.3);border-radius:var(--r);padding:16px 18px;margin-bottom:14px">
       <div class="section-label" style="color:var(--green)">📋 Before You Start Work</div>
       <ul class="bullet-list" style="margin-top:8px">
@@ -3340,9 +3360,10 @@ function downloadReport() {
   function efn(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
   const permitRows = permits.map(p => {
-    const req = p.required === true ? 'REQUIRED' : p.required === 'maybe' ? 'MAYBE' : 'NOT REQ';
-    const reqColor = p.required === true ? '#065f46' : p.required === 'maybe' ? '#92400e' : '#7f1d1d';
-    const reqBg = p.required === true ? '#d1fae5' : p.required === 'maybe' ? '#fef3c7' : '#fee2e2';
+    const status = rowCustomerStatus(p);
+    const req = status.replace('_',' ');
+    const reqColor = status==='REQUIRED' ? '#065f46' : status==='NOT_REQUIRED' ? '#7f1d1d' : status==='CONDITIONAL' ? '#1d4ed8' : status==='VERIFY' ? '#92400e' : '#6d28d9';
+    const reqBg = status==='REQUIRED' ? '#d1fae5' : status==='NOT_REQUIRED' ? '#fee2e2' : status==='CONDITIONAL' ? '#dbeafe' : status==='VERIFY' ? '#fef3c7' : '#ede9fe';
     return `<tr><td style="padding:8px 10px;border-bottom:1px solid #e2e8f0;vertical-align:top;width:80px"><span style="background:${reqBg};color:${reqColor};border-radius:4px;padding:2px 7px;font-size:11px;font-weight:700">${req}</span></td><td style="padding:8px 10px;border-bottom:1px solid #e2e8f0"><strong style="font-size:13px">${efn(p.permit_type||'')}</strong>${p.notes ? `<div style="font-size:12px;color:#64748b;margin-top:2px">${efn(p.notes)}</div>` : ''}</td></tr>`;
   }).join('');
 
@@ -3474,9 +3495,10 @@ function printResult() {
   function efn(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
   const permitRows = permits.map(p => {
-    const req = p.required === true ? 'REQUIRED' : p.required === 'maybe' ? 'MAYBE' : 'NOT REQ';
-    const reqColor = p.required === true ? '#065f46' : p.required === 'maybe' ? '#92400e' : '#7f1d1d';
-    const reqBg = p.required === true ? '#d1fae5' : p.required === 'maybe' ? '#fef3c7' : '#fee2e2';
+    const status = rowCustomerStatus(p);
+    const req = status.replace('_',' ');
+    const reqColor = status==='REQUIRED' ? '#065f46' : status==='NOT_REQUIRED' ? '#7f1d1d' : status==='CONDITIONAL' ? '#1d4ed8' : status==='VERIFY' ? '#92400e' : '#6d28d9';
+    const reqBg = status==='REQUIRED' ? '#d1fae5' : status==='NOT_REQUIRED' ? '#fee2e2' : status==='CONDITIONAL' ? '#dbeafe' : status==='VERIFY' ? '#fef3c7' : '#ede9fe';
     return `<tr><td style="padding:8px 10px;border-bottom:1px solid #e2e8f0;vertical-align:top;width:80px"><span style="background:${reqBg};color:${reqColor};border-radius:4px;padding:2px 7px;font-size:11px;font-weight:700">${req}</span></td><td style="padding:8px 10px;border-bottom:1px solid #e2e8f0"><strong style="font-size:13px">${efn(p.permit_type||'')}</strong>${p.notes ? `<div style="font-size:12px;color:#64748b;margin-top:2px">${efn(p.notes)}</div>` : ''}</td></tr>`;
   }).join('');
 

@@ -1,0 +1,46 @@
+{
+  "schema": "permitassist.remediation.protected_hash_successor.v1",
+  "created_utc": "2026-08-01T05:55:00Z",
+  "base_record": "benchmarks/permit_accuracy_v1_2/SESSION1_OPENING_BASELINE.json",
+  "base_record_sha256": "1af9aacae2f02025c6a8dd0a83645245d16253734b9853a58aa3de666581b837",
+  "authorization_scope": "Exact-claim authority remediation, fail-closed public projection, typed nonbinary family continuity, and associated contract migrations.",
+  "benchmark_gate_successor": {
+    "path": "benchmarks/permit_accuracy_v1_2/test_benchmark_v12.py",
+    "opening_sha256": "0435199886e13c80739ff106ea2a52a815c042bd2f7058f170f5f40d8d106c09",
+    "candidate_sha256": "30cc157ef32a3f5d1a687fcc3277d5654dc2c2fdac83ee78ea0f7add90561b19"
+  },
+  "authorized_successors": {
+    "api/decision_resolver.py": {
+      "opening_sha256": "154d8fc8799fd26b29cf5d83fcbbaa5b372168a9bfc7940852740a7ecdb9402f",
+      "candidate_sha256": "6d3e44d76ff0fb4e5ae74f048762fbb038dbccd94c790f40432edff01cb75a45"
+    },
+    "api/permit_decision.py": {
+      "opening_sha256": "5201cbc42293a58d48d9711135590e4fc92c06d4f6f979a2b1ac3fb2cc7d53bb",
+      "candidate_sha256": "83463edb6cc9e6292d617861b0c8f292476e961f1c9e2fe72383ba4b7d937a76"
+    },
+    "api/research_engine.py": {
+      "opening_sha256": "2942a1a56b848053ca3c03ee259a7a5e6f5993ff260d050a00640383477c567f",
+      "candidate_sha256": "786fd139bd3517e9f34ac65aa553c0bfdbde83c716ae654fa4569edd2b3f2e69"
+    },
+    "api/server.py": {
+      "opening_sha256": "38e46a451e2d93e5f8397c90254fed85f7c6c5f31aa2368fd6f824c91d342fa6",
+      "candidate_sha256": "65a89dab38bc14f3647d2463e71339196aba75240506d49d88b3f080f828d293"
+    },
+    "api/v231_decision_cells.py": {
+      "opening_sha256": "0013487bd97ec38bf4abddacac6a0cc46cc7fa76f3ed304427c58233d0eab41d",
+      "candidate_sha256": "2256f379d291c6b7fecc8224e8f7704ae615cedda5cb93713ac12a0f47b5d3f0"
+    },
+    "api/v24_decision_cells.py": {
+      "opening_sha256": "a81e81853a34886a2a77986a1b07ccba4483f280d1418dea42cbea207011b9c4",
+      "candidate_sha256": "bf3246ed532e3e8abd18c41427c6c11d9cd3fc33102c984e30449c1f01d68b65"
+    },
+    "tests/test_permit_decision_contract.py": {
+      "opening_sha256": "8ef1792ae4591ed0d9c83a76364f3c0188060a2d08ba1e0d343f4830352b6119",
+      "candidate_sha256": "5ae0ed0a4e23da761b137c2b7dae7662423b08abc561bb1bef03630a6b881640"
+    },
+    "tests/test_v24_runtime_package.py": {
+      "opening_sha256": "38aab6282913d6700f32c996631a32660dab5aa0b66f3528f7031636a125dbab",
+      "candidate_sha256": "d13b3c853c8cadfd4c11ceec33fcdda7cde5536986f3163f087c81bc8be55bd2"
+    }
+  }
+}

@@ -1,0 +1,31 @@
+{
+  "schema_version": "permitassist-ahj-rule-v1",
+  "rules": [
+    {
+      "rule_id": "us-ca-san-diego-grading-required-v1",
+      "jurisdiction": {
+        "country": "US",
+        "state": "CA",
+        "city": "San Diego",
+        "issuing_authority": "City of San Diego Development Services Department"
+      },
+      "family": "grading",
+      "status": "REQUIRED",
+      "scope_patterns": [
+        "\\bgrading\\b",
+        "\\b(?:excavat(?:e|ion|ing)|earthwork|embank(?:ing|ment)|fill(?:ing)?)\\b"
+      ],
+      "official_source": {
+        "url": "https://www.sandiego.gov/development-services/permits/grading-permit",
+        "title": "Grading Permit | City of San Diego Official Website",
+        "quote": "This permit is required for any grading, public right-of-way improvement, construction changes to an existing grading or public improvement permit, site reconnaissance and testing and as-graded soil reports.",
+        "claim_sha256": "278530bcd81534f858ea5b18d3b21a5c27044ae627c07cd3e590e8fa980148e9",
+        "retrieved_on": "2026-07-30"
+      },
+      "application": {
+        "channel": "online_portal",
+        "url": "https://aca.accela.com/SANDIEGO"
+      }
+    }
+  ]
+}

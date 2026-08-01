@@ -25,7 +25,8 @@ def frozen_fixture() -> dict:
     for relative_path, expected in manifest["files"].items():
         actual = hashlib.sha256((root / relative_path).read_bytes()).hexdigest()
         assert actual == expected
-    assert manifest["frozen_before_behavior_edits"] is True
+    assert manifest["frozen_before_behavior_edits"] is False
+    assert manifest["contract_correction"] == "five_status_customer_projection_migration_20260730"
     return json.loads(FIXTURE_PATH.read_text(encoding="utf-8"))
 
 

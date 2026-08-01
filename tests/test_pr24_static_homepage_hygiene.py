@@ -75,7 +75,14 @@ def test_shared_report_static_copy_uses_clean_labels_and_friendly_sources():
 
     leaked = [term for term in CUSTOMER_REPORT_FORBIDDEN_COPY if term in html]
     assert leaked == []
-    assert "Permit required: Yes" in html
+    for label in (
+        "Permit status: Required",
+        "Permit status: Not required",
+        "Permit status: Conditional",
+        "Permit status: Verify",
+        "Permit status: Needs input",
+    ):
+        assert label in html
     assert "sourceHost" in html
 
 

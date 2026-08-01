@@ -1,0 +1,21 @@
+{
+  "schema_version": "permitassist-ahj-rule-v1",
+  "rules": [
+    {
+      "rule_id": "us-ny-new-york-city-plumbing-relocation-required-v1",
+      "jurisdiction": {"country": "US", "state": "NY", "city": "Queens", "issuing_authority": "New York City Department of Buildings"},
+      "scope_patterns": ["relocat(?:e|ion|ing)[^.]{0,100}(?:drain|pipe|piping)", "(?:drain|pipe|piping)[^.]{0,100}relocat(?:e|ion|ing)"],
+      "family": "plumbing",
+      "status": "REQUIRED",
+      "official_source": {
+        "url": "https://www.nyc.gov/site/buildings/property-or-business-owner/plumbing-permits.page",
+        "title": "NYC Department of Buildings — Plumbing Permits",
+        "quote": "Work involving the alteration, rearrangement, relocation, or permanent removal of any piping must be supervised by a Licensed Master Plumber (LMP) or Master Fire Suppression Piping Contractor. The Licensed Master Plumber or Fire Suppression Piping Contractor must obtain permits from the Department and arrange for necessary tests and inspections of completed work by a DOB Inspector.",
+        "claim_sha256": "d089a24def1ae0466cf7da9d675fe97d7aa67290157000c7d3678d7f9bb6e4f1",
+        "retrieved_on": "2026-07-30"
+      },
+      "application": {"url": "https://www.nyc.gov/site/buildings/property-or-business-owner/plumbing-permits.page", "channel": "official_web"},
+      "notes": "Exact NYC plumbing-piping relocation claim. Direct fixture replacement without piping alteration remains outside this rule."
+    }
+  ]
+}

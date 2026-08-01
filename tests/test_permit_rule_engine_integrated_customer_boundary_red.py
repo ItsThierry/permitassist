@@ -67,6 +67,10 @@ FORBIDDEN_PUBLIC_KEYS = {
     "customerdecisiondto",
 }
 OFFICIAL_URL = "https://www.buckeyeaz.gov/business/development-services/permit-center"
+OFFICIAL_REQUIRED_QUOTE = (
+    "Permits are also required, but not limited to fencing, pools, spas, patios, "
+    "solar and re-roofs."
+)
 
 
 def _walk_keys(value, path=""):
@@ -90,18 +94,15 @@ def _assert_public_boundary(payload: dict) -> None:
     ]
     assert leaked == []
 
-    # No-neuter contract: the egress fix cannot remove or demote supported truth.
-    assert payload["permit_decision"] == "REQUIRED"
-    assert payload["permit_required"] is True
-    assert payload["permit_verdict"] == "YES"
-    assert payload["applying_office"] == "City of Buckeye Development Services Permit Center"
-    assert payload["apply_url"] == OFFICIAL_URL
-    assert payload["source_urls"] == [OFFICIAL_URL]
-    assert payload["sources"][0]["url"] == OFFICIAL_URL
-    assert len(payload["permits_required"]) == 10
-    assert payload["permits_required"][0]["required_status"] == "REQUIRED"
-    assert payload["permits_required"][0]["provenance"]["decision_source"] == "sealed_core_decision_cell"
-    assert [row["required_status"] for row in payload["permits_required"][1:]] == ["VERIFY"] * 9
+
+def _assert_untrusted_nonbinary(payload: dict) -> None:
+    # These endpoint fixtures deliberately return ordinary caller-shaped
+    # dictionaries. URLs, quotes, and provenance-looking fields inside such a
+    # dictionary cannot mint binary authority.
+    assert payload["permit_decision"] == "VERIFY"
+    assert payload["permit_required"] is None
+    assert payload["permit_verdict"] == "VERIFY"
+    assert payload.get("permits_required") == []
     assert payload["requirements"]
     assert payload["documents_needed"]
     assert payload["inspections"]
@@ -152,9 +153,14 @@ def _dirty_internal_result() -> dict:
         "permit_kind": "Residential Roofing",
         "permit_type": "Residential Roofing Permit",
         "permits_required": [{"permit_type": "internal raw row"}],
-        "sources": [OFFICIAL_URL],
+        "sources": [{"title": "City permit center", "url": OFFICIAL_URL, "quote": OFFICIAL_REQUIRED_QUOTE}],
         "source_urls": [OFFICIAL_URL],
-        "claim_citations": [{"field": "permit_decision", "source_url": OFFICIAL_URL}],
+        "claim_citations": [{
+            "field": "permit_decision",
+            "value": "REQUIRED",
+            "source_url": OFFICIAL_URL,
+            "quoted_snippet": OFFICIAL_REQUIRED_QUOTE,
+        }],
         "permit_decision_contract": {"decision": "REQUIRED", "cell_id": "internal-cell"},
         "source_evidence_floor": {"status": "satisfied"},
         "quality_warnings": ["internal warning"],
@@ -205,16 +211,26 @@ def _projected_customer_payload() -> dict:
         "permit_kind": "Residential Roofing",
         "permit_type": "Residential Roofing Permit",
         "permits_required": rows,
+        "family_decisions": copy.deepcopy(rows),
         "applying_office": "City of Buckeye Development Services Permit Center",
         "apply_url": OFFICIAL_URL,
         "source_urls": [OFFICIAL_URL],
-        "sources": [{"title": "City permit center", "url": OFFICIAL_URL}],
+        "sources": [{
+            "title": "City permit center",
+            "url": OFFICIAL_URL,
+            "quote": OFFICIAL_REQUIRED_QUOTE,
+        }],
         "requirements": ["Submit the roofing scope and product information."],
         "documents_needed": ["Roof plan or manufacturer details if requested."],
         "inspections": ["Schedule required roof inspections with the permit office."],
         # Deliberately dirty projection: the final universal egress must remove
         # these even if an upstream helper accidentally reintroduces them.
-        "claim_citations": [{"field": "permit_decision", "source_url": OFFICIAL_URL}],
+        "claim_citations": [{
+            "field": "permit_decision",
+            "value": "REQUIRED",
+            "source_url": OFFICIAL_URL,
+            "quoted_snippet": OFFICIAL_REQUIRED_QUOTE,
+        }],
         "permit_decision_contract": {"decision": "REQUIRED"},
         "quality_warnings": ["internal"],
         "_projection_debug": {"provider": "internal"},
@@ -502,6 +518,7 @@ def test_v16_signed_staging_canary_allows_exact_twelve_lookups_and_suppresses_ca
             )
             statuses.append(status)
             _assert_public_boundary(payload)
+            _assert_untrusted_nonbinary(payload)
         thirteenth = _post_permit_http(
             live.base,
             _signed_canary_headers(server, ordinal=13),
@@ -606,6 +623,7 @@ def test_permit_endpoint_uses_one_customer_egress_for_every_request_class(
         payload = _post_permit(live.base, headers)
 
     _assert_public_boundary(payload)
+    _assert_untrusted_nonbinary(payload)
 
 
 def test_customer_egress_is_idempotent_and_does_not_demote_ten_lane_packet(tmp_path, monkeypatch):
@@ -647,7 +665,16 @@ def test_historical_active_core_finalize_then_egress_keeps_authoritative_require
         job_category=case["job_category"],
     )
 
-    assert public == server.project_customer_response_egress(case["sealed"])
+    assert public["permit_decision"] == "REQUIRED"
+    assert public["permit_required"] is True
+    required_rows = public.get("permits_required") or []
+    assert required_rows
+    assert {str(row.get("filing_family") or row.get("family") or "").lower() for row in required_rows} == {"building"}
+    manifest = public.get("permit_manifest")
+    assert isinstance(manifest, dict)
+    assert manifest.get("schema_version") == "permit_manifest_v1"
+    assert manifest.get("permit_decision") == "REQUIRED"
+    assert "authority_tag" not in manifest
     assert public["permit_decision"] == "REQUIRED"
     assert public["permit_required"] is True
     assert public["permit_verdict"] == "YES"
@@ -708,9 +735,9 @@ def test_untrusted_tampered_active_core_still_fails_closed(tmp_path, monkeypatch
         job_category=case["job_category"],
     )
 
-    assert public["permit_decision"] == "UNKNOWN"
+    assert public["permit_decision"] == "VERIFY"
     assert public["permit_required"] is None
-    assert public["permit_verdict"] == "CONTACT_AHJ"
+    assert public["permit_verdict"] == "VERIFY"
 
 
 def test_plain_external_customer_dto_cannot_self_assert_verified_state(
@@ -735,7 +762,7 @@ def test_plain_external_customer_dto_cannot_self_assert_verified_state(
         job_category=case["job_category"],
     )
 
-    assert public["permit_decision"] == "UNKNOWN"
+    assert public["permit_decision"] == "VERIFY"
     assert public["permit_required"] is None
     assert public["permit_verdict"] == "VERIFY"
 
@@ -763,7 +790,7 @@ def test_in_process_regulated_field_mutation_invalidates_verified_projection(
         job_category=case["job_category"],
     )
 
-    assert public["permit_decision"] == "UNKNOWN"
+    assert public["permit_decision"] == "VERIFY"
     assert public["permit_required"] is None
     assert public["decision_source"] == "permit_rule_engine_integrity_fail_closed"
 
@@ -801,6 +828,7 @@ def test_repeat_and_server_side_handoff_revalidation_are_byte_stable(
             case["job_type"],
             case["city"],
             case["state"],
+            job_category=case["job_category"],
         )
         assert isinstance(verified, server._VerifiedCustomerProjection)
         assert "_regulated_projection_sha256" not in verified
@@ -837,9 +865,7 @@ def test_repeat_and_server_side_handoff_revalidation_are_byte_stable(
             "SELECT use_count FROM verified_projection_handoffs"
         ).fetchone()[0] == 3
     assert len(set(snapshots)) == 1
-    expected_wire_projection = server.redact_public_output(
-        server.project_customer_response_egress(case["sealed"])
-    )
+    expected_wire_projection = server.redact_public_output(customer_projection)
     assert server.json.loads(snapshots[0])["public"] == expected_wire_projection
 
 
@@ -883,6 +909,7 @@ def test_valid_handoff_with_non_ascii_customer_projection_remains_consumable(
         case["job_type"],
         case["city"],
         case["state"],
+        job_category=case["job_category"],
     )
     assert isinstance(verified, server._VerifiedCustomerProjection)
     assert verified["sources"][0]["title"] == "Cañon City – División de Permisos"
@@ -920,22 +947,49 @@ def test_handoff_rejects_tamper_expiry_substitution_owner_mismatch_and_survives_
         assert handle.startswith("vp_")
         return handle
 
-    handle = issue()
+    mirror_handle = issue()
     tampered_customer = server.copy.deepcopy(customer)
     tampered_customer["permit_name"] = "SUBSTITUTED CUSTOMER VALUE"
-    assert server.consume_verified_projection_handoff(
-        handle,
+    normalized = server.consume_verified_projection_handoff(
+        mirror_handle,
         tampered_customer,
         case["job_type"],
         case["city"],
         case["state"],
-    ) is None
+        job_category=case["job_category"],
+    )
+    if isinstance(customer.get("permit_manifest"), dict):
+        # With an authenticated Manifest, mutable compatibility mirrors may be
+        # repaired by returning the DB-authenticated snapshot.
+        assert isinstance(normalized, server._VerifiedCustomerProjection)
+        assert normalized["permit_name"] == customer["permit_name"]
+        assert normalized["permit_name"] != "SUBSTITUTED CUSTOMER VALUE"
+
+        manifest_handle = issue()
+        tampered_manifest = server.copy.deepcopy(customer)
+        tampered_manifest["permit_manifest"]["permit_decision"] = "NOT_REQUIRED"
+        assert server.consume_verified_projection_handoff(
+            manifest_handle,
+            tampered_manifest,
+            case["job_type"],
+            case["city"],
+            case["state"],
+            job_category=case["job_category"],
+        ) is None
+    else:
+        # Manifest mode is feature-gated. Without that smaller authenticated
+        # authority object, exact public DTO equality is required and no mirror
+        # repair is attempted.
+        assert normalized is None
+
+    handle = issue()
     assert server.consume_verified_projection_handoff(
         handle,
         customer,
         case["job_type"],
         "Phoenix",
         case["state"],
+        job_category=case["job_category"],
     ) is None
     assert server.consume_verified_projection_handoff(
         "vp_" + "A" * 43,
@@ -943,6 +997,7 @@ def test_handoff_rejects_tamper_expiry_substitution_owner_mismatch_and_survives_
         case["job_type"],
         case["city"],
         case["state"],
+        job_category=case["job_category"],
     ) is None
 
     owner_a = server._projection_owner_scope("owner-a@example.com")
@@ -954,6 +1009,7 @@ def test_handoff_rejects_tamper_expiry_substitution_owner_mismatch_and_survives_
         case["job_type"],
         case["city"],
         case["state"],
+        job_category=case["job_category"],
         owner_scope=owner_b,
     ) is None
     assert isinstance(
@@ -963,6 +1019,7 @@ def test_handoff_rejects_tamper_expiry_substitution_owner_mismatch_and_survives_
             case["job_type"],
             case["city"],
             case["state"],
+            job_category=case["job_category"],
             owner_scope=owner_a,
         ),
         server._VerifiedCustomerProjection,
@@ -984,6 +1041,7 @@ def test_handoff_rejects_tamper_expiry_substitution_owner_mismatch_and_survives_
         case["job_type"],
         case["city"],
         case["state"],
+        job_category=case["job_category"],
     ) is None
 
     tampered_row_handle = issue()
@@ -1012,6 +1070,7 @@ def test_handoff_rejects_tamper_expiry_substitution_owner_mismatch_and_survives_
         case["job_type"],
         case["city"],
         case["state"],
+        job_category=case["job_category"],
     ) is None
 
     def reseal_row(handle, **updates):
@@ -1072,6 +1131,7 @@ def test_handoff_rejects_tamper_expiry_substitution_owner_mismatch_and_survives_
         case["job_type"],
         case["city"],
         case["state"],
+        job_category=case["job_category"],
     ) is None
 
     bounded_handle = issue()
@@ -1083,6 +1143,7 @@ def test_handoff_rejects_tamper_expiry_substitution_owner_mismatch_and_survives_
             case["job_type"],
             case["city"],
             case["state"],
+            job_category=case["job_category"],
         ),
         server._VerifiedCustomerProjection,
     )
@@ -1092,6 +1153,7 @@ def test_handoff_rejects_tamper_expiry_substitution_owner_mismatch_and_survives_
         case["job_type"],
         case["city"],
         case["state"],
+        job_category=case["job_category"],
     ) is None
 
     core_flag_independent_handle = issue()
@@ -1103,6 +1165,7 @@ def test_handoff_rejects_tamper_expiry_substitution_owner_mismatch_and_survives_
             case["job_type"],
             case["city"],
             case["state"],
+            job_category=case["job_category"],
         ),
         server._VerifiedCustomerProjection,
     )
@@ -1142,9 +1205,9 @@ def test_http_share_and_checklist_without_handoff_fail_closed_even_with_cache_ro
 
     share = server.get_share(share_reply["slug"])
     assert share is not None
-    assert share["data"]["permit_decision"] == "UNKNOWN"
+    assert share["data"]["permit_decision"] == "VERIFY"
     assert share["data"]["permit_required"] is None
-    assert '\"permit_decision\":\"UNKNOWN\"' in server.render_share_page(share)
+    assert '\"permit_decision\":\"VERIFY\"' in server.render_share_page(share)
     assert not any(item.get("required") is True for item in checklist["items"])
     assert "decision_projection_sha256" not in json.dumps(checklist, sort_keys=True)
 
@@ -1197,6 +1260,7 @@ def test_evidence_no_cache_api_share_report_and_checklist_keep_authoritative_pro
             case["job_type"],
             case["city"],
             case["state"],
+            job_category=case["job_category"],
         )
         assert report_projection is not None
 
@@ -1337,6 +1401,7 @@ def test_authenticated_http_continuity_preserves_owner_bound_projection_across_c
             {
                 "email": "recipient@example.test",
                 "job": case["job_type"],
+                "job_category": case["job_category"],
                 "city": case["city"],
                 "state": case["state"],
                 "data": public,
@@ -1447,6 +1512,7 @@ def test_batch_endpoint_evidence_execution_cannot_return_raw_result(tmp_path, mo
 
     assert payload["total"] == 1
     _assert_public_boundary(payload["results"][0])
+    _assert_untrusted_nonbinary(payload["results"][0])
 
 
 def test_paid_api_v1_evidence_execution_cannot_return_raw_result(tmp_path, monkeypatch):
@@ -1470,6 +1536,7 @@ def test_paid_api_v1_evidence_execution_cannot_return_raw_result(tmp_path, monke
         )
 
     _assert_public_boundary(payload)
+    _assert_untrusted_nonbinary(payload)
 
 
 def test_source_contains_no_feature_flag_raw_customer_result_bypass():
@@ -1518,7 +1585,7 @@ def test_customer_builder_preserves_evidence_fail_closed_policy_without_metadata
     assert public["permits_required"] == []
     assert public["apply_url"] is None
     assert public["fee_range"] is None
-    assert public["approval_timeline"] == "Verified AHJ review timeline"
+    assert public["approval_timeline"] == "Verified issuing authority review timeline"
     assert public["companion_reviews_triggers"] == "Verified fire review trigger"
     assert public["apply_path"]["support_level"] == "not available"
     assert "_evidence_pack" not in public

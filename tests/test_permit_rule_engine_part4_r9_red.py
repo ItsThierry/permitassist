@@ -110,7 +110,7 @@ def test_r9_unsealed_public_core_dto_cannot_bypass_server_seal(monkeypatch) -> N
         job_category="residential",
     )
     assert projected is not None
-    assert projected["permit_decision"] == "UNKNOWN"
+    assert projected["permit_decision"] == "NEEDS_INPUT"
     assert projected["permit_required"] is None
     assert projected["coverage_status"] == "integrity_fail_closed"
     assert projected["permit_name"] != sealed_payload["permit_name"]

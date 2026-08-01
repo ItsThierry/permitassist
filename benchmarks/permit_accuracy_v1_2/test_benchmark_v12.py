@@ -25,6 +25,9 @@ class BenchmarkV12Tests(unittest.TestCase):
         cls.audit = json.loads((HERE / "truth_audit_v12.json").read_text())
         cls.closure = json.loads((HERE / "ontology_enum_closure.json").read_text())
         cls.baseline = json.loads((HERE / "SESSION1_OPENING_BASELINE.json").read_text())
+        cls.remediation_successor = json.loads(
+            (HERE / "REMEDIATION_PROTECTED_HASH_SUCCESSOR_20260731.json").read_text()
+        )
 
     def test_authoritative_input_hashes(self) -> None:
         for relative, expected in self.baseline["authoritative_input_sha256"].items():
@@ -131,9 +134,20 @@ class BenchmarkV12Tests(unittest.TestCase):
             self.assertTrue(row["source_urls"])
 
     def test_runtime_product_protected_hashes_still_match_opening(self) -> None:
+        authorized = self.remediation_successor["authorized_successors"]
+        baseline_path = HERE / "SESSION1_OPENING_BASELINE.json"
+        self.assertEqual(
+            hashlib.sha256(baseline_path.read_bytes()).hexdigest(),
+            self.remediation_successor["base_record_sha256"],
+        )
         for relative, expected in self.baseline["protected_path_sha256"].items():
+            successor = authorized.get(relative)
+            if successor is not None:
+                self.assertEqual(successor["opening_sha256"], expected, relative)
+                expected = successor["candidate_sha256"]
             actual = hashlib.sha256((REPO / relative).read_bytes()).hexdigest()
             self.assertEqual(actual, expected, relative)
+        self.assertTrue(set(authorized).issubset(self.baseline["protected_path_sha256"]))
 
 
 if __name__ == "__main__":

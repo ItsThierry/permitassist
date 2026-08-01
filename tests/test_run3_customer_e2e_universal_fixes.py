@@ -147,7 +147,7 @@ def test_ri_noncustomer_boundary_required_answer_gets_statewide_public_sources_w
         _assert_no_internal_tokens(public)
 
 
-def test_finalizer_reconciles_stale_cached_required_result_to_exact_not_required_cell():
+def test_finalizer_fails_closed_for_unquoted_legacy_not_required_cell():
     from api.server import finalize_permit_lookup_result, build_customer_permit_view_model
 
     job = "Office/retail tenant buildout with non-structural interior alteration"
@@ -168,9 +168,9 @@ def test_finalizer_reconciles_stale_cached_required_result_to_exact_not_required
     finalized = finalize_permit_lookup_result(cached, job, "Washington", "MN", is_cached=True, explicit_vertical="commercial_ti", evidence_allowed=False)
     public = build_customer_permit_view_model(finalized, job, "Washington", "MN")
 
-    assert public["permit_decision"] == "NOT_REQUIRED"
-    assert public["permit_required"] is False
-    assert public["permit_verdict"] == "NO"
-    assert public["permit_name"] == "No permit required"
+    assert public["permit_decision"] == "VERIFY"
+    assert public["permit_required"] is None
+    assert public["permit_verdict"] == "VERIFY"
+    assert public.get("permits_required") == []
     assert "https://washingtoncountymn.gov/486/Permits" in public["source_urls"]
     _assert_no_internal_tokens(public)

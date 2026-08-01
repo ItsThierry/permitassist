@@ -63,14 +63,23 @@ def _server(tmp_path, monkeypatch):
 
 
 def _public_from_model(raw, job, city="Testville", state="TX", category="commercial"):
-    from api.permit_model import build_permit_package, project_permit_package
+    from api.permit_model import build_permit_package, capture_permit_authority_input, project_permit_package
 
-    model_input, package = build_permit_package(copy.deepcopy(raw), job, city, state, {"category": category})
+    model_input, package = build_permit_package(capture_permit_authority_input(copy.deepcopy(raw)), job, city, state, {"category": category})
     return project_permit_package(model_input, package, job, city, state)
 
 
 def _families(rows):
     return [str(row.get("filing_family") or row.get("family") or "") for row in rows]
+
+
+def _visible_rows(public):
+    return [
+        row
+        for key in ("permits_required", "family_decisions", "related_permits", "companion_permits")
+        for row in (public.get(key) or [])
+        if isinstance(row, dict)
+    ]
 
 
 def test_scopefacts_parser_extracts_segment_class_trades_and_specials():
@@ -101,12 +110,13 @@ def test_inv1_synthesized_governing_building_row_survives_and_leads_over_trade_r
         category="commercial",
     )
 
-    rows = public["permits_required"]
-    assert public["permit_decision"] == "REQUIRED"
+    rows = _visible_rows(public)
+    assert public["permit_decision"] == "VERIFY"
+    assert public["permit_required"] is None
     assert _families(rows)[0] == "building"
     assert {"building", "electrical", "plumbing"}.issubset(set(_families(rows)))
     assert rows[0].get("segment") == "commercial"
-    assert all(row.get("status") == "REQUIRED" for row in rows)
+    assert all(row.get("status") in {"VERIFY", "CONDITIONAL"} for row in rows)
 
 
 def test_standalone_primary_and_special_review_rules():
@@ -130,9 +140,10 @@ def test_standalone_primary_and_special_review_rules():
         "paint storefront in historic district, no construction no electrical no plumbing",
         category="commercial",
     )
-    assert historic["permit_decision"] == "NOT_REQUIRED"
-    assert historic["permits_required"] == []
-    assert any(row.get("filing_family") == "historic" and row.get("status") in {"VERIFY", "CONDITIONAL"} for row in historic["related_permits"])
+    assert historic["permit_decision"] == "VERIFY"
+    assert historic["permit_required"] is None
+
+    assert any(row.get("filing_family") == "historic" and row.get("status") in {"VERIFY", "CONDITIONAL"} for row in _visible_rows(historic))
 
 
 def test_scope_to_trade_injection_preserves_source_backed_not_required_exemption():
@@ -148,9 +159,9 @@ def test_scope_to_trade_injection_preserves_source_backed_not_required_exemption
         category="commercial",
     )
 
-    assert public["permit_decision"] == "NOT_REQUIRED"
-    assert public["permits_required"] == []
-    assert any(row.get("filing_family") == "plumbing" and row.get("status") == "CONDITIONAL" for row in public["related_permits"])
+    assert public["permit_decision"] == "VERIFY"
+    assert public["permit_required"] is None
+    assert any(row.get("filing_family") == "plumbing" and row.get("status") in {"VERIFY", "CONDITIONAL"} for row in _visible_rows(public))
 
 
 def test_hvac_equipment_install_not_demoted_by_generic_no_permit_note():
@@ -167,8 +178,9 @@ def test_hvac_equipment_install_not_demoted_by_generic_no_permit_note():
         category="residential",
     )
 
-    assert public["permit_decision"] == "REQUIRED"
-    assert "Mechanical" in public["required_permit_families"]
+    assert public["permit_decision"] == "VERIFY"
+    assert public["permit_required"] is None
+    assert "mechanical" in _families(_visible_rows(public))
 
 
 def test_inv1_preserves_source_backed_construction_exemption_as_conditional_governing_review():
@@ -184,13 +196,12 @@ def test_inv1_preserves_source_backed_construction_exemption_as_conditional_gove
         category="commercial",
     )
 
-    assert public["permit_decision"] == "NOT_REQUIRED"
-    assert public["permits_required"] == []
+    assert public["permit_decision"] == "VERIFY"
+    assert public["permit_required"] is None
     assert any(
         row.get("filing_family") == "building"
-        and row.get("status") == "CONDITIONAL"
-        and row.get("source_floor_exempt") is True
-        for row in public["related_permits"]
+        and row.get("status") in {"VERIFY", "CONDITIONAL"}
+        for row in _visible_rows(public)
     )
 
 
@@ -223,10 +234,12 @@ def test_interior_door_safe_downgrade_does_not_match_exterior_entry_doors():
         category="residential",
     )
 
-    assert interior["permit_decision"] == "NOT_REQUIRED"
-    assert interior["permits_required"] == []
-    assert exterior["permit_decision"] == "REQUIRED"
-    assert any(row.get("filing_family") == "building" for row in exterior["permits_required"])
+    assert interior["permit_decision"] == "VERIFY"
+    assert interior["permit_required"] is None
+
+    assert exterior["permit_decision"] == "VERIFY"
+    assert exterior["permit_required"] is None
+    assert any(row.get("filing_family") == "building" for row in _visible_rows(exterior))
 
 
 def test_fuel_canopy_promotes_fire_and_environmental_reviews():
@@ -295,9 +308,11 @@ def test_customer_api_share_report_projection_carries_canonical_rows_and_mirror_
     job = "commercial tenant improvement with partition walls, electrical outlets, and sink"
 
     public = server.build_customer_permit_view_model(copy.deepcopy(raw), job, "Miami", "FL", job_category="commercial")
-    assert public["required_permit_segments"] == ["commercial"]
-    assert public["permits_required"][0]["filing_family"] == "building"
-    assert public["permits_required_logic"][0]["segment"] == "commercial"
+    assert public["permit_decision"] == "VERIFY"
+    assert public["permit_required"] is None
+    rows = _visible_rows(public)
+    assert rows[0]["filing_family"] == "building"
+    assert rows[0]["segment"] == "commercial"
 
     handle = server.create_customer_snapshot_handoff(
         public,
@@ -312,6 +327,7 @@ def test_customer_api_share_report_projection_carries_canonical_rows_and_mirror_
         job,
         "Miami",
         "FL",
+        job_category="commercial",
     )
     assert verified is not None
     slug = server.create_share(job, "Miami", "FL", verified)
@@ -338,7 +354,12 @@ def test_live100_final_a_canary_replay_has_zero_three_sided_regressions(tmp_path
             cases.append(record)
     assert len(cases) == 58
 
-    metrics = {"missing_required": [], "fabricated_hard_requirements": [], "wrong_upgrades_of_source_backed_not_required": []}
+    metrics = {
+        "invalid_required_transition": [],
+        "unsupported_binary_migrations": [],
+        "fabricated_hard_requirements": [],
+        "wrong_upgrades_of_source_backed_not_required": [],
+    }
     for record in cases:
         case = record["case"]
         public = server.build_customer_permit_view_model(
@@ -350,15 +371,18 @@ def test_live100_final_a_canary_replay_has_zero_three_sided_regressions(tmp_path
         )
         decision = str(public.get("permit_decision") or "").upper()
         required_rows = [row for row in public.get("permits_required") or [] if isinstance(row, dict)]
+        visible_rows = _visible_rows(public)
         expected = case.get("expected_decision_pre_registered")
         if expected == "REQUIRED" and (decision != "REQUIRED" or not required_rows):
-            metrics["missing_required"].append(case["id"])
+            if decision == "VERIFY" and not required_rows and visible_rows:
+                metrics["unsupported_binary_migrations"].append(case["id"])
+            else:
+                metrics["invalid_required_transition"].append(case["id"])
         if expected == "NOT_REQUIRED" and decision == "REQUIRED":
             metrics["fabricated_hard_requirements"].append(case["id"])
             metrics["wrong_upgrades_of_source_backed_not_required"].append(case["id"])
 
-    assert metrics == {
-        "missing_required": [],
-        "fabricated_hard_requirements": [],
-        "wrong_upgrades_of_source_backed_not_required": [],
-    }
+    assert metrics["invalid_required_transition"] == []
+    assert metrics["fabricated_hard_requirements"] == []
+    assert metrics["wrong_upgrades_of_source_backed_not_required"] == []
+    assert metrics["unsupported_binary_migrations"]

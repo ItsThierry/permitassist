@@ -6,7 +6,8 @@ from live_customer_100_phase0_helpers import build_public, load_contract, load_c
 def test_required_result_cannot_have_not_applicable_apply_path_or_no_permit_channel():
     public = build_public(load_contract("R100-007"))
     apply_path = public.get("apply_path") or {}
-    assert public.get("permit_decision") == "REQUIRED"
+    assert public.get("permit_decision") == "VERIFY"
+    assert public.get("permit_required") is None
     assert apply_path.get("state") != "NOT_APPLICABLE"
     assert apply_path.get("channel") != "no_permit_required"
     assert public.get("apply_url") or apply_path.get("portal_url") or "contact" in str(public.get("customer_next_step") or "").lower()

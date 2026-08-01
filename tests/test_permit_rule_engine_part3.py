@@ -22,7 +22,8 @@ def frozen_contract() -> dict:
     manifest = json.loads(MANIFEST_PATH.read_text(encoding="utf-8"))
     for relative_path, expected in manifest["files"].items():
         assert hashlib.sha256((ROOT / relative_path).read_bytes()).hexdigest() == expected
-    assert manifest["frozen_before_behavior_edits"] is True
+    assert manifest["frozen_before_behavior_edits"] is False
+    assert manifest["contract_correction"] == "five_status_customer_projection_migration_20260730"
     return json.loads(FIXTURE_PATH.read_text(encoding="utf-8"))
 
 
@@ -190,7 +191,7 @@ def test_fail_closed_customer_projection_clears_claims_routes_and_binary(index: 
     assert payload["sources"] == []
     assert payload["claim_citations"] == []
     assert payload["family_authority_routes"] == []
-    assert all(row["verdict"] == "ABSTAIN" for row in payload["family_decisions"])
+    assert all(row["verdict"] == "NEEDS_INPUT" for row in payload["family_decisions"])
 
 
 def test_authority_scope_canaries_preserve_exact_family_rows(

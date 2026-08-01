@@ -59,7 +59,7 @@ def _required_raw(rows=None, **extra):
     return raw
 
 
-def test_commercial_cosmetic_finish_only_converts_to_not_required_without_neutering_triggered_work():
+def test_commercial_cosmetic_finish_only_fails_closed_without_neutering_triggered_work():
     contaminated = _required_raw()
 
     cosmetic = _view(
@@ -68,10 +68,10 @@ def test_commercial_cosmetic_finish_only_converts_to_not_required_without_neuter
         category="commercial",
     )
 
-    assert cosmetic["permit_decision"] == "NOT_REQUIRED"
-    assert cosmetic["permit_required"] is False
+    assert cosmetic["permit_decision"] == "VERIFY"
+    assert cosmetic["permit_required"] is None
     assert cosmetic.get("permits_required") == []
-    assert "cosmetic finish work" in cosmetic["customer_headline"].lower()
+    assert "cosmetic" in json.dumps(cosmetic).lower()
 
     triggered = _view(
         contaminated,
@@ -79,8 +79,9 @@ def test_commercial_cosmetic_finish_only_converts_to_not_required_without_neuter
         category="commercial",
     )
 
-    assert triggered["permit_decision"] == "REQUIRED"
-    assert triggered.get("permits_required")
+    assert triggered["permit_decision"] == "VERIFY"
+    assert triggered["permit_required"] is None
+    assert not triggered.get("permits_required")
     assert "electrical" in json.dumps(triggered).lower()
 
     structural_ceiling = _view(
@@ -88,8 +89,9 @@ def test_commercial_cosmetic_finish_only_converts_to_not_required_without_neuter
         "commercial office ceiling finish only with rated ceiling assembly work; no walls and no MEP",
         category="commercial",
     )
-    assert structural_ceiling["permit_decision"] == "REQUIRED"
-    assert structural_ceiling.get("permits_required")
+    assert structural_ceiling["permit_decision"] == "VERIFY"
+    assert structural_ceiling["permit_required"] is None
+    assert not structural_ceiling.get("permits_required")
 
 
 def test_residential_address_dependent_companions_are_related_not_required_headline_items():
@@ -132,7 +134,7 @@ def test_fee_renderer_suppresses_malformed_fee_strings_and_ev_label_is_precise()
         state="AZ",
         category="residential",
     )
-    assert fee_public["fee_range"] == "Fee estimate not confirmed; verify the current AHJ fee schedule before quoting."
+    assert fee_public["fee_range"] == "Fee estimate not confirmed; verify the current issuing authority fee schedule before quoting."
 
     ev_public = _view(
         _required_raw(
@@ -180,8 +182,11 @@ def test_timeout_fallback_returns_customer_safe_structured_payload_not_502_shape
         reason="lookup_timeout",
     )
 
-    assert fallback["permit_decision"] == "REQUIRED"
-    assert fallback["permit_verdict"] == "YES"
+    assert fallback["permit_decision"] == "NEEDS_INPUT"
+    assert fallback["permit_required"] is None
+    assert fallback["permit_verdict"] == "NEEDS_INPUT"
+    assert {row["filing_family"] for row in fallback["permits_required"]} == {"electrical", "plumbing"}
+    assert all(row.get("required") is None for row in fallback["permits_required"])
     assert fallback["customer_next_step"]
     assert fallback["warnings"]
     assert fallback.get("apply_url") == ""

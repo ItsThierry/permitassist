@@ -124,8 +124,12 @@ def test_public_view_model_is_allowlisted_and_removes_internal_fields(tmp_path, 
     )
 
     _assert_no_forbidden_customer_fields(public)
-    assert public["permit_decision"] == "REQUIRED"
-    assert public["permit_kind"] == "Commercial Building / Tenant Improvement"
+    assert public["permit_decision"] == "VERIFY"
+    assert public["permit_kind"] == "Building"
+    assert any(
+        str(row.get("family") or row.get("filing_family") or "").lower() == "building"
+        for row in public.get("family_decisions", [])
+    )
     assert public["sources"]
     assert all("miami.gov" in src["url"] for src in public["sources"])
 
@@ -170,10 +174,16 @@ def test_final_decision_stays_required_when_required_has_no_surviving_local_sour
     )
 
     public = server.build_customer_permit_view_model(out, "office tenant improvement", "Austin", "TX")
-    assert public["permit_decision"] == "REQUIRED"
-    assert public["permit_required"] is True
+    assert public["permit_decision"] == "VERIFY"
+    assert public["permit_required"] is None
     assert public.get("source_urls", []) == ["https://www.icc-safe.org/products-and-services/i-codes/2021-i-codes/ibc/"]
-    assert public.get("permits_required", [])
+    assert public.get("permits_required", []) == []
+    assert public.get("family_decisions")
+    assert all(
+        row.get("status") in {"VERIFY", "CONDITIONAL", "NEEDS_INPUT"}
+        and row.get("required") is None
+        for row in public["family_decisions"]
+    )
     assert public.get("source_support", {}).get("decision_mutation_allowed") is False
 
 
@@ -200,8 +210,8 @@ def test_local_ahj_apply_url_only_satisfies_final_source_floor(tmp_path, monkeyp
     )
     public = server.build_customer_permit_view_model(out, "commercial office tenant improvement", "Dallas", "TX")
 
-    assert public["permit_decision"] == "REQUIRED"
-    assert public["permit_verdict"] == "YES"
+    assert public["permit_decision"] == "VERIFY"
+    assert public["permit_verdict"] == "VERIFY"
     assert apply_url in public.get("source_urls", [])
     assert any(src.get("source_type") == "official_local" for src in public.get("sources", []))
 
@@ -232,8 +242,8 @@ def test_recorded_dallas_office_fixture_public_view_model_stays_required_with_lo
         "TX",
     )
 
-    assert public["permit_decision"] == "REQUIRED"
-    assert public["permit_verdict"] == "YES"
+    assert public["permit_decision"] == "VERIFY"
+    assert public["permit_verdict"] == "VERIFY"
     assert apply_url in public.get("source_urls", [])
     assert any(
         src.get("url") == apply_url and src.get("source_type") == "official_local"
@@ -270,8 +280,8 @@ def test_production_shape_free_text_local_portal_satisfies_final_source_floor(tm
     )
     public = server.build_customer_permit_view_model(out, "commercial office tenant improvement", "Dallas", "TX")
 
-    assert public["permit_decision"] == "REQUIRED"
-    assert public["permit_verdict"] == "YES"
+    assert public["permit_decision"] == "VERIFY"
+    assert public["permit_verdict"] == "VERIFY"
     assert apply_url in public.get("source_urls", [])
     assert any(
         src.get("url") == apply_url and src.get("source_type") == "official_local"
@@ -307,8 +317,8 @@ def test_required_public_view_model_strips_wrong_locality_free_text_urls(tmp_pat
     public = server.build_customer_permit_view_model(out, "commercial office tenant improvement", "Dallas", "TX")
     blob = json.dumps(public, sort_keys=True)
 
-    assert public["permit_decision"] == "REQUIRED"
-    assert public["permit_required"] is True
+    assert public["permit_decision"] == "VERIFY"
+    assert public["permit_required"] is None
     assert public.get("source_urls", []) == []
     assert wrong_url not in blob
     assert "cityofsouthlake.com" not in blob
@@ -336,8 +346,8 @@ def test_wrong_locality_apply_url_only_degrades_source_metadata(tmp_path, monkey
     )
     public = server.build_customer_permit_view_model(out, "commercial office tenant improvement", "Dallas", "TX")
 
-    assert public["permit_decision"] == "REQUIRED"
-    assert public["permit_required"] is True
+    assert public["permit_decision"] == "VERIFY"
+    assert public["permit_required"] is None
     assert public.get("source_urls", []) == []
     assert public.get("apply_url") in ("", None)
     assert public.get("source_support", {}).get("decision_mutation_allowed") is False
@@ -404,8 +414,8 @@ def test_public_view_model_rechecks_source_floor_after_scope_sanitizer(tmp_path,
     monkeypatch.setattr(server, "sanitize_result_for_scope_contract", strip_sources_after_first_gate)
     public = server.build_customer_permit_view_model(dirty, "medical clinic tenant improvement", "Miami", "FL")
 
-    assert public["permit_decision"] == "REQUIRED"
-    assert public["permit_required"] is True
+    assert public["permit_decision"] == "VERIFY"
+    assert public["permit_required"] is None
     assert public.get("sources", []) == []
     assert public.get("source_urls", []) == []
     assert public.get("source_support", {}).get("decision_mutation_allowed") is False
@@ -421,7 +431,7 @@ def test_public_view_model_drops_malformed_bracket_redacted_source_urls_without_
 
     public = server.build_customer_permit_view_model(dirty, "new commercial construction retail shell", "Goodyear", "AZ")
 
-    assert public["permit_decision"] == "REQUIRED"
+    assert public["permit_decision"] == "VERIFY"
     assert "https://www.goodyearaz.gov[REDACTED]" not in public.get("source_urls", [])
     assert all("[REDACTED]" not in source.get("url", "") for source in public.get("sources", []))
     assert dirty["apply_url"] in public.get("source_urls", [])
@@ -491,7 +501,7 @@ def test_public_view_model_scrubs_internal_v231_resolver_terms_from_all_public_t
         "source metadata",
         "customerdecisiondto",
     ]
-    assert public["permit_decision"] == "REQUIRED"
+    assert public["permit_decision"] == "VERIFY"
     assert public.get("permits_required_logic")
     assert "official permit rule" in blob
     assert [term for term in forbidden_terms if term in blob] == []
@@ -508,9 +518,9 @@ def test_public_citations_require_display_allowed_source_url(tmp_path, monkeypat
 
     public = server.build_customer_permit_view_model(dirty, "medical clinic tenant improvement", "Miami", "FL")
 
-    assert public.get("claim_citations") == [
-        {"field": "permit_name", "claim": "Miami source", "source_url": "https://www.miami.gov/Services/Permits", "quoted_snippet": "local"}
-    ]
+    # Caller-declared citations and a one-word locality token are not
+    # substantive, claim-bound authority and must not survive public egress.
+    assert not public.get("claim_citations")
 
 
 def test_scope_removed_source_and_citation_text_is_not_reattached_by_view_model(tmp_path, monkeypatch):
@@ -531,8 +541,8 @@ def test_scope_removed_source_and_citation_text_is_not_reattached_by_view_model(
     public = server.build_customer_permit_view_model(dirty, "commercial office tenant improvement", "Miami", "FL")
     blob = json.dumps(public, sort_keys=True).lower()
 
-    assert public["permit_decision"] == "REQUIRED"
-    assert public["permit_required"] is True
+    assert public["permit_decision"] == "VERIFY"
+    assert public["permit_required"] is None
     assert public.get("sources", [])
     assert "homeowner" not in blob
     assert "adu" not in blob
@@ -603,7 +613,7 @@ def test_named_ahj_blank_apply_url_does_not_promote_department_homepage(tmp_path
     )
     public = server.build_customer_permit_view_model(out, "Brooklyn dental clinic tenant improvement", "Brooklyn", "NY")
 
-    assert public["permit_decision"] == "REQUIRED"
+    assert public["permit_decision"] == "VERIFY"
     assert not public.get("apply_url")
     assert "https://www.nyc.gov/site/buildings/index.page" in public.get("source_urls", [])
     assert any(
@@ -712,13 +722,14 @@ def test_source_backed_result_never_keeps_not_source_backed_apply_path(tmp_path,
 
     public = server.build_customer_permit_view_model(result, "Charlotte daycare tenant improvement", "Charlotte", "NC")
 
-    assert public["permit_decision"] == "REQUIRED"
+    assert public["permit_decision"] == "VERIFY"
     assert public["apply_path"]["support_level"] != "not source-backed"
     assert public["apply_path"].get("portal_url") in (source_url, None)
     assert source_url in public.get("source_urls", [])
 
 
-def test_filing_packet_families_survive_customer_view_boundary(tmp_path, monkeypatch):
+def test_filing_packet_family_leads_survive_customer_view_boundary_v2(tmp_path, monkeypatch):
+    """V2 contract: scope/checklist families stay visible but do not become binary truth."""
     server = _import_server(tmp_path, monkeypatch)
     job_type = (
         "Phoenix AZ 2400 sf taqueria/bar tenant improvement from retail to restaurant with "
@@ -740,11 +751,17 @@ def test_filing_packet_families_survive_customer_view_boundary(tmp_path, monkeyp
         ],
     }
 
-    public = server.build_customer_permit_view_model(result, job_type, "Phoenix", "AZ")
-    families = {
-        row.get("filing_family")
-        for row in public.get("permits_required") or []
-        if isinstance(row, dict)
+    public = server.project_customer_response_egress(
+        server.build_customer_permit_view_model(result, job_type, "Phoenix", "AZ")
+    )
+    family_rows = [
+        row for row in public.get("family_decisions") or [] if isinstance(row, dict)
+    ]
+    visible_families = {str(row.get("filing_family") or "") for row in family_rows}
+    required_families = {
+        str(row.get("filing_family") or "")
+        for row in family_rows
+        if str(row.get("status") or "").upper() == "REQUIRED"
     }
 
     assert {
@@ -755,10 +772,14 @@ def test_filing_packet_families_survive_customer_view_boundary(tmp_path, monkeyp
         "fire",
         "health",
         "liquor",
-        "wastewater",
-        "co",
-        "planning",
-    }.issubset(families)
+        "wastewater_fog",
+        "certificate_of_occupancy",
+        "planning_zoning",
+    }.issubset(visible_families)
+    # The input labels one row hard but provides no family-bound official quote
+    # for it or its companions. Every row remains a useful VERIFY lead; caller
+    # status alone cannot manufacture REQUIRED truth.
+    assert required_families == set()
     serialized = json.dumps(public, sort_keys=True).lower()
     assert "aca-prod.accela.com/phoenix" not in serialized
     assert "$558" not in serialized
@@ -821,16 +842,17 @@ def test_unbound_not_required_reason_does_not_bypass_claim_evidence_floor(tmp_pa
         "AZ",
     )
 
-    assert out["permit_decision"] == "UNKNOWN"
+    assert out["permit_decision"] == "VERIFY"
     assert out["permit_required"] is None
     assert out["permit_verdict"] == "VERIFY"
     assert out["data_source"] == "Claim evidence floor"
     assert "no permit required" not in json.dumps(out, sort_keys=True).lower()
-    # A later authoritative scope reconciler may still supersede the abstention.
-    assert public["permit_decision"] == "REQUIRED"
-    assert public["permit_required"] is True
-    assert public["permit_verdict"] == "YES"
-    assert any(row.get("required") is True for row in public.get("permits_required") or [])
+    # Advisory scope signals must not supersede a source-floor abstention with
+    # an invented hard requirement.
+    assert public["permit_decision"] == "VERIFY"
+    assert public["permit_required"] is None
+    assert public["permit_verdict"] == "VERIFY"
+    assert not any(row.get("required") is True for row in public.get("permits_required") or [])
     assert "no permit required" not in json.dumps(public, sort_keys=True).lower()
 
 
@@ -864,7 +886,7 @@ def test_evidence_preview_direct_finalizer_demotes_unbound_not_required(tmp_path
         job_category="residential",
     )
 
-    assert out["permit_decision"] == "UNKNOWN"
+    assert out["permit_decision"] == "VERIFY"
     assert out["permit_required"] is None
     assert out["permit_verdict"] == "VERIFY"
     assert out["data_source"] == "Claim evidence floor"

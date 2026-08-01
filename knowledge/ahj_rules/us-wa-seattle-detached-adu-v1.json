@@ -1,0 +1,21 @@
+{
+  "schema_version": "permitassist-ahj-rule-v1",
+  "rules": [
+    {
+      "rule_id": "us-wa-seattle-detached-adu-construction-required-v1",
+      "jurisdiction": {"country": "US", "state": "WA", "city": "Seattle", "issuing_authority": "Seattle Department of Construction and Inspections"},
+      "scope_patterns": ["(?:detached|backyard)[^.]{0,120}(?:accessory dwelling|adu|dadu|cottage)", "(?:accessory dwelling|adu|dadu|backyard cottage)[^.]{0,120}(?:build|construct|new)"],
+      "family": "building",
+      "status": "REQUIRED",
+      "official_source": {
+        "url": "https://www.seattle.gov/sdci/permits/common-projects/accessory-dwelling-units",
+        "title": "Seattle SDCI — Accessory Dwelling Unit",
+        "quote": "Building a detached unit. You need a construction addition / alteration permit.",
+        "claim_sha256": "4473697985de9843030bbb9760719b201f71394cb82f79c29eac9f7d0ba39fb8",
+        "retrieved_on": "2026-07-30"
+      },
+      "application": {"url": "https://services.seattle.gov/Portal", "channel": "official_portal"},
+      "notes": "Exact detached ADU/DADU construction claim; trade companions remain nonbinary unless separately sourced."
+    }
+  ]
+}

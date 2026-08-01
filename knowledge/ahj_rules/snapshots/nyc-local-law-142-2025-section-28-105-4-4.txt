@@ -1,0 +1,11 @@
+Source URL: https://www.nyc.gov/assets/buildings/local_laws/ll142of2025.pdf
+Official publisher: City of New York
+Document: Local Law No. 142 of 2025
+Section: NYC Administrative Code § 28-105.4.4 Ordinary plumbing work
+Retrieved: 2026-07-30 via authenticated web extraction
+
+§ 28-105.4.4 Ordinary plumbing work. The following ordinary plumbing work may be performed without a permit, provided that the licensed plumber performing such work: (i) provides a monthly report listing completed work and work in progress during the preceding month, including the block, lot and address of each job, a description of the work performed or in progress at each address, and the location in each building where the work was performed or is in progress; (ii) pays the fees for such work in accordance with this code; and (iii) submits to the department a certification that the work was performed in accordance with this code and all applicable laws and rules. Ordinary plumbing work shall include:
+
+1. The removal of a domestic plumbing system not connected to a fire suppression or fire protection system, or the removal of a portion of such system.
+
+2. The relocation of up to two plumbing fixtures within the same room to a maximum of 10 feet (3048 mm) distant from the original location, except in health care facilities.

@@ -241,7 +241,7 @@ def test_crook_timeout_customer_surface_preserves_not_required_without_internal_
         if isinstance(row, dict)
     }
     assert related["planning"]["decision"] == "CONDITIONAL"
-    assert related["co"]["decision"] == "CONDITIONAL"
+    assert related["occupancy"]["decision"] == "CONDITIONAL"
     assert public["source_support"]["has_official_source"] is True
     assert public["source_support"]["decision_mutation_allowed"] is False
     assert public["apply_path"].get("documents_to_prepare", []) == []
@@ -284,8 +284,9 @@ def test_uncovered_timeout_retains_ordinary_degraded_control(monkeypatch):
         use_cache=False,
     )
 
-    assert result["permit_decision"] == "REQUIRED"
-    assert result["permit_required"] is True
+    assert result["permit_decision"] == "NEEDS_INPUT"
+    assert result["permit_required"] is None
+    assert all(row.get("required") is None for row in result["permits_required"])
     assert result["_runtime_degraded_fallback"]["reason"] == "lookup_timeout"
     assert "_runtime_authority_recovery" not in result
     assert "_decision_cell_primary_lock" not in result
@@ -306,7 +307,8 @@ def test_authority_resolver_failure_falls_back_without_exception_detail_leak(mon
         reason="lookup_timeout",
     )
 
-    assert result["permit_decision"] == "REQUIRED"
+    assert result["permit_decision"] == "NEEDS_INPUT"
+    assert result["permit_required"] is None
     assert result["_runtime_degraded_fallback"]["reason"] == "lookup_timeout"
     output = capsys.readouterr().out
     assert "authority-fallback-error" in output

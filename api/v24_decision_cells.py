@@ -963,9 +963,9 @@ def reconcile_v24_result(result: dict[str, Any], resolution: V24Resolution | Non
         field_sources = dict(result.get("_field_sources") or {}) if isinstance(result.get("_field_sources"), dict) else {}
         field_sources["fail_closed"] = "permitassist_v24_static_data_gap"
         if not binary_answer:
-            result["permit_decision"] = "UNKNOWN"
+            result["permit_decision"] = "NEEDS_INPUT"
             result["permit_required"] = None
-            result["permit_verdict"] = "CONTACT_AHJ"
+            result["permit_verdict"] = "NEEDS_INPUT"
             result["confidence"] = "fail_closed"
             result["confidence_reason"] = "v2.4 static Decision Cell is fail-closed and no source-backed live answer was produced; routing to office confirmation."
             for field in ("permit_verdict", "permit_required", "permit_decision"):

@@ -84,14 +84,14 @@ def test_suppressed_wrong_families_are_not_source_backed_hard_rows():
         assert not (forbidden & required_families(public)), {"case": case_id, "forbidden": sorted(forbidden), "required": sorted(required_families(public))}
 
 
-def test_commercial_cosmetic_positive_carveout_remains_not_required_and_clears_companions():
+def test_commercial_cosmetic_historical_artifact_fails_closed_and_clears_hard_rows():
     contract = load_contract("C100-050")
     public = build_public(contract)
-    assert public["permit_decision"] == "NOT_REQUIRED"
-    assert public["permit_required"] is False
+    assert public["permit_decision"] == "VERIFY"
+    assert public["permit_required"] is None
     assert public.get("permits_required") == []
-    assert public.get("companion_permits") == []
-    assert "cosmetic" in public.get("customer_headline", "").lower()
+    assert not public.get("companion_permits")
+    assert "cosmetic" in public_text(public).lower()
 
 
 @pytest.mark.parametrize("scope", [
@@ -118,9 +118,10 @@ def test_sign_trigger_variants_share_sign_row_and_demote_building_ti(scope):
     variant["input_scope"] = scope
     public = build_public(variant, source=source)
     families = {family_from_row(row) for row in visible_rows(public)}
-    assert public["permit_decision"] == "REQUIRED"
+    assert public["permit_decision"] == "VERIFY"
+    assert public["permit_required"] is None
     assert "sign" in families
-    assert "sign" in required_families(public)
+    assert "sign" not in required_families(public)
     assert "building" not in required_families(public)
 
 
@@ -166,16 +167,22 @@ def test_ambiguous_decision_without_hard_rows_does_not_project_as_no_permit_requ
     variant = dict(contract)
     variant["input_scope"] = "commercial ambiguous office work requiring AHJ verification, no cosmetic-only exemption facts"
     public = build_public(variant, source=source)
-    assert public["permit_decision"] == "REQUIRED"
-    assert public["permit_required"] is True
-    assert public.get("permits_required")
+    assert public["permit_decision"] == "CONDITIONAL"
+    assert public["permit_required"] is None
+    assert public.get("permits_required") == []
+    assert public.get("family_decisions")
+    assert all(row.get("status") == "CONDITIONAL" for row in public["family_decisions"])
     assert "no permit required" not in public_text(public)
 
 
-def test_final_projection_function_is_directly_idempotent():
+def test_plain_public_projection_cannot_reestablish_required_authority():
     contract = load_contract("R100-050")
     first = build_public(contract)
     server = server_module()
     second = server.finalize_customer_public_projection(first, contract["input_scope"], contract["city"], contract["state"], first.get("_scope_contract") or {})
-    keys = ["permit_decision", "permit_required", "permit_name", "customer_headline", "customer_next_step", "required_permit_names", "required_permit_families"]
-    assert {key: first.get(key) for key in keys} == {key: second.get(key) for key in keys}
+    assert first["permit_decision"] == "VERIFY"
+    assert first["permit_required"] is None
+    assert second["permit_decision"] == "VERIFY"
+    assert second["permit_required"] is None
+    assert not required_rows(first)
+    assert not required_rows(second)

@@ -7,9 +7,11 @@ call models, or depend on runtime state.
 """
 from __future__ import annotations
 
+import builtins
 from dataclasses import dataclass, field
 from enum import StrEnum
 import copy
+import hashlib
 import json
 import re
 from typing import Any, Iterable
@@ -55,7 +57,7 @@ class PermitStatus(StrEnum):
     VERIFY = "VERIFY"
     CONDITIONAL = "CONDITIONAL"
     NOT_REQUIRED = "NOT_REQUIRED"
-    RELATED = "RELATED"
+    NEEDS_INPUT = "NEEDS_INPUT"
 
 
 @dataclass(frozen=True)
@@ -89,6 +91,72 @@ class PermitPackage:
     required_items: tuple[PermitItem, ...] = ()
     related_items: tuple[PermitItem, ...] = ()
     source_support: SourceSupport = field(default_factory=SourceSupport)
+
+
+_PERMIT_AUTHORITY_SEAL = object()
+_PROCESS_SERVER_PROVENANCE_ATTR = "_permitassist_server_authority_provenance_marker"
+if not hasattr(builtins, _PROCESS_SERVER_PROVENANCE_ATTR):
+    setattr(builtins, _PROCESS_SERVER_PROVENANCE_ATTR, object())
+_SERVER_AUTHORITY_PROVENANCE_MARKER = getattr(
+    builtins, _PROCESS_SERVER_PROVENANCE_ATTR
+)
+
+
+def _stamp_server_authority_provenance(value: object) -> None:
+    """Private issuance seam shared by canonical server module aliases."""
+    setattr(value, "_permit_authority_provenance_marker", _SERVER_AUTHORITY_PROVENANCE_MARKER)
+
+
+@dataclass(frozen=True, init=False)
+class PermitAuthorityInput:
+    """Opaque immutable capability for one controlled authority capture.
+
+    The public constructor is intentionally disabled.  Canonical JSON bytes
+    prevent callers from mutating nested dictionaries after capture.
+    """
+
+    _payload_json: bytes
+    _seal: object
+    _authenticated_provenance: bool
+
+    def __init__(self, *_args: Any, **_kwargs: Any) -> None:
+        raise TypeError("PermitAuthorityInput can only be created by capture_permit_authority_input")
+
+    def _read_payload(self) -> dict[str, Any]:
+        if self._seal is not _PERMIT_AUTHORITY_SEAL:
+            raise TypeError("invalid PermitAuthorityInput capability")
+        value = json.loads(self._payload_json.decode("utf-8"))
+        return value if isinstance(value, dict) else {}
+
+
+def capture_permit_authority_input(value: dict[str, Any]) -> PermitAuthorityInput:
+    """Capture an untrusted DTO for typed fail-closed projection.
+
+    This public helper guarantees immutability only. It deliberately does not
+    authenticate source provenance and therefore cannot preserve binary claims.
+    Authenticated Manifest/snapshot/Decision-Cell paths bypass this DTO lane.
+    """
+    payload = value if isinstance(value, dict) else {}
+    encoded = json.dumps(payload, sort_keys=True, separators=(",", ":"), ensure_ascii=False, default=str).encode("utf-8")
+    authority = object.__new__(PermitAuthorityInput)
+    object.__setattr__(authority, "_payload_json", encoded)
+    object.__setattr__(authority, "_seal", _PERMIT_AUTHORITY_SEAL)
+    value_type = type(value)
+    marker = str(getattr(value, "_server_owned_sha256", "") or "")
+    regulated_marker = str(getattr(value, "_regulated_projection_sha256", "") or "")
+    evidence_marker = str(getattr(value, "_evidence_pack_sha256", "") or "")
+    canonical_sha = hashlib.sha256(encoded).hexdigest()
+    # Do not authenticate from caller-controlled ``__module__``/``__name__``
+    # strings. A dict subclass can spoof both. Server-issued wrappers carry a
+    # process-private provenance token shared across package/direct-import and
+    # reload identities, plus their existing mutation-sensitive payload hash.
+    authenticated = bool(
+        getattr(value, "_permit_authority_provenance_marker", None)
+        is _SERVER_AUTHORITY_PROVENANCE_MARKER
+        and canonical_sha in {marker, regulated_marker, evidence_marker}
+    )
+    object.__setattr__(authority, "_authenticated_provenance", authenticated)
+    return authority
 
 
 _FAMILY_LABELS: dict[PermitFamily, str] = {
@@ -236,8 +304,10 @@ def normalize_status(row: dict[str, Any]) -> PermitStatus:
     raw = str(row.get("status") or row.get("decision") or row.get("requirement") or "").upper().strip()
     if raw in {"CONDITIONAL_REQUIRED", "MAY_NEED", "MAY NEED"}:
         return PermitStatus.CONDITIONAL
-    if raw in {"REQUIRED", "VERIFY", "CONDITIONAL", "NOT_REQUIRED", "RELATED"}:
-        return PermitStatus(raw if raw != "RELATED" else "RELATED")
+    if raw in {"REQUIRED", "VERIFY", "CONDITIONAL", "NOT_REQUIRED", "NEEDS_INPUT"}:
+        return PermitStatus(raw)
+    if raw == "RELATED":
+        return PermitStatus.VERIFY
     return PermitStatus.REQUIRED if row.get("required") is True else PermitStatus.VERIFY
 
 
@@ -648,6 +718,7 @@ def _has_illumination(scope: str) -> bool:
 
 def _expected_primary_from_scope(scope: str, current: PermitFamily | None = None) -> PermitFamily | None:
     s = scope or ""
+    affirmative = _NEGATED_TRIGGER_PHRASE_RE.sub(" ", s)
     if _is_sign_scope(s):
         return PermitFamily.SIGN
     if re.search(r"\b(?:driveway|sidewalk|apron|curb|right[- ]of[- ]way|row|encroachment)\b", s, re.I):
@@ -662,7 +733,7 @@ def _expected_primary_from_scope(scope: str, current: PermitFamily | None = None
         return PermitFamily.MECHANICAL
     if re.search(r"\b(?:detached\s+(?:one-car\s+)?garage|build\s+detached|porch|stairs|deck|window|roof|change\s+of\s+(?:use|occupancy)|tenant\s+improvement|retail\s+bay\s+to)\b", s, re.I):
         return PermitFamily.BUILDING
-    if re.search(r"\b(?:fixture|switch|panel|circuit|ev\s+chargers?|ev\s+charger|level\s*2|level\s*ii|electrical)\b", s, re.I):
+    if re.search(r"\b(?:fixture|switch|panel|circuit|ev\s+chargers?|ev\s+charger|level\s*2|level\s*ii|electrical)\b", affirmative, re.I):
         return PermitFamily.ELECTRICAL
     return current
 
@@ -674,6 +745,27 @@ def _demote_item(item: PermitItem, reason: str) -> PermitItem:
     row["condition_text"] = reason
     row["rationale"] = reason
     return PermitItem(family=item.family, status=PermitStatus.VERIFY, segment=item.segment, name=item.name, row=row, rationale=reason, source_support=item.source_support)
+
+
+def _retag_item(item: PermitItem, status: PermitStatus) -> PermitItem:
+    """Project an existing family lead at a nonbinary typed status."""
+    row = copy.deepcopy(item.row)
+    row.update({
+        "status": status.value,
+        "decision": status.value,
+        "required_status": status.value,
+        "required": None,
+        "segment": item.segment.value,
+    })
+    return PermitItem(
+        family=item.family,
+        status=status,
+        segment=item.segment,
+        name=item.name,
+        row=row,
+        rationale=item.rationale,
+        source_support=item.source_support,
+    )
 
 
 def _add_or_replace_required(items: list[PermitItem], family: PermitFamily, name: str | None, source_support: SourceSupport, rationale: str = "", *, first: bool = False, segment: PermitSegment | str | None = None) -> None:
@@ -756,8 +848,11 @@ def _filter_wrong_jurisdiction_sources(public: dict[str, Any], city: str, state:
     return out
 
 
-def build_permit_package(public: dict[str, Any], job_type: str, city: str, state: str, scope_contract: dict[str, Any] | None = None) -> tuple[dict[str, Any], PermitPackage]:
-    out = _filter_wrong_jurisdiction_sources(public if isinstance(public, dict) else {}, city, state)
+def build_permit_package(authority: PermitAuthorityInput, job_type: str, city: str, state: str, scope_contract: dict[str, Any] | None = None) -> tuple[dict[str, Any], PermitPackage]:
+    if not isinstance(authority, PermitAuthorityInput) or getattr(authority, "_seal", None) is not _PERMIT_AUTHORITY_SEAL:
+        raise TypeError("build_permit_package requires a server-owned PermitAuthorityInput")
+    out = _filter_wrong_jurisdiction_sources(authority._read_payload(), city, state)
+    authenticated_provenance = bool(getattr(authority, "_authenticated_provenance", False))
     facts = _scope_facts(job_type, city, state, scope_contract)
     out["_scope_facts"] = facts.as_dict() if hasattr(facts, "as_dict") else {}
     # R-031 class: preserve known official AHJ source binding for KCK water-heater/plumbing rows instead of downgrading a real REQUIRED answer.
@@ -769,15 +864,18 @@ def build_permit_package(public: dict[str, Any], job_type: str, city: str, state
     segment = str((scope_contract or {}).get("category") or out.get("job_category") or "")
     source_support = source_support_from_public(out, city, state)
     required_items = [item_from_row(row, source_support, scope_segment=segment) for row in (out.get("permits_required") or []) if isinstance(row, dict) and normalize_status(row) == PermitStatus.REQUIRED]
-    related_items = [item_from_row(row, source_support, scope_segment=segment) for rows_key in ("related_permits", "companion_permits", "trade_permits") for row in (out.get(rows_key) or []) if isinstance(row, dict) and normalize_status(row) != PermitStatus.REQUIRED]
+    related_items = [
+        item_from_row(row, source_support, scope_segment=segment)
+        for rows_key in ("permits_required", "family_decisions", "related_permits", "companion_permits", "trade_permits")
+        for row in (out.get(rows_key) or [])
+        if isinstance(row, dict) and normalize_status(row) != PermitStatus.REQUIRED
+    ]
 
     decision = str(out.get("permit_decision") or "").upper().strip()
-    if decision not in {"REQUIRED", "NOT_REQUIRED"}:
-        # Ambiguous/verify/unknown customer-boundary states must never become a
-        # confident no-permit answer.  The undercall floor is REQUIRED with an
-        # honest filing/verification row unless the canonical gates below prove
-        # a no-work/cosmetic exemption.
-        decision = "REQUIRED"
+    if decision in {"UNKNOWN", "CONTACT_AHJ", "ABSTAIN", "FAIL_CLOSED_UNSUPPORTED_OR_NO_EVIDENCE", ""}:
+        decision = "VERIFY"
+    if decision not in {status.value for status in PermitStatus}:
+        decision = "VERIFY"
 
     cosmetic_no_work = _is_commercial_cosmetic_no_work(scope, segment) and not _is_sign_scope(scope)
     if decision == "NOT_REQUIRED" and not cosmetic_no_work:
@@ -796,6 +894,59 @@ def build_permit_package(public: dict[str, Any], job_type: str, city: str, state
             return out, package
 
     primary_hint = _expected_primary_from_scope(scope, required_items[0].family if required_items else None)
+
+    # Nonbinary authority is terminal at the package boundary. Scope-derived or
+    # legacy required-looking rows remain visible as typed family leads, but can
+    # never promote CONDITIONAL/NEEDS_INPUT/VERIFY to a hard requirement.
+    if decision in {"CONDITIONAL", "NEEDS_INPUT", "VERIFY"}:
+        target_status = PermitStatus(decision)
+        excluded_families: set[PermitFamily] = set()
+        if re.search(r"\bno\s+(?:new\s+)?electrical\b", scope, re.I):
+            excluded_families.add(PermitFamily.ELECTRICAL)
+        if re.search(r"\bno\s+(?:new\s+)?plumbing\b", scope, re.I):
+            excluded_families.add(PermitFamily.PLUMBING)
+        if re.search(r"\bno\s+(?:hvac|mechanical|heat(?:ing)?)\b", scope, re.I):
+            excluded_families.add(PermitFamily.MECHANICAL)
+        candidates = [
+            _retag_item(item, target_status)
+            for item in [*required_items, *related_items]
+            if (item.family != PermitFamily.OTHER or item.name)
+            and item.family not in excluded_families
+            and not (
+                item.family == PermitFamily.BUILDING
+                and re.search(r"\bno\s+foundation\b", scope, re.I)
+                and re.search(r"\bfoundation\b", item.name, re.I)
+            )
+        ]
+        if primary_hint and not any(item.family == primary_hint for item in candidates):
+            scope_name = (
+                "Right-of-Way / Driveway-Sidewalk Permit"
+                if primary_hint == PermitFamily.GRADING
+                else default_name(primary_hint)
+            )
+            candidates.insert(
+                0,
+                item_from_row(
+                    make_row(
+                        primary_hint,
+                        scope_name,
+                        target_status,
+                        "The described scope belongs to this filing family; verify the exact local category and trigger with the issuing authority.",
+                    ),
+                    source_support,
+                ),
+            )
+        candidates = list(_unique_items(candidates))
+        primary_family = candidates[0].family if candidates else primary_hint
+        package = PermitPackage(
+            decision=decision,
+            required=False,
+            primary_family=primary_family,
+            required_items=(),
+            related_items=tuple(candidates),
+            source_support=source_support,
+        )
+        return out, package
 
     if _is_sign_scope(scope):
         reason = "The described sign scope requires a visible sign-permit filing family unless the AHJ source explicitly routes signs under another filing category."
@@ -949,13 +1100,58 @@ def build_permit_package(public: dict[str, Any], job_type: str, city: str, state
         family = primary_hint or PermitFamily.BUILDING
         _add_or_replace_required(required_items, family, default_name(family), source_support, "Requirement could not be safely resolved to no-permit; verify the exact filing category with the local permit office.", first=True, segment=getattr(facts, "segment", segment))
 
+    if decision == "REQUIRED":
+        supported_required: list[PermitItem] = []
+        unsupported_required: list[PermitItem] = []
+        for item in required_items:
+            if _has_claim_bound_required_authority(out, item, authenticated_provenance=authenticated_provenance):
+                supported_required.append(item)
+            else:
+                row = copy.deepcopy(item.row)
+                row.update({"status": "VERIFY", "required_status": "VERIFY", "required": None})
+                row.setdefault("trigger", f"Verify whether {item.name} is required for the exact described scope with the issuing authority.")
+                row["rationale"] = f"The available official material is not bound to a hard {item.family.value} requirement for this exact scope; verify before filing or starting work."
+                unsupported_required.append(PermitItem(item.family, PermitStatus.VERIFY, item.segment, item.name, row))
+        required_items = supported_required
+        related_items.extend(unsupported_required)
+        if not required_items:
+            decision = "VERIFY"
+            out["permit_decision"] = "VERIFY"
+            out["permit_required"] = None
+            out["permit_verdict"] = "VERIFY"
+
+    unbound_not_required = decision == "NOT_REQUIRED" and not _has_claim_bound_not_required_authority(
+        out, authenticated_provenance=authenticated_provenance
+    )
+    if unbound_not_required:
+        decision = "VERIFY"
+        out["permit_decision"] = "VERIFY"
+        out["permit_required"] = None
+        out["permit_verdict"] = "VERIFY"
+        out.pop("not_required_reason", None)
+        out.pop("exemption_reason", None)
+        if not any(item.family == PermitFamily.OTHER for item in related_items):
+            related_items.insert(0, PermitItem(
+                PermitFamily.OTHER,
+                PermitStatus.VERIFY,
+                normalize_segment(getattr(facts, "segment", segment)),
+                default_name(PermitFamily.OTHER),
+                {"status": "VERIFY", "required": None},
+                "Hard NOT_REQUIRED was withheld because no claim-bound official exemption evidence was attached.",
+                source_support,
+            ))
+
     required_items = list(_unique_items(required_items))
     related_items = list(_unique_items(related_items))
+    if unbound_not_required:
+        related_items.sort(key=lambda item: (0 if item.family == PermitFamily.OTHER else 1, _ORDER_INDEX.get(item.family, 999), item.name.lower()))
     request_segment = normalize_segment(getattr(facts, "segment", segment))
     required_items = [_with_segment(item, request_segment) for item in required_items]
     related_items = [_with_segment(item, request_segment) for item in related_items]
-    if required_items:
-        decision = "REQUIRED"
+    if decision != "REQUIRED" and required_items:
+        # A compatibility row may never promote the typed package decision.
+        related_items.extend(_retag_item(item, PermitStatus.VERIFY) for item in required_items)
+        required_items = []
     required = decision == "REQUIRED"
     if not required:
         required_items = []
@@ -975,6 +1171,14 @@ def _project_rows(items: Iterable[PermitItem]) -> list[dict[str, Any]]:
     for item in items:
         row = copy.deepcopy(item.row)
         row.pop("certainty", None)
+        # The typed item is authoritative.  Preserve the established public
+        # compatibility keys as pure projections so downstream checklist/share
+        # consumers do not have to infer status or family from display prose.
+        row["filing_family"] = item.family.value
+        row.setdefault("category", item.family.value)
+        row["status"] = item.status.value
+        row["required_status"] = item.status.value
+        row["required"] = True if item.status == PermitStatus.REQUIRED else None
         if normalize_segment(row.get("segment")) == PermitSegment.UNKNOWN:
             row["segment"] = PermitSegment.NEUTRAL.value
         rows.append(row)
@@ -1001,6 +1205,89 @@ def _scrub_required_no_permit_copy(value: Any, replacement: str) -> Any:
     return value
 
 
+def _has_claim_bound_required_authority(
+    value: dict[str, Any], item: PermitItem, *, authenticated_provenance: bool = False
+) -> bool:
+    """Accept a hard family row only when an official citation states that claim."""
+    if not authenticated_provenance:
+        return False
+    aliases = {
+        PermitFamily.BUILDING: ("building", "construction", "alteration", "roof", "roofs", "reroof", "reroofs", "re-roof", "re-roofs"),
+        PermitFamily.ELECTRICAL: ("electrical", "wiring", "circuit"),
+        PermitFamily.PLUMBING: ("plumbing", "pipe", "piping", "fixture", "drain"),
+        PermitFamily.MECHANICAL: ("mechanical", "hvac", "heating", "cooling", "ventilation"),
+        PermitFamily.FIRE: ("fire", "sprinkler", "alarm"),
+        PermitFamily.HEALTH: ("health", "food establishment", "restaurant"),
+        PermitFamily.WASTEWATER: ("wastewater", "grease interceptor", "fog", "pretreatment"),
+        PermitFamily.PLANNING: ("planning", "land use"),
+        PermitFamily.ZONING: ("zoning", "land use"),
+        PermitFamily.OCCUPANCY: ("certificate of occupancy", "occupancy"),
+        PermitFamily.GRADING: ("grading", "earthwork", "excavation"),
+
+        PermitFamily.HISTORIC: ("historic", "landmark"),
+        PermitFamily.LIQUOR: ("liquor", "alcohol"),
+        PermitFamily.REFRIGERATION: ("refrigeration", "refrigerant"),
+        PermitFamily.OTHER: tuple(),
+    }
+    family_terms = aliases.get(item.family, (item.family.value.replace("_", " "),))
+    item_terms = tuple(term for term in family_terms if term) + tuple(
+        token for token in re.findall(r"[a-z]{4,}", item.name.lower()) if token not in {"permit", "residential", "commercial", "required"}
+    )
+    candidates: list[dict[str, Any]] = []
+    for citation in value.get("claim_citations") or []:
+        if not isinstance(citation, dict):
+            continue
+        field = str(citation.get("field") or "").lower()
+        if field in {"permit_type", "permit_decision", "permits_required", "family_decision", "family_decisions"}:
+            candidates.append(citation)
+    lock = value.get("_decision_cell_primary_lock")
+    if isinstance(lock, dict) and str(lock.get("permit_decision") or lock.get("main_decision") or "").upper() == "REQUIRED":
+        candidates.extend(source for source in (lock.get("sources") or []) if isinstance(source, dict))
+    row = item.row if isinstance(item.row, dict) else {}
+    if any(row.get(key) for key in ("quoted_snippet", "source_quote", "quote", "snippet")):
+        candidates.append(row)
+    positive = re.compile(r"\b(?:permits?\s+(?:is|are)\s+(?:also\s+)?required|permit (?:is )?required|requires? (?:an? )?[^.;]{0,80}permit|needs? (?:an? )?[^.;]{0,80}permit|must (?:obtain|secure|apply)|shall (?:obtain|secure)|apply for (?:an? |your )?[^.;]{0,80}permit|without first securing)\b", re.I)
+    for candidate in candidates:
+        url = str(candidate.get("source_url") or candidate.get("url") or candidate.get("source_ref") or "").strip()
+        quote = str(candidate.get("quoted_snippet") or candidate.get("source_quote") or candidate.get("quote") or candidate.get("snippet") or "").strip()
+        claim_value = str(candidate.get("value") or candidate.get("claim") or "")
+        combined = f"{quote} {claim_value}".lower()
+        if not url.startswith(("https://", "http://")) or len(quote) < 20 or not positive.search(quote):
+            continue
+        if re.fullmatch(r"[0-9a-f]{64}", str(candidate.get("source_claim_sha256") or "").lower()):
+            return True
+        if item_terms and any(re.search(rf"\b{re.escape(term)}\b", combined, re.I) for term in item_terms):
+            return True
+    return False
+
+
+def _has_claim_bound_not_required_authority(
+    value: dict[str, Any], *, authenticated_provenance: bool = False
+) -> bool:
+    """Accept hard exemptions only when an official source is bound to the claim."""
+    if not authenticated_provenance:
+        return False
+    candidates: list[dict[str, Any]] = []
+    for item in value.get("claim_citations") or []:
+        if isinstance(item, dict) and str(item.get("field") or "").lower() == "permit_decision" and str(item.get("value") or "").upper() in {"NOT_REQUIRED", "NO"}:
+            candidates.append(item)
+    for item in value.get("positive_exemption_evidence") or []:
+        if isinstance(item, dict):
+            candidates.append(item)
+    lock = value.get("_decision_cell_primary_lock")
+    if isinstance(lock, dict) and str(lock.get("permit_decision") or lock.get("main_decision") or "").upper() == "NOT_REQUIRED":
+        for item in lock.get("sources") or []:
+            if isinstance(item, dict):
+                candidates.append(item)
+    positive = re.compile(r"\b(?:no permit (?:is )?required|permit (?:is )?not required|exempt(?:ion|ed)?|does not require (?:a )?permit|does not have[^.]{0,240}permit requirements?|no building permit requirements?)\b", re.I)
+    for item in candidates:
+        url = str(item.get("source_url") or item.get("url") or "").strip()
+        quote = str(item.get("quoted_snippet") or item.get("source_quote") or item.get("quote") or item.get("snippet") or item.get("claim_text") or "").strip()
+        if url.startswith(("https://", "http://")) and len(quote) >= 20 and positive.search(quote):
+            return True
+    return False
+
+
 def _package_title(package: PermitPackage) -> str:
     if not package.required_items:
         return "No permit required"
@@ -1014,6 +1301,46 @@ def _package_title(package: PermitPackage) -> str:
 def project_permit_package(public: dict[str, Any], package: PermitPackage, job_type: str, city: str, state: str) -> dict[str, Any]:
     out = copy.deepcopy(public if isinstance(public, dict) else {})
     office = out.get("applying_office") or out.get("building_dept_name") or f"{city} permit office".strip() or "the local permit office"
+    if package.decision in {"CONDITIONAL", "NEEDS_INPUT", "VERIFY"}:
+        rows = _project_rows(package.related_items)
+        primary = package.related_items[0] if package.related_items else None
+        title = primary.name if primary else "Permit category verification"
+        family = family_label(primary.family) if primary else "Permit"
+        headline = {
+            "CONDITIONAL": f"Conditional permit requirement: {title}.",
+            "NEEDS_INPUT": f"More project information is needed to resolve {title}.",
+            "VERIFY": f"Verify the {title} requirement with the issuing authority.",
+        }[package.decision]
+        out.update({
+            "permit_required": None,
+            "permit_decision": package.decision,
+            "permit_verdict": package.decision,
+            "permit_kind": family,
+            "permit_name": title,
+            "permit_type": title,
+            # Keep typed nonbinary lanes customer-visible without claiming they
+            # are hard requirements. Every row carries its exact nonbinary
+            # status and ``required=None``; binary mirrors remain empty below.
+            "permits_required": copy.deepcopy(rows),
+            "family_decisions": copy.deepcopy(rows),
+            "related_permits": copy.deepcopy(rows),
+            "companion_permits": [],
+            "required_permit_names": [],
+            "required_permit_families": [],
+            "required_permit_segments": [],
+            "related_permit_names": [item.name for item in package.related_items],
+            "related_permit_families": list(dict.fromkeys(family_label(item.family) for item in package.related_items)),
+            "related_permit_segments": list(dict.fromkeys(_public_segment_value(item.segment) for item in package.related_items)),
+            "required_permit_summary": headline,
+            "customer_headline": headline,
+            "job_summary": headline,
+            "summary": headline,
+            "customer_next_step": f"Contact {office} to resolve the listed conditions or missing inputs before filing or starting work.",
+            "apply_url": "",
+            "online_application_url": "",
+            "apply_path": {"state": "CONTACT_AHJ", "channel": "contact_ahj", "support_level": "verification required", "portal_url": None, "platform": None, "login_required": None, "permit_type": title, "verification_note": "The hard filing claim is unresolved; confirm the exact permit family and filing route with the issuing authority."},
+        })
+        return out
     if not package.required:
         cosmetic_no_work = _is_commercial_cosmetic_no_work(job_type or "", str(out.get("job_category") or ""))
         headline = "No permit required for cosmetic finish work only." if cosmetic_no_work else "No permit required for the described scope."
@@ -1176,8 +1503,12 @@ def validate_customer_view(public: dict[str, Any]) -> list[str]:
         issues.append("collapsed_package_apply_path")
     for idx, row in enumerate(rows):
         fam = normalize_family(row.get("filing_family") or row.get("family") or row.get("kind"), row)
-        if normalize_status(row) != PermitStatus.REQUIRED:
+        row_status = normalize_status(row)
+        if decision == "REQUIRED" and row_status != PermitStatus.REQUIRED:
             issues.append(f"required_row_not_required_{idx}")
+        if decision in {"CONDITIONAL", "VERIFY", "NEEDS_INPUT"}:
+            if row_status.value != decision or row.get("required") is not None:
+                issues.append(f"nonbinary_row_status_mismatch_{idx}")
         if not row.get("filing_family"):
             issues.append(f"row_missing_family_{idx}")
         if re.match(r"^\s*multiple permits required\s*:", str(row.get("permit_type") or row.get("permit_name") or ""), re.I):

@@ -5,6 +5,8 @@ import os
 import sys
 from pathlib import Path
 
+import pytest
+
 ROOT = Path(__file__).resolve().parents[1]
 API = ROOT / "api"
 for path in (ROOT, API):
@@ -16,8 +18,112 @@ from api.permit_manifest import (  # noqa: E402
     MANIFEST_FLAG,
     build_permit_manifest_projection,
     canonical_family,
+    is_authenticated_permit_manifest,
+    seal_permit_manifest_projection,
 )
 from api import permit_manifest as permit_manifest_module  # noqa: E402
+
+
+def test_private_verified_projection_constructor_is_sealed():
+    from api import server
+
+    with pytest.raises(TypeError):
+        server._VerifiedCustomerProjection(_payload())
+
+
+def test_spoofed_server_wrapper_type_identity_cannot_mint_manifest_authority(monkeypatch):
+    from api.permit_model import capture_permit_authority_input
+
+    monkeypatch.setenv(MANIFEST_FLAG, "active")
+
+    class ForgedServerOwnedResult(dict):
+        pass
+
+    ForgedServerOwnedResult.__name__ = "_ServerOwnedLegacyResult"
+    ForgedServerOwnedResult.__module__ = "api.server"
+
+    for decision, required in (("REQUIRED", True), ("NOT_REQUIRED", False)):
+        payload = _payload()
+        payload["permit_decision"] = decision
+        payload["permit_required"] = required
+        payload["permit_verdict"] = "YES" if required else "NO"
+        if not required:
+            payload["permits_required"] = []
+        forged = ForgedServerOwnedResult(payload)
+        encoded = json.dumps(
+            forged,
+            sort_keys=True,
+            separators=(",", ":"),
+            ensure_ascii=False,
+            default=str,
+        ).encode("utf-8")
+        setattr(forged, "_server_owned_sha256", hashlib.sha256(encoded).hexdigest())
+
+        authority = capture_permit_authority_input(forged)
+        assert authority._authenticated_provenance is False
+        projected = seal_permit_manifest_projection(
+            payload, force=True, authority_input=authority
+        )
+        assert projected["permit_decision"] == "VERIFY"
+        assert projected["permit_required"] is None
+
+
+def test_spoofed_permit_authority_input_type_identity_cannot_mint_manifest_authority(
+    monkeypatch,
+):
+    monkeypatch.setenv(MANIFEST_FLAG, "active")
+    forged_type = type(
+        "PermitAuthorityInput",
+        (),
+        {
+            "__module__": "api.permit_model",
+            "_authenticated_provenance": True,
+        },
+    )
+    projected = seal_permit_manifest_projection(
+        _payload(), force=True, authority_input=forged_type()
+    )
+    assert projected["permit_decision"] == "VERIFY"
+    assert projected["permit_required"] is None
+
+
+def test_unauthenticated_manifest_sealing_cannot_create_binary_authority(monkeypatch):
+    monkeypatch.setenv(MANIFEST_FLAG, "active")
+
+    required = seal_permit_manifest_projection(_payload(), force=True)
+    assert required["permit_decision"] == "VERIFY"
+    assert required["permit_required"] is None
+    assert required["permits_required"] == []
+
+    not_required_payload = _payload()
+    not_required_payload.update({
+        "permit_decision": "NOT_REQUIRED",
+        "permit_required": False,
+        "permit_verdict": "NO",
+        "permits_required": [],
+    })
+    not_required = seal_permit_manifest_projection(not_required_payload, force=True)
+    assert not_required["permit_decision"] == "VERIFY"
+    assert not_required["permit_required"] is None
+    assert not_required["permits_required"] == []
+
+
+def test_authenticated_private_authority_can_seal_exact_binary_manifest(monkeypatch):
+    from api import server
+    from api.permit_model import capture_permit_authority_input
+
+    monkeypatch.setenv(MANIFEST_FLAG, "active")
+    payload = _payload()
+    capability = server._issue_server_owned_legacy_result(payload)
+    authority = capture_permit_authority_input(capability)
+    assert authority._authenticated_provenance is True
+
+    projected = seal_permit_manifest_projection(
+        payload, force=True, authority_input=authority
+    )
+    assert projected["permit_decision"] == "REQUIRED"
+    assert projected["permit_required"] is True
+    assert projected["permits_required"]
 
 
 def _payload() -> dict:
@@ -47,6 +153,7 @@ def _payload() -> dict:
                 "status": "REQUIRED",
                 "required": True,
                 "source_url": "https://www.muni.org/official-permits",
+                "source_quote": "A commercial building permit is required for tenant improvement construction.",
                 "scope_trigger": "commercial_tenant_improvement",
             },
             {
@@ -56,6 +163,7 @@ def _payload() -> dict:
                 "required": True,
                 "source_ref": "cell:w4:anchorage:electrical",
                 "source_url": "https://www.muni.org/electrical",
+                "source_quote": "An electrical permit is required before new commercial wiring or circuits are installed.",
             },
         ],
         "related_permits": [
@@ -125,16 +233,16 @@ def test_session2_flag_off_is_exact_object_and_byte_identity(monkeypatch):
     assert after == before
 
 
-def test_session2_flag_on_builds_manifest_without_mutating_decision(monkeypatch):
+def test_session2_unauthenticated_seal_builds_typed_manifest_and_demotes_binary(monkeypatch):
     monkeypatch.setenv(MANIFEST_FLAG, "shadow")
     payload = _payload()
-    projected = build_permit_manifest_projection(payload)
+    projected = seal_permit_manifest_projection(payload)
     manifest = projected["permit_manifest"]
-    assert projected["permit_decision"] == payload["permit_decision"]
-    assert projected["permit_required"] is payload["permit_required"]
-    assert projected["permit_verdict"] == payload["permit_verdict"]
+    assert projected["permit_decision"] == "VERIFY"
+    assert projected["permit_required"] is None
+    assert projected["permit_verdict"] == "VERIFY"
     assert projected["primary_permit_family"] == "BUILDING"
-    assert manifest["permit_decision"] == "REQUIRED"
+    assert manifest["permit_decision"] == "VERIFY"
     assert manifest["primary"]["family"] == "BUILDING"
     assert manifest["primary"]["local_name"] == "Commercial Tenant Improvement Permit"
     assert manifest["jurisdiction"] == projected["jurisdiction_identity"]
@@ -142,9 +250,9 @@ def test_session2_flag_on_builds_manifest_without_mutating_decision(monkeypatch)
     assert manifest["jurisdiction"]["name"] == "Municipality of Anchorage"
 
 
-def test_session2_source_backed_companions_preserved_and_unsourced_demoted(monkeypatch):
+def test_session2_typed_nonbinary_companions_preserved_and_unsourced_required_demoted(monkeypatch):
     monkeypatch.setenv(MANIFEST_FLAG, "active")
-    projected = build_permit_manifest_projection(_payload())
+    projected = seal_permit_manifest_projection(_payload())
     companions = projected["permit_manifest"]["companions"]
     by_family = {}
     for row in companions:
@@ -155,7 +263,7 @@ def test_session2_source_backed_companions_preserved_and_unsourced_demoted(monke
     fire = by_family["FIRE_LIFE_SAFETY"][0]
     accessibility = by_family["ACCESSIBILITY"][0]
     zoning = by_family["ZONING_PLANNING"][0]
-    assert electrical["status"] == "REQUIRED"
+    assert electrical["status"] == "VERIFY"
     assert electrical["source_ref"] == "cell:w4:anchorage:electrical"
     assert fire["status"] == "CONDITIONAL"
     assert fire["source_ref"] == "https://www.muni.org/fire-review"
@@ -163,24 +271,21 @@ def test_session2_source_backed_companions_preserved_and_unsourced_demoted(monke
     assert accessibility["required"] is None
     assert accessibility["source_ref"] is None
     assert "confirm" in accessibility["customer_guidance"].lower()
-    assert zoning["status"] == "VERIFY"
+    assert zoning["status"] == "CONDITIONAL"
     assert zoning["required"] is None
     assert zoning["source_ref"] is None
-    assert all(
-        row.get("source_ref")
-        for row in companions
-        if row.get("status") in {"REQUIRED", "CONDITIONAL"}
-    )
+    assert not [row for row in companions if row.get("status") == "REQUIRED"]
     assert any(row.get("source_ref") == "cell:w4:anchorage:electrical" for row in companions)
     assert any(row.get("source_ref") == "https://www.muni.org/fire-review" for row in companions)
 
 
-def test_session2_companion_uses_same_family_typed_route_provenance(monkeypatch):
+def test_session2_typed_route_without_claim_snapshot_does_not_create_binary_authority(monkeypatch):
     monkeypatch.setenv(MANIFEST_FLAG, "active")
     payload = _payload()
     electrical = payload["permits_required"][1]
     electrical.pop("source_ref")
     electrical.pop("source_url")
+    electrical.pop("source_quote")
     payload["family_authority_routes"] = [{
         "family": "electrical",
         "authority": {"application_authority": "Anchorage Electrical Inspections"},
@@ -195,9 +300,10 @@ def test_session2_companion_uses_same_family_typed_route_provenance(monkeypatch)
             ],
         },
     }]
-    projected = build_permit_manifest_projection(payload)
+    projected = seal_permit_manifest_projection(payload)
     row = next(item for item in projected["permit_manifest"]["companions"] if item["family"] == "ELECTRICAL")
-    assert row["status"] == "REQUIRED"
+    assert row["status"] == "VERIFY"
+    assert row["required"] is None
     assert row["source_ref"] == "https://www.muni.org/electrical-route"
     assert row["source_refs"] == [
         "https://www.muni.org/electrical-route",
@@ -212,7 +318,7 @@ def test_session2_companion_uses_same_family_typed_route_provenance(monkeypatch)
 def test_session2_projection_is_idempotent_and_does_not_add_companions(monkeypatch):
     monkeypatch.setenv(MANIFEST_FLAG, "active")
     payload = _payload()
-    once = build_permit_manifest_projection(payload)
+    once = seal_permit_manifest_projection(payload)
     twice = build_permit_manifest_projection(copy.deepcopy(once))
     assert twice == once
     original_rows = (
@@ -223,29 +329,30 @@ def test_session2_projection_is_idempotent_and_does_not_add_companions(monkeypat
     assert len(once["permit_manifest"]["companions"]) <= original_rows
 
 
-def test_session2_conflicting_manifest_reentry_rejects_stale_projection(monkeypatch):
+def test_session2_manifest_reentry_ignores_mutable_compatibility_mirrors(monkeypatch):
     monkeypatch.setenv(MANIFEST_FLAG, "active")
-    projected = build_permit_manifest_projection(_payload())
+    projected = seal_permit_manifest_projection(_payload())
     projected["permit_decision"] = "NOT_REQUIRED"
     projected["permit_required"] = False
     failed = build_permit_manifest_projection(projected)
-    assert failed["permit_decision"] == "NOT_REQUIRED"
-    assert failed["permit_manifest"]["permit_decision"] == "NOT_REQUIRED"
-    assert failed["permit_manifest"] != projected["permit_manifest"]
+    assert failed["permit_decision"] == "VERIFY"
+    assert failed["permit_required"] is None
+    assert failed["permit_manifest"]["permit_decision"] == "VERIFY"
 
-    stale_row = build_permit_manifest_projection(_payload())
-    stale_row["permits_required"][1]["status"] = "NOT_REQUIRED"
-    stale_row["permits_required"][1]["source_ref"] = "https://tampered.invalid/source"
+    stale_row = seal_permit_manifest_projection(_payload())
+    electrical_mirror = next(row for row in stale_row["family_decisions"] if row.get("canonical_family") == "ELECTRICAL")
+    electrical_mirror["status"] = "NOT_REQUIRED"
+    electrical_mirror["source_ref"] = "https://tampered.invalid/source"
     rebuilt_row = build_permit_manifest_projection(stale_row)
     assert rebuilt_row != stale_row
-    assert rebuilt_row["permit_manifest"] != stale_row["permit_manifest"]
-    assert rebuilt_row["permit_manifest"]["companions"][0]["status"] == "NOT_REQUIRED"
+    assert rebuilt_row["permit_manifest"] == stale_row["permit_manifest"]
+    assert rebuilt_row["permit_manifest"]["companions"][0]["status"] == "VERIFY"
 
-    tampered_manifest = build_permit_manifest_projection(_payload())
+    tampered_manifest = seal_permit_manifest_projection(_payload())
     tampered_manifest["permit_manifest"]["primary"]["rationale"] = "tampered"
     rebuilt_manifest = build_permit_manifest_projection(tampered_manifest)
-    assert rebuilt_manifest != tampered_manifest
-    assert rebuilt_manifest["permit_manifest"]["primary"].get("rationale") != "tampered"
+    assert "permit_manifest" not in rebuilt_manifest
+    assert not is_authenticated_permit_manifest(tampered_manifest.get("permit_manifest"))
 
 
 def test_session2_preserves_multiple_source_refs_and_rationale(monkeypatch):
@@ -257,7 +364,7 @@ def test_session2_preserves_multiple_source_refs_and_rationale(monkeypatch):
         {"source_url": "https://www.muni.org/electrical-one"},
         {"source_url": "https://www.muni.org/electrical-two"},
     ]
-    companion = build_permit_manifest_projection(payload)["permit_manifest"]["companions"][0]
+    companion = seal_permit_manifest_projection(payload)["permit_manifest"]["companions"][0]
     assert companion["rationale"] == row["notes"]
     assert companion["source_refs"] == [
         "cell:w4:anchorage:electrical",
@@ -270,7 +377,7 @@ def test_session2_preserves_multiple_source_refs_and_rationale(monkeypatch):
 def test_session2_untrusted_nested_surface_is_projected_once(monkeypatch):
     monkeypatch.setenv(MANIFEST_FLAG, "active")
     wrapper = {"share": {"data": _payload()}, "other": "unchanged"}
-    projected = build_permit_manifest_projection(wrapper)
+    projected = seal_permit_manifest_projection(wrapper)
     assert projected["other"] == "unchanged"
     assert projected["share"]["data"]["permit_manifest"]["primary"]["family"] == "BUILDING"
 
@@ -283,15 +390,73 @@ def _server(monkeypatch):
     return server
 
 
-def test_session2_server_api_egress_uses_single_manifest_projection(monkeypatch):
+def test_session2_server_api_egress_sanitizes_but_only_finalizer_seals(monkeypatch):
     monkeypatch.setenv(MANIFEST_FLAG, "active")
     server = _server(monkeypatch)
-    projected = server.project_customer_response_egress(_payload())
+    sanitized = server.project_customer_response_egress(_payload())
+    assert "permit_manifest" not in sanitized
+    projected = server.finalize_customer_public_projection(
+        sanitized, "commercial tenant improvement", "Anchorage", "AK",
+    )
     assert projected["permit_manifest"]["primary"]["family"] == "BUILDING"
     assert projected["primary_permit_family"] == "BUILDING"
     assert projected["jurisdiction_identity"]["jurisdiction_id"] == "us-ak-anchorage"
     assert projected["companion_permits"] == projected["permit_manifest"]["companions"]
+    assert "permit_manifest" not in projected.get("customer_result_summary", {})
     assert server.project_customer_response_egress(projected) == projected
+
+
+def test_session2_signature_free_public_manifest_cannot_repair_mutated_mirrors(monkeypatch):
+    server = _server(monkeypatch)
+    canonical = server.finalize_customer_public_projection(
+        _payload(), "commercial tenant improvement", "Anchorage", "AK",
+    )
+    mutated = copy.deepcopy(canonical)
+    mutated["permit_decision"] = "NOT_REQUIRED"
+    mutated["permit_required"] = False
+    mutated["permit_verdict"] = "NO"
+    mutated["permit_name"] = "No permit required"
+    mutated["permits_required"] = []
+
+    repaired = server.finalize_customer_public_projection(
+        mutated,
+        "commercial tenant improvement",
+        "Anchorage",
+        "AK",
+    )
+    assert "authority_tag" not in canonical["permit_manifest"]
+    assert repaired["permit_decision"] == "VERIFY"
+    assert repaired["permit_required"] is None
+    assert repaired["permit_verdict"] == "VERIFY"
+    assert repaired.get("permits_required") == []
+
+
+def test_session2_trusted_egress_preserves_needs_input_nonbinary(monkeypatch):
+    server = _server(monkeypatch)
+    raw = {
+        "permit_decision": "NEEDS_INPUT",
+        "permit_required": None,
+        "permit_verdict": "NEEDS_INPUT",
+        "permit_kind": "verification",
+        "permit_name": "Additional project details needed",
+        "permits_required": [{
+            "permit_type": "Building permit verification",
+            "filing_family": "building",
+            "status": "NEEDS_INPUT",
+            "decision": "NEEDS_INPUT",
+            "required": None,
+            "trigger_condition": "Provide the missing project scope details.",
+        }],
+    }
+    public = server._build_trusted_customer_response_egress(
+        raw,
+        "project details unavailable",
+        "Anchorage",
+        "AK",
+    )
+    assert public["permit_decision"] == "NEEDS_INPUT"
+    assert public["permit_required"] is None
+    assert public["permit_verdict"] == "NEEDS_INPUT"
 
 
 def test_session2_report_allowlist_and_white_label_render_manifest(monkeypatch):
@@ -308,30 +473,34 @@ def test_session2_report_allowlist_and_white_label_render_manifest(monkeypatch):
             "provenance": [{"source_url": "https://www.muni.org/electrical-route"}],
         },
     }]
-    projected = server.project_customer_response_egress(payload)
+    projected = server.finalize_customer_public_projection(
+        payload, "commercial tenant improvement", "Anchorage", "AK",
+    )
     public = server.to_public_share_payload(
         {"data": projected, "job_type": "commercial tenant improvement", "city": "Anchorage", "state": "AK"},
         {},
     )
     assert public["share"]["data"]["permit_manifest"] == projected["permit_manifest"]
     white_label = server.render_white_label_report_html({
-        "result": server._VerifiedCustomerProjection(projected),
+        "result": projected,
         "job_type": "commercial tenant improvement",
         "job_category": "commercial",
         "city": "Anchorage",
         "state": "AK",
     })
     assert "Commercial Tenant Improvement Permit" in white_label
-    assert "Accessibility review" in white_label
+    assert "Fire alarm review" in white_label
     assert "VERIFY" in white_label
-    assert "Anchorage Electrical Inspections" in white_label
-    assert "https://www.muni.org/electrical-application" in white_label
+    assert "CONDITIONAL" in white_label
+    assert "Planning/Zoning Use Verification" in white_label
 
 
 def test_session2_verified_share_render_embeds_same_manifest(monkeypatch):
     monkeypatch.setenv(MANIFEST_FLAG, "active")
     server = _server(monkeypatch)
-    projected = server.project_customer_response_egress(_payload())
+    projected = server.finalize_customer_public_projection(
+        _payload(), "commercial tenant improvement", "Anchorage", "AK",
+    )
     canonical = json.dumps(projected, sort_keys=True, separators=(",", ":"), ensure_ascii=False)
     import hashlib
 
@@ -345,14 +514,88 @@ def test_session2_verified_share_render_embeds_same_manifest(monkeypatch):
     rendered = server.render_share_page(share)
     assert '"permit_manifest"' in rendered
     assert '"primary_permit_family":"BUILDING"' in rendered
-    assert "Accessibility review" in rendered
+    assert "Fire alarm review" in rendered
 
 
-def test_session2_flag_off_shipped_frontend_assets_are_opening_byte_identical():
-    import hashlib
+def test_schema_literal_cannot_authenticate_or_redirect_manifest_authority(monkeypatch):
+    server = _server(monkeypatch)
+    fake = {
+        "permit_decision": "NEEDS_INPUT",
+        "permit_required": None,
+        "permit_verdict": "NEEDS_INPUT",
+        "permit_name": "Permit verification",
+        "permit_kind": "verification",
+        "permits_required": [],
+        "permit_manifest": {
+            "schema_version": "permit_manifest_v1",
+            "permit_decision": "REQUIRED",
+            "primary": {"family": "ELECTRICAL", "status": "REQUIRED", "local_name": "Electrical"},
+            "companions": [],
+            "jurisdiction": {},
+            "filing_destination": {"apply_url": "https://attacker.invalid/apply"},
+        },
+    }
+    sanitized = server.project_customer_response_egress(fake)
+    assert "permit_manifest" not in sanitized
+    assert sanitized["permit_decision"] == "NEEDS_INPUT"
+    assert sanitized.get("apply_url") != "https://attacker.invalid/apply"
 
-    assert hashlib.sha256((ROOT / "frontend" / "index.html").read_bytes()).hexdigest() == "c7e570fa9c8a57c84bb344b736742df5660a39761d77aaf88ddea4829c1489f0"
-    assert hashlib.sha256((ROOT / "frontend" / "report.html").read_bytes()).hexdigest() == "4294e4fcecaf2317c89bf729c543843a983d0b5e25cd6b9764cd57e057d2da36"
+    finalized = server.finalize_customer_public_projection(
+        fake, "project details unavailable", "Anchorage", "AK",
+    )
+    assert finalized["permit_decision"] == "NEEDS_INPUT"
+    assert finalized["permit_required"] is None
+    assert finalized["permit_manifest"]["primary"]["family"] != "ELECTRICAL"
+    assert finalized.get("apply_url") != "https://attacker.invalid/apply"
+    assert not is_authenticated_permit_manifest(finalized["permit_manifest"])
+    assert "authority_tag" not in finalized["permit_manifest"]
+
+
+def test_decision_contract_exception_cannot_promote_terminal_nonbinary(monkeypatch):
+    server = _server(monkeypatch)
+    original_apply = server.apply_permit_decision_contract
+    calls = {"count": 0}
+
+    def fail_once(*args, **kwargs):
+        calls["count"] += 1
+        if calls["count"] == 1:
+            raise RuntimeError("forced once")
+        return original_apply(*args, **kwargs)
+
+    monkeypatch.setattr(server, "apply_permit_decision_contract", fail_once)
+    monkeypatch.setattr(server, "resolve_customer_decision", lambda *_args, **_kwargs: {
+        "permit_decision": "REQUIRED", "permit_required": True,
+        "permit_verdict": "YES", "permit_name": "Forged fallback",
+        "permits_required": [{"filing_family": "electrical", "status": "REQUIRED", "required": True}],
+    })
+    raw = {
+        "permit_decision": "NEEDS_INPUT", "permit_required": None,
+        "permit_verdict": "NEEDS_INPUT", "permit_name": "Scope verification",
+        "permits_required": [{
+            "filing_family": "building", "permit_type": "Building verification",
+            "status": "NEEDS_INPUT", "required": None,
+            "trigger_condition": "Provide missing project scope details.",
+        }],
+    }
+    public = server._build_trusted_customer_response_egress(
+        raw, "project details unavailable", "Anchorage", "AK",
+    )
+    assert public["permit_decision"] == "NEEDS_INPUT"
+    assert public["permit_required"] is None
+    assert public["permit_verdict"] == "NEEDS_INPUT"
+    assert public["permits_required"] == []
+
+
+def test_session2_shipped_frontend_assets_enforce_v2_five_status_contract():
+    index = (ROOT / "frontend" / "index.html").read_text(encoding="utf-8")
+    report = (ROOT / "frontend" / "report.html").read_text(encoding="utf-8")
+
+    for status in ("REQUIRED", "NOT_REQUIRED", "CONDITIONAL", "VERIFY", "NEEDS_INPUT"):
+        assert status in index
+        assert status in report
+    assert "canonicalCustomerStatus" in index
+    assert "permit_manifest_v1" in report
+    assert "⚠️ MAYBE" not in index
 
 
 def test_session2_runtime_family_projection_closes_over_frozen_ontology():
@@ -376,4 +619,14 @@ def test_session2_runtime_protected_hash_successor_links_to_frozen_session1_reco
     assert all(character in "0123456789abcdef" for character in server_record["session2_current_sha256"])
     assert successor["session1_artifacts_unchanged"] is True
     frozen_test = ROOT / "benchmarks" / "permit_accuracy_v1_2" / "test_benchmark_v12.py"
-    assert hashlib.sha256(frozen_test.read_bytes()).hexdigest() == "0435199886e13c80739ff106ea2a52a815c042bd2f7058f170f5f40d8d106c09"
+    remediation = json.loads(
+        (
+            ROOT
+            / "benchmarks"
+            / "permit_accuracy_v1_2"
+            / "REMEDIATION_PROTECTED_HASH_SUCCESSOR_20260731.json"
+        ).read_text()
+    )
+    gate_successor = remediation["benchmark_gate_successor"]
+    assert gate_successor["opening_sha256"] == "0435199886e13c80739ff106ea2a52a815c042bd2f7058f170f5f40d8d106c09"
+    assert hashlib.sha256(frozen_test.read_bytes()).hexdigest() == gate_successor["candidate_sha256"]

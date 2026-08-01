@@ -27,6 +27,7 @@ import re
 import sqlite3
 import string
 import requests
+import secrets
 import socket
 import threading
 import time
@@ -62,7 +63,12 @@ except (TypeError, ValueError):
 
 from scope_contract import build_scope_contract, customer_text_has_forbidden_scope, customer_text_mentions_forbidden_scope, project_scope_relevant_source_excerpts, sanitize_result_for_scope_contract
 from permit_decision import apply_permit_decision_contract, _get_decision_cell_primary_lock, enforce_decision_cell_primary, apply_contact_sanitization
-from permit_manifest import build_permit_manifest_projection, permit_manifest_mode_enabled
+from permit_manifest import (
+    build_permit_manifest_projection,
+    is_authenticated_permit_manifest,
+    permit_manifest_mode_enabled,
+    seal_permit_manifest_projection,
+)
 from trade_authority_routing import apply_trade_authority_routing
 from decision_resolver import is_input_rejection, resolve_customer_decision
 try:
@@ -72,7 +78,11 @@ except ImportError:  # package import path in some tests
 from evidence_pack_runtime import apply_evidence_pack_fail_closed, canonical_request_vertical, evidence_pack_enabled, get_local_evidence_pack
 from filing_packet_reconciler import ensure_required_filing_rows
 from residential_universal_gate import apply_residential_universal_gate
-from permit_model import build_permit_package, project_permit_package, validate_customer_view
+from permit_model import _stamp_server_authority_provenance, build_permit_package, capture_permit_authority_input, project_permit_package, validate_customer_view
+from lookup_execution_ledger import (
+    IdempotencyConflictError,
+    LookupExecutionLedger,
+)
 try:
     from permit_rule_engine import (
         ActiveCorePackageUnavailableError,
@@ -134,7 +144,8 @@ BLOG_DIR       = os.path.join(os.path.dirname(__file__), "..", "seo", "blog")
 # Support RAILWAY_VOLUME_MOUNT_PATH or CACHE_DIR env var for persistent volumes
 # Railway volumes are configured in the dashboard and mounted at a custom path
 _default_data_dir = os.path.join(os.path.dirname(__file__), "..", "data")
-DATA_DIR = os.environ.get("CACHE_DIR") or os.environ.get("RAILWAY_VOLUME_MOUNT_PATH") or _default_data_dir
+_EXPLICIT_PERSISTENT_DATA_DIR = os.environ.get("CACHE_DIR") or os.environ.get("RAILWAY_VOLUME_MOUNT_PATH")
+DATA_DIR = _EXPLICIT_PERSISTENT_DATA_DIR or _default_data_dir
 PORT           = int(os.environ.get("PORT", 8766))
 # Railway hobby production has a single small app instance. The permit engine can
 # fan out to search/provider calls and large JSON shaping, so keep expensive
@@ -147,6 +158,56 @@ PERMIT_LOOKUP_TOTAL_TIMEOUT_SECONDS = max(30, int(os.environ.get("PERMIT_LOOKUP_
 PERMIT_LOOKUP_SEMAPHORE = threading.BoundedSemaphore(PERMIT_LOOKUP_CONCURRENCY_LIMIT)
 EMAILS_CSV     = os.path.join(DATA_DIR, "captured_emails.csv")
 CACHE_DB       = os.path.join(DATA_DIR, "cache.db")
+LOOKUP_LEDGER_DB = os.path.join(DATA_DIR, "lookup_execution_ledger.db")
+_LOOKUP_EXECUTION_LEDGER = None
+_LOOKUP_EXECUTION_LEDGER_LOCK = threading.Lock()
+
+
+def _lookup_execution_ledger() -> LookupExecutionLedger:
+    global _LOOKUP_EXECUTION_LEDGER
+    production_runtime = bool(
+        os.environ.get("RAILWAY_ENVIRONMENT")
+        or str(os.environ.get("PERMITASSIST_ENV", "")).lower() in {"production", "prod"}
+    )
+    if production_runtime and not _EXPLICIT_PERSISTENT_DATA_DIR:
+        raise RuntimeError(
+            "Production idempotency ledger requires CACHE_DIR or RAILWAY_VOLUME_MOUNT_PATH on durable storage"
+        )
+    if _LOOKUP_EXECUTION_LEDGER is None:
+        with _LOOKUP_EXECUTION_LEDGER_LOCK:
+            if _LOOKUP_EXECUTION_LEDGER is None:
+                _LOOKUP_EXECUTION_LEDGER = LookupExecutionLedger(
+                    LOOKUP_LEDGER_DB,
+                    claim_ttl_seconds=max(30, PERMIT_LOOKUP_TOTAL_TIMEOUT_SECONDS + 30),
+                )
+    return _LOOKUP_EXECUTION_LEDGER
+
+
+def _issue_idempotency_owner_token() -> str:
+    raw = secrets.token_urlsafe(32)
+    signature = hmac.new(
+        SESSION_SECRET.encode("utf-8"),
+        f"permitassist:idempotency-owner:{raw}".encode("utf-8"),
+        hashlib.sha256,
+    ).hexdigest()
+    return f"{raw}.{signature}"
+
+
+def _validate_idempotency_owner_token(token: str) -> str | None:
+    try:
+        raw, signature = str(token or "").strip().rsplit(".", 1)
+    except ValueError:
+        return None
+    if not raw or len(raw) > 200:
+        return None
+    expected = hmac.new(
+        SESSION_SECRET.encode("utf-8"),
+        f"permitassist:idempotency-owner:{raw}".encode("utf-8"),
+        hashlib.sha256,
+    ).hexdigest()
+    if not hmac.compare_digest(signature, expected):
+        return None
+    return hashlib.sha256(raw.encode("utf-8")).hexdigest()
 SHARE_TTL_DAYS = 90  # shareable links expire after 90 days
 VERIFIED_PROJECTION_HANDLE_HEADER = "X-PermitAssist-Projection-Handle"
 VERIFIED_PROJECTION_HANDLES_HEADER = "X-PermitAssist-Projection-Handles"
@@ -326,6 +387,16 @@ def init_free_lookup_db():
             last_seen DATETIME NOT NULL
         )
     """)
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS lookup_usage_reservations (
+            owner_scope TEXT NOT NULL,
+            idempotency_key TEXT NOT NULL,
+            ip TEXT NOT NULL,
+            fingerprint TEXT,
+            reserved_at DATETIME NOT NULL,
+            PRIMARY KEY(owner_scope, idempotency_key)
+        )
+    """)
     conn.commit()
     conn.close()
 
@@ -362,6 +433,46 @@ def record_lookup_usage(ip: str, fingerprint: str = "") -> tuple[int, int]:
     conn.commit()
     conn.close()
     return get_usage_counts(ip, fingerprint)
+
+
+def record_lookup_usage_once(
+    ip: str,
+    fingerprint: str,
+    *,
+    owner_scope: str,
+    idempotency_key: str,
+) -> tuple[int, int]:
+    """Charge one free unit at most once for a stable idempotent execution."""
+    now = utc_now().isoformat()
+    conn = sqlite3.connect(FREE_LOOKUP_DB, timeout=30)
+    try:
+        conn.execute("BEGIN IMMEDIATE")
+        inserted = conn.execute(
+            """INSERT OR IGNORE INTO lookup_usage_reservations
+               (owner_scope,idempotency_key,ip,fingerprint,reserved_at)
+               VALUES (?,?,?,?,?)""",
+            [owner_scope, idempotency_key, ip, fingerprint, now],
+        ).rowcount
+        if inserted:
+            conn.execute(
+                "INSERT INTO ip_usage (ip, count, first_seen, last_seen) VALUES (?,?,?,?) "
+                "ON CONFLICT(ip) DO UPDATE SET count=count+1, last_seen=excluded.last_seen",
+                [ip, 1, now, now],
+            )
+            if fingerprint:
+                conn.execute(
+                    "INSERT INTO fingerprint_usage (fingerprint, ip, count, first_seen, last_seen) VALUES (?,?,?,?,?) "
+                    "ON CONFLICT(fingerprint) DO UPDATE SET ip=excluded.ip, count=count+1, last_seen=excluded.last_seen",
+                    [fingerprint, ip, 1, now, now],
+                )
+        ip_row = conn.execute("SELECT count FROM ip_usage WHERE ip=?", [ip]).fetchone()
+        fp_row = conn.execute(
+            "SELECT count FROM fingerprint_usage WHERE fingerprint=?", [fingerprint]
+        ).fetchone() if fingerprint else None
+        conn.commit()
+        return (ip_row[0] if ip_row else 0, fp_row[0] if fp_row else 0)
+    finally:
+        conn.close()
 
 
 def build_free_lookup_headers(used: int) -> dict:
@@ -842,6 +953,19 @@ def sanitize_customer_visible_result(result: dict, *, strip_internal_keys: bool 
             for child_key, child_value in value.items():
                 key_name = str(child_key)
                 key_lc = key_name.lower()
+                if (
+                    strip_internal_keys
+                    and key_lc == "provenance"
+                    and isinstance(child_value, dict)
+                    and child_value.get("decision_source") == "sealed_core_decision_cell"
+                ):
+                    # Preserve only the non-secret public continuity marker. All
+                    # cell IDs, resolver metadata, hashes, and source internals
+                    # remain stripped by the default-deny branch below.
+                    cleaned[child_key] = {
+                        "decision_source": "sealed_core_decision_cell"
+                    }
+                    continue
                 if strip_internal_keys and (key_lc.startswith("_") or key_lc in internal_keys):
                     continue
                 next_value = scrub(child_value, key_name)
@@ -958,7 +1082,7 @@ _PUBLIC_CUSTOMER_RESULT_FIELDS = frozenset({
     "permit_decision", "permit_verdict", "permit_required", "permit_kind", "permit_name",
     "input_status", "error_code", "validation_errors", "message", "city", "state",
     "customer_result_summary", "customer_first_screen_summary",
-    "permit_type", "permits_required", "permits_required_logic", "companion_permits", "related_permits",
+    "permit_type", "permits_required", "permits_required_logic", "family_decisions", "companion_permits", "related_permits",
     "customer_headline", "customer_next_step", "summary", "job_summary", "scope_summary",
     "confidence", "confidence_level", "confidence_reason", "data_source", "county_fallback_note",
     "source_confidence", "source_support", "local_form_known", "apply_url_known", "degraded_sources",
@@ -972,7 +1096,7 @@ _PUBLIC_CUSTOMER_RESULT_FIELDS = frozenset({
     "permit_routing_map", "permit_authority_cards", "jurisdiction_routing_summary",
     "required_permit_names", "required_permit_families", "required_permit_segments", "required_permit_summary",
     "related_permit_names", "related_permit_families", "related_permit_segments",
-    "city_contractor_registration", "primary_permit_family", "jurisdiction_identity", "permit_manifest",
+    "city_contractor_registration", "primary_permit_family", "jurisdiction_id", "jurisdiction_identity", "permit_manifest",
     "zoning_hoa_flag", "remaining_lookups", "_cached",
 })
 _PUBLIC_SOURCE_FIELDS = frozenset({"url", "title", "snippet", "source_url", "source_title", "publisher", "date", "source_type", "jurisdiction"})
@@ -1021,9 +1145,31 @@ _CUSTOMER_EGRESS_FORBIDDEN_FIELD_NAMES = frozenset({
     "verified_projection_handles",
     "handoff_handle",
     "handoff_handles",
+    "authority_tag",
+    "provenance",
 })
 
 _OPAQUE_PROJECTION_HANDLE_RE = re.compile(r"vp_[A-Za-z0-9_-]{32,96}")
+
+
+def _customer_egress_value_is_clean(value: object) -> bool:
+    """Return whether a value already satisfies the recursive public denylist."""
+    if isinstance(value, dict):
+        for raw_key, child in value.items():
+            key_lc = str(raw_key).lower()
+            if (
+                key_lc.startswith("_")
+                or key_lc in _CUSTOMER_EGRESS_FORBIDDEN_FIELD_NAMES
+                or key_lc.endswith(("_sha256", "_hash", "_digest", "_fingerprint"))
+                or not _customer_egress_value_is_clean(child)
+            ):
+                return False
+        return True
+    if isinstance(value, (list, tuple)):
+        return all(_customer_egress_value_is_clean(child) for child in value)
+    if isinstance(value, str):
+        return _OPAQUE_PROJECTION_HANDLE_RE.search(value) is None
+    return True
 
 
 def project_customer_response_egress(value: dict) -> dict:
@@ -1056,14 +1202,119 @@ def project_customer_response_egress(value: dict) -> dict:
         if isinstance(item, tuple):
             return [project(child) for child in item]
         if isinstance(item, str):
-            return _OPAQUE_PROJECTION_HANDLE_RE.sub("", item)
+            cleaned = _OPAQUE_PROJECTION_HANDLE_RE.sub("", item)
+            if not re.match(r"^https?://", cleaned, flags=re.I):
+                cleaned = re.sub(r"\bcontact[_\s-]*ahj\b", "contact_authority", cleaned, flags=re.I)
+                cleaned = re.sub(r"\bAHJ\b", "issuing authority", cleaned, flags=re.I)
+            return cleaned
         return copy.deepcopy(item)
 
-    projected = project(value if isinstance(value, dict) else {})
-    # Session 2 owns all canonical family/jurisdiction/companion serialization at
-    # this already-universal boundary. Flag-off returns the exact legacy object;
-    # flag-on adds only a projection of typed fields that survived the denylist.
-    projected = build_permit_manifest_projection(projected if isinstance(projected, dict) else {})
+    raw = value if isinstance(value, dict) else {}
+    # Authenticate and expand a private signed Manifest *before* recursively
+    # removing its HMAC.  The resulting signature-free public Manifest is an
+    # inert compatibility projection: a later pass may preserve it byte-for-byte
+    # but may never use it to manufacture or rewrite regulated fields.
+    manifest = raw.get("permit_manifest")
+    if is_authenticated_permit_manifest(manifest):
+        prepared = build_permit_manifest_projection(raw, force=True)
+    else:
+        prepared = copy.deepcopy(raw)
+        if isinstance(manifest, dict):
+            # A signature-free Manifest may cross the customer boundary only as
+            # the internally consistent public projection previously produced
+            # from a signed Manifest.  A bare schema literal (or one that
+            # contradicts the outer decision/family matrix) is discarded.
+            public_rows = raw.get("family_decisions")
+            manifest_primary = manifest.get("primary")
+            outer_decision = str(raw.get("permit_decision") or "").strip().upper()
+            manifest_decision = str(manifest.get("permit_decision") or "").strip().upper()
+            primary_family = str(
+                (manifest_primary or {}).get("family")
+                if isinstance(manifest_primary, dict)
+                else ""
+            ).strip().upper()
+            first_row = public_rows[0] if isinstance(public_rows, list) and public_rows else {}
+            row_family = str(
+                (first_row or {}).get("canonical_family")
+                or (first_row or {}).get("family")
+                or ""
+            ).strip().upper()
+            row_status = str(
+                (first_row or {}).get("status")
+                or (first_row or {}).get("required_status")
+                or (first_row or {}).get("verdict")
+                or ""
+            ).strip().upper()
+            if not (
+                outer_decision
+                and outer_decision == manifest_decision == row_status
+                and primary_family
+                and row_family
+                and row_family == primary_family
+            ):
+                prepared.pop("permit_manifest", None)
+    projected = project(prepared)
+    # Preserve typed family lanes at the universal boundary. For a nonbinary
+    # outer decision, normalize any stale nested binary mirrors without
+    # deleting family identity or actionable verification guidance.
+    if isinstance(projected, dict):
+        family_rows = [
+            row
+            for collection_key in (
+                "permits_required",
+                "family_decisions",
+                "related_permits",
+                "companion_permits",
+            )
+            for row in (projected.get(collection_key) or [])
+            if isinstance(row, dict)
+        ]
+        public_manifest = projected.get("permit_manifest")
+        if isinstance(public_manifest, dict):
+            manifest_primary = public_manifest.get("primary")
+            if isinstance(manifest_primary, dict):
+                family_rows.append(manifest_primary)
+            family_rows.extend(
+                row
+                for row in (public_manifest.get("companions") or [])
+                if isinstance(row, dict)
+            )
+        for row in family_rows:
+            family = str(row.get("family") or "").strip().lower()
+            if family in {"co", "occupancy_co", "certificate_of_occupancy"}:
+                row["family"] = "occupancy"
+        decision = str(projected.get("permit_decision") or "").upper().strip()
+        if decision in {"CONDITIONAL", "VERIFY", "NEEDS_INPUT"}:
+            for row in projected.get("permits_required") or []:
+                if not isinstance(row, dict):
+                    continue
+                row["required"] = None
+                for key in ("status", "decision", "verdict", "required_status"):
+                    if key in row:
+                        token = str(row.get(key) or "").upper().strip()
+                        if token in {"YES", "NO", "REQUIRED", "NOT_REQUIRED"}:
+                            row[key] = decision
+                if not any(
+                    str(row.get(key) or "").strip()
+                    for key in ("next_step", "verification_step", "trigger", "description")
+                ):
+                    family = str(
+                        row.get("filing_family")
+                        or row.get("permit_family")
+                        or row.get("permit_kind")
+                        or row.get("category")
+                        or "permit"
+                    ).replace("_", " ")
+                    row["verification_step"] = (
+                        f"Contact the issuing authority to verify the {family} filing lane."
+                    )
+            for key in (
+                "required_permit_names",
+                "required_permit_families",
+                "required_permit_segments",
+            ):
+                if key in projected:
+                    projected[key] = []
     return projected if isinstance(projected, dict) else {}
 
 
@@ -1082,6 +1333,67 @@ _EVIDENCE_PACK_CONTROLLED_CUSTOMER_FIELDS = frozenset({
 })
 
 
+def _apply_evidence_pack_controlled_customer_fields(public: dict, internal: dict) -> dict:
+    """Terminally preserve only fields governed by an authenticated local pack."""
+    if not (
+        isinstance(internal, _EvidencePackAuthorizedResult)
+        and internal.has_intact_evidence_pack_payload()
+    ):
+        return public
+    evidence_meta = internal.get("_evidence_pack")
+    if not isinstance(evidence_meta, dict) or evidence_meta.get("enabled") is not True:
+        return public
+    matched_fields = {str(field) for field in evidence_meta.get("matched_fields") or []}
+    failed_closed_fields = {
+        str(field) for field in evidence_meta.get("failed_closed_fields") or []
+    }
+    governed_fields = (matched_fields | failed_closed_fields) & set(
+        _EVIDENCE_PACK_CONTROLLED_CUSTOMER_FIELDS
+    )
+    controlled_values = evidence_meta.get("_controlled_customer_values")
+    controlled = controlled_values if isinstance(controlled_values, dict) else internal
+    for field in governed_fields:
+        # Failed-closed fields are explicit nulls even when the internal
+        # finalizer removed the stale value instead of retaining a None key.
+        public[field] = copy.deepcopy(controlled.get(field))
+    if "permit_type" in governed_fields and "permits_required" in internal:
+        public["permits_required"] = copy.deepcopy(internal["permits_required"])
+    if (
+        "permit_type" in matched_fields
+        and isinstance(controlled.get("permit_required"), bool)
+    ):
+        # A matched permit-type record carries validated exact local claim
+        # evidence inside the private pack capability. Preserve its binary
+        # decision without serializing that private evidence.
+        public["permit_decision"] = controlled.get("permit_decision")
+        public["permit_required"] = controlled.get("permit_required")
+        public["permit_verdict"] = controlled.get("permit_verdict")
+    if "apply_url" in governed_fields:
+        for field in ("online_application_url", "portal_url", "inspection_booking"):
+            if field in internal:
+                public[field] = copy.deepcopy(internal[field])
+        if "apply_url" in failed_closed_fields:
+            public["apply_url"] = None
+            public["apply_path"] = {
+                "support_level": "not available",
+                "url": None,
+                "portal_url": None,
+                "steps": [
+                    "No verified online filing path is available; confirm the route with the issuing authority."
+                ],
+                "instructions": "Verify the application route with the issuing authority.",
+            }
+        elif "apply_path" in controlled:
+            public["apply_path"] = copy.deepcopy(controlled["apply_path"])
+        elif controlled.get("apply_url") in (None, ""):
+            public["apply_path"] = {
+                "support_level": "not available",
+                "url": None,
+                "instructions": "Verify the application route with the issuing authority.",
+            }
+    return public
+
+
 def _customer_projection_marker_sha256(result: dict) -> str:
     canonical = json.dumps(
         dict(result),
@@ -1093,6 +1405,34 @@ def _customer_projection_marker_sha256(result: dict) -> str:
     return hashlib.sha256(canonical.encode("utf-8")).hexdigest()
 
 
+_EVIDENCE_PACK_CAPABILITY_SEAL = object()
+
+
+class _EvidencePackAuthorizedResult(dict):
+    """Unserializable in-process proof that the local pack produced metadata."""
+
+    def __init__(self, payload: dict, seal: object) -> None:
+        if seal is not _EVIDENCE_PACK_CAPABILITY_SEAL:
+            raise TypeError("evidence-pack capability can only be issued internally")
+        super().__init__(copy.deepcopy(dict(payload)))
+        _stamp_server_authority_provenance(self)
+        self._evidence_pack_sha256 = _customer_projection_marker_sha256(self)
+
+    def has_intact_evidence_pack_payload(self) -> bool:
+        return hmac.compare_digest(
+            str(getattr(self, "_evidence_pack_sha256", "") or ""),
+            _customer_projection_marker_sha256(self),
+        )
+
+
+def _issue_evidence_pack_authorized_result(payload: dict) -> _EvidencePackAuthorizedResult:
+    return _EvidencePackAuthorizedResult(payload, _EVIDENCE_PACK_CAPABILITY_SEAL)
+
+
+_VERIFIED_CUSTOMER_PROJECTION_SEAL = object()
+_SERVER_OWNED_LEGACY_SEAL = object()
+
+
 class _VerifiedCustomerProjection(dict):
     """Private proof that a canonical customer snapshot was authenticated.
 
@@ -1101,8 +1441,11 @@ class _VerifiedCustomerProjection(dict):
     boundary or be reconstructed from payload fields.
     """
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(self, payload: dict, seal: object) -> None:
+        if seal is not _VERIFIED_CUSTOMER_PROJECTION_SEAL:
+            raise TypeError("verified customer projections can only be issued internally")
+        super().__init__(copy.deepcopy(dict(payload)))
+        _stamp_server_authority_provenance(self)
         self._regulated_projection_sha256 = _customer_projection_marker_sha256(self)
 
     def has_intact_regulated_projection(self) -> bool:
@@ -1112,11 +1455,18 @@ class _VerifiedCustomerProjection(dict):
         )
 
 
+def _issue_verified_customer_projection(payload: dict) -> _VerifiedCustomerProjection:
+    return _VerifiedCustomerProjection(payload, _VERIFIED_CUSTOMER_PROJECTION_SEAL)
+
+
 class _ServerOwnedLegacyResult(dict):
     """Private, mutation-sensitive marker for a lookup result created in-process."""
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(self, payload: dict, seal: object) -> None:
+        if seal is not _SERVER_OWNED_LEGACY_SEAL:
+            raise TypeError("server-owned legacy results can only be issued internally")
+        super().__init__(copy.deepcopy(dict(payload)))
+        _stamp_server_authority_provenance(self)
         self._server_owned_sha256 = _customer_projection_marker_sha256(self)
 
     def has_intact_server_owned_payload(self) -> bool:
@@ -1124,6 +1474,10 @@ class _ServerOwnedLegacyResult(dict):
             str(getattr(self, "_server_owned_sha256", "") or ""),
             _customer_projection_marker_sha256(self),
         )
+
+
+def _issue_server_owned_legacy_result(payload: dict) -> _ServerOwnedLegacyResult:
+    return _ServerOwnedLegacyResult(payload, _SERVER_OWNED_LEGACY_SEAL)
 
 
 def _is_core_envelope_instance(result: object) -> bool:
@@ -1148,14 +1502,21 @@ def _is_server_owned_core_result(result: object) -> bool:
 def _mark_server_owned_result(result: object) -> dict:
     """Mark a result at the lookup boundary without adding a serializable key."""
     if isinstance(result, _VerifiedCustomerProjection):
-        return _VerifiedCustomerProjection(copy.deepcopy(dict(result)))
+        return _issue_verified_customer_projection(dict(result))
+    if (
+        isinstance(result, _EvidencePackAuthorizedResult)
+        and result.has_intact_evidence_pack_payload()
+    ):
+        return _issue_evidence_pack_authorized_result(dict(result))
     if _is_core_envelope_instance(result):
         # Preserve even a damaged envelope's private type so the one-shot core
         # projector can validate it and emit the family-visible fail-closed DTO.
         # Wrapping it as a legacy result would erase provenance and let generic
         # heuristics promote tampered binary fields.
         return copy.deepcopy(result)  # type: ignore[return-value]
-    return _ServerOwnedLegacyResult(copy.deepcopy(result) if isinstance(result, dict) else {})
+    return _issue_server_owned_legacy_result(
+        copy.deepcopy(result) if isinstance(result, dict) else {}
+    )
 
 
 def _project_core_customer_boundary_once(
@@ -1186,7 +1547,7 @@ def _project_core_customer_boundary_once(
     )
     if core_projection is None:
         return None
-    return _VerifiedCustomerProjection(copy.deepcopy(core_projection))
+    return _issue_verified_customer_projection(copy.deepcopy(core_projection))
 
 
 def _build_trusted_customer_response_egress(
@@ -1211,8 +1572,28 @@ def _build_trusted_customer_response_egress(
         job_category=job_category,
         explicit_vertical=explicit_vertical,
     )
+    if (
+        isinstance(public, _VerifiedCustomerProjection)
+        and public.has_intact_regulated_projection()
+    ):
+        # The core projector already validated the private seal and produced the
+        # terminal customer DTO (including tamper-safe abstentions). Re-entering
+        # legacy finalizers would reinterpret its now-public fields and can
+        # demote or reorder the sealed family matrix.
+        trusted_projection = copy.deepcopy(public)
+        if (
+            permit_manifest_mode_enabled()
+            and not is_authenticated_permit_manifest(trusted_projection.get("permit_manifest"))
+        ):
+            trusted_projection.pop("permit_manifest", None)
+            trusted_projection = seal_permit_manifest_projection(
+                trusted_projection,
+                force=True,
+                authority_input=capture_permit_authority_input(public),
+            )
+        return project_customer_response_egress(trusted_projection)
     terminal_nonbinary = str(internal.get("permit_decision") or "").upper().strip()
-    if terminal_nonbinary in {"CONDITIONAL", "VERIFY"} and not _get_decision_cell_primary_lock(internal):
+    if terminal_nonbinary in {"CONDITIONAL", "VERIFY", "NEEDS_INPUT"} and not _get_decision_cell_primary_lock(internal):
         public["permit_decision"] = terminal_nonbinary
         public["permit_required"] = None
         public["permit_verdict"] = terminal_nonbinary
@@ -1223,44 +1604,71 @@ def _build_trusted_customer_response_egress(
             state,
             public.get("_scope_contract") if isinstance(public.get("_scope_contract"), dict) else internal.get("_scope_contract"),
         )
-    evidence_meta = internal.get("_evidence_pack")
-    if isinstance(evidence_meta, dict) and evidence_meta.get("enabled") is True:
-        governed_fields = {
-            str(field)
-            for field in (
-                list(evidence_meta.get("matched_fields") or [])
-                + list(evidence_meta.get("failed_closed_fields") or [])
-            )
-            if str(field) in _EVIDENCE_PACK_CONTROLLED_CUSTOMER_FIELDS
-        }
-        # The internal finalizer has already applied matched evidence and
-        # fail-closed suppression. Copy only those governed customer fields
-        # back over legacy ViewModel fallbacks so serialization cannot silently
-        # reintroduce stale URLs, fees, permits, or timelines.
-        for field in governed_fields:
-            if field in internal:
-                public[field] = copy.deepcopy(internal[field])
-        if "permit_type" in governed_fields and "permits_required" in internal:
-            public["permits_required"] = copy.deepcopy(internal["permits_required"])
-        if "apply_url" in governed_fields:
-            for field in ("online_application_url", "portal_url", "inspection_booking"):
-                if field in internal:
-                    public[field] = copy.deepcopy(internal[field])
-            if "apply_path" in internal:
-                public["apply_path"] = copy.deepcopy(internal["apply_path"])
-            elif internal.get("apply_url") in (None, ""):
-                public["apply_path"] = {
-                    "support_level": "not available",
-                    "url": None,
-                    "instructions": "Verify the application route with the issuing authority.",
-                }
-    return project_customer_response_egress(public)
+        # The legacy contract adapter may enrich copy/routes, but it cannot
+        # convert typed nonbinary authority into a binary customer verdict.
+        public["permit_decision"] = terminal_nonbinary
+        public["permit_required"] = None
+        public["permit_verdict"] = terminal_nonbinary
+        public["permits_required"] = []
+    public = _apply_evidence_pack_controlled_customer_fields(public, internal)
+    cell_lock = _get_decision_cell_primary_lock(internal)
+    if cell_lock:
+        # A server-owned exact Decision Cell is an in-process authority
+        # capability. Its private lock must not be serialized, but it must remain
+        # authoritative through the final public package pass; otherwise the
+        # generic legacy resolver sees only the sanitized DTO and demotes valid
+        # REQUIRED/NOT_REQUIRED truth after provenance was intentionally removed.
+        public = enforce_decision_cell_primary(
+            public, cell_lock, city, state, public=True
+        )
+        public = apply_final_customer_egress_contract(
+            public,
+            job_type,
+            city,
+            state,
+            scope_contract=(
+                public.get("_scope_contract")
+                if isinstance(public.get("_scope_contract"), dict)
+                else internal.get("_scope_contract")
+            ),
+            cell_lock=cell_lock,
+        )
+        public = enforce_decision_cell_primary(
+            public, cell_lock, city, state, public=True
+        )
+        public.pop("permit_manifest", None)
+        public = seal_permit_manifest_projection(
+            public,
+            force=True,
+            authority_input=capture_permit_authority_input(internal),
+        )
+        public["customer_result_summary"] = _build_customer_result_summary(
+            public, public, city, state
+        )
+        public["customer_first_screen_summary"] = (
+            _build_customer_first_screen_summary(public["customer_result_summary"])
+        )
+        public = project_customer_response_egress(public)
+        return _apply_evidence_pack_controlled_customer_fields(public, internal)
+    public = finalize_customer_public_projection(
+        public,
+        job_type,
+        city,
+        state,
+        public.get("_scope_contract") if isinstance(public.get("_scope_contract"), dict) else internal.get("_scope_contract"),
+    )
+    public = project_customer_response_egress(public)
+    return _apply_evidence_pack_controlled_customer_fields(public, internal)
 
 
 def _fail_closed_untrusted_customer_projection(result: object) -> dict:
     """Keep useful customer guidance while removing every binary authority bit."""
     raw = result if isinstance(result, dict) else {}
     projected = project_customer_response_egress(redact_public_output(raw))
+    # An unsigned public Manifest is useful only with an authenticated
+    # server-side snapshot handoff.  An ordinary caller-supplied mapping has no
+    # such capability, so never echo a forged canonical-looking authority block.
+    projected.pop("permit_manifest", None)
 
     route_context_keys = {"apply_path", "application_route", "filing_destination"}
 
@@ -1271,7 +1679,7 @@ def _fail_closed_untrusted_customer_projection(result: object) -> dict:
                 normalized = str(key).lower().lstrip("_")
                 route_context = any(segment in route_context_keys for segment in path)
                 if normalized == "permit_decision":
-                    safe[key] = "UNKNOWN"
+                    safe[key] = "VERIFY"
                 elif normalized in {"apply_url", "online_application_url", "portal_url"}:
                     safe[key] = None if child is None else ""
                 elif route_context and normalized in {"url", "source_url"}:
@@ -1295,13 +1703,39 @@ def _fail_closed_untrusted_customer_projection(result: object) -> dict:
             return [demote(child, path) for child in value]
         return copy.deepcopy(value)
 
-    public = demote(projected)
-    public["permit_decision"] = "UNKNOWN"
+    demoted = demote(projected)
+    raw_typed_rows = redact_public_output(raw.get("permits_required") or [])
+    safe_typed_rows = demote(raw_typed_rows)
+    if not isinstance(safe_typed_rows, list):
+        safe_typed_rows = []
+    safe_typed_rows = [row for row in safe_typed_rows if isinstance(row, dict)]
+    for row in safe_typed_rows:
+        row["required"] = None
+        row["required_status"] = "VERIFY"
+        row["decision"] = "VERIFY"
+        row["status"] = "VERIFY"
+        row["verdict"] = "VERIFY"
+        if not any(
+            str(row.get(field) or "").strip()
+            for field in ("next_step", "verification_step", "trigger", "description")
+        ):
+            family = str(
+                row.get("filing_family")
+                or row.get("permit_family")
+                or row.get("permit_kind")
+                or row.get("category")
+                or "permit"
+            ).replace("_", " ")
+            row["verification_step"] = (
+                f"Contact the issuing authority to verify the {family} filing lane."
+            )
+    public = demoted if isinstance(demoted, dict) else {}
+    public["permit_decision"] = "VERIFY"
     public["permit_required"] = None
     had_core_envelope = _is_server_owned_core_result(raw) or isinstance(
         raw.get("_permit_rule_engine_core"), dict
     )
-    public["permit_verdict"] = "CONTACT_AHJ" if had_core_envelope else "VERIFY"
+    public["permit_verdict"] = "VERIFY"
     public["decision_source"] = "permit_rule_engine_integrity_fail_closed"
     public.setdefault(
         "customer_headline", "Verify the permit requirement with the issuing authority."
@@ -1311,12 +1745,28 @@ def _fail_closed_untrusted_customer_projection(result: object) -> dict:
         "Contact the issuing authority before relying on a required/not-required answer.",
     )
     evidence_meta = raw.get("_evidence_pack")
+    failed_closed_fields = (
+        set(evidence_meta.get("failed_closed_fields") or [])
+        if isinstance(evidence_meta, dict) and evidence_meta.get("enabled") is True
+        else set()
+    )
+    # A damaged private marker must not undo evidence-pack suppression.  These
+    # are explicit negative capabilities, not binary permit decisions: when the
+    # evidence pack failed a governed permit/apply field closed, keep it absent
+    # even while the rest of the untrusted projection is demoted to VERIFY.
+    if "permit_type" in failed_closed_fields and raw.get("permit_type") in (None, ""):
+        public["permit_type"] = None
+        public["permits_required"] = []
+    if "fee_range" in failed_closed_fields and raw.get("fee_range") in (None, ""):
+        public["fee_range"] = None
     if (
         isinstance(evidence_meta, dict)
         and evidence_meta.get("enabled") is True
-        and "apply_url" in set(evidence_meta.get("failed_closed_fields") or [])
+        and "apply_url" in failed_closed_fields
         and raw.get("apply_url") in (None, "")
     ):
+        public["apply_url"] = None
+        public["online_application_url"] = None
         public["apply_path"] = {
             "support_level": "not available",
             "url": None,
@@ -1348,7 +1798,29 @@ def _fail_closed_untrusted_customer_projection(result: object) -> dict:
                 row["verification_step"] = (
                     f"Contact the issuing authority to verify the {family} filing lane."
                 )
-    return project_customer_response_egress(public)
+    final_public = project_customer_response_egress(public)
+    if safe_typed_rows and "permit_type" not in failed_closed_fields:
+        # The generic projector deliberately drops caller-shaped binary rows.
+        # Reattach only their recursively redacted, route-stripped, explicitly
+        # nonbinary typed forms so broad W4 guidance survives fail-closed egress.
+        final_public["permits_required"] = copy.deepcopy(safe_typed_rows)
+    # Manifest projection is intentionally eager and can synthesize a typed
+    # VERIFY primary for an otherwise empty nonbinary result. Evidence-pack
+    # suppression is stronger and must survive actual serialization.
+    if "permit_type" in failed_closed_fields and raw.get("permit_type") in (None, ""):
+        final_public["permit_type"] = None
+        final_public["permits_required"] = []
+    if "fee_range" in failed_closed_fields and raw.get("fee_range") in (None, ""):
+        final_public["fee_range"] = None
+    if "apply_url" in failed_closed_fields and raw.get("apply_url") in (None, ""):
+        final_public["apply_url"] = None
+        final_public["online_application_url"] = None
+        final_public["apply_path"] = {
+            "support_level": "not available",
+            "url": None,
+            "instructions": "Verify the application route with the issuing authority.",
+        }
+    return final_public
 
 
 def build_customer_response_egress(
@@ -1366,10 +1838,27 @@ def build_customer_response_egress(
         isinstance(result, _VerifiedCustomerProjection)
         and result.has_intact_regulated_projection()
     ):
-        return project_customer_response_egress(copy.deepcopy(result))
+        # This private capability contains the exact authenticated current-request
+        # customer projection. In active Manifest mode, attach the canonical signed
+        # Manifest from that same intact capability before stripping private proof.
+        trusted_projection = copy.deepcopy(result)
+        if (
+            permit_manifest_mode_enabled()
+            and not is_authenticated_permit_manifest(trusted_projection.get("permit_manifest"))
+        ):
+            trusted_projection.pop("permit_manifest", None)
+            trusted_projection = seal_permit_manifest_projection(
+                trusted_projection,
+                force=True,
+                authority_input=capture_permit_authority_input(result),
+            )
+        return project_customer_response_egress(trusted_projection)
     if _is_server_owned_core_result(result) or (
         isinstance(result, _ServerOwnedLegacyResult)
         and result.has_intact_server_owned_payload()
+    ) or (
+        isinstance(result, _EvidencePackAuthorizedResult)
+        and result.has_intact_evidence_pack_payload()
     ):
         if preserve_server_owned_shape:
             # Event/digest sinks can retain the exact current-request result
@@ -1388,6 +1877,7 @@ def build_customer_response_egress(
 
 _PUBLIC_KEEP_EMPTY_FIELDS = frozenset({
     "apply_url", "apply_phone", "online_application_url", "source_urls", "sources", "claim_citations",
+    "permit_required", "permits_required",
 })
 
 
@@ -1414,13 +1904,13 @@ class CustomerPermitDecision:
 
     def validate(self) -> list[str]:
         issues: list[str] = []
-        if self.decision not in {"REQUIRED", "NOT_REQUIRED", "CONDITIONAL", "VERIFY", "UNKNOWN"}:
+        if self.decision not in {"REQUIRED", "NOT_REQUIRED", "CONDITIONAL", "VERIFY", "NEEDS_INPUT"}:
             issues.append("invalid_customer_decision")
         if self.decision == "REQUIRED" and self.required is not True:
             issues.append("required_decision_missing_required_bool")
         if self.decision == "NOT_REQUIRED" and self.required is not False:
             issues.append("not_required_decision_missing_required_bool")
-        if self.decision in {"CONDITIONAL", "VERIFY", "UNKNOWN"} and self.required is not None:
+        if self.decision in {"CONDITIONAL", "VERIFY", "NEEDS_INPUT"} and self.required is not None:
             issues.append("nonbinary_decision_has_required_bool")
         if self.decision == "REQUIRED" and not self.primary_family:
             issues.append("required_missing_primary_family")
@@ -2414,7 +2904,7 @@ def _pa20_scope_signal_status_row(family: str, status: str, job_type: str, city:
 
 
 def _pa20_apply_scope_signal_family_floor(result: dict, job_type: str, city: str, state: str) -> dict:
-    """Additive Phase-4 wiring: ScopeSignals floor controls visibility, not hiding."""
+    """Add advisory ScopeSignal filing leads without rewriting regulated truth."""
     if not isinstance(result, dict):
         return {}
     try:
@@ -2430,13 +2920,22 @@ def _pa20_apply_scope_signal_family_floor(result: dict, job_type: str, city: str
         return result
     archetypes = derive_project_archetypes(signals)
     floor = derive_family_floor(signals, archetypes)
+    # Scope signals are recall/advisory inputs only. Official evidence must be
+    # bound into a typed family decision before this stage; a keyword plus a
+    # generic source title/URL can never manufacture a hard REQUIRED family.
+    floor = {family: "VERIFY" for family in floor}
     primary = resolve_primary_family(signals, archetypes, floor, request_text=job_type or "")
     out = result
     if not floor:
-        signal_ids = {getattr(signal, "signal_id", "") for signal in signals}
-        if signal_ids and signal_ids <= {"de_minimis_fixture_swap"} and not re.search(r"\b(?:commercial|tenant\s+improvement|office|retail|restaurant|clinic)\b", job_type or "", flags=re.I):
-            return _live60_apply_not_required_contract(out, job_type, city, state)
         return result
+
+    original_decision = str(out.get("permit_decision") or "").upper().strip()
+    # A terminal authenticated NOT_REQUIRED result is complete. Scope keywords
+    # must not reintroduce advisory permit families beside an exemption.
+    if original_decision == "NOT_REQUIRED" and out.get("permit_required") is False:
+        return out
+    # Advisory leads may remain visible beside a binary result, but this function
+    # never changes that binary decision or adds a REQUIRED row.
 
     out = result
     original_permit_kind = str(out.get("permit_kind") or "").strip()
@@ -2468,29 +2967,6 @@ def _pa20_apply_scope_signal_family_floor(result: dict, job_type: str, city: str
             related_rows.append(row)
             visible_families.add(fam)
 
-    text = (job_type or "").lower()
-    signal_ids = {getattr(signal, "signal_id", "") for signal in signals}
-    sitework_only = primary == "grading" and not re.search(r"\b(?:kitchen|hood|grease|sink|restroom|bath|shower|electrical|mechanical|hvac|plumbing|fire\s+alarm|sprinkler|tenant\s+improvement|interior)\b", text)
-    generator_no_building = primary == "electrical" and re.search(r"\bno\s+building\s+(?:work|expansion)\b", text)
-    plumbing_distribution_only = (
-        primary == "plumbing"
-        and bool(signal_ids & {"whole_house_repipe", "fuel_gas_connection"})
-        and not re.search(r"\b(?:structural|building\s+work|foundation|framing|header|wall\s+opening|cut\s+new|new\s+window|fixture\s+relocation|relocate\s+fixture)\b", text)
-    )
-    if sitework_only or generator_no_building or plumbing_distribution_only:
-        forbidden = {"health", "fire", "co", "plumbing", "building"} if sitework_only else {"building"}
-        kept_required: list[dict] = []
-        for row in required_rows:
-            fam = _pa20_row_family(row) or _customer_row_family(row)
-            if fam in forbidden:
-                demoted = copy.deepcopy(row)
-                demoted.update({"required": False, "decision": "VERIFY", "status": "VERIFY"})
-                demoted["trigger_condition"] = f"Verify whether {demoted.get('permit_type') or fam} is separately triggered; the request text does not make this a hard required family."
-                demoted["condition_text"] = demoted["trigger_condition"]
-                related_rows.append(demoted)
-            else:
-                kept_required.append(row)
-        required_rows = kept_required
 
     if primary and any((_pa20_row_family(row) or _customer_row_family(row)) == primary for row in required_rows):
         required_rows.sort(key=lambda row: 0 if (_pa20_row_family(row) or _customer_row_family(row)) == primary else 1)
@@ -2524,50 +3000,197 @@ def _pa20_apply_scope_signal_family_floor(result: dict, job_type: str, city: str
         else:
             out["permit_kind"] = original_permit_kind
     else:
+        out["permits_required"] = []
         out["related_permits"] = related_rows
+        if original_decision == "REQUIRED" or out.get("permit_required") is True:
+            out["permit_required"] = None
+            out["permit_decision"] = "VERIFY"
+            out["permit_verdict"] = "VERIFY"
+            out["permit_name"] = "Verify with the permit office"
+            out["permit_type"] = "Permit verification"
+            out["permit_kind"] = "verification"
     out["_scope_signal_primary_family"] = primary
     out["_scope_signal_family_floor"] = floor
     return out
 
 
+def _apply_exact_ahj_rule_authority(result: dict, job_type: str, city: str, state: str) -> dict:
+    """Apply a retained, integrity-checked exact-AHJ claim before Manifest sealing."""
+    if not isinstance(result, dict) or isinstance(result.get("permit_manifest"), dict):
+        return result
+    try:
+        from ahj_rule_packs import resolve_ahj_rule
+        rule = resolve_ahj_rule(city, state, job_type, result)
+    except Exception as exc:
+        print(f"[ahj-rule] resolution failed closed: {exc}")
+        return result
+    if rule is None:
+        return result
+
+    prior_rows = [copy.deepcopy(row) for row in result.get("permits_required") or [] if isinstance(row, dict)]
+    related = [copy.deepcopy(row) for row in result.get("related_permits") or [] if isinstance(row, dict)]
+    for prior in prior_rows:
+        prior_family = _pa20_row_family(prior) or _customer_row_family(prior)
+        if prior_family == rule.family:
+            continue
+        prior.update({"required": None, "decision": "VERIFY", "status": "VERIFY", "required_status": "VERIFY"})
+        prior["trigger_condition"] = prior.get("trigger_condition") or "Confirm this companion filing independently; the exact cited AHJ rule establishes only the primary family."
+        prior["condition_text"] = prior["trigger_condition"]
+        related.append(prior)
+
+    label = f"{rule.family.replace('_', ' ').title()} Permit"
+    required = True if rule.status == "REQUIRED" else False if rule.status == "NOT_REQUIRED" else None
+    primary = {
+        "family": rule.family, "filing_family": rule.family,
+        "permit_type": label, "permit_name": label,
+        "status": rule.status, "decision": rule.status,
+        "required_status": rule.status, "required": required,
+        "authority": rule.issuing_authority,
+        "source_ref": rule.source_url, "source_url": rule.source_url,
+        "source_refs": [rule.source_url], "source_quote": rule.source_quote,
+        "source_claim_sha256": rule.source_claim_sha256,
+        "rationale": rule.source_quote,
+        "trigger_condition": f"The described scope explicitly includes {rule.family.replace('_', ' ')} work covered by the cited exact-AHJ rule.",
+        "validation_issue_codes": [],
+    }
+    result.update({
+        "permit_decision": rule.status,
+        "permit_required": required,
+        "permit_verdict": "YES" if rule.status == "REQUIRED" else "NO" if rule.status == "NOT_REQUIRED" else rule.status,
+        "permit_name": label, "permit_type": label, "permit_kind": rule.family,
+        "permits_required": [primary] if rule.status == "REQUIRED" else [],
+        "related_permits": related,
+        "apply_url": rule.application_url,
+        "online_application_url": rule.application_url,
+        "decision_source": rule.rule_id,
+        "data_source": "exact_ahj_rule_pack",
+    })
+    return result
+
+
 def _pa20_demote_known_scope_overreach_rows(result: dict, job_type: str = "") -> dict:
-    """Demote source-weak hard REQUIRED companions that are contradicted by scope text."""
+    """Fail closed when an exact official family page contradicts a legacy primary.
+
+    Scope signals alone never demote or promote regulated truth. This guard runs
+    only when the request's primary family is also named by an official,
+    family-specific permit URL and the current hard primary is a different
+    family. A URL establishes the relevant family, not threshold applicability,
+    so the replacement is VERIFY rather than REQUIRED.
+    """
     if not isinstance(result, dict):
         return result
     rows = [copy.deepcopy(row) for row in result.get("permits_required") or [] if isinstance(row, dict)]
     if not rows:
         return result
-    text = (job_type or "").lower()
-    related = [copy.deepcopy(row) for row in result.get("related_permits") or [] if isinstance(row, dict)]
-    kept: list[dict] = []
+    try:
+        from scope_signals import detect_scope_signals, derive_project_archetypes, derive_family_floor, resolve_primary_family
+        signals = detect_scope_signals(job_type or "")
+        archetypes = derive_project_archetypes(signals)
+        floor = derive_family_floor(signals, archetypes)
+        scope_primary = str(resolve_primary_family(signals, archetypes, floor, job_type or "") or "").lower().strip()
+        scope_families = {str(value).lower().strip() for value in floor if value}
+    except Exception:
+        return result
+    if not scope_primary:
+        return result
 
-    repipe_no_building = (
-        re.search(r"\b(?:whole\s+house\s+repipe|repipe\s+from|galvanized\s+to\s+pex|pex\s+repipe)\b", text)
-        and not re.search(r"\b(?:structural|foundation|framing|header|wall\s+opening|cut\s+new|new\s+window)\b", text)
-    )
-    clinic_ti_planning_verify = (
-        re.search(r"\b(?:dental\s+office|medical\s+clinic|exam\s+rooms?|nitrous|medical\s+gas)\b", text)
-        and not re.search(r"\b(?:convert|conversion|change\s+of\s+(?:use|occupancy)|new\s+use|rezon|zoning\s+change)\b", text)
-    )
+    refs: list[str] = []
+    for value in result.get("source_urls") or []:
+        if isinstance(value, str):
+            refs.append(value)
+    for source in result.get("sources") or []:
+        if isinstance(source, str):
+            refs.append(source)
+        elif isinstance(source, dict):
+            for key in ("url", "source_url"):
+                if isinstance(source.get(key), str):
+                    refs.append(source[key])
+    for citation in result.get("claim_citations") or []:
+        if isinstance(citation, dict) and isinstance(citation.get("source_url"), str):
+            refs.append(citation["source_url"])
 
-    for row in rows:
-        fam = _pa20_row_family(row) or _customer_row_family(row)
-        should_demote = (fam == "building" and repipe_no_building) or (fam == "planning" and clinic_ti_planning_verify)
-        if should_demote:
-            demoted = copy.deepcopy(row)
-            demoted.update({"required": False, "decision": "VERIFY", "status": "VERIFY"})
-            demoted["trigger_condition"] = demoted.get("trigger_condition") or (
-                "Verify this companion review only if parcel/use/structural details independently trigger it; the stated scope does not support a hard REQUIRED row."
-            )
-            demoted["condition_text"] = demoted["trigger_condition"]
-            demoted["derived_from"] = list(dict.fromkeys((demoted.get("derived_from") or []) + ["scope_overreach_guard"]))
-            related.append(demoted)
+    exact_source_families: set[str] = set()
+    for ref in refs:
+        try:
+            path_text = re.sub(r"[^a-z0-9]+", " ", urlparse(ref).path.lower()).strip()
+        except Exception:
             continue
-        kept.append(row)
+        if not re.search(r"\b(?:permit|application|fee schedule|inspection)\b", path_text):
+            continue
+        source_family = None
+        for family_name, terms in {
+            "grading": ("grading", "site civil", "right of way", "encroachment"),
+            "plumbing": ("plumbing", "sewer permit", "wastewater permit"),
+            "electrical": ("electrical",),
+            "mechanical": ("mechanical", "hvac"),
+            "building": ("building", "construction"),
+            "roofing": ("roofing", "reroof"),
+            "fire": ("fire prevention", "fire permit", "sprinkler", "alarm permit"),
+            "planning": ("planning", "zoning", "land use"),
+            "health": ("health permit", "food establishment"),
+            "demolition": ("demolition",),
+            "sign": ("sign permit",),
+        }.items():
+            if any(term in path_text for term in terms):
+                source_family = family_name
+                break
+        if source_family and source_family in scope_families:
+            exact_source_families.add(source_family)
 
-    if len(kept) != len(rows):
-        result["permits_required"] = kept
-        result["related_permits"] = related
+    if scope_primary not in exact_source_families:
+        return result
+    current_primary = _pa20_row_family(rows[0]) or _customer_row_family(rows[0])
+    if not current_primary or current_primary == scope_primary:
+        return result
+
+    related = [copy.deepcopy(row) for row in result.get("related_permits") or [] if isinstance(row, dict)]
+    demoted: list[dict] = []
+    for row in rows:
+        candidate = copy.deepcopy(row)
+        candidate.update({"required": None, "decision": "VERIFY", "status": "VERIFY", "required_status": "VERIFY"})
+        candidate["trigger_condition"] = candidate.get("trigger_condition") or "Verify exact applicability with the issuing authority; the retained official page identifies a different primary family."
+        candidate["condition_text"] = candidate["trigger_condition"]
+        demoted.append(candidate)
+    combined_related = [*demoted, *related]
+    if not any((_pa20_row_family(row) or _customer_row_family(row)) == scope_primary for row in combined_related):
+        label = scope_primary.replace("_", " ").title()
+        combined_related.insert(0, {
+            "permit_type": f"{label} Permit",
+            "filing_family": scope_primary,
+            "required": None,
+            "decision": "VERIFY",
+            "status": "VERIFY",
+            "required_status": "VERIFY",
+            "trigger_condition": "Confirm threshold applicability on the cited official family-specific permit page.",
+            "derived_from": ["exact_source_family_reconciliation"],
+        })
+    combined_related.sort(
+        key=lambda row: 0 if (_pa20_row_family(row) or _customer_row_family(row)) == scope_primary else 1
+    )
+    result["permits_required"] = []
+    result["related_permits"] = combined_related
+    result["permit_decision"] = "VERIFY"
+    result["permit_required"] = None
+    result["permit_verdict"] = "VERIFY"
+    result["permit_name"] = f"{scope_primary.replace('_', ' ').title()} permit verification"
+    result["permit_type"] = result["permit_name"]
+    result["permit_kind"] = scope_primary
+    result["apply_url"] = None
+    result["online_application_url"] = None
+    result["apply_path"] = {
+        "state": "HONEST_FALLBACK",
+        "channel": "contact_ahj",
+        "support_level": "needs verification",
+        "portal_url": None,
+        "permit_category": result["permit_name"],
+        "verification_note": "Confirm the exact threshold and filing route on the cited official family-specific page.",
+    }
+    result["required_permit_names"] = []
+    result["required_permit_families"] = []
+    result["required_permit_segments"] = []
+    for key in ("customer_headline", "customer_next_step", "customer_result_summary", "customer_first_screen_summary", "required_permit_summary"):
+        result.pop(key, None)
+    result["_intentional_safe_downgrade"] = True
     return result
 
 
@@ -2583,7 +3206,6 @@ def apply_phase1_public_boundary_invariants(result: dict, city: str, state: str,
     if not isinstance(result, dict):
         return {}
     out = result
-    out = _pa20_demote_known_scope_overreach_rows(out, job_type)
     decision = str(out.get("permit_decision") or "").upper().strip()
     required = decision == "REQUIRED" or out.get("permit_required") is True or str(out.get("permit_verdict") or "").upper().strip() in {"YES", "REQUIRED"}
     not_required = decision == "NOT_REQUIRED" or out.get("permit_required") is False or str(out.get("permit_verdict") or "").upper().strip() in {"NO", "NOT_REQUIRED"}
@@ -2882,15 +3504,24 @@ def _build_customer_result_summary(public: dict, source: dict, city: str, state:
         "Fees depend on valuation, trade scope, plan-review fees, and the current local fee schedule; verify before quoting.",
     )
     resolved = resolve_customer_decision({"result": {**source, **public}, "job_type": public.get("job_summary") or source.get("job_summary") or "", "city": city, "state": state})
+    summary_decision = _first_customer_text(
+        public.get("permit_decision"),
+        source.get("permit_decision"),
+        resolved.get("permit_decision"),
+        "REQUIRED",
+    )
+    freshness_label = _customer_freshness_label(source, citations)
+    if summary_decision == "NOT_REQUIRED" and "before filing" in freshness_label.lower():
+        freshness_label = "Source date not published; confirm the current scope details with the issuing authority."
     return {
-        "permit_decision": _first_customer_text(public.get("permit_decision"), source.get("permit_decision"), resolved.get("permit_decision"), "REQUIRED"),
+        "permit_decision": summary_decision,
         "permit_kind": _first_customer_text(public.get("permit_kind"), source.get("permit_kind"), public.get("permit_type"), resolved.get("permit_kind"), "Building"),
         "permit_name": _first_customer_text(public.get("permit_name"), source.get("permit_name"), resolved.get("permit_name"), public.get("required_permit_summary")),
         "ahj_department": ahj_department,
         "next_step": next_step,
         "timeline": timeline,
         "fee_cost_caveat": fee_cost_caveat,
-        "freshness_label": _customer_freshness_label(source, citations),
+        "freshness_label": freshness_label,
         "source_cue": source_cue,
         "jurisdiction": ", ".join(part for part in [city, state] if part),
     }
@@ -4600,11 +5231,43 @@ def finalize_customer_public_projection(public: dict, job_type: str, city: str, 
     `Multiple permits required: A + B` string is never a row or apply type.
     """
     scope_contract = scope_contract if isinstance(scope_contract, dict) else {}
-    model_input, package = build_permit_package(public if isinstance(public, dict) else {}, job_type, city, state, scope_contract)
-    out = project_permit_package(model_input, package, job_type, city, state)
+    existing_manifest = public.get("permit_manifest") if isinstance(public, dict) else None
+    existing_manifest_authenticated = is_authenticated_permit_manifest(existing_manifest)
+    authority = None
+    if existing_manifest_authenticated:
+        # Re-entry is one-way: the intact authenticated Manifest rewrites every mutable mirror.
+        out = build_permit_manifest_projection(public, force=True)
+    else:
+        authority = capture_permit_authority_input(public if isinstance(public, dict) else {})
+        model_input, package = build_permit_package(authority, job_type, city, state, scope_contract)
+        out = project_permit_package(model_input, package, job_type, city, state)
+    current_jurisdiction = out.get("jurisdiction_identity")
+    if not isinstance(current_jurisdiction, dict) or not current_jurisdiction.get("jurisdiction_id"):
+        prior_summary = public.get("customer_result_summary") if isinstance(public, dict) else None
+        prior_jurisdiction = prior_summary.get("jurisdiction") if isinstance(prior_summary, dict) else None
+        if isinstance(prior_jurisdiction, dict):
+            merged_jurisdiction = copy.deepcopy(current_jurisdiction) if isinstance(current_jurisdiction, dict) else {}
+            merged_jurisdiction.update({key: copy.deepcopy(value) for key, value in prior_jurisdiction.items() if value not in (None, "")})
+            out["jurisdiction_identity"] = merged_jurisdiction
     out["customer_result_summary"] = _build_customer_result_summary(out, out, city, state)
     out["customer_first_screen_summary"] = _build_customer_first_screen_summary(out["customer_result_summary"])
     projected = _public_dict(sanitize_customer_visible_result(out, strip_internal_keys=True), _PUBLIC_CUSTOMER_RESULT_FIELDS)
+    if isinstance(projected, dict):
+        if existing_manifest_authenticated:
+            # Sanitizers may normalize display text, but accepted authenticated
+            # authority survives byte-for-byte and rewrites regulated mirrors.
+            projected["permit_manifest"] = copy.deepcopy(existing_manifest)
+            projected = build_permit_manifest_projection(projected, force=True)
+        else:
+            # Only this server-owned package lane may create Manifest authority.
+            projected = seal_permit_manifest_projection(
+                projected, force=True, authority_input=authority
+            )
+        projected["customer_result_summary"] = _build_customer_result_summary(projected, projected, city, state)
+        projected["customer_first_screen_summary"] = _build_customer_first_screen_summary(projected["customer_result_summary"])
+        # Normalize nested compatibility fields once from authenticated
+        # Manifest authority so the first serialized response is byte-idempotent.
+        projected = project_customer_response_egress(projected)
     if isinstance(projected, dict) and projected.get("permit_required") is False:
         for key in ("permits_required", "permits_required_logic", "companion_permits", "required_permit_names", "required_permit_families"):
             projected.setdefault(key, [])
@@ -4619,40 +5282,57 @@ def finalize_customer_public_projection(public: dict, job_type: str, city: str, 
 
 
 def _build_degraded_lookup_fallback(job_type: str, city: str, state: str, *, reason: str = "lookup_timeout") -> dict:
+    """Return a useful typed nonbinary timeout result without inventing truth."""
     office = f"{city} permit office".strip() or "the local permit office"
-    likely = "REQUIRED" if _has_unnegated_any((job_type or "").lower(), ("renovation", "remodel", "bathroom", "plumbing", "electrical", "tenant improvement", "addition", "conversion", "hvac", "water heater")) else "NOT_REQUIRED"
-    if likely == "REQUIRED":
-        return {
-            "permit_required": True,
-            "permit_decision": "REQUIRED",
-            "permit_verdict": "YES",
-            "permit_kind": "Verify with AHJ",
-            "permit_name": "Permit category requires AHJ verification",
-            "permits_required": [{"permit_type": "Permit category needs AHJ verification", "status": "VERIFY", "decision": "VERIFY", "required": False, "rationale": "The live lookup timed out before PermitAssist could verify the exact permit category."}],
-            "related_permits": [],
-            "customer_headline": "Permit category requires permit-office verification before work starts.",
-            "customer_next_step": f"Contact {office} before starting work; PermitAssist could not complete live verification in time for this lookup.",
-            "confidence": "degraded — timeout fallback",
-            "degraded_sources": True,
-            "warnings": ["Live lookup timed out; this fallback preserves a useful next step but is not a fully verified filing packet."],
-            "fee_range": "Fee not confirmed; verify the current AHJ fee schedule before quoting.",
-            "apply_url": "",
-            "online_application_url": "",
-            "applying_office": office,
-            "_runtime_degraded_fallback": {"reason": reason, "timeout_seconds": PERMIT_LOOKUP_TOTAL_TIMEOUT_SECONDS},
+    family_floor: dict[str, str] = {}
+    try:
+        from scope_signals import detect_scope_signals, derive_family_floor
+
+        family_floor = derive_family_floor(detect_scope_signals(job_type or ""))
+    except Exception:
+        family_floor = {}
+    rows = [
+        {
+            "filing_family": family,
+            "category": family,
+            "permit_type": f"{family.replace('_', ' ').title()} permit verification",
+            "status": "NEEDS_INPUT",
+            "decision": "NEEDS_INPUT",
+            "required_status": "NEEDS_INPUT",
+            "required": None,
+            "rationale": "Project scope indicates this filing lane, but the live lookup timed out before local authority could be verified.",
+            "verification_step": f"Contact {office} to verify the {family.replace('_', ' ')} filing lane.",
         }
+        for family in family_floor
+    ]
+    if not rows:
+        rows = [{
+            "filing_family": "other",
+            "category": "other",
+            "permit_type": "Permit category verification",
+            "status": "NEEDS_INPUT",
+            "decision": "NEEDS_INPUT",
+            "required_status": "NEEDS_INPUT",
+            "required": None,
+            "rationale": "The live lookup timed out before PermitAssist could verify local permit applicability.",
+            "verification_step": f"Contact {office} to verify permit applicability for the described scope.",
+        }]
     return {
-        "permit_required": False,
-        "permit_decision": "NOT_REQUIRED",
-        "permit_verdict": "NO",
-        "permit_kind": "Not Required",
-        "permit_name": "No permit indicated for the described minor scope",
-        "permits_required": [],
-        "customer_headline": "No permit indicated for the described minor scope.",
-        "customer_next_step": f"Keep the scope as described and verify with {office} if any structural, trade, occupancy, exterior, or life-safety work is added.",
+        "permit_required": None,
+        "permit_decision": "NEEDS_INPUT",
+        "permit_verdict": "NEEDS_INPUT",
+        "permit_kind": "Permit verification",
+        "permit_name": rows[0]["permit_type"],
+        "permits_required": rows,
+        "family_decisions": copy.deepcopy(rows),
+        "related_permits": copy.deepcopy(rows),
+        "customer_headline": "Permit requirements need verification because the live lookup did not finish in time.",
+        "customer_next_step": f"Contact {office} before starting work; resolve the listed filing lanes rather than relying on a guessed yes/no answer.",
         "confidence": "degraded — timeout fallback",
         "degraded_sources": True,
-        "warnings": ["Live lookup timed out; this fallback is not a fully verified filing packet."],
+        "decision_source": "lookup_timeout_needs_input",
+        "warnings": ["Live lookup timed out; no binary permit answer was invented."],
+        "fee_range": "Fee not confirmed; verify the current AHJ fee schedule before quoting.",
         "apply_url": "",
         "online_application_url": "",
         "applying_office": office,
@@ -5011,6 +5691,15 @@ def _normalize_segment_scope_labels(result: dict, scope_contract: dict) -> dict:
 
 def build_customer_permit_view_model(result: dict, job_type: str = "", city: str = "", state: str = "", job_category: str | None = None, explicit_vertical: str | None = None) -> dict:
     """Allowlisted customer ViewModel used by API, share, report, and checklist surfaces."""
+    original_apply_path = dict(result.get("apply_path") or {}) if isinstance(result, dict) and isinstance(result.get("apply_path"), dict) else {}
+    original_documents = (
+        original_apply_path.get("documents_to_prepare")
+        or original_apply_path.get("likely_documents")
+        or []
+    )
+    original_documents = [
+        str(item).strip() for item in original_documents if str(item).strip()
+    ] if isinstance(original_documents, list) else []
     core_projection = _project_core_customer_boundary_once(
         result,
         job_type=job_type,
@@ -5024,6 +5713,35 @@ def build_customer_permit_view_model(result: dict, job_type: str = "", city: str
         # through to legacy binary fields.
         return core_projection
     public_reentry = project_customer_response_egress(result if isinstance(result, dict) else {})
+    public_reentry_preserves_input = (
+        isinstance(result, dict)
+        and all(key in public_reentry and public_reentry.get(key) == value for key, value in result.items())
+    )
+    finalized_public_mirror_signature = (
+        isinstance(result, dict)
+        and all(
+            key in result
+            for key in (
+                "required_permit_names", "required_permit_families", "required_permit_segments",
+                "related_permit_names", "related_permit_families", "related_permit_segments",
+                "customer_result_summary", "customer_first_screen_summary",
+            )
+        )
+        and not result.get("claim_citations")
+        and not any(str(key).startswith("_") for key in result)
+    )
+    nonbinary_public_mirror_signature = (
+        isinstance(result, dict)
+        and all(
+            key in result
+            for key in (
+                "customer_result_summary", "customer_first_screen_summary",
+                "family_decisions",
+            )
+        )
+        and not result.get("claim_citations")
+        and not any(str(key).startswith("_") for key in result)
+    )
     decision_reentry = str(public_reentry.get("permit_decision") or "").upper().strip()
     reentry_lint_codes = {
         str(hit.get("code") or "")
@@ -5032,7 +5750,7 @@ def build_customer_permit_view_model(result: dict, job_type: str = "", city: str
     }
     if (
         isinstance(result, dict)
-        and public_reentry == result
+        and (public_reentry_preserves_input or finalized_public_mirror_signature)
         and decision_reentry == "REQUIRED"
         and public_reentry.get("permit_required") is True
         and "internal_process_copy" not in reentry_lint_codes
@@ -5052,6 +5770,30 @@ def build_customer_permit_view_model(result: dict, job_type: str = "", city: str
         # through their authoritative seal verification or full build below.
         return copy.deepcopy(public_reentry)
     if (
+        isinstance(result, dict)
+        and (public_reentry_preserves_input or nonbinary_public_mirror_signature)
+        and decision_reentry in {"VERIFY", "NEEDS_INPUT", "CONDITIONAL"}
+        and public_reentry.get("permit_required") is None
+        and _customer_egress_value_is_clean(result)
+        and isinstance(public_reentry.get("customer_result_summary"), dict)
+        and isinstance(public_reentry.get("customer_first_screen_summary"), dict)
+        and all(
+            not isinstance(row, dict)
+            or (
+                row.get("required") is None
+                and str(row.get("status") or row.get("required_status") or row.get("decision") or decision_reentry).upper().strip()
+                in {"VERIFY", "NEEDS_INPUT", "CONDITIONAL"}
+            )
+            for row in (public_reentry.get("permits_required") or [])
+        )
+    ):
+        # A fully rendered abstention is safe to preserve byte-semantically:
+        # re-entry cannot promote it to binary truth, and the recursive denylist,
+        # public linter, and typed-row checks prevent stale or private data from
+        # hitchhiking. Preserve the already-public Manifest exactly rather than
+        # rebuilding it from compatibility fields.
+        return copy.deepcopy(result)
+    if (
         _source_evidence_floor_satisfied(result)
         and str((result or {}).get("permit_decision") or "").upper().strip() == "NOT_REQUIRED"
         and _not_required_public_evidence_is_persisted(result, city, state)
@@ -5062,7 +5804,7 @@ def build_customer_permit_view_model(result: dict, job_type: str = "", city: str
         return copy.deepcopy(result)
     if (
         isinstance(result, dict)
-        and str(result.get("permit_decision") or "").upper().strip() == "UNKNOWN"
+        and str(result.get("permit_decision") or "").upper().strip() in {"VERIFY", "NEEDS_INPUT"}
         and str(result.get("data_source") or "").strip() == _UNBOUND_NOT_REQUIRED_PUBLIC_SOURCE
         and isinstance(result.get("customer_result_summary"), dict)
         and isinstance(result.get("customer_first_screen_summary"), dict)
@@ -5119,8 +5861,8 @@ def build_customer_permit_view_model(result: dict, job_type: str = "", city: str
         apply_url = working.get("apply_url") or contact.get("apply_url") or ""
         contact_public = {
             "permit_required": None,
-            "permit_decision": "UNKNOWN",
-            "permit_verdict": "CONTACT_AHJ",
+            "permit_decision": "NEEDS_INPUT",
+            "permit_verdict": "NEEDS_INPUT",
             "permit_name": None,
             "permit_type": None,
             "permits_required": [],
@@ -5151,6 +5893,11 @@ def build_customer_permit_view_model(result: dict, job_type: str = "", city: str
         )
     source_floor_satisfied = _source_evidence_floor_satisfied(working)
     working = apply_source_floor_annotation(working, job_type, city, state)
+    original_terminal_status = str(working.get("permit_decision") or "").upper().strip()
+    original_terminal_nonbinary = (
+        original_terminal_status in {"CONDITIONAL", "VERIFY", "NEEDS_INPUT"}
+        and working.get("permit_required") is None
+    )
     try:
         working = sanitize_result_for_scope_contract(working, scope_contract, fail_on_removal_in_tests=False)
     except Exception as exc:
@@ -5166,9 +5913,17 @@ def build_customer_permit_view_model(result: dict, job_type: str = "", city: str
             working = apply_permit_decision_contract(working, job_type, city, state, scope_contract)
     except Exception as exc:
         print(f"[customer-view] Decision resolver fallback used: {exc}")
-        dto = resolve_customer_decision({"result": working, "job_type": job_type, "city": city, "state": state, "scope_contract": scope_contract})
-        working.update(dto)
-        working["permit_verdict"] = "YES" if dto.get("permit_required") else "NO"
+        if original_terminal_nonbinary:
+            # Resolver failure cannot promote terminal nonbinary authority. Keep
+            # typed family leads and reassert the original tri-state mirrors.
+            working["permit_decision"] = original_terminal_status
+            working["permit_required"] = None
+            working["permit_verdict"] = original_terminal_status
+        else:
+            dto = resolve_customer_decision({"result": working, "job_type": job_type, "city": city, "state": state, "scope_contract": scope_contract})
+            working.update(dto)
+            dto_required = dto.get("permit_required")
+            working["permit_verdict"] = "YES" if dto_required is True else "NO" if dto_required is False else str(dto.get("permit_decision") or "VERIFY").upper()
     cleaned = sanitize_customer_visible_result(working, strip_internal_keys=True)
     if isinstance(cleaned, dict) and isinstance(working.get("_residential_source_backed_companions"), list):
         cleaned["_residential_source_backed_companions"] = working.get("_residential_source_backed_companions")
@@ -5209,6 +5964,20 @@ def build_customer_permit_view_model(result: dict, job_type: str = "", city: str
     except Exception as exc:
         print(f"[customer-view] Scope sanitize fallback used: {exc}")
     if isinstance(cleaned, dict):
+        if (
+            str(cleaned.get("permit_decision") or "").upper().strip() == "NOT_REQUIRED"
+            and not _not_required_claim_citation_is_source_backed(cleaned, city, state)
+        ):
+            # Scope heuristics and legacy cache mirrors may suggest an exemption,
+            # but only claim-bound official evidence may publish hard NOT_REQUIRED.
+            cleaned["permit_decision"] = "VERIFY"
+            cleaned["permit_required"] = None
+            cleaned["permit_verdict"] = "VERIFY"
+            cleaned["decision_source"] = "not_required_source_floor_fail_closed"
+            cleaned["apply_url"] = None
+            cleaned["online_application_url"] = None
+            cleaned.pop("not_required_reason", None)
+            cleaned.pop("exemption_reason", None)
         source_backed_not_required_cleaned = (
             str(cleaned.get("permit_decision") or "").upper().strip() == "NOT_REQUIRED"
             and (cleaned.get("permit_required") is False or str(cleaned.get("permit_verdict") or "").upper().strip() in {"NO", "NOT_REQUIRED"})
@@ -5221,10 +5990,17 @@ def build_customer_permit_view_model(result: dict, job_type: str = "", city: str
             return finalize_customer_public_projection(cleaned, job_type, city, state, scope_contract)
     public = _public_dict(cleaned if isinstance(cleaned, dict) else {}, _PUBLIC_CUSTOMER_RESULT_FIELDS)
     if isinstance(public, dict):
+        current_status = str(public.get("permit_decision") or "").upper().strip()
+        terminal_nonbinary = current_status in {"CONDITIONAL", "VERIFY", "NEEDS_INPUT"} and public.get("permit_required") is None
         dto = resolve_customer_decision({"result": public, "job_type": job_type, "city": city, "state": state, "scope_contract": scope_contract})
-        if public.get("permit_decision") not in {"REQUIRED", "NOT_REQUIRED"} or public.get("permit_required") not in {True, False}:
+        if not terminal_nonbinary and (public.get("permit_decision") not in {"REQUIRED", "NOT_REQUIRED"} or public.get("permit_required") not in {True, False}):
             public.update({k: v for k, v in dto.items() if k in _PUBLIC_CUSTOMER_RESULT_FIELDS})
-            public["permit_verdict"] = "YES" if dto.get("permit_required") else "NO"
+            dto_required = dto.get("permit_required")
+            public["permit_verdict"] = "YES" if dto_required is True else "NO" if dto_required is False else current_status or "VERIFY"
+        elif terminal_nonbinary:
+            public["permit_decision"] = current_status
+            public["permit_required"] = None
+            public["permit_verdict"] = current_status
         if public.get("permit_required") is True and not public.get("permits_required"):
             public["permits_required"] = dto.get("permits_required") or [{"permit_type": dto.get("permit_name") or "Building Permit", "required": True}]
         if public.get("permit_required") is True and not public.get("permit_kind"):
@@ -5247,6 +6023,12 @@ def build_customer_permit_view_model(result: dict, job_type: str = "", city: str
     else:
         public["claim_citations"] = []
     public = _customer_apply_url_fallback_from_sources(public, city, state)
+    if isinstance(public, dict) and str(public.get("permit_decision") or "").upper() in {"CONDITIONAL", "VERIFY", "NEEDS_INPUT"}:
+        raw_support = public.get("source_support")
+        support: dict = raw_support if isinstance(raw_support, dict) else {}
+        if support.get("decision_mutation_allowed") is not True:
+            public["apply_url"] = None
+            public["online_application_url"] = None
     if not isinstance(public, dict):
         return {}
     final_public = sanitize_customer_visible_result(public, strip_internal_keys=True)
@@ -5267,10 +6049,17 @@ def build_customer_permit_view_model(result: dict, job_type: str = "", city: str
         for key in _PUBLIC_KEEP_EMPTY_FIELDS:
             if key in public and public.get(key) in ("", [], {}):
                 final_public[key] = public.get(key)
+        current_status = str(final_public.get("permit_decision") or "").upper().strip()
+        terminal_nonbinary = current_status in {"CONDITIONAL", "VERIFY", "NEEDS_INPUT"} and final_public.get("permit_required") is None
         dto = resolve_customer_decision({"result": final_public, "job_type": job_type, "city": city, "state": state, "scope_contract": scope_contract})
-        if final_public.get("permit_decision") not in {"REQUIRED", "NOT_REQUIRED"} or final_public.get("permit_required") not in {True, False}:
+        if not terminal_nonbinary and (final_public.get("permit_decision") not in {"REQUIRED", "NOT_REQUIRED"} or final_public.get("permit_required") not in {True, False}):
             final_public.update({k: v for k, v in dto.items() if k in _PUBLIC_CUSTOMER_RESULT_FIELDS})
-            final_public["permit_verdict"] = "YES" if dto.get("permit_required") else "NO"
+            dto_required = dto.get("permit_required")
+            final_public["permit_verdict"] = "YES" if dto_required is True else "NO" if dto_required is False else current_status or "VERIFY"
+        elif terminal_nonbinary:
+            final_public["permit_decision"] = current_status
+            final_public["permit_required"] = None
+            final_public["permit_verdict"] = current_status
         if final_public.get("permit_required") is True and not final_public.get("permits_required"):
             final_public["permits_required"] = dto.get("permits_required") or [{"permit_type": dto.get("permit_name") or "Building Permit", "required": True}]
         final_public["claim_citations"] = citations if citations else []
@@ -5375,20 +6164,7 @@ def build_customer_permit_view_model(result: dict, job_type: str = "", city: str
         source_backed_not_required_passthrough = (
             isinstance(final_public, dict)
             and str(final_public.get("permit_decision") or "").upper().strip() == "NOT_REQUIRED"
-            and (
-                _not_required_claim_citation_is_source_backed(final_public, city, state)
-                or (
-                    bool(final_public.get("source_urls") or final_public.get("sources"))
-                    and re.search(
-                        r"\b(?:no permit|not required|exempt)\b",
-                        " ".join(
-                            str(final_public.get(k) or "")
-                            for k in ("not_required_reason", "exemption_reason", "reason")
-                        ),
-                        re.I,
-                    )
-                )
-            )
+            and _not_required_claim_citation_is_source_backed(final_public, city, state)
         )
         if not source_backed_not_required_passthrough:
             final_public = _pa20_apply_scope_signal_family_floor(final_public if isinstance(final_public, dict) else {}, job_type, city, state)
@@ -5402,7 +6178,7 @@ def build_customer_permit_view_model(result: dict, job_type: str = "", city: str
         if preview_only_passthrough:
             final_public["apply_url"] = original_apply_url or ""
         final_public = _pa20_add_trigger_conditions_to_visible_floor_rows(final_public if isinstance(final_public, dict) else {}, job_type)
-        final_public = _pa20_demote_known_scope_overreach_rows(final_public if isinstance(final_public, dict) else {}, job_type)
+
         if not cell_lock and not preview_only_passthrough and not source_backed_not_required_passthrough:
             final_public = apply_phase1_public_boundary_invariants(final_public if isinstance(final_public, dict) else {}, city, state, job_type)
         if isinstance(final_public, dict):
@@ -5455,7 +6231,106 @@ def build_customer_permit_view_model(result: dict, job_type: str = "", city: str
                 final_public["permit_required"] = True
                 final_public["permit_verdict"] = "YES"
                 final_public["permits_required"] = copy.deepcopy(original_required_rows_for_companion_contract)
-            final_public = finalize_customer_public_projection(final_public, job_type, city, state, scope_contract)
+            if isinstance(final_public, dict) and str(final_public.get("permit_decision") or "").upper() == "NOT_REQUIRED" and not _not_required_claim_citation_is_source_backed(final_public, city, state):
+                final_public["permit_decision"] = "VERIFY"
+                final_public["permit_required"] = None
+                final_public["permit_verdict"] = "VERIFY"
+                final_public["decision_source"] = "not_required_source_floor_fail_closed"
+                final_public["apply_url"] = None
+                final_public["online_application_url"] = None
+                final_public.pop("not_required_reason", None)
+                final_public.pop("exemption_reason", None)
+            final_public = _apply_exact_ahj_rule_authority(final_public, job_type, city, state)
+            final_public = _pa20_demote_known_scope_overreach_rows(final_public, job_type)
+            # Exact Decision Cell authority must be applied before the first
+            # Manifest is sealed; post-Manifest mirror rewrites are intentionally ignored.
+            if cell_lock:
+                final_public = enforce_decision_cell_primary(final_public, cell_lock, city, state, public=True)
+                final_public = _pa20_apply_scope_signal_family_floor(
+                    final_public if isinstance(final_public, dict) else {}, job_type, city, state
+                )
+                final_public = apply_final_customer_egress_contract(
+                    final_public if isinstance(final_public, dict) else {},
+                    job_type,
+                    city,
+                    state,
+                    scope_contract=scope_contract,
+                    cell_lock=cell_lock,
+                )
+                if re.search(r"\b(?:commercial|tenant)\b.*\b(?:tenant\s+improvement|ti|interior\s+alteration)\b", job_type or "", re.I):
+                    related = [copy.deepcopy(row) for row in (final_public.get("related_permits") or []) if isinstance(row, dict)]
+                    visible = {_pa20_row_family(row) or _customer_row_family(row) for row in related}
+                    for family, label, trigger in (
+                        ("planning", "Planning/Zoning Use Verification", "If the tenant improvement changes use, zoning compliance, exterior/site conditions, or an approved land-use entitlement."),
+                        ("co", "Certificate of Occupancy / change-of-occupancy review", "If the work changes occupancy classification, use, occupant load, or certificate-of-occupancy conditions."),
+                    ):
+                        if family not in visible:
+                            related.append({"family": family, "filing_family": family, "permit_type": label, "status": "CONDITIONAL", "decision": "CONDITIONAL", "required": None, "trigger_condition": trigger, "condition_text": trigger})
+                    final_public["related_permits"] = related
+                lock_evidence = json.dumps(cell_lock.get("sources") or [], sort_keys=True, default=str).lower()
+                if str(cell_lock.get("permit_decision") or "").upper() == "NOT_REQUIRED":
+                    if re.search(r"\b(?:does not have|no)\b[^.]{0,240}\bbuilding permit requirements?\b", lock_evidence):
+                        final_public["related_permits"] = [
+                            row for row in (final_public.get("related_permits") or [])
+                            if isinstance(row, dict) and not re.search(
+                                r"\bbuilding\b",
+                                " ".join(str(row.get(key) or "") for key in ("family", "filing_family", "category", "permit_type", "permit_name")),
+                                re.I,
+                            )
+                        ]
+                final_public = enforce_decision_cell_primary(final_public, cell_lock, city, state, public=True)
+                if str(cell_lock.get("permit_decision") or "").upper() == "NOT_REQUIRED" and re.search(
+                    r"\b(?:does not have|no)\b[^.]{0,240}\bbuilding permit requirements?\b", lock_evidence
+                ):
+                    final_public["related_permits"] = [
+                        row for row in (final_public.get("related_permits") or [])
+                        if isinstance(row, dict) and not re.search(
+                            r"\bbuilding\b",
+                            " ".join(str(row.get(key) or "") for key in ("family", "filing_family", "category", "permit_type", "permit_name")),
+                            re.I,
+                        )
+                    ]
+                if str(cell_lock.get("permit_decision") or "").upper() == "NOT_REQUIRED":
+                    final_public["positive_exemption_evidence"] = copy.deepcopy(cell_lock.get("sources") or [])
+                    final_public = bind_positive_exemption_decision_citation(final_public, city, state)
+                final_public = sanitize_customer_visible_result(final_public, strip_internal_keys=True)
+            if isinstance(final_public, dict) and str(final_public.get("permit_decision") or "").upper() in {"CONDITIONAL", "VERIFY", "NEEDS_INPUT"}:
+                route_support = final_public.get("source_support")
+                if not isinstance(route_support, dict) or route_support.get("decision_mutation_allowed") is not True:
+                    existing_apply_path = dict(
+                        final_public.get("apply_path") or {}
+                    ) if isinstance(final_public.get("apply_path"), dict) else {}
+                    documents_to_prepare = (
+                        existing_apply_path.get("documents_to_prepare")
+                        or existing_apply_path.get("likely_documents")
+                    )
+                    final_public["apply_url"] = None
+                    final_public["online_application_url"] = None
+                    final_public["apply_path"] = {
+                        "state": "CONTACT_AHJ",
+                        "channel": "contact_ahj",
+                        "support_level": "verification required",
+                        "portal_url": None,
+                        "primary_filing_source_tier": "none",
+                    }
+                    if documents_to_prepare:
+                        final_public["apply_path"]["documents_to_prepare"] = copy.deepcopy(
+                            documents_to_prepare
+                        )
+            if cell_lock:
+                # The exact Cell was already enforced and source-scoped above.
+                # Do not send the now-sanitized DTO through the generic legacy
+                # authority resolver a second time; it no longer carries the
+                # private Cell capability and would replace the Cell's exact
+                # permit name/route or demote its binary decision.
+                final_public.pop("permit_manifest", None)
+                final_public = seal_permit_manifest_projection(
+                    final_public, force=True
+                )
+            else:
+                final_public = finalize_customer_public_projection(
+                    final_public, job_type, city, state, scope_contract
+                )
             if (
                 not original_input_not_required
                 and str(final_public.get("permit_decision") or "").upper().strip() == "NOT_REQUIRED"
@@ -5499,7 +6374,166 @@ def build_customer_permit_view_model(result: dict, job_type: str = "", city: str
             city,
             state,
         )
-        return final_public if isinstance(final_public, dict) else {}
+        if isinstance(final_public, dict) and isinstance(final_public.get("permit_manifest"), dict):
+            # Absolute terminal seal: every late compatibility adapter above is
+            # advisory only. Re-project regulated fields from the typed Manifest
+            # and then derive summaries once, so repeated egress is byte-stable.
+            final_public = seal_permit_manifest_projection(
+                final_public,
+                force=True,
+                authority_input=capture_permit_authority_input(result),
+            )
+            public_projection = _public_dict(final_public, _PUBLIC_CUSTOMER_RESULT_FIELDS)
+            final_public = assert_customer_view_invariants(
+                public_projection if isinstance(public_projection, dict) else {}
+            )
+            final_public["customer_result_summary"] = _build_customer_result_summary(
+                final_public,
+                final_public,
+                city,
+                state,
+            )
+            final_public["customer_first_screen_summary"] = _build_customer_first_screen_summary(
+                final_public["customer_result_summary"]
+            )
+            final_projection = _public_dict(final_public, _PUBLIC_CUSTOMER_RESULT_FIELDS)
+            final_public = final_projection if isinstance(final_projection, dict) else {}
+        if isinstance(final_public, dict) and str(final_public.get("permit_decision") or "").upper() == "REQUIRED":
+            manifest = final_public.get("permit_manifest")
+            manifest_rows: list[dict] = []
+            if isinstance(manifest, dict):
+                manifest_primary = manifest.get("primary")
+                if isinstance(manifest_primary, dict):
+                    manifest_rows.append(manifest_primary)
+                manifest_rows.extend(row for row in (manifest.get("companions") or []) if isinstance(row, dict))
+            hard_names = list(dict.fromkeys(
+                str(row.get("local_name") or row.get("permit_type") or "").strip()
+                for row in manifest_rows
+                if str(row.get("status") or row.get("decision") or "").upper() == "REQUIRED"
+                and str(row.get("local_name") or row.get("permit_type") or "").strip()
+            ))
+            related_names = list(dict.fromkeys(
+                str(row.get("local_name") or row.get("permit_type") or "").strip()
+                for row in manifest_rows
+                if str(row.get("status") or row.get("decision") or "").upper() in {"CONDITIONAL", "VERIFY", "NEEDS_INPUT"}
+                and str(row.get("local_name") or row.get("permit_type") or "").strip()
+            ))
+            primary_name = str(final_public.get("permit_name") or (hard_names[0] if hard_names else "permit")).strip()
+            office = str(final_public.get("applying_office") or final_public.get("issuing_authority") or "the issuing authority").strip()
+            filing_label = "; ".join(hard_names) if hard_names else primary_name
+            if final_public.get("apply_url") or final_public.get("online_application_url"):
+                next_step = f"File {filing_label} with {office} using the verified application path."
+            else:
+                next_step = f"Permit required. Contact {office} to file {filing_label}."
+            if related_names:
+                next_step += " Verify whether these related reviews also apply before starting work: " + "; ".join(related_names) + "."
+            headline = f"Permit required: {primary_name}."
+            final_public["customer_headline"] = headline
+            final_public["customer_next_step"] = next_step
+            final_public["required_permit_summary"] = headline
+            final_public["job_summary"] = headline
+            final_public["summary"] = headline
+            final_support = final_public.get("source_support")
+            if isinstance(final_support, dict):
+                final_support = copy.deepcopy(final_support)
+                final_support["apply_url_known"] = bool(final_public.get("apply_url") or final_public.get("online_application_url"))
+                final_public["source_support"] = final_support
+            result_summary = final_public.get("customer_result_summary")
+            if isinstance(result_summary, dict):
+                result_summary = copy.deepcopy(result_summary)
+                result_summary["next_step"] = next_step
+                result_summary["permit_name"] = primary_name
+                final_public["customer_result_summary"] = result_summary
+            first_summary = final_public.get("customer_first_screen_summary")
+            if isinstance(first_summary, dict):
+                first_summary = copy.deepcopy(first_summary)
+                first_summary["next_action"] = next_step
+                first_summary["kind_category"] = primary_name
+                final_public["customer_first_screen_summary"] = first_summary
+        if isinstance(final_public, dict) and str(final_public.get("permit_decision") or "").upper() == "NOT_REQUIRED":
+            final_public["not_required_reason"] = final_public.get("not_required_reason") or "Permit not required for the resolved scope."
+            final_public["permits_required"] = []
+            final_public["required_permit_names"] = []
+            final_public["required_permit_families"] = []
+            final_public["required_permit_segments"] = []
+            if not cell_lock:
+                final_public["companion_permits"] = []
+                final_public["related_permits"] = []
+                final_public["related_permit_names"] = []
+                final_public["related_permit_families"] = []
+                final_public["related_permit_segments"] = []
+            else:
+                # The terminal Manifest projection rebuilt compatibility copy;
+                # reapply the exact Cell once so NOT_REQUIRED summaries and
+                # companion conditions cannot retain filing instructions.
+                final_public = enforce_decision_cell_primary(
+                    final_public, cell_lock, city, state, public=True
+                )
+        if isinstance(final_public, dict) and str(final_public.get("permit_decision") or "").upper() == "VERIFY":
+            label = str(final_public.get("permit_name") or final_public.get("permit_kind") or "permit").strip()
+            office = str(final_public.get("applying_office") or final_public.get("issuing_authority") or "the issuing authority").strip()
+            if office != "the issuing authority":
+                final_public["building_dept_name"] = office
+            final_support = final_public.get("source_support")
+            if isinstance(final_support, dict):
+                final_support = copy.deepcopy(final_support)
+                final_support["has_source_backed_evidence"] = bool(final_support.get("display_source_count") or final_public.get("sources") or final_public.get("source_urls"))
+                final_public["source_support"] = final_support
+            headline = f"Verify the {label} requirement with the issuing authority."
+            next_step = f"Contact {office} to resolve the listed conditions or missing inputs before filing or starting work."
+            final_public["customer_headline"] = headline
+            final_public["customer_next_step"] = next_step
+            summary = final_public.get("customer_result_summary")
+            if isinstance(summary, dict):
+                summary = copy.deepcopy(summary)
+                summary["next_step"] = next_step
+                final_public["customer_result_summary"] = summary
+            first = final_public.get("customer_first_screen_summary")
+            if isinstance(first, dict):
+                first = copy.deepcopy(first)
+                first["next_action"] = next_step
+                final_public["customer_first_screen_summary"] = first
+        if isinstance(final_public, dict) and str(final_public.get("permit_decision") or "").upper() in {"CONDITIONAL", "VERIFY", "NEEDS_INPUT"}:
+            # Preserve typed family rows for downstream API, report, share, and
+            # City Watch consumers. These are advisory lanes, never binary truth:
+            # each row must carry a nonbinary status and `required=None`.
+            for row in (final_public.get("permits_required") or []):
+                if not isinstance(row, dict):
+                    continue
+                row["required"] = None
+                status = str(row.get("status") or row.get("required_status") or row.get("decision") or "VERIFY").upper().strip()
+                if status not in {"CONDITIONAL", "VERIFY", "NEEDS_INPUT"}:
+                    status = "VERIFY"
+                row["status"] = status
+                row["required_status"] = status
+                row["decision"] = status
+                row["verdict"] = status
+            final_apply_path = final_public.get("apply_path")
+            if isinstance(final_apply_path, dict):
+                final_apply_path.setdefault(
+                    "primary_filing_source_tier",
+                    "none" if not (
+                        final_public.get("apply_url")
+                        or final_public.get("online_application_url")
+                        or final_apply_path.get("portal_url")
+                    ) else "local_ahj",
+                )
+        if original_documents and isinstance(final_public, dict):
+            final_apply_path = final_public.get("apply_path")
+            if isinstance(final_apply_path, dict) and not final_apply_path.get("documents_to_prepare"):
+                final_apply_path["documents_to_prepare"] = copy.deepcopy(original_documents)
+        if isinstance(final_public, dict) and str(job_category or "").strip():
+            public_segment = str(job_category).strip().lower()
+            for collection_key in (
+                "permits_required",
+                "family_decisions",
+                "related_permits",
+                "companion_permits",
+            ):
+                for row in final_public.get(collection_key) or []:
+                    if isinstance(row, dict) and not str(row.get("segment") or "").strip():
+                        row["segment"] = public_segment
+        return project_customer_response_egress(final_public) if isinstance(final_public, dict) else {}
     return {}
 
 
@@ -6779,7 +7813,7 @@ def enforce_unbound_not_required_source_floor(
         "degraded_sources": True,
     })
     out.update({
-        "permit_decision": "UNKNOWN",
+        "permit_decision": "VERIFY",
         "permit_required": None,
         "permit_verdict": "VERIFY",
         "permit_name": "Verify with the permit office",
@@ -6928,6 +7962,20 @@ def evidence_pack_allowed_for_request(path: str, headers, *, is_sample_demo: boo
     return preview_route_allowed
 
 
+def _typed_nonbinary_rows(rows: object, status: str) -> list[dict]:
+    projected: list[dict] = []
+    for raw in rows if isinstance(rows, list) else []:
+        if not isinstance(raw, dict):
+            continue
+        row = copy.deepcopy(raw)
+        row["status"] = status
+        row["decision"] = status
+        row["required_status"] = status
+        row["required"] = None
+        projected.append(row)
+    return projected
+
+
 def finalize_permit_lookup_result(result: dict, job_type: str, city: str, state: str, *, is_cached: bool = False, explicit_vertical: str | None = None, evidence_allowed: bool | None = None, job_category: str | None = None) -> dict:
     """Shared final response safety pipeline for all permit lookup endpoints."""
     core_projection = _project_core_customer_boundary_once(
@@ -6941,8 +7989,48 @@ def finalize_permit_lookup_result(result: dict, job_type: str, city: str, state:
         return core_projection
     if not isinstance(result, dict):
         result = {}
+    else:
+        result = copy.deepcopy(result)
+    # Evidence-pack metadata is a private capability output, never accepted
+    # from a resolver DTO, cache body, submitted result, or direct helper call.
+    result.pop("_evidence_pack", None)
+    incoming_decision = str(result.get("permit_decision") or "").upper().strip()
+    incoming_source = str(result.get("decision_source") or "").strip()
+    # A sealed-core integrity sink is evidence that the binary authority was
+    # lost, not permission for legacy keyword writers to guess YES/NO. Re-enter
+    # the universal authority ladder before any old finalizer can promote or
+    # demote the result. Scope can recover typed trigger-bearing family leads,
+    # but without an authoritative claim it remains NEEDS_INPUT.
+    if (
+        not _get_decision_cell_primary_lock(result)
+        and (
+            incoming_decision in {"UNKNOWN", "VERIFY"}
+            or incoming_source == "permit_rule_engine_integrity_fail_closed"
+        )
+    ):
+        try:
+            from permit_rule_engine import resolve_decision_authority_ladder
+            recovered = resolve_decision_authority_ladder(
+                job_type=job_type,
+                city=city,
+                state=state,
+            )
+        except Exception as exc:
+            print(f"[finalize] early authority recovery failed closed (non-fatal): {exc}")
+            recovered = {}
+        if recovered.get("authority_tier") == "SCOPE_SIGNAL":
+            recovered_rows = _typed_nonbinary_rows(
+                recovered.get("family_decisions"), "NEEDS_INPUT"
+            )
+            result["permit_decision"] = "NEEDS_INPUT"
+            result["permit_required"] = None
+            result["permit_verdict"] = "NEEDS_INPUT"
+            result["family_decisions"] = recovered_rows
+            result["related_permits"] = recovered_rows
+            result["permits_required"] = []
+            result["decision_source"] = recovered.get("decision_source") or "scope_signal_floor"
     terminal_nonbinary_decision = str(result.get("permit_decision") or "").upper().strip()
-    if terminal_nonbinary_decision not in {"CONDITIONAL", "VERIFY"}:
+    if terminal_nonbinary_decision not in {"CONDITIONAL", "VERIFY", "NEEDS_INPUT"}:
         terminal_nonbinary_decision = ""
     input_was_not_required = (
         result.get("permit_required") is False
@@ -7142,6 +8230,93 @@ def finalize_permit_lookup_result(result: dict, job_type: str, city: str, state:
         and str(result.get("permit_decision") or "").upper().strip() == "NOT_REQUIRED"
     ):
         result["data_source"] = _DETERMINISTIC_NOT_REQUIRED_PUBLIC_SOURCE
+    if not final_cell_lock and str(result.get("permit_decision") or "").upper() in {"UNKNOWN", "VERIFY", "CONDITIONAL", "NEEDS_INPUT"}:
+        try:
+            from permit_rule_engine import resolve_decision_authority_ladder
+            ladder_result = resolve_decision_authority_ladder(
+                job_type=job_type,
+                city=city,
+                state=state,
+            )
+        except Exception as exc:
+            print(f"[finalize] authority ladder failed closed (non-fatal): {exc}")
+            ladder_result = {}
+        if ladder_result.get("authority_tier") == "SCOPE_SIGNAL":
+            family_leads = _typed_nonbinary_rows(
+                ladder_result.get("family_decisions"), "NEEDS_INPUT"
+            )
+            if family_leads:
+                result["permit_decision"] = "NEEDS_INPUT"
+                result["permit_required"] = None
+                result["permit_verdict"] = "NEEDS_INPUT"
+                result["family_decisions"] = family_leads
+                result["related_permits"] = family_leads
+                result["decision_source"] = ladder_result.get("decision_source")
+    # Statewide executable rules sit below exact cells and above generic
+    # resolver/reconciler output. Apply them late so legacy writers cannot
+    # overwrite a matched exemption.
+    state_rule = None
+    if not final_cell_lock:
+        try:
+            from state_rule_packs import resolve_state_rule
+            state_rule = resolve_state_rule(state, {"job_type": job_type, "city": city, "state": state})
+        except Exception as exc:
+            print(f"[finalize] state rule resolution failed closed (non-fatal): {exc}")
+            state_rule = None
+        if state_rule:
+            state_row = {
+                "family": state_rule.family,
+                "permit_type": state_rule.family.replace("_", " ").title(),
+                "status": state_rule.status,
+                "decision": state_rule.status,
+                "required": True if state_rule.status == "REQUIRED" else False if state_rule.status == "NOT_REQUIRED" else None,
+                "trigger": state_rule.trigger,
+                "authority": state_rule.authority_model.value,
+                "source_ref": state_rule.source_url,
+                "source_url": state_rule.source_url,
+                "rationale": state_rule.citation,
+                "inspection_required": state_rule.inspection_required,
+                "notice_required": state_rule.notice_required,
+                "code_compliance_required": state_rule.code_compliance_required,
+                "source_section": state_rule.source_section,
+                "source_quote": state_rule.source_quote,
+            }
+            result["permit_decision"] = state_rule.status
+            result["permit_required"] = True if state_rule.status == "REQUIRED" else False if state_rule.status == "NOT_REQUIRED" else None
+            result["permit_verdict"] = "YES" if state_rule.status == "REQUIRED" else "NO" if state_rule.status == "NOT_REQUIRED" else state_rule.status
+            result["permits_required"] = [] if state_rule.status == "NOT_REQUIRED" else [state_row]
+            result["family_decisions"] = [state_row]
+            result["positive_exemption_evidence"] = state_rule.citation if state_rule.status == "NOT_REQUIRED" else result.get("positive_exemption_evidence")
+            result["code_citation"] = {"section": state_rule.citation, "url": state_rule.source_url}
+            result["source_urls"] = list(dict.fromkeys([state_rule.source_url, *(result.get("source_urls") or [])]))
+            result["sources"] = list(dict.fromkeys([state_rule.source_url, *(result.get("sources") or [])]))
+            result["decision_source"] = state_rule.rule_id
+            result["data_source"] = "state_rule_pack"
+            result["state_rule_effects"] = {
+                "building_permit_required": state_rule.status == "REQUIRED",
+                "inspection_required": state_rule.inspection_required,
+                "notice_required": state_rule.notice_required,
+                "code_compliance_required": state_rule.code_compliance_required,
+                "effective_from": state_rule.effective_date,
+                "effective_to": state_rule.effective_to,
+                "source_section": state_rule.source_section,
+                "source_snapshot_sha256": state_rule.source_snapshot_sha256,
+            }
+    if terminal_nonbinary_decision and not final_cell_lock and not state_rule:
+        # Final authority firebreak: filing reconcilers and compatibility writers
+        # may enrich routes, but may not turn a nonbinary authority result into a
+        # hard REQUIRED/NOT_REQUIRED decision.
+        result["permit_decision"] = terminal_nonbinary_decision
+        result["permit_required"] = None
+        result["permit_verdict"] = terminal_nonbinary_decision
+        family_rows = _typed_nonbinary_rows(
+            result.get("family_decisions") or result.get("related_permits"),
+            terminal_nonbinary_decision,
+        )
+        result["family_decisions"] = family_rows
+        result["related_permits"] = copy.deepcopy(family_rows)
+        if terminal_nonbinary_decision == "NEEDS_INPUT":
+            result["permits_required"] = []
     result = bind_positive_exemption_decision_citation(result, city, state)
     result = sanitize_customer_visible_result(result, strip_internal_keys=False)
     # The sanitizer intentionally removes decision-cell internals.  This object,
@@ -7178,6 +8353,31 @@ def finalize_permit_lookup_result(result: dict, job_type: str, city: str, state:
             state,
             public=False,
         )
+    evidence_meta = result.get("_evidence_pack")
+    if isinstance(evidence_meta, dict) and evidence_meta.get("enabled") is True:
+        governed_fields = {
+            str(field)
+            for field in (
+                list(evidence_meta.get("matched_fields") or [])
+                + list(evidence_meta.get("failed_closed_fields") or [])
+            )
+            if str(field) in _EVIDENCE_PACK_CONTROLLED_CUSTOMER_FIELDS
+        }
+        controlled_values = {
+            field: copy.deepcopy(result.get(field)) for field in governed_fields
+        }
+        if "permit_type" in governed_fields:
+            for field in (
+                "permit_decision",
+                "permit_required",
+                "permit_verdict",
+            ):
+                controlled_values[field] = copy.deepcopy(result.get(field))
+        if "apply_url" in governed_fields and "apply_path" in result:
+            controlled_values["apply_path"] = copy.deepcopy(result["apply_path"])
+        evidence_meta["_controlled_customer_values"] = controlled_values
+    if isinstance(evidence_meta, dict) and evidence_meta.get("enabled") is True:
+        result = _issue_evidence_pack_authorized_result(result)
     return _mark_server_owned_result(result)
 
 
@@ -7266,29 +8466,84 @@ def render_white_label_report_html(data: dict) -> str:
     permit_manifest = result.get("permit_manifest") if isinstance(result.get("permit_manifest"), dict) else {}
     manifest_primary = permit_manifest.get("primary") if isinstance(permit_manifest.get("primary"), dict) else {}
     manifest_companions = permit_manifest.get("companions") if isinstance(permit_manifest.get("companions"), list) else []
-    decision_kind = str(manifest_primary.get("local_name") or manifest_primary.get("family") or result.get("permit_kind") or decision_contract.get("permit_kind") or "Other")
+    decision_kind = str(result.get("permit_kind") or manifest_primary.get("local_name") or manifest_primary.get("family") or decision_contract.get("permit_kind") or "Other")
     customer_next_step = str(result.get("customer_next_step") or decision_contract.get("customer_next_step") or "Confirm requirements with the building department before filing.")
     apply_note = str(
         decision_contract.get("exact_apply_url_customer_note")
         or "Use the listed department/portal category and match the filing to the structured permit kind before filing."
     )
-    permits = result.get("permits_required") or []
+    permits = (
+        result.get("family_decisions")
+        or result.get("permits_required")
+        or result.get("related_permits")
+        or []
+    )
     if permit_manifest:
         manifest_rows = ([manifest_primary] if manifest_primary else []) + [row for row in manifest_companions if isinstance(row, dict)]
 
         def _manifest_permit_item(row: dict) -> str:
-            label = html.escape(str(row.get("local_name") or row.get("family") or "Permit category"))
+            family_key = str(row.get("family") or row.get("filing_family") or "").strip().lower()
+            permit_row = next(
+                (
+                    candidate
+                    for candidate in (result.get("permits_required") or [])
+                    if isinstance(candidate, dict)
+                    and str(
+                        candidate.get("family")
+                        or candidate.get("filing_family")
+                        or candidate.get("category")
+                        or ""
+                    ).strip().lower() == family_key
+                ),
+                {},
+            )
+            label = html.escape(str(
+                permit_row.get("permit_type")
+                or permit_row.get("permit_name")
+                or row.get("local_name")
+                or row.get("family")
+                or "Permit category"
+            ))
             status = html.escape(str(row.get("status") or "VERIFY"))
             authority = html.escape(str(row.get("authority") or ""))
             route_url = _safe_external_url(row.get("apply_url") or "")
             details = f"<br><span>Authority: {authority}</span>" if authority else ""
-            if route_url:
+            if status == "REQUIRED" and route_url:
                 details += f"<br><span>Application path: {_render_safe_link(route_url)}</span>"
             return f"<li>{label} — {status}{details}</li>"
 
         permit_items = "".join(_manifest_permit_item(row) for row in manifest_rows) or f"<li>{html.escape(decision_kind)}</li>"
     else:
-        permit_items = "".join(f"<li>{html.escape(str((p or {}).get('permit_type') or p))}</li>" for p in permits) or f"<li>{html.escape(decision_kind)}</li>"
+        def _typed_permit_label(row: object) -> str:
+            if not isinstance(row, dict):
+                return str(row or "Permit category")
+            explicit = row.get("permit_type") or row.get("permit_name") or row.get("local_name")
+            if explicit:
+                return str(explicit)
+            family = str(
+                row.get("family")
+                or row.get("filing_family")
+                or row.get("category")
+                or "Permit"
+            ).replace("_", " ").strip()
+            return family.title() if family.lower().endswith("permit") else f"{family.title()} Permit"
+
+        def _typed_permit_item(row: object) -> str:
+            label = html.escape(_typed_permit_label(row))
+            if not isinstance(row, dict):
+                return f"<li>{label}</li>"
+            status = str(
+                row.get("status")
+                or row.get("verdict")
+                or row.get("decision")
+                or row.get("required_status")
+                or "VERIFY"
+            ).upper().strip()
+            if status not in {"REQUIRED", "NOT_REQUIRED", "CONDITIONAL", "VERIFY", "NEEDS_INPUT"}:
+                status = "VERIFY"
+            return f"<li>{label} — {html.escape(status)}</li>"
+
+        permit_items = "".join(_typed_permit_item(row) for row in permits) or f"<li>{html.escape(decision_kind)}</li>"
     safe_apply_url = _safe_external_url(result.get('apply_url') or '')
     def _customer_safe_report_text(value: object) -> str:
         text = str(value or "")
@@ -8568,10 +9823,27 @@ import secrets
 SHARED_RESULT_SCHEMA_VERSION = "permitassist.shared-result.v2"
 
 
-def _seal_shared_public_result(result: dict) -> dict:
-    result = project_customer_response_egress(result)
+def _seal_shared_public_result(
+    result: dict, *, job_type: str = "", city: str = "", state: str = ""
+) -> dict:
+    # `create_share` supplies an already authenticated or fail-closed customer
+    # boundary DTO. Preserve its typed lanes while recursively scrubbing once
+    # more before keyed persistence.
+    redacted = redact_public_output(result)
+    result = redacted if isinstance(redacted, dict) else {}
     payload_json = json.dumps(
         result if isinstance(result, dict) else {},
+        sort_keys=True,
+        separators=(",", ":"),
+        ensure_ascii=False,
+    )
+    identity = {
+        "job_type": str(job_type or ""),
+        "city": str(city or ""),
+        "state": str(state or ""),
+    }
+    authenticated_json = json.dumps(
+        {"payload_json": payload_json, **identity},
         sort_keys=True,
         separators=(",", ":"),
         ensure_ascii=False,
@@ -8579,18 +9851,41 @@ def _seal_shared_public_result(result: dict) -> dict:
     return {
         "schema_version": SHARED_RESULT_SCHEMA_VERSION,
         "payload_json": payload_json,
-        "payload_sha256": hashlib.sha256(payload_json.encode("utf-8")).hexdigest(),
+        **identity,
+        "payload_hmac_sha256": hmac.new(
+            SESSION_SECRET.encode("utf-8"),
+            authenticated_json.encode("utf-8"),
+            hashlib.sha256,
+        ).hexdigest(),
     }
 
 
-def _unseal_shared_public_result(stored: object) -> dict | None:
+def _unseal_shared_public_result(
+    stored: object, *, job_type: str = "", city: str = "", state: str = ""
+) -> dict | None:
     if not isinstance(stored, dict) or stored.get("schema_version") != SHARED_RESULT_SCHEMA_VERSION:
         return None
     payload_json = stored.get("payload_json")
-    payload_hash = str(stored.get("payload_sha256") or "")
+    payload_hmac = str(stored.get("payload_hmac_sha256") or "")
     if not isinstance(payload_json, str):
         return None
-    if hashlib.sha256(payload_json.encode("utf-8")).hexdigest() != payload_hash:
+    identity = {
+        "job_type": str(job_type or ""),
+        "city": str(city or ""),
+        "state": str(state or ""),
+    }
+    if any(stored.get(key) != value for key, value in identity.items()):
+        return None
+    authenticated_json = json.dumps(
+        {"payload_json": payload_json, **identity},
+        sort_keys=True,
+        separators=(",", ":"),
+        ensure_ascii=False,
+    )
+    expected_hmac = hmac.new(
+        SESSION_SECRET.encode("utf-8"), authenticated_json.encode("utf-8"), hashlib.sha256
+    ).hexdigest()
+    if not hmac.compare_digest(expected_hmac, payload_hmac):
         return None
     try:
         payload = json.loads(payload_json)
@@ -8603,12 +9898,13 @@ def _unseal_shared_public_result(stored: object) -> dict | None:
 
 
 def _canonical_projection_request_identity(
-    job_type: str, city: str, state: str
+    job_type: str, city: str, state: str, job_category: str = ""
 ) -> str:
     identity = {
         "job_type": " ".join(str(job_type or "").strip().lower().split()),
         "city": " ".join(str(city or "").strip().lower().split()),
         "state": str(state or "").strip().upper(),
+        "job_category": " ".join(str(job_category or "").strip().lower().split()),
     }
     return json.dumps(identity, sort_keys=True, separators=(",", ":"))
 
@@ -8743,6 +10039,7 @@ def create_customer_snapshot_handoff(
     *,
     job_category: str = "",
     owner_scope: str = "",
+    authenticated_manifest: dict | None = None,
 ) -> str:
     """Persist one canonical customer DTO behind a short-lived bearer handle."""
     if not isinstance(customer, dict):
@@ -8751,6 +10048,10 @@ def create_customer_snapshot_handoff(
     customer_public = project_customer_response_egress(
         redacted_customer if isinstance(redacted_customer, dict) else {}
     )
+    if isinstance(authenticated_manifest, dict):
+        # The compatibility alias authenticates this exact public Manifest
+        # against a private server-owned projection before persistence.
+        customer_public["permit_manifest"] = copy.deepcopy(authenticated_manifest)
     try:
         customer_json = _canonical_projection_json(customer_public)
     except (TypeError, ValueError):
@@ -8767,7 +10068,7 @@ def create_customer_snapshot_handoff(
             customer_json.encode("utf-8")
         ).hexdigest(),
         "request_identity_json": _canonical_projection_request_identity(
-            job_type, city, state
+            job_type, city, state, job_category
         ),
         "owner_scope": _canonical_projection_owner_scope(owner_scope),
         "created_at": now.isoformat(),
@@ -8826,6 +10127,7 @@ def consume_customer_snapshot_handoff(
     city: str,
     state: str,
     *,
+    job_category: str = "",
     owner_scope: str = "",
 ) -> _VerifiedCustomerProjection | None:
     """Atomically authenticate and consume one exact customer snapshot use."""
@@ -8890,7 +10192,7 @@ def consume_customer_snapshot_handoff(
             return None
         if not hmac.compare_digest(
             row["request_identity_json"],
-            _canonical_projection_request_identity(job_type, city, state),
+            _canonical_projection_request_identity(job_type, city, state, job_category),
         ):
             conn.commit()
             return None
@@ -8902,28 +10204,43 @@ def consume_customer_snapshot_handoff(
         if not isinstance(customer, dict):
             conn.commit()
             return None
-        submitted_json = _canonical_projection_json(customer)
-        submitted_hash = hashlib.sha256(submitted_json.encode("utf-8")).hexdigest()
-        if not (
-            hmac.compare_digest(
-                submitted_json.encode("utf-8"),
-                row["customer_projection_json"].encode("utf-8"),
-            )
-            and hmac.compare_digest(
-                submitted_hash, row["customer_projection_sha256"]
-            )
-            and hmac.compare_digest(
-                hashlib.sha256(
-                    row["customer_projection_json"].encode("utf-8")
-                ).hexdigest(),
-                row["customer_projection_sha256"],
-            )
+        # The DB row HMAC authenticates the stored canonical DTO. Compatibility
+        # mirrors in a submitted ViewModel are deliberately ignored: only the
+        # submitted public Manifest must exactly match the stored public
+        # Manifest. This lets handoff repair a mutated mirror while refusing a
+        # caller that altered, omitted, or substituted canonical authority.
+        submitted_manifest_raw = customer.get("permit_manifest")
+        submitted_public = project_customer_response_egress(customer)
+        if not hmac.compare_digest(
+            hashlib.sha256(
+                row["customer_projection_json"].encode("utf-8")
+            ).hexdigest(),
+            row["customer_projection_sha256"],
         ):
             conn.commit()
             return None
         customer_projection = json.loads(row["customer_projection_json"])
+        stored_manifest = customer_projection.get("permit_manifest") if isinstance(customer_projection, dict) else None
+        submitted_manifest = submitted_manifest_raw
+        authority_matches = False
+        if isinstance(customer_projection, dict):
+            if isinstance(stored_manifest, dict) and isinstance(submitted_manifest, dict):
+                authority_matches = hmac.compare_digest(
+                    _canonical_projection_json(submitted_manifest).encode("utf-8"),
+                    _canonical_projection_json(stored_manifest).encode("utf-8"),
+                )
+            elif not isinstance(stored_manifest, dict) and not isinstance(submitted_manifest, dict):
+                # Activated-core and older canonical public projections may
+                # legitimately expose no Manifest. In that lane there is no
+                # smaller public authority object to compare, so require exact
+                # canonical DTO equality against the DB-HMAC-authenticated
+                # snapshot. Never accept or repair caller-mutated mirrors here.
+                authority_matches = hmac.compare_digest(
+                    _canonical_projection_json(submitted_public).encode("utf-8"),
+                    _canonical_projection_json(customer_projection).encode("utf-8"),
+                )
         if (
-            not isinstance(customer_projection, dict)
+            not authority_matches
             or _canonical_projection_json(customer_projection)
             != row["customer_projection_json"]
             or project_customer_response_egress(customer_projection)
@@ -8952,7 +10269,7 @@ def consume_customer_snapshot_handoff(
             conn.rollback()
             return None
         conn.commit()
-        return _VerifiedCustomerProjection(customer_projection)
+        return _issue_verified_customer_projection(customer_projection)
     except Exception as exc:
         if conn is not None:
             conn.rollback()
@@ -8974,6 +10291,23 @@ def create_verified_projection_handoff(
     owner_scope: str = "",
 ) -> str:
     """Compatibility alias; private envelopes are intentionally not persisted."""
+    authenticated_manifest = None
+    if isinstance(private_result, dict) and isinstance(customer_result, dict):
+        trusted_projection = build_customer_response_egress(
+            private_result,
+            job_type,
+            city,
+            state,
+            job_category=job_category,
+        )
+        trusted_manifest = trusted_projection.get("permit_manifest")
+        submitted_manifest = customer_result.get("permit_manifest")
+        if isinstance(trusted_manifest, dict) and isinstance(submitted_manifest, dict):
+            if hmac.compare_digest(
+                _canonical_projection_json(trusted_manifest).encode("utf-8"),
+                _canonical_projection_json(submitted_manifest).encode("utf-8"),
+            ):
+                authenticated_manifest = trusted_manifest
     return create_customer_snapshot_handoff(
         customer_result,
         job_type,
@@ -8981,6 +10315,7 @@ def create_verified_projection_handoff(
         state,
         job_category=job_category,
         owner_scope=owner_scope,
+        authenticated_manifest=authenticated_manifest,
     )
 
 
@@ -8991,6 +10326,7 @@ def consume_verified_projection_handoff(
     city: str,
     state: str,
     *,
+    job_category: str = "",
     owner_scope: str = "",
 ) -> _VerifiedCustomerProjection | None:
     """Compatibility alias for the one generic snapshot consumer."""
@@ -9000,19 +10336,49 @@ def consume_verified_projection_handoff(
         job_type,
         city,
         state,
+        job_category=job_category,
         owner_scope=owner_scope,
     )
 
 
-def create_share(job_type: str, city: str, state: str, result: dict) -> str:
+def create_share(
+    job_type: str, city: str, state: str, result: dict, *, job_category: str = ""
+) -> str:
     """Store a hash-sealed public result and return a short expiring slug."""
     slug = secrets.token_urlsafe(8)  # e.g. 'aB3xY7qR'
     now  = utc_now()
     exp  = now + timedelta(days=SHARE_TTL_DAYS)
     # Store only the public customer ViewModel. The wrapper detects storage
     # corruption without retaining the internal core envelope or debug fields.
-    clean = build_customer_response_egress(result, job_type, city, state)
-    stored = _seal_shared_public_result(clean)
+    effective_category = str(job_category or result.get("job_category") or "").strip()
+    if not effective_category and isinstance(result.get("_permit_rule_engine_core"), dict):
+        source_cell_id = str(result["_permit_rule_engine_core"].get("source_cell_id") or "")
+        cell_parts = source_cell_id.split("__")
+        if len(cell_parts) >= 2 and cell_parts[1] in {"residential", "commercial", "both"}:
+            effective_category = cell_parts[1]
+    verified_projection = None
+    if isinstance(result, _VerifiedCustomerProjection) and result.has_intact_regulated_projection():
+        verified_projection = result
+    elif _is_core_envelope_instance(result):
+        verified_projection = _project_core_customer_boundary_once(
+            result,
+            job_type=job_type,
+            city=city,
+            state=state,
+            job_category=effective_category,
+        )
+    if verified_projection is not None:
+        # Shares persist the exact authenticated customer projection. Rebuilding
+        # an already sealed projection would reorder/enrich rows and break the
+        # one-projection contract.
+        clean = project_customer_response_egress(verified_projection)
+    else:
+        clean = build_customer_response_egress(
+            result, job_type, city, state, job_category=effective_category
+        )
+    stored = _seal_shared_public_result(
+        clean, job_type=job_type, city=city, state=state
+    )
     try:
         conn = sqlite3.connect(CACHE_DB)
         conn.execute(
@@ -9053,7 +10419,9 @@ def get_share(slug: str) -> dict | None:
             return None
         stored = json.loads(result_json)
         if isinstance(stored, dict) and stored.get("schema_version") == SHARED_RESULT_SCHEMA_VERSION:
-            data = _unseal_shared_public_result(stored)
+            data = _unseal_shared_public_result(
+                stored, job_type=job_type, city=city, state=state
+            )
             if data is None:
                 conn.execute("DELETE FROM shared_results WHERE slug=?", [slug])
                 conn.commit()
@@ -9086,7 +10454,7 @@ def get_share(slug: str) -> dict | None:
             and stored.get("schema_version") == SHARED_RESULT_SCHEMA_VERSION
         ):
             share_payload._verified_payload_sha256 = str(
-                stored.get("payload_sha256") or ""
+                stored.get("payload_hmac_sha256") or ""
             )
         return share_payload
     except Exception as e:
@@ -9209,6 +10577,7 @@ def build_checklist_fallback(result: dict, job_type: str = "", city: str = "", s
                 "permit_name",
                 "permit_type",
                 "approval_type",
+                "local_name",
                 "display_family",
             ) or "Companion permit/review"
             condition = _checklist_dict_text(
@@ -9399,10 +10768,10 @@ def get_or_create_checklist(result: dict, job_type: str = "", city: str = "", st
         if family_rows:
             items = [
                 {
-                    "label": f"{str(row.get('family') or 'permit').replace('_', ' ').title()}: {str(row.get('verdict') or 'VERIFY')}",
+                    "label": f"{str(row.get('family') or 'permit').replace('_', ' ').title()}: {str(row.get('verdict') or row.get('status') or 'VERIFY')}",
                     "description": str(row.get("trigger") or "Confirm this filing lane with the issuing authority."),
-                    "category": str(row.get("family") or "permit"),
-                    "required": True if row.get("verdict") == "REQUIRED" else False if row.get("verdict") == "NOT_REQUIRED" else None,
+                    "category": str(row.get("filing_family") or row.get("family") or "permit").lower(),
+                    "required": True if (row.get("verdict") or row.get("status")) == "REQUIRED" else False if (row.get("verdict") or row.get("status")) == "NOT_REQUIRED" else None,
                 }
                 for row in family_rows
                 if isinstance(row, dict)
@@ -9430,7 +10799,7 @@ def get_or_create_checklist(result: dict, job_type: str = "", city: str = "", st
     result = copy.deepcopy(result) if isinstance(result, dict) else {}
     permit_rows = result.get("permits_required")
     if (
-        str(result.get("permit_decision") or "").upper() == "UNKNOWN"
+        str(result.get("permit_decision") or "").upper() in {"VERIFY", "NEEDS_INPUT", "CONDITIONAL"}
         and result.get("permit_required") is None
         and isinstance(permit_rows, list)
         and permit_rows
@@ -9683,10 +11052,27 @@ def render_share_page(share: dict) -> str:
         separators=(",", ":"),
         ensure_ascii=False,
     )
+    authenticated_shared_json = json.dumps(
+        {
+            "payload_json": canonical_shared_payload,
+            "job_type": str(safe_share.get("job_type") or ""),
+            "city": str(safe_share.get("city") or ""),
+            "state": str(safe_share.get("state") or ""),
+        },
+        sort_keys=True,
+        separators=(",", ":"),
+        ensure_ascii=False,
+    )
     verified_exact_share = (
         bool(re.fullmatch(r"[0-9a-f]{64}", verified_shared_hash))
-        and hashlib.sha256(canonical_shared_payload.encode("utf-8")).hexdigest()
-        == verified_shared_hash
+        and hmac.compare_digest(
+            hmac.new(
+                SESSION_SECRET.encode("utf-8"),
+                authenticated_shared_json.encode("utf-8"),
+                hashlib.sha256,
+            ).hexdigest(),
+            verified_shared_hash,
+        )
     )
     if verified_exact_share:
         safe_data = copy.deepcopy(original_data)
@@ -10303,7 +11689,27 @@ def delete_job(job_id: str, email: str | None = None) -> bool:
 
 
 def _city_watch_payload_hash(result: dict) -> str:
-    permits = result.get("permits_required") or []
+    required_permits = [
+        row
+        for row in (result.get("permits_required") or [])
+        if isinstance(row, dict)
+        and (
+            str(row.get("status") or row.get("required_status") or row.get("permit_decision") or "").upper() == "REQUIRED"
+            or row.get("required") is True
+            or row.get("permit_required") is True
+        )
+    ]
+    permit_leads = [
+        row
+        for key in ("permits_required", "family_decisions", "related_permits", "permit_leads")
+        for row in (result.get(key) or [])
+        if isinstance(row, dict)
+        and not (
+            str(row.get("status") or row.get("required_status") or row.get("permit_decision") or "").upper() == "REQUIRED"
+            or row.get("required") is True
+            or row.get("permit_required") is True
+        )
+    ]
     fees = result.get("fee_range") or result.get("fee") or result.get("cost") or ""
     key_requirements = (
         result.get("what_to_bring")
@@ -10313,11 +11719,41 @@ def _city_watch_payload_hash(result: dict) -> str:
         or []
     )
     payload = {
-        "required_permits": permits,
+        "required_permits": required_permits,
+        "permit_leads": permit_leads,
         "fees": fees,
         "key_requirements": key_requirements,
     }
     return hashlib.sha256(json.dumps(payload, sort_keys=True).encode()).hexdigest()
+
+
+def _city_watch_customer_result(job_type: str, city: str, state: str) -> dict:
+    """Project a researched result while retaining nonbinary permit leads."""
+    researched = research_permit(job_type, city, state)
+    result = build_customer_response_egress(
+        _mark_server_owned_result(researched),
+        job_type,
+        city,
+        state,
+        preserve_server_owned_shape=True,
+    )
+    if not any(
+        result.get(key)
+        for key in ("permits_required", "family_decisions", "related_permits")
+    ):
+        result["permit_leads"] = [
+            {
+                "permit_type": row.get("permit_type")
+                or row.get("local_name")
+                or row.get("permit_name")
+                or "Permit",
+                "status": "VERIFY",
+                "required": None,
+            }
+            for row in (researched.get("permits_required") or [])
+            if isinstance(row, dict)
+        ]
+    return result
 
 
 def _normalize_saved_email(email: str) -> str:
@@ -10455,14 +11891,8 @@ def create_city_watch(email: str, city: str, state: str, job_type: str) -> dict:
     normalized_city = city.strip()
     normalized_state = state.strip().upper()
     normalized_job = job_type.strip()
-    result = build_customer_response_egress(
-        _mark_server_owned_result(
-            research_permit(normalized_job, normalized_city, normalized_state)
-        ),
-        normalized_job,
-        normalized_city,
-        normalized_state,
-        preserve_server_owned_shape=True,
+    result = _city_watch_customer_result(
+        normalized_job, normalized_city, normalized_state
     )
     initial_hash = _city_watch_payload_hash(result)
     conn = sqlite3.connect(CACHE_DB)
@@ -10521,22 +11951,42 @@ def check_city_changes(email: str, city: str, state: str, job_type: str) -> dict
         conn.close()
         return {"watched": False, "changed": False}
     watch_id, last_hash = row
-    result = build_customer_response_egress(
-        _mark_server_owned_result(
-            research_permit(normalized_job, normalized_city, normalized_state)
-        ),
-        normalized_job,
-        normalized_city,
-        normalized_state,
-        preserve_server_owned_shape=True,
+    result = _city_watch_customer_result(
+        normalized_job, normalized_city, normalized_state
     )
     current_hash = _city_watch_payload_hash(result)
     changed = bool(last_hash and last_hash != current_hash)
+    required_rows = [
+        p
+        for p in (result.get("permits_required") or [])
+        if isinstance(p, dict)
+        and (
+            str(p.get("status") or p.get("required_status") or p.get("permit_decision") or "").upper() == "REQUIRED"
+            or p.get("required") is True
+            or p.get("permit_required") is True
+        )
+    ]
+    lead_rows = [
+        p
+        for key in ("permits_required", "family_decisions", "related_permits", "permit_leads")
+        for p in (result.get(key) or [])
+        if isinstance(p, dict)
+        and not (
+            str(p.get("status") or p.get("required_status") or p.get("permit_decision") or "").upper() == "REQUIRED"
+            or p.get("required") is True
+            or p.get("permit_required") is True
+        )
+    ]
+    permit_leads = [
+        p.get("permit_type") or p.get("local_name") or p.get("permit_name") or "Permit"
+        for p in lead_rows
+    ][:8]
     digest = {
         "job_type": normalized_job,
         "city": normalized_city,
         "state": normalized_state,
-        "required_permits": [p.get('permit_type', 'Permit') for p in (result.get("permits_required") or []) if isinstance(p, dict)][:8],
+        "required_permits": [p.get('permit_type', 'Permit') for p in required_rows][:8],
+        "permit_leads": permit_leads,
         "fee_range": result.get('fee_range') or result.get('fee') or 'Check with city',
         "apply_url": result.get('apply_url') or '',
         "checked_at": utc_now().isoformat(),
@@ -10544,7 +11994,11 @@ def check_city_changes(email: str, city: str, state: str, job_type: str) -> dict
     now = utc_now().isoformat()
     if changed:
         requirements = result.get("what_to_bring") or result.get("requirements") or result.get("documents_needed") or []
-        permits = result.get("permits_required") or []
+        permits = required_rows
+        required_names = [
+            p.get("permit_type") or p.get("local_name") or p.get("permit_name") or "Permit"
+            for p in permits
+        ][:8]
         body_lines = [
             "Hi,",
             "",
@@ -10552,9 +12006,15 @@ def check_city_changes(email: str, city: str, state: str, job_type: str) -> dict
             f"Job: {normalized_job}",
             f"Location: {normalized_city}, {normalized_state}",
             "",
-            "Required permits:",
         ]
-        body_lines.extend([f"- {p.get('permit_type', 'Permit')}" for p in permits] or ["- Review latest result in PermitAssist"])
+        if required_names:
+            body_lines.append("Required permits:")
+            body_lines.extend(f"- {name}" for name in required_names)
+        if permit_leads:
+            body_lines.extend(["", "Permit leads to verify:"])
+            body_lines.extend(f"- {name}" for name in permit_leads)
+        if not required_names and not permit_leads:
+            body_lines.extend(["Permit status update:", "- Review latest result in PermitAssist"])
         body_lines.extend([
             "",
             f"Fees: {result.get('fee_range') or result.get('fee') or 'Check with city'}",
@@ -12023,6 +13483,11 @@ class Handler(BaseHTTPRequestHandler):
 
         # ── Permit lookup ─────────────────────────────────────────────────
         if path == "/api/permit":
+            idempotency_key = ""
+            idempotency_fingerprint = ""
+            idempotency_owner_scope = "anonymous"
+            idempotency_execution_token = ""
+            correlation_id = self.headers.get("X-Request-ID", "").strip()[:128] or uuid.uuid4().hex
             try:
                 try:
                     data = self.read_json_body()
@@ -12078,14 +13543,101 @@ class Handler(BaseHTTPRequestHandler):
                 paid = is_paid_user(user_email) if user_email else False
                 unlimited = is_sample_demo or paid or is_unlimited_lookup_ip(ip) or is_benchmark or is_staging_canary
                 used_before = 0 if unlimited else get_effective_free_usage(ip, fingerprint)
-                response_headers = {} if unlimited else build_free_lookup_headers(used_before)
-
+                response_headers = {
+                    **({} if unlimited else build_free_lookup_headers(used_before)),
+                    "X-Request-ID": correlation_id,
+                }
                 admin_token = self.headers.get("X-Admin-Token", "")
                 admin_bypass = bool(
                     ADMIN_TOKEN
                     and admin_token
                     and hmac.compare_digest(admin_token, ADMIN_TOKEN)
                 )
+
+                # Claim/replay before abuse and quota gates. Anonymous callers
+                # must first acquire a server-signed owner token so NAT peers or
+                # spoofed client fingerprints can never share ledger ownership.
+                idempotency_key = self.headers.get("Idempotency-Key", "").strip()
+                if idempotency_key:
+                    if len(idempotency_key) > 200:
+                        self.send_json(400, {
+                            "error": "invalid_idempotency_key",
+                            "message": "Idempotency-Key must contain 1-200 characters.",
+                        }, extra_headers=response_headers)
+                        return
+                    if user_email:
+                        idempotency_owner_scope = f"user:{user_email.lower()}"
+                    else:
+                        owner_hash = _validate_idempotency_owner_token(
+                            self.headers.get("X-PermitAssist-Idempotency-Owner", "")
+                        )
+                        if not owner_hash:
+                            self.send_json(428, {
+                                "error": "idempotency_owner_token_required",
+                                "message": "Retry with the returned signed idempotency owner token.",
+                            }, extra_headers={
+                                **response_headers,
+                                "X-PermitAssist-Idempotency-Owner": _issue_idempotency_owner_token(),
+                            })
+                            return
+                        idempotency_owner_scope = f"anon:{owner_hash}"
+                    execution_ledger = _lookup_execution_ledger()
+                    idempotency_fingerprint = execution_ledger.request_fingerprint({
+                        "body": data,
+                        "execution_semantics": {
+                            "sample_demo": is_sample_demo,
+                            "benchmark": is_benchmark,
+                            "benchmark_engine": force_model or "",
+                            "staging_canary": is_staging_canary,
+                            "admin_bypass": admin_bypass,
+                            "paid": paid,
+                            "evidence_mode": bool(evidence_pack_allowed_for_request(path, self.headers, is_sample_demo=is_sample_demo)),
+                            "cache_mode": (self.headers.get("X-PermitAssist-Cache-Mode", "") or "").strip().lower(),
+                        },
+                    })
+                    try:
+                        lookup_claim = execution_ledger.claim(
+                            idempotency_key,
+                            idempotency_fingerprint,
+                            owner_scope=idempotency_owner_scope,
+                            request_id=correlation_id,
+                        )
+                    except IdempotencyConflictError:
+                        self.send_json(409, {
+                            "error": "idempotency_conflict",
+                            "message": "This Idempotency-Key was already used with different request semantics.",
+                        }, extra_headers=response_headers)
+                        return
+                    except ValueError as exc:
+                        self.send_json(400, {
+                            "error": "invalid_idempotency_key",
+                            "message": str(exc),
+                        }, extra_headers=response_headers)
+                        return
+                    if lookup_claim.action == "replay":
+                        self.send_json(lookup_claim.http_status or 200, lookup_claim.response or {}, extra_headers={
+                            **response_headers,
+                            "X-Idempotent-Replay": "true",
+                            "X-Response-Digest": lookup_claim.response_digest or "",
+                        })
+                        return
+                    if lookup_claim.action == "in_progress":
+                        self.send_json(409, {
+                            "error": "lookup_in_progress",
+                            "message": "The original lookup is still processing; retry this same key shortly.",
+                            "request_id": lookup_claim.request_id,
+                        }, extra_headers={**response_headers, "Retry-After": "3"})
+                        return
+                    if lookup_claim.action == "indeterminate":
+                        self.send_json(409, {
+                            "error": "lookup_outcome_indeterminate",
+                            "message": "The prior execution outcome cannot be safely replayed or re-executed automatically. Contact support with the request ID.",
+                            "request_id": lookup_claim.request_id,
+                        }, extra_headers=response_headers)
+                        return
+                    idempotency_execution_token = lookup_claim.execution_token or ""
+                    if not idempotency_execution_token:
+                        raise RuntimeError("execution ledger returned an unfenced executable claim")
                 if not is_sample_demo and not is_benchmark:
                     # A bare admin token deliberately remains subject to the
                     # ordinary abuse limiter. Only the exact, signed, one-shot
@@ -12093,6 +13645,12 @@ class Handler(BaseHTTPRequestHandler):
                     if not is_staging_canary:
                         limited, retry_after = check_rate_limit(ip)
                         if limited and not unlimited:
+                            if idempotency_key:
+                                execution_ledger.fail(
+                                    idempotency_key, idempotency_fingerprint,
+                                    owner_scope=idempotency_owner_scope, request_id=correlation_id,
+                                    execution_token=idempotency_execution_token,
+                                )
                             self.send_json(429, {
                                 "error": "rate_limit_exceeded",
                                 "message": "Too many requests. Please wait a minute and try again.",
@@ -12108,6 +13666,12 @@ class Handler(BaseHTTPRequestHandler):
                         # Skip free-tier limit check — proceed to engine
                     else:
                         if used_before >= FREE_LOOKUP_LIMIT and not unlimited:
+                            if idempotency_key:
+                                execution_ledger.fail(
+                                    idempotency_key, idempotency_fingerprint,
+                                    owner_scope=idempotency_owner_scope, request_id=correlation_id,
+                                    execution_token=idempotency_execution_token,
+                                )
                             user = get_user(user_email) if user_email else None
                             if user and user.get("email"):
                                 threading.Thread(target=send_free_limit_email_once, args=(user["email"],), daemon=True).start()
@@ -12132,16 +13696,26 @@ class Handler(BaseHTTPRequestHandler):
                     "state": state,
                 })
                 if is_input_rejection(early_rejection):
+                    early_response = build_customer_response_egress(
+                        early_rejection,
+                        job_type,
+                        city,
+                        state,
+                        job_category=job_category,
+                        explicit_vertical=explicit_vertical,
+                    )
+                    if idempotency_key:
+                        execution_ledger.complete(
+                            idempotency_key,
+                            idempotency_fingerprint,
+                            early_response,
+                            owner_scope=idempotency_owner_scope,
+                            request_id=correlation_id,
+                            execution_token=idempotency_execution_token,
+                        )
                     self.send_json(
                         200,
-                        build_customer_response_egress(
-                            early_rejection,
-                            job_type,
-                            city,
-                            state,
-                            job_category=job_category,
-                            explicit_vertical=explicit_vertical,
-                        ),
+                        early_response,
                         extra_headers=response_headers,
                     )
                     return
@@ -12170,6 +13744,12 @@ class Handler(BaseHTTPRequestHandler):
                         f"[permit] busy: concurrency limit {PERMIT_LOOKUP_CONCURRENCY_LIMIT} "
                         f"held for >{PERMIT_LOOKUP_QUEUE_TIMEOUT_SECONDS}s; returning 429"
                     )
+                    if idempotency_key:
+                        execution_ledger.fail(
+                            idempotency_key, idempotency_fingerprint,
+                            owner_scope=idempotency_owner_scope, request_id=correlation_id,
+                                    execution_token=idempotency_execution_token,
+                        )
                     self.send_json(429, {
                         "error": "server_busy",
                         "message": "PermitAssist is processing other lookups. Please retry in a few seconds.",
@@ -12183,6 +13763,12 @@ class Handler(BaseHTTPRequestHandler):
                         # blocks cheaply instead of consuming worker resources.
                         used_now = get_effective_free_usage(ip, fingerprint)
                         if used_now >= FREE_LOOKUP_LIMIT:
+                            if idempotency_key:
+                                execution_ledger.fail(
+                                    idempotency_key, idempotency_fingerprint,
+                                    owner_scope=idempotency_owner_scope, request_id=correlation_id,
+                                    execution_token=idempotency_execution_token,
+                                )
                             response_headers = build_free_lookup_headers(used_now)
                             self.send_json(403, {
                                 "error": "free_limit_reached",
@@ -12219,6 +13805,12 @@ class Handler(BaseHTTPRequestHandler):
                             })
                         except Exception:
                             pass
+                        if idempotency_key:
+                            execution_ledger.fail(
+                                idempotency_key, idempotency_fingerprint,
+                                owner_scope=idempotency_owner_scope, request_id=correlation_id,
+                                    execution_token=idempotency_execution_token,
+                            )
                         self.send_json(503, {
                             "error": exc.code,
                             "message": "PermitAssist rule-engine data is temporarily unavailable. Please retry shortly.",
@@ -12227,7 +13819,17 @@ class Handler(BaseHTTPRequestHandler):
                     is_cached = result.get("_cached", False)
 
                     if not unlimited and not is_sample_demo:
-                        used_after = max(*record_lookup_usage(ip, fingerprint))
+                        usage_counts = (
+                            record_lookup_usage_once(
+                                ip,
+                                fingerprint,
+                                owner_scope=idempotency_owner_scope,
+                                idempotency_key=idempotency_key,
+                            )
+                            if idempotency_key
+                            else record_lookup_usage(ip, fingerprint)
+                        )
+                        used_after = max(*usage_counts)
                         response_headers = build_free_lookup_headers(used_after)
                         result["remaining_lookups"] = max(0, FREE_LOOKUP_LIMIT - used_after)
                     elif paid:
@@ -12290,6 +13892,19 @@ class Handler(BaseHTTPRequestHandler):
                         job_category=job_category,
                         explicit_vertical=explicit_vertical,
                     )
+                    response_digest = ""
+                    if idempotency_key:
+                        # Seal the immutable customer decision before publishing
+                        # any downstream snapshot handoff. A crash after this
+                        # point replays the sealed response and cannot re-execute.
+                        response_digest = execution_ledger.complete(
+                            idempotency_key,
+                            idempotency_fingerprint,
+                            customer_result,
+                            owner_scope=idempotency_owner_scope,
+                            request_id=correlation_id,
+                            execution_token=idempotency_execution_token,
+                        )
                     projection_handle = create_customer_snapshot_handoff(
                         customer_result,
                         job_type,
@@ -12303,6 +13918,7 @@ class Handler(BaseHTTPRequestHandler):
                         **_projection_handoff_response_headers(
                             projection_handle, self.headers
                         ),
+                        **({"X-Response-Digest": response_digest} if response_digest else {}),
                     }
 
                     self.send_json(200, customer_result, extra_headers=response_headers)
@@ -12311,6 +13927,17 @@ class Handler(BaseHTTPRequestHandler):
 
             except Exception as e:
                 print(f"[permit] Error: {e}")
+                if idempotency_key and idempotency_fingerprint:
+                    try:
+                        _lookup_execution_ledger().fail(
+                            idempotency_key,
+                            idempotency_fingerprint,
+                            owner_scope=idempotency_owner_scope,
+                            request_id=correlation_id,
+                            execution_token=idempotency_execution_token,
+                        )
+                    except Exception as ledger_error:
+                        print(f"[permit][ledger] failed to record terminal failure: {ledger_error}")
                 try:
                     record_beta_event("lookup_failed", {"error_type": type(e).__name__, "path": "/api/permit"})
                 except Exception:
@@ -12453,6 +14080,7 @@ class Handler(BaseHTTPRequestHandler):
                     str(data.get("job_type") or ""),
                     str(data.get("city") or ""),
                     str(data.get("state") or ""),
+                    job_category=str(data.get("job_category") or ""),
                     owner_scope=_projection_owner_scope(user_email),
                 )
                 safe_result = verified_result if verified_result is not None else build_customer_response_egress(
@@ -12595,6 +14223,7 @@ class Handler(BaseHTTPRequestHandler):
                     job_type,
                     city,
                     state,
+                    job_category=str(data.get("job_category") or ""),
                     owner_scope=_projection_owner_scope_from_headers(self.headers),
                 )
                 slug = create_share(
@@ -12602,6 +14231,7 @@ class Handler(BaseHTTPRequestHandler):
                     city,
                     state,
                     verified_result if verified_result is not None else result,
+                    job_category=str(data.get("job_category") or ""),
                 )
                 share_url = f"{APP_BASE_URL}/report/{slug}"
                 self.send_json(200, {"url": share_url, "slug": slug, "expires_days": SHARE_TTL_DAYS})
@@ -12628,6 +14258,7 @@ class Handler(BaseHTTPRequestHandler):
                     job_type,
                     city,
                     state,
+                    job_category=str(data.get("job_category") or ""),
                     owner_scope=_projection_owner_scope_from_headers(self.headers),
                 )
                 checklist_input = (
@@ -12642,16 +14273,26 @@ class Handler(BaseHTTPRequestHandler):
                         explicit_vertical=explicit_vertical,
                     )
                 )
+                checklist = get_or_create_checklist(
+                    checklist_input,
+                    job_type,
+                    city,
+                    state,
+                )
+                if verified_result is None and isinstance(checklist, dict):
+                    # An external DTO cannot recover hard authority through AI or
+                    # a checklist-cache hit after its permit projection failed closed.
+                    checklist = copy.deepcopy(checklist)
+                    for item in checklist.get("items") or []:
+                        if not isinstance(item, dict):
+                            continue
+                        item["required"] = None
+                        for key in ("status", "decision", "required_status", "verdict"):
+                            if key in item and str(item.get(key) or "").upper() in {"YES", "NO", "REQUIRED", "NOT_REQUIRED"}:
+                                item[key] = "VERIFY"
                 self.send_json(
                     200,
-                    project_customer_response_egress(
-                        get_or_create_checklist(
-                            checklist_input,
-                            job_type,
-                            city,
-                            state,
-                        )
-                    ),
+                    project_customer_response_egress(checklist),
                 )
             except Exception as e:
                 print(f"[checklist] Error: {e}")
@@ -12817,6 +14458,7 @@ class Handler(BaseHTTPRequestHandler):
                     job,
                     city,
                     state,
+                    job_category=str(data.get("job_category") or ""),
                     owner_scope=_projection_owner_scope_from_headers(self.headers),
                 )
                 rdata = verified_result if verified_result is not None else build_customer_response_egress(
@@ -12863,6 +14505,7 @@ class Handler(BaseHTTPRequestHandler):
                     job_type,
                     city,
                     state,
+                    job_category=str(data.get("job_category") or ""),
                     owner_scope=_projection_owner_scope(user_email),
                 )
                 safe_result = (

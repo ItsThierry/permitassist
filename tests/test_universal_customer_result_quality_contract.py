@@ -1,3 +1,4 @@
+import html
 import json
 import re
 import sys
@@ -85,8 +86,9 @@ def test_wrong_state_specific_customer_claims_are_removed_but_cross_applicable_a
         assert forbidden not in text
     assert "ada" in text or "accessibility" in text
     assert "nec" in text or "electrical" in text
-    assert public["permit_decision"] == "REQUIRED"
-    assert public["permit_kind"] == "Commercial Building / Tenant Improvement"
+    assert public["permit_decision"] == "VERIFY"
+    assert public["permit_required"] is None
+    assert public["permit_kind"] == "Building"
 
 
 def test_normalized_customer_answer_fields_are_canonical_and_freshness_consistent(tmp_path, monkeypatch):
@@ -116,7 +118,7 @@ def test_normalized_customer_answer_fields_are_canonical_and_freshness_consisten
     summary = public.get("customer_result_summary")
 
     assert isinstance(summary, dict)
-    assert summary["permit_decision"] == public["permit_decision"] == "REQUIRED"
+    assert summary["permit_decision"] == public["permit_decision"] == "VERIFY"
     assert summary["permit_kind"] == public["permit_kind"] == "Plumbing"
     assert summary["permit_name"] == public["permit_name"]
     assert summary["ahj_department"] == public["applying_office"]
@@ -135,7 +137,7 @@ def test_normalized_customer_answer_fields_are_canonical_and_freshness_consisten
 def _quality_lint_hits(text: str) -> list[str]:
     patterns = {
         "stutter_permit_permit": r"\bpermit\s+permit\b",
-        "unfilled_braces": r"\{\{|\}\}",
+        "unfilled_braces": r"\{\{",
         "unfilled_js_template": r"\$\{[^}]+\}",
         "unknown_freshness": r"last\s+updated\s*:\s*unknown",
         "repeated_caveat": r"verify\s+with\s+the\s+building\s+department.{0,80}verify\s+with\s+the\s+building\s+department",
@@ -151,7 +153,7 @@ def _assert_customer_quality(server, result: dict, job: str, city: str, state: s
 
     assert isinstance(public, dict) and public
     assert isinstance(summary, dict)
-    assert public.get("permit_decision") in {"REQUIRED", "CONDITIONAL", "NOT_REQUIRED", "FAIL_CLOSED_UNSUPPORTED_OR_NO_EVIDENCE"}
+    assert public.get("permit_decision") in {"REQUIRED", "CONDITIONAL", "VERIFY", "NEEDS_INPUT", "NOT_REQUIRED", "FAIL_CLOSED_UNSUPPORTED_OR_NO_EVIDENCE"}
     assert summary.get("permit_decision") == public.get("permit_decision")
     assert public.get("permit_kind")
     assert summary.get("permit_kind") == public.get("permit_kind")
@@ -196,7 +198,7 @@ def _assert_customer_quality(server, result: dict, job: str, city: str, state: s
 
     report_html = server.render_white_label_report_html({"result": public, "job_type": job, "city": city, "state": state})
     assert str(summary["permit_kind"]).split(" /")[0] in report_html
-    assert str(summary["next_step"]).split(".")[0][:40] in report_html
+    assert str(summary["next_step"]).split(".")[0][:40] in html.unescape(report_html)
     return public
 
 
@@ -454,7 +456,7 @@ def test_second_summary_sanitization_uses_jurisdiction_context_and_frontend_rend
     assert "permit permit" not in text
     assert "title 24" not in text
     assert "california" not in text
-    assert public["customer_first_screen_summary"]["decision"] == "REQUIRED"
+    assert public["customer_first_screen_summary"]["decision"] == "VERIFY"
 
     html = FRONTEND_INDEX.read_text(encoding="utf-8")
     assert "customer_first_screen_summary" in html

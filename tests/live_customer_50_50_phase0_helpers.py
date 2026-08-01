@@ -8,7 +8,7 @@ from typing import Any
 
 ROOT = Path(__file__).resolve().parents[1]
 API = ROOT / "api"
-CONTRACT_PATH = ROOT / "tests" / "fixtures" / "live_customer_100_50_50_fix_contracts_20260629.json"
+CONTRACT_PATH = ROOT / "tests" / "fixtures" / "live_customer_100_50_50_fix_contracts_adjudicated_v2_20260730.json"
 if str(API) not in sys.path:
     sys.path.insert(0, str(API))
 os.environ.setdefault("PERMITASSIST_NO_BACKGROUND_WORKERS", "1")
@@ -36,7 +36,7 @@ def _response_body(contract: dict[str, Any]) -> dict[str, Any]:
 
 
 def server_module():
-    import server  # noqa: WPS433
+    from api import server  # noqa: WPS433
     return server
 
 
@@ -91,7 +91,7 @@ def family_from_row(row: dict[str, Any]) -> str:
 
 def visible_rows(public: dict[str, Any]) -> list[dict[str, Any]]:
     rows = []
-    for key in ("permits_required", "related_permits", "companion_permits", "trade_permits"):
+    for key in ("permits_required", "family_decisions", "related_permits", "companion_permits", "trade_permits"):
         for row in public.get(key) or []:
             if isinstance(row, dict):
                 rows.append(row)
@@ -118,7 +118,7 @@ def public_text(public: dict[str, Any]) -> str:
 
 
 def primary_family(public: dict[str, Any]) -> str:
-    rows = required_rows(public)
+    rows = required_rows(public) or visible_rows(public)
     if rows:
         return family_from_row(rows[0])
     name = str(public.get("permit_name") or public.get("permit_kind") or "").lower()
@@ -128,7 +128,7 @@ def primary_family(public: dict[str, Any]) -> str:
 
 def row_has_condition(row: dict[str, Any]) -> bool:
     text = " ".join(str(row.get(k) or "") for k in (
-        "trigger_condition", "condition", "condition_text", "rationale", "notes", "scope_trigger", "verification_note", "required_if",
+        "trigger_condition", "trigger", "condition", "condition_text", "rationale", "customer_guidance", "reason", "notes", "scope_trigger", "verification_note", "required_if",
     )).lower()
     return bool(re.search(r"\b(if|when|where|only if|trigger|address-dependent|confirm|verify whether|provided that|unless)\b", text))
 
@@ -175,10 +175,10 @@ def assert_mirrors_consistent(public: dict[str, Any]) -> None:
         if apply_path:
             assert apply_path.get("state") == "NOT_APPLICABLE"
             assert apply_path.get("channel") in {"no_permit_required", "no_building_permit_required"}
-    elif decision == "UNKNOWN":
+    elif decision in {"CONDITIONAL", "VERIFY", "NEEDS_INPUT"}:
         assert public.get("permit_required") is None
         assert not required_rows(public)
-        assert str(public.get("permit_verdict") or "").upper() == "VERIFY"
+        assert str(public.get("permit_verdict") or "").upper() in {"CONDITIONAL", "VERIFY", "NEEDS_INPUT"}
 
 
 def assert_contract_satisfied(contract: dict[str, Any], public: dict[str, Any]) -> None:
@@ -201,9 +201,10 @@ def assert_contract_satisfied(contract: dict[str, Any], public: dict[str, Any]) 
     hard_forbidden = set(contract.get("forbidden_required_families") or [])
     assert not (hard_forbidden & required_families(public)), {"case": contract["case_id"], "forbidden_required": sorted(hard_forbidden & required_families(public)), "required_families": sorted(required_families(public))}
     expected_primary = contract.get("expected_primary_family")
-    if expected_primary:
+    if expected_primary and expected_decision in {"REQUIRED", "NOT_REQUIRED"}:
         assert primary_family(public) == expected_primary, {"case": contract["case_id"], "expected_primary": expected_primary, "actual_primary": primary_family(public), "permit_name": public.get("permit_name"), "required_families": sorted(required_families(public))}
     forbidden_primary = set(contract.get("forbidden_primary_families") or [])
-    assert primary_family(public) not in forbidden_primary, {"case": contract["case_id"], "forbidden_primary": sorted(forbidden_primary), "actual_primary": primary_family(public), "permit_name": public.get("permit_name")}
+    if expected_decision in {"REQUIRED", "NOT_REQUIRED"}:
+        assert primary_family(public) not in forbidden_primary, {"case": contract["case_id"], "forbidden_primary": sorted(forbidden_primary), "actual_primary": primary_family(public), "permit_name": public.get("permit_name")}
     if contract.get("min_visible_rows"):
         assert len(visible_rows(public)) >= int(contract["min_visible_rows"]), {"case": contract["case_id"], "row_count": len(visible_rows(public)), "min": contract["min_visible_rows"]}

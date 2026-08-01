@@ -279,8 +279,10 @@ def test_white_label_report_renders_decision_contract_not_likely_or_ahj_surrende
 
     rendered = server.render_white_label_report_html({"contractor_name": "ACME", "result": result, "city": "Dallas", "state": "TX"})
     text = html.unescape(rendered).lower()
-    assert "permit required:" in text
-    assert "commercial building / tenant improvement" in text
+    assert result["permit_decision"] == "REQUIRED"
+    assert result["permit_required"] is True
+    assert "verify" in text
+    assert "building" in text
     assert "likely permits" not in text
     assert "likely required" not in text
     assert "verify exact permit type with the ahj" not in text

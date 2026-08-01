@@ -20,25 +20,25 @@ def _families(public):
     return [(server._pa20_row_family(row) or server._customer_row_family(row), server._pa20_row_status(row) or server._customer_row_status(row) or ("VERIFY" if not row.get("required") else "REQUIRED")) for row in rows]
 
 
-def test_scope_signal_floor_is_idempotent_and_does_not_duplicate_rows():
+def test_scope_signal_floor_does_not_override_not_required_truth():
     base = {"permit_decision": "NOT_REQUIRED", "permit_required": False, "permit_verdict": "NO", "permits_required": [], "related_permits": []}
     job = "replace bathtub with walk in shower and relocate drain six inches, no electrical work"
     once = server._pa20_apply_scope_signal_family_floor(copy.deepcopy(base), job, "Queens", "NY")
     twice = server._pa20_apply_scope_signal_family_floor(copy.deepcopy(once), job, "Queens", "NY")
-    assert once["permit_decision"] == "REQUIRED"
+    assert once["permit_decision"] == "NOT_REQUIRED"
     assert _families(once) == _families(twice)
-    assert _families(once).count(("plumbing", "REQUIRED")) == 1
+    assert _families(once) == []
 
 
-def test_de_minimis_only_signal_keeps_not_required_contract():
+def test_de_minimis_only_signal_does_not_override_required_truth():
     base = {"permit_decision": "REQUIRED", "permit_required": True, "permit_verdict": "YES", "permits_required": [{"permit_type": "Building Permit", "filing_family": "building", "required": True, "status": "REQUIRED"}]}
     job = "replace interior prehung door same size, no wall framing or header changes"
     out = server._pa20_apply_scope_signal_family_floor(copy.deepcopy(base), job, "Raleigh", "NC")
-    assert out["permit_decision"] == "NOT_REQUIRED"
-    assert out.get("permits_required") == []
+    assert out["permit_decision"] == "REQUIRED"
+    assert _families(out).count(("building", "REQUIRED")) == 1
 
 
-def test_generator_no_building_expansion_demotes_building_without_deleting_guidance():
+def test_generator_scope_leads_do_not_demote_existing_required_rows():
     base = {"permit_decision": "REQUIRED", "permit_required": True, "permit_verdict": "YES", "permits_required": [
         {"permit_type": "Building Permit", "filing_family": "building", "required": True, "status": "REQUIRED"},
         {"permit_type": "Electrical Permit", "filing_family": "electrical", "required": True, "status": "REQUIRED"},
@@ -48,8 +48,8 @@ def test_generator_no_building_expansion_demotes_building_without_deleting_guida
     required = {fam for fam, status in _families(out) if status == "REQUIRED"}
     verify = {fam for fam, status in _families(out) if status == "VERIFY"}
     assert "electrical" in required
-    assert "building" not in required
-    assert "building" in verify
+    assert "building" in required
+    assert "mechanical" in verify
 
 
 def test_synthesized_verify_rows_have_trigger_condition_text():

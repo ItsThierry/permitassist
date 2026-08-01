@@ -369,15 +369,32 @@ def detect_filing_scope_signals(job_type: str, result: dict[str, Any] | None = N
         )
     }
     scope_text = _norm(job_type)
-    advisory_text = _norm(_flatten_public_text(advisory_fields, include_private=True))
-    all_text = f"{scope_text} {advisory_text}"
+    # Advisory/model prose may explain a filing but may never author one.
+    advisory_text = ""
+    all_text = scope_text
     signals: list[FilingSignal] = []
 
     is_commercial = _contains_any(scope_text, ("commercial", "tenant improvement", " ti", "restaurant", "retail", "office", "clinic", "salon", "daycare", "laundromat", "finish-out", "fit-out", "bar"))
     is_adu = _contains_any(scope_text, ("adu", "accessory dwelling", "garage conversion", "jadu", "in-law suite", "granny flat")) and not is_commercial
     if is_adu:
         _append_signal(signals, "adu_or_garage_conversion", ("building_adu",), "ADU / garage conversion scope")
-    if is_commercial or _contains_any(scope_text, ("change of occupancy", "change of use", "certificate of occupancy")):
+    commercial_work = _contains_any(
+        scope_text,
+        (
+            "tenant improvement", "interior alteration", "finish-out", "fit-out",
+            "remodel", "renovation", "partition", "wall", "electrical",
+            "plumbing", "mechanical", "hvac", "change of occupancy",
+            "change of use", "certificate of occupancy",
+        ),
+    ) or bool(re.search(r"\bti\b", scope_text))
+    no_regulated_work = _contains_any(
+        scope_text,
+        (
+            "furniture replacement only", "furniture only", "decor only",
+            "no walls, mep", "no change of use, occupancy, walls",
+        ),
+    )
+    if (is_commercial and commercial_work and not no_regulated_work) or _contains_any(scope_text, ("change of occupancy", "change of use", "certificate of occupancy")):
         _append_signal(signals, "commercial_ti_or_change_of_use", ("building_ti",), "Commercial TI/change-of-use scope")
 
     if _contains_any(all_text, ("subpanel", "sub-panel", "service upgrade", "service change", "new electrical service", "panel upgrade", "meter main", "switchgear", "200 amp", "200a", "400 amp", "400a")):
@@ -630,13 +647,15 @@ def _new_row(family_id: str, signals: list[FilingSignal], city: str, state: str,
     family = FILING_FAMILIES[family_id]
     prov = _provenance_for(family_id, city, state, as_of=as_of)
     trigger_ids = [s.signal_id for s in signals if family_id in s.filing_families]
-    decision = _row_decision_for_family(family_id, signals)
+    proposed_decision = _row_decision_for_family(family_id, signals)
+    decision = "CONDITIONAL_REQUIRED" if proposed_decision == "CONDITIONAL_REQUIRED" else "VERIFY"
     row: dict[str, Any] = {
         "filing_family": family_id,
         "permit_type": family.label,
         "approval_type": family.label,
         "row_category": family.row_category,
-        "required": True,
+        "status": "CONDITIONAL" if decision == "CONDITIONAL_REQUIRED" else decision,
+        "required": False,
         "decision": decision,
         "trigger_signal_ids": list(dict.fromkeys(trigger_ids)),
         "ahj_name": prov["ahj_name"],
@@ -671,8 +690,15 @@ def _reconcile_existing_row(row: dict[str, Any], family_id: str, signals: list[F
             continue
         merged[key] = value
     merged["filing_family"] = family_id
-    merged["required"] = True
-    merged["decision"] = _row_decision_for_family(family_id, signals)
+    existing_decision = str(row.get("decision") or row.get("status") or "").upper().strip()
+    decision = existing_decision if existing_decision in {
+        "REQUIRED", "CONDITIONAL", "CONDITIONAL_REQUIRED",
+        "NOT_REQUIRED", "NEEDS_INPUT", "VERIFY",
+    } else _row_decision_for_family(family_id, signals)
+    status = "CONDITIONAL" if decision == "CONDITIONAL_REQUIRED" else decision
+    merged["required"] = status == "REQUIRED"
+    merged["status"] = status
+    merged["decision"] = decision
     merged["trigger_signal_ids"] = list(dict.fromkeys(list(merged.get("trigger_signal_ids") or []) + list(base.get("trigger_signal_ids") or [])))
     if merged.get("apply_url") and BANNED_PHOENIX_APPLY_HOST_RE.search(str(merged.get("apply_url"))):
         merged["apply_url"] = None
@@ -744,9 +770,6 @@ def ensure_required_filing_rows(result: dict[str, Any], job_type: str, city: str
     reconciled.extend(passthrough)
     if reconciled:
         out["permits_required"] = reconciled
-        out["permit_required"] = True
-        out["permit_decision"] = "REQUIRED"
-        out["permit_verdict"] = "YES"
         if not out.get("permit_name"):
             out["permit_name"] = reconciled[0].get("permit_type")
         if not out.get("permit_kind"):
@@ -775,6 +798,6 @@ def ensure_required_filing_rows(result: dict[str, Any], job_type: str, city: str
         "families": ordered_families,
         "injected_families": injected,
         "repaired_families": repaired,
-        "advisory_gate": "inject_only",
+        "advisory_gate": "scope_only",
     }
     return _repair_seattle_split_system_customer_text(out, job_type, city, state)

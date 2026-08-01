@@ -1,8 +1,10 @@
 {
-  "manifest_version": "permitassist.rule-engine-part2-red-manifest.v1",
-  "frozen_before_behavior_edits": true,
+  "contract_correction": "five_status_customer_projection_migration_20260730",
   "files": {
-    "tests/fixtures/permit_rule_engine_part2_red_no_neuter.json": "6ed10204a54ae37469b79a9b969ad95769cdbe101d1b00c3cada59c157c5991a",
-    "tests/test_permit_rule_engine_part2.py": "a494195634b382114b066b29c5110b4106bcf156e7e518b770c9f85ce9884fe9"
-  }
+    "tests/fixtures/permit_rule_engine_part2_red_no_neuter.json": "5b8d5435c3ff01acaa65d48ae20f9c7f01b05197758ecafb3e13b83e45df2a35",
+    "tests/test_permit_rule_engine_part2.py": "1d974c97d03896a6258bfcbe247b58bf774bedabeb82de3f8ec2a01b7b72c71b"
+  },
+  "frozen_before_behavior_edits": false,
+  "manifest_version": "permitassist.rule-engine-part2-red-manifest.v2",
+  "preserved_v1_manifest": "tests/fixtures/permit_rule_engine_part2_red_no_neuter_manifest_v1.json"
 }

@@ -56,7 +56,7 @@ def _run_verdict_state(fixture: dict) -> dict:
     html = FRONTEND_INDEX.read_text(encoding="utf-8")
     helpers = "\n".join(
         _extract_js_function(html, name)
-        for name in ["hasPositiveNoPermitEvidence", "verdictState", "customerFacingDecisionLabel"]
+        for name in ["hasPositiveNoPermitEvidence", "canonicalCustomerStatus", "verdictState", "customerFacingDecisionLabel"]
     )
     script = f"""
 {helpers}
@@ -83,7 +83,7 @@ def test_fail_closed_unknown_empty_permits_renders_check_required_not_not_requir
 
     assert rendered["verdict"] != "no"
     assert "NOT REQUIRED" not in rendered["customerDecision"].upper()
-    assert rendered["customerDecision"].upper() in {"CHECK REQUIRED", "VERIFY REQUIRED"}
+    assert rendered["customerDecision"].upper() == "NEEDS INPUT"
 
 
 def test_mobile_first_summary_not_required_is_sanitized_without_positive_exemption_evidence():
@@ -99,7 +99,7 @@ def test_mobile_first_summary_not_required_is_sanitized_without_positive_exempti
 
     assert rendered["verdict"] != "no"
     assert "NOT REQUIRED" not in rendered["customerDecision"].upper()
-    assert rendered["customerDecision"].upper() in {"CHECK REQUIRED", "VERIFY REQUIRED"}
+    assert rendered["customerDecision"].upper() == "NEEDS INPUT"
 
 
 def test_unknown_no_evidence_empty_sources_never_renders_not_required():
@@ -114,11 +114,17 @@ def test_unknown_no_evidence_empty_sources_never_renders_not_required():
 
     assert rendered["verdict"] != "no"
     assert "NOT REQUIRED" not in rendered["customerDecision"].upper()
-    assert rendered["customerDecision"].upper() in {"CHECK REQUIRED", "VERIFY REQUIRED"}
+    assert rendered["customerDecision"].upper() == "NEEDS INPUT"
 
 
-def test_positive_source_backed_no_permit_evidence_still_renders_not_required():
-    legitimate_no_permit_payload = {
+def _source_shaped_not_required_payload() -> dict:
+    return {
+        "permit_manifest": {
+            "schema_version": "permit_manifest_v1",
+            "permit_decision": "NOT_REQUIRED",
+            "primary": {"family": "BUILDING", "status": "NOT_REQUIRED"},
+            "companions": [],
+        },
         "permit_decision": "NOT_REQUIRED",
         "permit_verdict": "NO",
         "permits_required": [
@@ -143,6 +149,53 @@ def test_positive_source_backed_no_permit_evidence_still_renders_not_required():
         ],
         "customer_first_screen_summary": {"decision": "NOT_REQUIRED"},
     }
+
+
+def test_unsigned_source_shaped_not_required_payload_fails_closed(monkeypatch):
+    from api import server
+
+    monkeypatch.setenv("PERMITASSIST_PERMIT_MANIFEST_MODE", "active")
+    public = server.build_customer_response_egress(
+        _source_shaped_not_required_payload(),
+        "residential cosmetic interior painting only",
+        "Phoenix",
+        "AZ",
+        job_category="residential",
+    )
+    rendered = _run_verdict_state(public)
+
+    assert public["permit_decision"] == "VERIFY"
+    assert public["permit_required"] is None
+    assert rendered["verdict"] == "maybe"
+    assert rendered["customerDecision"].upper() != "NOT REQUIRED"
+
+
+def test_authenticated_server_projected_not_required_dto_renders_not_required(monkeypatch):
+    from api import server
+
+    monkeypatch.setenv("PERMITASSIST_PERMIT_MANIFEST_MODE", "active")
+    monkeypatch.setenv("PERMITASSIST_V24_MODE", "active")
+    from api.research_engine import _deterministic_v24_result_from_resolution
+    from api.v24_decision_cells import reconcile_authoritative_result, resolve_v24_cell
+
+    job_type = "commercial office tenant improvement"
+    resolution = resolve_v24_cell("Crook County", "WY", job_type, "commercial")
+    raw = _deterministic_v24_result_from_resolution(
+        resolution, job_type, "Crook County", "WY"
+    )
+    assert raw is not None
+    reconcile_authoritative_result(raw, v24_resolution=resolution, v231_resolution=None)
+    capability = server._issue_server_owned_legacy_result(raw)
+    legitimate_no_permit_payload = server.build_customer_response_egress(
+        capability,
+        job_type,
+        "Crook County",
+        "WY",
+        job_category="commercial",
+    )
+    assert legitimate_no_permit_payload["permit_decision"] == "NOT_REQUIRED"
+    assert legitimate_no_permit_payload["permit_required"] is False
+    assert "authority_tag" not in json.dumps(legitimate_no_permit_payload).lower()
 
     rendered = _run_verdict_state(legitimate_no_permit_payload)
 

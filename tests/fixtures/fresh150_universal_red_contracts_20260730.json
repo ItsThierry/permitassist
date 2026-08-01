@@ -1,0 +1,57 @@
+{
+  "schema_version": "fresh150_universal_red_contracts_v1",
+  "source_commit": "0a30728ac6c16ba9f6fef24d26046e6629e7631a",
+  "source_report": "/mnt/d/AI/HermesData/hermes-default/backups/permitassist-checkpoints/2026-07-30-fresh150-real-life-eval/FINAL_RESULTS_REPORT_V2.md",
+  "constraints": {
+    "prior_correct_definitive": 127,
+    "resolver_exact_definitive": 98,
+    "required_to_unknown": 13,
+    "conditional_overclaims": 8,
+    "infra_failures": 1
+  },
+  "required_to_unknown": [
+    {"case_id":"F150-R-051","city":"Hesston","state":"KS","job_type":"Residential remodel of a single-family kitchen with cabinet replacement, sink relocation, new island receptacles, and no structural wall changes.","minimum_families":["electrical"],"artifact":"per_case/F150-R-051/response_body.json"},
+    {"case_id":"F150-R-052","city":"Harrisonville","state":"MO","job_type":"Residential remodel of a single-family basement into finished living space with new partitions, electrical outlets, and no separate dwelling unit.","minimum_families":["building","electrical"],"artifact":"per_case/F150-R-052/response_body.json"},
+    {"case_id":"F150-R-056","city":"Clinton Township","state":"MI","job_type":"Home remodel converting an attached garage into conditioned living space with insulation and electrical work, but no new dwelling unit.","minimum_families":["building","electrical"],"artifact":"per_case/F150-R-056/response_body.json"},
+    {"case_id":"F150-R-060","city":"Snyder County","state":"PA","job_type":"Residential remodel of a single-family basement into finished living space with new partitions, electrical outlets, and no separate dwelling unit.","minimum_families":["electrical"],"artifact":"per_case/F150-R-060/response_body.json"},
+    {"case_id":"F150-R-065","city":"Princeton","state":"WV","job_type":"Residential roof replacement on a single-family home using composition shingles, with underlayment replacement and no solar or skylight work.","minimum_families":["building"],"artifact":"per_case/F150-R-065/response_body.json"},
+    {"case_id":"F150-R-073","city":"Kern County","state":"CA","job_type":"Residential roof replacement on a single-family home using composition shingles, with underlayment replacement and no solar or skylight work.","minimum_families":["building"],"artifact":"per_case/F150-R-073/response_body.json"},
+    {"case_id":"F150-C-053","city":"Defiance","state":"OH","job_type":"Office tenant improvement in an existing multi-tenant building with conference rooms, a break-room sink, and no change of occupancy.","minimum_families":["building","plumbing","zoning","city_of_defiance_engineering_certificate"],"artifact":"per_case/F150-C-053/response_body.json"},
+    {"case_id":"F150-C-055","city":"Clermont County","state":"OH","job_type":"Restaurant tenant improvement in an existing commercial shell with a kitchen hood, grease interceptor, plumbing, gas, and electrical work.","minimum_families":["building","electrical","health","mechanical","plumbing"],"artifact":"per_case/F150-C-055/response_body.json"},
+    {"case_id":"F150-C-059","city":"Salem","state":"NJ","job_type":"Office tenant improvement in an existing multi-tenant building with conference rooms, a break-room sink, and no change of occupancy.","minimum_families":["building","plumbing"],"artifact":"per_case/F150-C-059/response_body.json"},
+    {"case_id":"F150-C-063","city":"West Springfield","state":"MA","job_type":"Clinic tenant improvement in an existing commercial office suite with exam-room partitions, hand sinks, lighting, and no exterior expansion.","minimum_families":["building","electrical","plumbing"],"artifact":"per_case/F150-C-063/response_body.json"},
+    {"case_id":"F150-C-064","city":"Manning","state":"SC","job_type":"Commercial tenant improvement in an existing warehouse office area with partitions, lighting, HVAC distribution, and no structural expansion.","minimum_families":["building","electrical","mechanical"],"artifact":"per_case/F150-C-064/response_body.json"},
+    {"case_id":"F150-C-070","city":"Rigby","state":"ID","job_type":"Commercial tenant improvement in an existing warehouse office area with partitions, lighting, HVAC distribution, and no structural expansion.","minimum_families":["building","electrical","mechanical"],"artifact":"per_case/F150-C-070/response_body.json"},
+    {"case_id":"F150-C-073","city":"Union County","state":"NM","job_type":"Clinic tenant improvement in an existing commercial office suite with exam-room partitions, hand sinks, lighting, and no exterior expansion.","minimum_families":["building","electrical","plumbing"],"artifact":"per_case/F150-C-073/response_body.json"}
+  ],
+  "conditional_overclaims": [
+    {"case_id":"F150-C-050","city":"Crook County","state":"WY","job_type":"Office tenant improvement in an existing multi-tenant building with conference rooms, a break-room sink, and no change of occupancy.","artifact":"per_case/F150-C-050/response_body.json"},
+    {"case_id":"F150-R-054","city":"Fall River County","state":"SD","job_type":"Residential roof replacement on a single-family home using composition shingles, with underlayment replacement and no solar or skylight work.","artifact":"per_case/F150-R-054/response_body.json"},
+    {"case_id":"F150-R-066","city":"Metcalfe County","state":"KY","job_type":"Reroof a residential single-family home with a complete asphalt-shingle tear-off and like-for-like replacement, with no structural framing changes.","artifact":"per_case/F150-R-066/response_body.json"},
+    {"case_id":"F150-R-067","city":"Martin County","state":"NC","job_type":"Reroof a residential single-family home with a complete asphalt-shingle tear-off and like-for-like replacement, with no structural framing changes.","artifact":"per_case/F150-R-067/response_body.json"},
+    {"case_id":"F150-R-068","city":"State Fire Marshal","state":"OK","job_type":"Reroof a residential single-family home with a complete asphalt-shingle tear-off and like-for-like replacement, with no structural framing changes.","artifact":"per_case/F150-R-068/response_body.json"},
+    {"case_id":"F150-R-070","city":"Hermiston","state":"OR","job_type":"Residential roof replacement on a single-family home using composition shingles, with underlayment replacement and no solar or skylight work.","artifact":"per_case/F150-R-070/response_body.json"},
+    {"case_id":"F150-R-075","city":"Aleutians East Borough","state":"AK","job_type":"Residential remodel of a single-family kitchen with cabinet replacement, sink relocation, new island receptacles, and no structural wall changes.","artifact":"per_case/F150-R-075/response_body.json"},
+    {"case_id":"F150-C-054","city":"Howard County","state":"IA","job_type":"Office tenant improvement in an existing multi-tenant building with conference rooms, a break-room sink, and no change of occupancy.","artifact":"per_case/F150-C-054/response_body.json"}
+  ],
+  "false_required_exemption": {"case_id":"F150-R-058","state":"NJ","scope_class":"detached_one_or_two_family_roof_covering_replacement","artifact":"per_case/F150-R-058/response_body.json"},
+  "infrastructure_failure": {"case_id":"F150-R-007","http_status":502,"request_id":"Advw5lV-TBi6S0ppBhdwDg","artifact":"per_case/F150-R-007/PROCESS_FAILURE_PROOF.txt"},
+  "protected_prior_correct": [
+    {"case_id":"F150-C-001","segment":"commercial","coverage":"enriched_exact","artifact":"per_case/F150-C-001/response_body.json"},
+    {"case_id":"F150-C-002","segment":"commercial","coverage":"enriched_exact","artifact":"per_case/F150-C-002/response_body.json"},
+    {"case_id":"F150-C-048","segment":"commercial","coverage":"enriched_exact","artifact":"per_case/F150-C-048/response_body.json"},
+    {"case_id":"F150-C-049","segment":"commercial","coverage":"enriched_exact","artifact":"per_case/F150-C-049/response_body.json"},
+    {"case_id":"F150-C-051","segment":"commercial","coverage":"fallback","artifact":"per_case/F150-C-051/response_body.json"},
+    {"case_id":"F150-C-052","segment":"commercial","coverage":"fallback","artifact":"per_case/F150-C-052/response_body.json"},
+    {"case_id":"F150-C-074","segment":"commercial","coverage":"fallback","artifact":"per_case/F150-C-074/response_body.json"},
+    {"case_id":"F150-C-075","segment":"commercial","coverage":"fallback","artifact":"per_case/F150-C-075/response_body.json"},
+    {"case_id":"F150-R-001","segment":"residential","coverage":"enriched_exact","artifact":"per_case/F150-R-001/response_body.json"},
+    {"case_id":"F150-R-002","segment":"residential","coverage":"enriched_exact","artifact":"per_case/F150-R-002/response_body.json"},
+    {"case_id":"F150-R-049","segment":"residential","coverage":"enriched_exact","artifact":"per_case/F150-R-049/response_body.json"},
+    {"case_id":"F150-R-050","segment":"residential","coverage":"enriched_exact","artifact":"per_case/F150-R-050/response_body.json"},
+    {"case_id":"F150-R-053","segment":"residential","coverage":"fallback","artifact":"per_case/F150-R-053/response_body.json"},
+    {"case_id":"F150-R-055","segment":"residential","coverage":"fallback","artifact":"per_case/F150-R-055/response_body.json"},
+    {"case_id":"F150-R-072","segment":"residential","coverage":"fallback","artifact":"per_case/F150-R-072/response_body.json"},
+    {"case_id":"F150-R-074","segment":"residential","coverage":"fallback","artifact":"per_case/F150-R-074/response_body.json"}
+  ]
+}

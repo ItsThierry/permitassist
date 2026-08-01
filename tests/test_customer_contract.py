@@ -20,7 +20,7 @@ BANNED_RE = re.compile(
     r"UNKNOWN|FAIL_CLOSED|fail closed|permit likely required|likely required|likely not required|"
     r"may be required|may require|might require|probably|maybe|possibly|unable to determine|"
     r"could not verify|not available from source-backed evidence|Permit answer not available|"
-    r"verify with (?:the )?AHJ|permit_required[\"']?\s*:\s*(?:null|None)",
+    r"verify with (?:the )?AHJ",
     re.I,
 )
 
@@ -125,13 +125,17 @@ def _legacy_unknown_result():
 def _assert_concrete_public(public):
     serialized = json.dumps(public, sort_keys=True, default=str)
     assert not BANNED_RE.search(serialized), serialized
-    assert public["permit_decision"] in {"REQUIRED", "NOT_REQUIRED"}
-    assert public["permit_required"] in {True, False}
-    if public["permit_required"] is True:
+    decision = public["permit_decision"]
+    assert decision in {"REQUIRED", "NOT_REQUIRED", "CONDITIONAL", "VERIFY", "NEEDS_INPUT"}
+    assert public["permit_required"] is ({"REQUIRED": True, "NOT_REQUIRED": False}.get(decision))
+    if decision == "REQUIRED":
         assert public.get("permit_kind")
         assert public.get("permits_required")
-    else:
+    elif decision == "NOT_REQUIRED":
         assert public.get("not_required_reason") or "not required" in serialized.lower()
+    else:
+        assert not public.get("permits_required")
+        assert public.get("family_decisions") or public.get("related_permits") or public.get("companion_permits")
     assert public.get("customer_headline")
     assert public.get("customer_next_step")
 
@@ -207,7 +211,8 @@ def test_source_starvation_degrades_source_not_decision(tmp_path, monkeypatch):
     raw.update({"retrieval_diagnostics": {"source_url_count": 0}, "warnings": ["source retrieval failed"]})
     public = server.build_customer_permit_view_model(raw, "commercial office tenant improvement", "Austin", "TX")
     _assert_concrete_public(public)
-    assert public["permit_decision"] == "REQUIRED"
+    assert public["permit_decision"] == "VERIFY"
+    assert public["permit_required"] is None
     assert public.get("degraded_sources") is True
     assert public.get("source_support", {}).get("decision_mutation_allowed") is False
 
@@ -218,7 +223,8 @@ def test_http_429_502_still_returns_concrete_decision(tmp_path, monkeypatch):
     raw.update({"retrieval_diagnostics": {"status_codes": [429, 502], "error": "bad gateway / rate limit"}})
     public = server.build_customer_permit_view_model(raw, "EV charger installation", "Denver", "CO")
     _assert_concrete_public(public)
-    assert public["permit_decision"] == "REQUIRED"
+    assert public["permit_decision"] == "VERIFY"
+    assert public["permit_required"] is None
     assert public.get("degraded_sources") is True
 
 
@@ -280,8 +286,8 @@ def test_valid_us_jurisdiction_still_returns_concrete_never_unknown(tmp_path, mo
     public = server.build_customer_permit_view_model(_legacy_unknown_result(), "water heater replacement", "Phoenix", "AZ")
 
     _assert_concrete_public(public)
-    assert public["permit_decision"] in {"REQUIRED", "NOT_REQUIRED"}
-    assert public["permit_required"] in {True, False}
+    assert public["permit_decision"] in {"REQUIRED", "NOT_REQUIRED", "CONDITIONAL", "VERIFY", "NEEDS_INPUT"}
+    assert public["permit_required"] is ({"REQUIRED": True, "NOT_REQUIRED": False}.get(public["permit_decision"]))
 
 
 def test_customer_apply_path_scrubs_cached_uncertainty_and_renames_documents(tmp_path, monkeypatch):
@@ -321,13 +327,17 @@ def test_customer_apply_path_scrubs_cached_uncertainty_and_renames_documents(tmp
 
     public = server.build_customer_permit_view_model(dirty, "commercial office tenant improvement", "Dallas", "TX")
 
-    assert public["permit_decision"] == "REQUIRED"
+    assert public["permit_decision"] == "VERIFY"
+    assert public["permit_required"] is None
     apply_path = public.get("apply_path") or {}
     assert apply_path.get("login_required") in (True, False, None)
     assert apply_path.get("platform") in (None, "city portal / AHJ website", "PDF / paper form", "Accela / Citizen Access", "Tyler / EnerGov", "OpenGov")
     assert "likely_documents" not in apply_path
     assert apply_path.get("documents_to_prepare") == ["scope of work", "plans/drawings if required"]
-    assert public.get("companion_permits", [{}])[0].get("certainty") == "likely"
+    companion = public.get("companion_permits", [{}])[0]
+    assert companion.get("status") in {"VERIFY", "CONDITIONAL", "NEEDS_INPUT"}
+    assert companion.get("required") is None
+    assert "certainty" not in companion
     _assert_no_uncertainty_outside_companion(public)
 
 

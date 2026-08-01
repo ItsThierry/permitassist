@@ -9014,7 +9014,7 @@ def _deterministic_v24_result_from_resolution(v24_resolution, job_type: str, cit
         "summary": narrative,
         "permit_required": payload.get("permit_required"),
         "permit_decision": payload.get("permit_decision"),
-        "permit_verdict": "YES" if payload.get("permit_required") is True else ("NO" if payload.get("permit_required") is False else "CONTACT_AHJ"),
+        "permit_verdict": "YES" if payload.get("permit_required") is True else ("NO" if payload.get("permit_required") is False else "NEEDS_INPUT"),
         "permit_name": payload.get("permit_name"),
         "permit_type": payload.get("permit_name"),
         "permits_required": payload.get("permits_required") or [],
@@ -9033,8 +9033,8 @@ def _deterministic_v24_result_from_resolution(v24_resolution, job_type: str, cit
     if status == "exact_cell_fail_closed":
         result.update({
             "permit_required": None,
-            "permit_decision": "UNKNOWN",
-            "permit_verdict": "CONTACT_AHJ",
+            "permit_decision": "NEEDS_INPUT",
+            "permit_verdict": "NEEDS_INPUT",
             "permit_name": None,
             "permit_type": None,
             "permits_required": [],
@@ -9681,8 +9681,8 @@ Return ONLY the JSON object."""
     if not result.get("permit_verdict"):
         permits = result.get("permits_required", [])
         if not permits:
-            # Empty array = GPT said no permit needed
-            result["permit_verdict"] = "NO"
+            # An omitted/empty family list is not authoritative NOT_REQUIRED.
+            result["permit_verdict"] = "NEEDS_INPUT"
         else:
             first_req = permits[0].get("required")
             if first_req is True:
@@ -9690,7 +9690,7 @@ Return ONLY the JSON object."""
             elif first_req is False:
                 result["permit_verdict"] = "NO"
             elif first_req == "maybe":
-                result["permit_verdict"] = "MAYBE"
+                result["permit_verdict"] = "CONDITIONAL"
             else:
                 # required field missing or unknown value — check fee/summary for hints
                 fee = str(result.get("fee_range", "")).lower()
@@ -9698,7 +9698,7 @@ Return ONLY the JSON object."""
                 if "no permit" in fee or "no permit" in summary or "not required" in summary:
                     result["permit_verdict"] = "NO"
                 else:
-                    result["permit_verdict"] = "MAYBE"
+                    result["permit_verdict"] = "NEEDS_INPUT"
 
     # ── City Database Fallbacks for Missing Fields ──
     if city_match_level == "city":

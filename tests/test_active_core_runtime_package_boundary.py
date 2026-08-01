@@ -150,7 +150,7 @@ def test_allowlisted_uncovered_project_returns_sealed_fail_closed_not_legacy(
 
     assert legacy_calls == 0
     assert public["jurisdiction_id"] == "us-az-buckeye"
-    assert public["permit_decision"] == "UNKNOWN"
+    assert public["permit_decision"] == "NEEDS_INPUT"
     assert public["permit_required"] is None
 
 

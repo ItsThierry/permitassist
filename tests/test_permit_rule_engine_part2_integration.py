@@ -173,8 +173,8 @@ def test_exact_fail_closed_abstains_every_family_and_customer_mirror() -> None:
     assert all(decision.verdict is pre.FamilyVerdict.ABSTAIN for decision in envelope.family_decisions)
     assert all("exact_cell_fail_closed" in decision.validation_issue_codes for decision in envelope.family_decisions)
     assert projection["permit_required"] is None
-    assert all(row["required_status"] == "ABSTAIN" for row in projection["permits_required"])
-    assert all(row["required"] == "maybe" for row in projection["permits_required"])
+    assert all(row["required_status"] == "NEEDS_INPUT" for row in projection["permits_required"])
+    assert all(row["required"] is None for row in projection["permits_required"])
 
 
 def test_customer_authority_routes_redact_internal_provenance_metadata() -> None:

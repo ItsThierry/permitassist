@@ -80,7 +80,7 @@ def test_linter_flags_internal_process_copy_at_customer_boundary():
     assert "internal_process_copy" in codes
 
 
-def test_v24_cell_lock_is_recognized_and_preserves_core_customer_fields():
+def test_plain_synthetic_v24_cell_lock_cannot_mint_binary_customer_authority():
     raw = {
         "permit_required": True,
         "permit_decision": "REQUIRED",
@@ -115,11 +115,10 @@ def test_v24_cell_lock_is_recognized_and_preserves_core_customer_fields():
         job_category="residential",
     )
 
-    assert public["permit_decision"] == "REQUIRED"
-    assert public["permit_name"] == "Cell-Owned Building Permit"
-    assert public["applying_office"] == "Cell-Owned Building Department"
-    assert public["apply_url"] == "https://cell.example.gov/building"
-    assert public["permits_required"][0]["permit_type"] == "Cell-Owned Building Permit"
+    assert public["permit_decision"] == "VERIFY"
+    assert public["permit_required"] is None
+    assert public["permit_verdict"] == "VERIFY"
+    assert public.get("permits_required") == []
     assert "_decision_cell_primary_lock" not in public
 
 
@@ -151,8 +150,9 @@ def test_residential_address_dependent_companions_demote_to_verify_not_deleted()
     required_text = json.dumps(public.get("permits_required") or []).lower()
     related_text = json.dumps(public.get("related_permits") or []).lower()
 
-    assert "electrical" in required_text
-    assert "fire marshal" not in required_text
-    assert "planning" not in required_text
+    assert public["permit_decision"] == "VERIFY"
+    assert public["permit_required"] is None
+    assert not required_text or required_text == "[]"
+    assert "electrical" in related_text and "verify" in related_text
     assert "fire marshal" in related_text and "verify" in related_text
     assert "planning" in related_text and "verify" in related_text

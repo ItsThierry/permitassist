@@ -1,0 +1,31 @@
+{
+  "schema_version": "permitassist-ahj-rule-v1",
+  "rules": [
+    {
+      "rule_id": "us-ca-san-francisco-window-replacement-required-v1",
+      "jurisdiction": {
+        "country": "US",
+        "state": "CA",
+        "city": "San Francisco",
+        "issuing_authority": "San Francisco Department of Building Inspection"
+      },
+      "family": "building",
+      "status": "REQUIRED",
+      "scope_patterns": [
+        "\\b(?:replace|replacement)\\b[^.]{0,120}\\bwindows?\\b",
+        "\\bwindows?\\b[^.]{0,120}\\b(?:same size|same opening|existing opening|not changing the existing wall opening)\\b"
+      ],
+      "official_source": {
+        "url": "https://www.sf.gov/replace-your-windows",
+        "title": "Replace your windows | SF.gov",
+        "quote": "If you are not changing the existing wall opening, apply for your window replacement permit online.",
+        "claim_sha256": "b0314fb609fec740d05c33316a0fcfaa1a3e9449a3dcd024a3c9da445539b4eb",
+        "retrieved_on": "2026-07-30"
+      },
+      "application": {
+        "channel": "online_portal",
+        "url": "https://sanfranciscoca.portal.opengov.com/categories/1082/record-types/6434"
+      }
+    }
+  ]
+}

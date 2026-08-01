@@ -2506,7 +2506,7 @@ def build_sealed_projection_payload(
     family_rows = [
         {
             "family": decision.family,
-            "verdict": decision.verdict.value,
+            "verdict": "NEEDS_INPUT" if decision.verdict is FamilyVerdict.ABSTAIN else decision.verdict.value,
             "trigger": decision.trigger,
             "source_ref": (decision_source_refs(decision) or [None])[0],
             "source_refs": decision_source_refs(decision),
@@ -2560,8 +2560,8 @@ def build_sealed_projection_payload(
         {
             "permit_type": decision.family.replace("_", " ").title() + " Permit",
             "permit_kind": decision.family,
-            "required": True if decision.verdict is FamilyVerdict.REQUIRED else False if decision.verdict is FamilyVerdict.NOT_REQUIRED else "maybe",
-            "required_status": decision.verdict.value,
+            "required": True if decision.verdict is FamilyVerdict.REQUIRED else False if decision.verdict is FamilyVerdict.NOT_REQUIRED else None,
+            "required_status": "NEEDS_INPUT" if decision.verdict is FamilyVerdict.ABSTAIN else decision.verdict.value,
             "trigger": decision.trigger,
             "source_ref": (decision_source_refs(decision) or [None])[0],
             "source_refs": decision_source_refs(decision),
@@ -2574,8 +2574,8 @@ def build_sealed_projection_payload(
         {
             "permit_type": decision.family.replace("_", " ").title() + " Permit",
             "permit_kind": decision.family,
-            "required": False if decision.verdict is FamilyVerdict.NOT_REQUIRED else "maybe",
-            "required_status": decision.verdict.value,
+            "required": False if decision.verdict is FamilyVerdict.NOT_REQUIRED else None,
+            "required_status": "NEEDS_INPUT" if decision.verdict is FamilyVerdict.ABSTAIN else decision.verdict.value,
             "trigger": decision.trigger,
         }
         for decision in family_decisions
@@ -2592,9 +2592,13 @@ def build_sealed_projection_payload(
         else main_decision.family.replace("_", " ").title() + " Permit"
     )
     verdict_text = "YES" if permit_required is True else "NO" if permit_required is False else "VERIFY"
-    decision_text = main_decision.verdict.value if main_binary else "UNKNOWN"
+    decision_text = main_decision.verdict.value if main_binary else (
+        "CONDITIONAL" if main_decision.verdict is FamilyVerdict.CONDITIONAL
+        else "NEEDS_INPUT" if main_decision.verdict is FamilyVerdict.ABSTAIN
+        else "VERIFY"
+    )
     unresolved_family_rows = [
-        row for row in family_rows if row["verdict"] in {"CONDITIONAL", "VERIFY", "ABSTAIN"}
+        row for row in family_rows if row["verdict"] in {"CONDITIONAL", "VERIFY", "NEEDS_INPUT"}
     ]
     if seed_classification_value == SeedClassification.EXACT_PARTIAL.value and unresolved_family_rows:
         next_step = (
@@ -2642,7 +2646,7 @@ def build_sealed_projection_payload(
         "warnings": [
             f"{row['family'].replace('_', ' ').title()}: {row['verdict']} — verify before filing."
             for row in family_rows
-            if row["verdict"] in {"CONDITIONAL", "VERIFY", "ABSTAIN"}
+            if row["verdict"] in {"CONDITIONAL", "VERIFY", "NEEDS_INPUT"}
         ],
     }
 
@@ -3033,7 +3037,7 @@ def project_core_customer_boundary(
     allowlisted request, every unsealed or invalid payload fails closed; a
     shape-valid public DTO is never accepted as proof of server authenticity.
     The integrity fallback keeps every applicable permit-family lane visible as
-    ABSTAIN with a concrete office-verification task.
+    NEEDS_INPUT with a concrete office-verification task.
 
     Flag-off and unallowlisted legacy traffic returns ``None`` so the pre-core
     path remains unchanged.
@@ -3073,7 +3077,7 @@ def project_core_customer_boundary(
     family_decisions = [
         {
             "family": family,
-            "verdict": FamilyVerdict.ABSTAIN.value,
+            "verdict": "NEEDS_INPUT",
             "trigger": issue_code,
             "authority": "",
             "apply_url": "",
@@ -3085,8 +3089,8 @@ def project_core_customer_boundary(
         {
             "permit_kind": family,
             "permit_type": f"{family.replace('_', ' ').title()} Permit",
-            "required": "maybe",
-            "required_status": FamilyVerdict.ABSTAIN.value,
+            "required": None,
+            "required_status": "NEEDS_INPUT",
             "trigger": issue_code,
             "applying_office": "",
             "apply_url": "",
@@ -3124,8 +3128,8 @@ def project_core_customer_boundary(
         "state": identity.selected.state,
         "project_family": project_family,
         "permit_required": None,
-        "permit_decision": "UNKNOWN",
-        "permit_verdict": "CONTACT_AHJ",
+        "permit_decision": "NEEDS_INPUT",
+        "permit_verdict": "NEEDS_INPUT",
         "permit_name": None,
         "permit_kind": "Verification Required",
         "customer_headline": "Verify permit requirements with the permit office.",
@@ -3985,3 +3989,78 @@ def _complete_part3_family_decisions(
                 ),
             )
     return tuple(existing[key] for key in sorted(existing))
+
+
+def resolve_decision_authority_ladder(
+    *,
+    job_type: str,
+    city: str,
+    state: str,
+    exact_decision: dict[str, Any] | None = None,
+    official_claim: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    """Resolve regulated truth through one jurisdiction-bound precedence ladder.
+
+    Exact authenticated decisions remain first. State exemptions/rules are
+    second, validated claim packets third, and scope signals can only supply
+    nonbinary family leads.
+    """
+    if isinstance(exact_decision, dict) and exact_decision.get("publishable"):
+        return {**exact_decision, "authority_tier": "DECISION_CELL"}
+    try:
+        from state_rule_packs import resolve_state_rule
+        from scope_signals import detect_scope_signals
+    except ImportError:
+        from api.state_rule_packs import resolve_state_rule
+        from api.scope_signals import detect_scope_signals
+    state_rule = resolve_state_rule(state, {"job_type": job_type, "city": city, "state": state})
+    if state_rule:
+        return {
+            "permit_decision": state_rule.status,
+            "family_decisions": [{
+                "family": state_rule.family,
+                "status": state_rule.status,
+                "trigger": state_rule.trigger,
+                "authority": state_rule.authority_model.value,
+                "source_ref": state_rule.source_url,
+                "source_url": state_rule.source_url,
+                "citation": state_rule.citation,
+                "required": state_rule.status == "REQUIRED",
+            }],
+            "authority_tier": "STATE_RULE",
+            "decision_source": state_rule.rule_id,
+        }
+    if isinstance(official_claim, dict):
+        source = str(official_claim.get("source_ref") or official_claim.get("source_url") or "")
+        claim_state = str(official_claim.get("state") or "").upper()
+        status = str(official_claim.get("status") or "").upper()
+        if source.startswith(("https://", "http://")) and claim_state == str(state).upper() and status in {"REQUIRED", "CONDITIONAL", "NOT_REQUIRED"}:
+            return {**official_claim, "authority_tier": "OFFICIAL_AHJ_CLAIM"}
+    signals = detect_scope_signals(job_type)
+    families: dict[str, dict[str, Any]] = {}
+    for signal in signals:
+        for family, raw_status in signal.family_floor.items():
+            # Scope text identifies a candidate family, not jurisdictional law.
+            # Without L1-L3 authority it is a specific missing-input lead.
+            status = "NEEDS_INPUT"
+            families.setdefault(family, {
+                "family": family,
+                "status": status,
+                "trigger": signal.trigger_condition.get(family) or signal.trigger_condition.get("when"),
+                "authority": "scope_signal_only",
+                "source_ref": None,
+                "required": False,
+            })
+    if families:
+        return {
+            "permit_decision": "NEEDS_INPUT",
+            "family_decisions": list(families.values()),
+            "authority_tier": "SCOPE_SIGNAL",
+            "decision_source": "trigger_specific_scope_floor",
+        }
+    return {
+        "permit_decision": "VERIFY",
+        "family_decisions": [],
+        "authority_tier": "VERIFY",
+        "decision_source": "authority_ladder_unresolved",
+    }

@@ -1,6 +1,8 @@
 import importlib
+import hashlib
 import json
 import re
+import sqlite3
 import sys
 import threading
 import urllib.error
@@ -213,9 +215,18 @@ def test_public_share_report_payload_is_allowlisted_across_scope_matrix(
     payload = _extract_report_payload(html)
     _assert_public_payload_has_no_internal_keys(payload)
     public_result = payload["share"]["data"]
-    assert public_result["permit_decision"] == "REQUIRED"
-    assert public_result["permit_kind"] == permit_kind
-    assert public_result["customer_headline"].startswith("Permit required:")
+    # A local department URL identifies an office but does not prove the exact
+    # REQUIRED claim. Untrusted report input must remain a typed abstention and
+    # cannot mint a sealed Manifest when Manifest mode is inactive.
+    assert public_result["permit_decision"] == "VERIFY"
+    assert public_result["permit_required"] is None
+    manifest = public_result.get("permit_manifest")
+    assert isinstance(manifest, dict)
+    assert manifest.get("schema_version") == "permit_manifest_v1"
+    assert manifest.get("permit_decision") == "VERIFY"
+    assert manifest.get("primary", {}).get("status") in {"VERIFY", "CONDITIONAL", "NEEDS_INPUT"}
+    assert "authority_tag" not in manifest
+    assert public_result["customer_headline"].startswith("Verify")
     assert public_result["customer_next_step"]
 
 
@@ -347,7 +358,7 @@ def test_actual_share_report_http_path_fails_closed_for_untrusted_payload(
     assert report_status == 200
     payload = _extract_report_payload(html)
     _assert_public_payload_has_no_internal_keys(payload)
-    assert payload["share"]["data"]["permit_decision"] == "UNKNOWN"
+    assert payload["share"]["data"]["permit_decision"] == "VERIFY"
     assert payload["share"]["data"]["permit_required"] is None
     actionable_urls = []
     stack = [payload["share"]["data"]]
@@ -368,14 +379,15 @@ def test_actual_share_report_http_path_fails_closed_for_untrusted_payload(
         elif isinstance(item, list):
             stack.extend(item)
     assert actionable_urls == []
-    assert payload["share"]["data"]["permit_kind"] == permit_kind
+    assert "permit_manifest" not in payload["share"]["data"]
+    assert payload["share"]["data"]["permit_kind"]
     soup = BeautifulSoup(html, "html.parser")
     assert len(soup.find_all("script")) == 2
     assert not soup.find_all("img")
     assert not soup.find_all("svg")
 
 
-def test_verified_share_round_trip_preserves_live_shaped_public_permit_rows(tmp_path, monkeypatch):
+def test_verified_share_round_trip_preserves_exact_verified_projection_and_rejects_late_row_injection(tmp_path, monkeypatch):
     server = _import_server(tmp_path, monkeypatch)
     raw = _base_result(
         "Roofing",
@@ -446,10 +458,10 @@ def test_verified_share_round_trip_preserves_live_shaped_public_permit_rows(tmp_
     # boundary. The report must not apply a second lossy result-field allowlist.
     assert embedded["share"]["data"] == expected
     assert set(embedded["share"]["data"]) == set(expected)
-    assert len(embedded["share"]["data"]["permits_required"]) == 2
-    assert {
-        row["permit_type"] for row in embedded["share"]["data"]["permits_required"]
-    } == {"Historic Preservation Review", "Roofing / Building Permit"}
+    embedded_rows = embedded["share"]["data"].get("permits_required") or []
+    assert len(embedded_rows) == 2
+    assert all(row.get("required") is None for row in embedded_rows if isinstance(row, dict))
+    assert "universal_filing_packet_reconciler" not in json.dumps(embedded_rows).lower()
 
 
 def test_report_payload_keeps_exact_public_result_and_destination_maps_url(tmp_path, monkeypatch):
@@ -515,3 +527,48 @@ def test_report_payload_keeps_exact_public_result_and_destination_maps_url(tmp_p
     assert embedded["permit_office_maps_url"] == maps_url
     assert "Open in Google Maps" in html
     _assert_public_payload_has_no_internal_keys(embedded)
+
+
+def test_snapshot_handoff_is_bound_to_job_category(tmp_path, monkeypatch):
+    server = _import_server(tmp_path, monkeypatch)
+    customer = server.project_customer_response_egress({
+        "permit_decision": "VERIFY",
+        "permit_required": None,
+        "permit_verdict": "VERIFY",
+        "permit_name": "Building permit verification",
+        "permit_kind": "Building",
+        "permits_required": [],
+    })
+    handle = server.create_customer_snapshot_handoff(
+        customer, "tenant improvement", "Austin", "TX", job_category="commercial"
+    )
+    assert handle
+    assert server.consume_customer_snapshot_handoff(
+        handle, customer, "tenant improvement", "Austin", "TX", job_category="residential"
+    ) is None
+    assert server.consume_customer_snapshot_handoff(
+        handle, customer, "tenant improvement", "Austin", "TX", job_category="commercial"
+    ) is not None
+
+
+def test_share_payload_cannot_be_replaced_with_recomputed_unkeyed_hash(tmp_path, monkeypatch):
+    server = _import_server(tmp_path, monkeypatch)
+    slug = server.create_share("interior refresh", "Austin", "TX", {
+        "permit_decision": "VERIFY", "permit_required": None,
+        "permit_verdict": "VERIFY", "permit_name": "Permit verification",
+        "permit_kind": "Building", "permits_required": [],
+    })
+    forged_payload = json.dumps({
+        "permit_decision": "REQUIRED", "permit_required": True,
+        "permit_verdict": "YES", "permit_name": "Forged Permit",
+    }, sort_keys=True, separators=(",", ":"))
+    with sqlite3.connect(server.CACHE_DB) as conn:
+        stored = json.loads(conn.execute(
+            "SELECT result_json FROM shared_results WHERE slug=?", [slug]
+        ).fetchone()[0])
+        stored["payload_json"] = forged_payload
+        stored["payload_hmac_sha256"] = hashlib.sha256(forged_payload.encode()).hexdigest()
+        conn.execute(
+            "UPDATE shared_results SET result_json=? WHERE slug=?", [json.dumps(stored), slug]
+        )
+    assert server.get_share(slug) is None

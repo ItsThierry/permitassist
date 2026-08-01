@@ -27,8 +27,8 @@
   "report_embed_forbidden_fields": [
     "claim_citations"
   ],
-  "required_fail_closed_decision": "UNKNOWN",
-  "required_fail_closed_verdict": "CONTACT_AHJ",
+  "required_fail_closed_decision": "NEEDS_INPUT",
+  "required_fail_closed_verdict": "NEEDS_INPUT",
   "activation_environment_must_be_absent": [
     "PERMITASSIST_RULE_ENGINE_CORE",
     "PERMITASSIST_RULE_ENGINE_CORE_ALLOWLIST"

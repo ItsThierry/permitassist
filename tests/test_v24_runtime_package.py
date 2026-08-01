@@ -172,7 +172,7 @@ def test_v24_fail_closed_no_live_answer_still_contacts_office(monkeypatch):
     result = {}
     reconcile_authoritative_result(result, v24_resolution=resolution, v231_resolution=None)
     assert result["permit_required"] is None
-    assert result["permit_verdict"] == "CONTACT_AHJ"
+    assert result["permit_verdict"] == "NEEDS_INPUT"
     assert result["_field_sources"]["permit_required"] == "permitassist_v24_fail_closed_no_live_answer"
 
 
@@ -234,7 +234,7 @@ def test_v24_deterministic_fallback_covers_exact_cells_without_ai(monkeypatch):
     result = _deterministic_v24_result_from_resolution(fail_closed, "residential remodel", "Yuma", "AZ")
     assert result is not None
     assert result["permit_required"] is None
-    assert result["permit_verdict"] == "CONTACT_AHJ"
+    assert result["permit_verdict"] == "NEEDS_INPUT"
     assert result["needs_review"] is True
 
 
@@ -249,8 +249,8 @@ def test_v24_fail_closed_survives_customer_view_model(monkeypatch):
     assert raw is not None
     public = build_customer_permit_view_model(raw, "residential remodel", "Yuma", "AZ", job_category="residential")
     assert public["permit_required"] is None
-    assert public["permit_verdict"] == "CONTACT_AHJ"
-    assert public["permit_decision"] == "UNKNOWN"
+    assert public["permit_verdict"] == "NEEDS_INPUT"
+    assert public["permit_decision"] == "NEEDS_INPUT"
     rendered = json.dumps(public).lower()
     assert "_v24" not in rendered
     assert "decision_cell" not in rendered
@@ -368,7 +368,7 @@ def test_v24_delmar_repaired_cell_is_publishable_and_source_backed(monkeypatch):
     assert "iccsafe.org" not in rendered
 
 
-def test_fail_closed_live_answer_survives_customer_view_model(monkeypatch):
+def test_unquoted_live_source_cannot_preserve_required_customer_decision(monkeypatch):
     monkeypatch.setenv("OPENAI_API_KEY", "test-key-for-import-only")
     from api.server import build_customer_permit_view_model
 
@@ -383,13 +383,14 @@ def test_fail_closed_live_answer_survives_customer_view_model(monkeypatch):
         "confidence_reason": "live source-backed answer",
     }
     public = build_customer_permit_view_model(raw, "residential reroof", "Delmar", "DE", job_category="residential")
-    assert public["permit_required"] is True
-    assert public["permit_verdict"] == "YES"
-    assert public["permit_decision"] == "REQUIRED"
-    assert "contact_ahj" not in json.dumps(public).lower()
+    assert public["permit_required"] is None
+    assert public["permit_verdict"] == "VERIFY"
+    assert public["permit_decision"] == "VERIFY"
+    assert "townofdelmar.us" in json.dumps(public.get("sources") or []).lower()
+    assert (public.get("apply_path") or {}).get("channel") == "contact_authority"
 
 
-def test_generic_icc_apply_url_demoted_not_decision_neutered(monkeypatch):
+def test_generic_icc_apply_url_and_unbound_required_claim_both_demote(monkeypatch):
     monkeypatch.setenv("OPENAI_API_KEY", "test-key-for-import-only")
     from api.server import build_customer_permit_view_model, finalize_permit_lookup_result
 
@@ -404,15 +405,17 @@ def test_generic_icc_apply_url_demoted_not_decision_neutered(monkeypatch):
     }
     finalized = finalize_permit_lookup_result(raw, "residential reroof", "Delmar", "DE", job_category="residential", evidence_allowed=False)
     public = build_customer_permit_view_model(finalized, "residential reroof", "Delmar", "DE", job_category="residential")
-    assert public["permit_required"] is True
-    assert public["permit_verdict"] == "YES"
+    assert public["permit_required"] is None
+    assert public["permit_verdict"] == "VERIFY"
+    assert public["permit_decision"] == "VERIFY"
     # The verified Delmar page is an informational office page, not an
-    # application start. Preserve the local source and decision while exposing
-    # an honest contact-AHJ filing path rather than mislabeling it as apply_url.
+    # application start, and the generic ICC reference does not prove the local
+    # REQUIRED claim. Preserve both as context while exposing an honest
+    # contact-AHJ filing path and nonbinary decision.
     assert public.get("apply_url") is None
     assert "iccsafe.org" not in (public.get("apply_url") or "")
     assert "townofdelmar.us" in json.dumps(public.get("sources") or []).lower()
-    assert (public.get("apply_path") or {}).get("channel") == "contact_ahj"
+    assert (public.get("apply_path") or {}).get("channel") == "contact_authority"
 
 
 def test_v24_crook_county_exact_cell_uses_official_not_required_authority(monkeypatch):
@@ -508,7 +511,7 @@ def test_v24_crook_county_not_required_survives_customer_and_report_boundaries(m
     monkeypatch.setenv("PERMITASSIST_V24_MODE", "active")
     monkeypatch.setenv("OPENAI_API_KEY", "test-key-for-import-only")
     from api.research_engine import _deterministic_v24_result_from_resolution
-    from api.server import build_customer_permit_view_model, render_white_label_report_html
+    from api import server
 
     resolution = resolve_v24_cell(
         "Crook County",
@@ -524,8 +527,8 @@ def test_v24_crook_county_not_required_survives_customer_and_report_boundaries(m
     )
     assert raw is not None
     reconcile_authoritative_result(raw, v24_resolution=resolution, v231_resolution=None)
-    public = build_customer_permit_view_model(
-        raw,
+    public = server.build_customer_response_egress(
+        server._mark_server_owned_result(raw),
         "commercial office tenant improvement",
         "Crook County",
         "WY",
@@ -535,7 +538,7 @@ def test_v24_crook_county_not_required_survives_customer_and_report_boundaries(m
     assert public["permit_decision"] == "NOT_REQUIRED"
     assert public["permit_verdict"] == "NO"
 
-    report_html = render_white_label_report_html(
+    report_html = server.render_white_label_report_html(
         {
             "result": public,
             "job_type": "commercial office tenant improvement",
@@ -662,8 +665,8 @@ def test_v24_exact_not_required_lock_survives_internal_finalize_until_public_egr
     }
     assert related_by_family["planning"]["decision"] == "CONDITIONAL"
     assert related_by_family["planning"]["condition_text"]
-    assert related_by_family["co"]["decision"] == "CONDITIONAL"
-    assert related_by_family["co"]["condition_text"]
+    assert related_by_family["occupancy"]["decision"] == "CONDITIONAL"
+    assert related_by_family["occupancy"]["condition_text"]
     assert public["source_support"]["has_source_backed_evidence"] is True
     assert public["source_support"]["has_official_source"] is True
     assert public["source_support"]["decision_mutation_allowed"] is False
@@ -699,8 +702,8 @@ def test_v24_exact_not_required_lock_survives_internal_finalize_until_public_egr
     assert "certificate of occupancy" in checklist_blob
     report_template = server.load_report_template()
     assert "const isNotRequired" in report_template
-    assert "'Scope records & safeguards' : 'Required documents'" in report_template
-    assert "'Inspection status' : 'Inspection checklist'" in report_template
-    assert "'Scope & companion checklist' : 'Pre-construction checklist'" in report_template
+    assert "isRequired ? 'Required documents' : (isNotRequired ? 'Scope records & safeguards' : 'Information to verify')" in report_template
+    assert "isRequired ? 'Inspection checklist' : (isNotRequired ? 'Inspection status' : 'Possible inspection triggers')" in report_template
+    assert "isRequired ? 'Pre-construction checklist' : (isNotRequired ? 'Scope & companion checklist' : 'Verification checklist')" in report_template
     assert "No primary permit inspection applies to the resolved scope" in report_template
     assert "_decision_cell_primary_lock" not in public_blob

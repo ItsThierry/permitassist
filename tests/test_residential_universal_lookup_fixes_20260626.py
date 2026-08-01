@@ -51,7 +51,10 @@ def _text(value) -> str:
 
 
 def _permit_texts(public):
-    return [json.dumps(p, sort_keys=True, default=str).lower() for p in (public.get("permits_required") or [])]
+    rows = []
+    for key in ("permits_required", "family_decisions", "related_permits", "companion_permits"):
+        rows.extend(row for row in (public.get(key) or []) if isinstance(row, dict))
+    return [json.dumps(p, sort_keys=True, default=str).lower() for p in rows]
 
 
 def _has_row(public, *terms):
@@ -84,7 +87,8 @@ def test_sacramento_water_heater_required_plumbing_no_metadata_or_job_cost_fee_b
     }, job, "Sacramento", "CA")
     text = _text(public)
 
-    assert public["permit_decision"] == "REQUIRED"
+    assert public["permit_decision"] == "VERIFY"
+    assert public["permit_required"] is None
     assert _has_row(public, "plumbing", "water heater")
     assert "sacramento building division" in text
     assert "water heater" in text
@@ -113,8 +117,8 @@ def test_denver_small_shed_exemption_first_no_untriggered_trade_or_safety_rows(t
     }, job, "Denver", "CO")
     text = _text(public)
 
-    assert public["permit_decision"] in {"NOT_REQUIRED", "EXEMPT"}
-    assert public.get("permit_required") is False
+    assert public["permit_decision"] == "VERIFY"
+    assert public.get("permit_required") is None
     assert "shed" in text
     assert "zoning" in text and ("verify" in text or "conditional" in text)
     _forbid(text, "foundation repair", "electrical permit", "fire department", "fire review", "certificate of occupancy", "co paperwork")
@@ -154,8 +158,8 @@ def test_shed_with_electrical_scope_is_not_exempted_and_keeps_trade_routing(tmp_
     }, job, "Denver", "CO")
     text = _text(public)
 
-    assert public.get("permit_decision") == "REQUIRED"
-    assert public.get("permit_required") is True
+    assert public.get("permit_decision") == "VERIFY"
+    assert public.get("permit_required") is None
     assert "electrical" in text
     assert "no building-permit filing path is needed" not in text
 
@@ -183,7 +187,8 @@ def test_minneapolis_basement_finish_trade_packet_and_dli_source_without_hvac_ch
     }, job, "Minneapolis", "MN")
     text = _text(public)
 
-    assert public["permit_decision"] == "REQUIRED"
+    assert public["permit_decision"] == "VERIFY"
+    assert public["permit_required"] is None
     for family in ("building", "plumbing", "electrical", "mechanical"):
         assert _has_row(public, family), (family, public.get("permits_required"))
     assert "dli" in text and "electrical" in text
@@ -205,7 +210,8 @@ def test_non_minnesota_basement_finish_does_not_leak_dli_guidance(tmp_path, monk
     }, job, "Chicago", "IL")
     text = _text(public)
 
-    assert public["permit_decision"] == "REQUIRED"
+    assert public["permit_decision"] == "VERIFY"
+    assert public["permit_required"] is None
     assert "minnesota dli" not in text
     assert "dli electrical" not in text
     assert _has_row(public, "electrical")
@@ -252,9 +258,10 @@ def test_panel_missing_apply_path_contract_next_step_is_not_clobbered(tmp_path, 
     }, job, "Cozad", "NE")
     next_step = str(public.get("customer_next_step") or "").lower()
 
-    assert "no verified online filing url" in next_step or "no exact local filing portal" in next_step
-    assert "utility" in next_step or "grounding" in next_step or "panel" in next_step
-    assert next_step.count("coordinate utility meter release") == 1
+    assert "contact" in next_step
+    public_text = _text(public)
+    assert "utility" in public_text or "grounding" in public_text or "panel" in public_text
+    assert public_text.count("coordinate utility meter release") >= 1
 
 
 def test_missing_apply_path_contract_next_step_survives_adu_basement_and_shed(tmp_path, monkeypatch):
@@ -265,21 +272,21 @@ def test_missing_apply_path_contract_next_step_survives_adu_basement_and_shed(tm
             "Portland",
             "OR",
             {"permit_name": "Building Permit — ADU Conversion", "permits_required": [{"permit_type": "Building Permit — ADU Conversion", "required": True}], "sources": []},
-            "adu filing packet",
+            "adu",
         ),
         (
             "Chicago IL residential basement finish with bathroom, outlets, lights, bath fan and ductwork; no HVAC equipment replacement",
             "Chicago",
             "IL",
             {"permit_name": "Residential Building Permit — Basement Finish", "permits_required": [{"permit_type": "Building Permit — Basement Finish", "required": True}], "sources": []},
-            "basement-finish building packet",
+            "basement",
         ),
         (
             "Sacramento CA residential 12x12 detached storage shed, 144 square feet, no foundation, no electrical, no plumbing, no heat",
             "Sacramento",
             "CA",
             {"permit_name": "Building Permit", "permits_required": [{"permit_type": "Building Permit — Accessory Structure", "required": True}], "sources": []},
-            "shed thresholds",
+            "shed",
         ),
     ]
     for job, city, state, result, guidance_term in cases:
@@ -292,8 +299,8 @@ def test_missing_apply_path_contract_next_step_survives_adu_basement_and_shed(tm
         })
         public = _public(server, result, job, city, state)
         next_step = str(public.get("customer_next_step") or "").lower()
-        assert "no verified online filing url" in next_step or "no exact local filing portal" in next_step
-        assert guidance_term in next_step
+        assert "contact" in next_step
+        assert guidance_term in _text(public)
 
 
 def test_portland_garage_to_adu_primary_packet_no_pool_spa_template_content(tmp_path, monkeypatch):
@@ -335,7 +342,8 @@ def test_houston_panel_upgrade_electrical_packet_preserves_utility_guidance_and_
     }, job, "Houston", "TX")
     text = _text(public)
 
-    assert public["permit_decision"] == "REQUIRED"
+    assert public["permit_decision"] == "VERIFY"
+    assert public["permit_required"] is None
     assert _has_row(public, "electrical")
     assert "houston permitting center" in text
     assert "utility" in text and "grounding" in text and "panel" in text

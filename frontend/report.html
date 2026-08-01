@@ -35,6 +35,8 @@
     .decision-status.required { background:rgba(5,150,105,.12); color:#047857; }
     .decision-status.not-required { background:rgba(71,85,105,.12); color:#475569; }
     .decision-status.verify { background:rgba(217,119,6,.14); color:#92400e; }
+    .decision-status.conditional { background:rgba(37,99,235,.12); color:#1d4ed8; }
+    .decision-status.needs-input { background:rgba(124,58,237,.12); color:#6d28d9; }
     .decision-detail { margin-top:7px; color:#475569; font-size:13px; line-height:1.45; }
     .decision-route { margin-top:7px; color:#64748b; font-size:12px; }
     .decision-route a { color:var(--brand); font-weight:750; }
@@ -56,18 +58,28 @@
     const share = payload.share || {};
     const d = share.data || {};
     const checklist = payload.checklist || {};
-    const primaryPermit = (d.primary_permit && typeof d.primary_permit === 'object') ? d.primary_permit : {};
-    const firstPermit = Array.isArray(d.permits_required) && d.permits_required[0] ? d.permits_required[0] : {};
+    const safeArray = (value) => Array.isArray(value) ? value : [];
+    const manifest = d.permit_manifest && d.permit_manifest.schema_version === 'permit_manifest_v1' ? d.permit_manifest : null;
+    const primaryPermit = manifest && manifest.primary && typeof manifest.primary === 'object' ? manifest.primary : {};
+    const manifestRows = manifest ? [primaryPermit, ...safeArray(manifest.companions)] : [];
+    const firstPermit = primaryPermit;
     const textValue = (value, fallback = '') => {
       if (value === null || value === undefined) return fallback;
       return String(value);
     };
-    const safeArray = (value) => Array.isArray(value) ? value : [];
     const permitName = textValue(d.permit_name || d.permit_type || primaryPermit.permit_type || firstPermit.permit_type, 'Permit details');
-    const rawVerdict = textValue(d.permit_verdict).toUpperCase();
-    const verdict = rawVerdict || (d.permit_required === true ? 'YES' : d.permit_required === false ? 'NO' : 'VERIFY');
-    const isNotRequired = verdict === 'NO' || textValue(d.permit_decision).toUpperCase() === 'NOT_REQUIRED';
-    const verdictLabel = verdict === 'YES' ? 'Permit required: Yes' : (verdict === 'NO' ? 'Permit required: No' : 'Permit status: Verify');
+    const allowedStatuses = new Set(['REQUIRED','NOT_REQUIRED','CONDITIONAL','VERIFY','NEEDS_INPUT']);
+    const rawVerdict = textValue(manifest && manifest.permit_decision).toUpperCase();
+    const verdict = allowedStatuses.has(rawVerdict) ? rawVerdict : 'NEEDS_INPUT';
+    const isRequired = verdict === 'REQUIRED';
+    const isNotRequired = verdict === 'NOT_REQUIRED';
+    const verdictLabel = {
+      REQUIRED: 'Permit status: Required',
+      NOT_REQUIRED: 'Permit status: Not required',
+      CONDITIONAL: 'Permit status: Conditional',
+      VERIFY: 'Permit status: Verify',
+      NEEDS_INPUT: 'Permit status: Needs input',
+    }[verdict];
     const feeDisplay = isNotRequired
       ? textValue(d.fee_estimate, 'No primary permit fee')
       : textValue(d.fee_range || d.fee_estimate, 'Call to confirm');
@@ -85,8 +97,10 @@
       const raw = String(url || '').trim();
       if (!raw) return fallback;
       try {
-        const parsed = new URL(raw, window.location.origin);
-        if (parsed.protocol === 'http:' || parsed.protocol === 'https:') return parsed.href;
+        const parsed = new URL(raw);
+        const current = new URL(window.location.href);
+        const samePermitAssistReport = parsed.origin === current.origin && /^\/(?:report|share)(?:\/|$)/i.test(parsed.pathname);
+        if ((parsed.protocol === 'http:' || parsed.protocol === 'https:') && !samePermitAssistReport) return parsed.href;
       } catch {}
       return fallback;
     };
@@ -103,7 +117,7 @@
     const applyContactLabel = [applyOffice, applyAddress, applyPhone].filter(Boolean).join(' • ');
     const whereToApply = textValue(applyContactLabel || applyPathLabel, 'Contact local building department');
     const permitOfficeMapsUrl = safeExternalUrl(payload.permit_office_maps_url);
-    const permitRows = safeArray(d.permits_required).filter(row => row && typeof row === 'object');
+    const permitRows = manifestRows.filter(row => row && typeof row === 'object');
     const verificationTasks = safeArray(d.verification_tasks).filter(row => row && typeof row === 'object');
     const familyKey = (row) => textValue(row && (row.family || row.filing_family || row.permit_kind || row.kind || row.permit_type)).trim().toLowerCase();
     const familyTitle = (family) => textValue(family)
@@ -123,9 +137,11 @@
       if (status === 'NOT_REQUIRED' || status === 'NO' || status === 'NO_PERMIT_REQUIRED') {
         return { label: 'Not required', className: 'not-required' };
       }
-      return { label: 'Verify', className: 'verify' };
+      if (status === 'CONDITIONAL') return { label: 'Conditional', className: 'conditional' };
+      if (status === 'VERIFY') return { label: 'Verify', className: 'verify' };
+      return { label: 'Needs input', className: 'needs-input' };
     };
-    const canonicalFamilyRows = safeArray(d.family_decisions).filter(row => row && typeof row === 'object');
+    const canonicalFamilyRows = manifestRows.length ? manifestRows : safeArray(d.family_decisions);
     const decisionRows = (canonicalFamilyRows.length ? canonicalFamilyRows : permitRows).map((row) => {
       const family = familyKey(row);
       const permitRow = canonicalFamilyRows.length
@@ -209,7 +225,7 @@
     meta.appendChild(metaRow('Permit', permitName));
     meta.appendChild(metaRow('Fees', feeDisplay));
     meta.appendChild(metaRow('Timeline', timeline));
-    meta.appendChild(metaRow(isNotRequired ? 'Permit office / companion contact' : 'Where to apply', whereToApply));
+    meta.appendChild(metaRow(isRequired ? 'Where to apply' : 'Office to contact', whereToApply));
     if (permitOfficeMapsUrl) {
       const mapsRow = addText(meta, 'div', { className: 'meta-row' });
       addText(mapsRow, 'strong', { text: 'Directions' });
@@ -245,16 +261,16 @@
         addText(rowHead, 'div', { className: 'decision-family', text: row.label });
         addText(rowHead, 'div', { className: `decision-status ${row.status.className}`, text: row.status.label });
         if (row.trigger) addText(decisionRow, 'div', { className: 'decision-detail', text: row.trigger });
-        if (row.authority || row.applyUrl) {
+        if (row.authority || (row.status.className === 'REQUIRED' && row.applyUrl)) {
           const route = addText(decisionRow, 'div', { className: 'decision-route' });
           if (row.authority) addText(route, 'span', { text: `Authority: ${row.authority}` });
-          if (row.authority && row.applyUrl) route.appendChild(document.createTextNode(' • '));
-          if (row.applyUrl) addText(route, 'a', { text: 'Official application path', attrs: { href: row.applyUrl, target: '_blank', rel: 'noopener' } });
+          if (row.authority && row.status.className === 'REQUIRED' && row.applyUrl) route.appendChild(document.createTextNode(' • '));
+          if (row.status.className === 'REQUIRED' && row.applyUrl) addText(route, 'a', { text: 'Official application path', attrs: { href: row.applyUrl, target: '_blank', rel: 'noopener' } });
         }
       }
     }
 
-    const documentsTitle = isNotRequired ? 'Scope records & safeguards' : 'Required documents';
+    const documentsTitle = isRequired ? 'Required documents' : (isNotRequired ? 'Scope records & safeguards' : 'Information to verify');
     const inspectionFallback = safeArray(checklist.items).filter(i => i && i.category === 'inspection').map(i => i.label).filter(Boolean).slice(0, 8);
     const conditionalInspections = inspections.filter(item => /\b(?:conditional|companion|if|when|trigger)\b/i.test(item));
     const noPermitInspectionText = textValue(
@@ -264,13 +280,15 @@
     const inspectionItems = isNotRequired
       ? [noPermitInspectionText, ...conditionalInspections]
       : (inspections.length ? inspections : inspectionFallback);
-    const inspectionTitle = isNotRequired ? 'Inspection status' : 'Inspection checklist';
-    const constructionChecklistTitle = isNotRequired ? 'Scope & companion checklist' : 'Pre-construction checklist';
-    const constructionChecklistFallback = isNotRequired
-      ? 'Keep the work within the resolved no-primary-permit scope and review conditional companion triggers if the scope changes.'
-      : 'Pull permit before starting work';
-    grid.appendChild(listCard(documentsTitle, docs, isNotRequired ? 'Keep records showing that the work remained within the resolved scope.' : 'Scope of work'));
-    grid.appendChild(listCard(inspectionTitle, inspectionItems, isNotRequired ? noPermitInspectionText : 'Confirm inspection phases with the jurisdiction.'));
+    const inspectionTitle = isRequired ? 'Inspection checklist' : (isNotRequired ? 'Inspection status' : 'Possible inspection triggers');
+    const constructionChecklistTitle = isRequired ? 'Pre-construction checklist' : (isNotRequired ? 'Scope & companion checklist' : 'Verification checklist');
+    const constructionChecklistFallback = isRequired
+      ? 'Pull permit before starting work'
+      : (isNotRequired
+        ? 'Keep the work within the resolved no-primary-permit scope and review conditional companion triggers if the scope changes.'
+        : 'Confirm the permit decision and filing path with the listed authority before starting work.');
+    grid.appendChild(listCard(documentsTitle, docs, isRequired ? 'Scope of work' : (isNotRequired ? 'Keep records showing that the work remained within the resolved scope.' : 'Bring these details when verifying the permit decision.')));
+    grid.appendChild(listCard(inspectionTitle, inspectionItems, isRequired ? 'Confirm inspection phases with the jurisdiction.' : (isNotRequired ? noPermitInspectionText : 'Confirm whether inspections apply after the permit decision is verified.')));
     grid.appendChild(listCard(constructionChecklistTitle, safeArray(checklist.items).map(item => item && item.label).filter(Boolean), constructionChecklistFallback));
 
     const sourceRows = sources.map(src => ({ src, url: safeExternalUrl(sourceUrl(src)) })).filter(row => row.url);

@@ -437,9 +437,22 @@ def test_goodyear_commercial_construction_cell_stays_primary_in_public_view_mode
     import os
 
     os.environ.setdefault("OPENAI_API_KEY", "test-key-for-import-only")
-    from api.server import build_customer_permit_view_model
+    from api.server import build_customer_response_egress, finalize_permit_lookup_result
 
-    public = build_customer_permit_view_model(_goodyear_construction_cell_result(), "new commercial construction retail shell", "Goodyear", "AZ")
+    internal = finalize_permit_lookup_result(
+        _goodyear_construction_cell_result(),
+        "new commercial construction retail shell",
+        "Goodyear",
+        "AZ",
+        job_category="commercial",
+    )
+    public = build_customer_response_egress(
+        internal,
+        "new commercial construction retail shell",
+        "Goodyear",
+        "AZ",
+        job_category="commercial",
+    )
 
     assert public["permit_name"] == "Construction Permit"
     assert public["permit_kind"] == "Building"
@@ -466,7 +479,7 @@ def test_cell_primary_lock_survives_customer_view_sanitize_and_terminal_pass():
     import os
 
     os.environ.setdefault("OPENAI_API_KEY", "test-key-for-import-only")
-    from api.server import build_customer_permit_view_model, sanitize_customer_visible_result
+    from api.server import build_customer_response_egress, finalize_permit_lookup_result, sanitize_customer_visible_result
     from api.permit_decision import apply_permit_decision_contract
 
     original = _goodyear_construction_cell_result()
@@ -475,7 +488,20 @@ def test_cell_primary_lock_survives_customer_view_sanitize_and_terminal_pass():
     if cell_lock:
         cleaned["_decision_cell_primary_lock"] = cell_lock
     terminal = apply_permit_decision_contract(cleaned, "new commercial construction retail shell", "Goodyear", "AZ")
-    public = build_customer_permit_view_model(original, "new commercial construction retail shell", "Goodyear", "AZ")
+    internal = finalize_permit_lookup_result(
+        original,
+        "new commercial construction retail shell",
+        "Goodyear",
+        "AZ",
+        job_category="commercial",
+    )
+    public = build_customer_response_egress(
+        internal,
+        "new commercial construction retail shell",
+        "Goodyear",
+        "AZ",
+        job_category="commercial",
+    )
 
     assert terminal["permit_name"] == "Construction Permit"
     assert public["permit_name"] == "Construction Permit"

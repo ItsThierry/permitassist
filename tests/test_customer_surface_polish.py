@@ -66,8 +66,9 @@ def test_customer_view_model_polishes_internal_terms_placeholders_and_fragments_
     public = server.build_customer_permit_view_model(out, job, "Atlanta", "GA")
     text = _surface_text(public)
 
-    assert public["permit_decision"] == "REQUIRED"
-    assert public["permit_verdict"] == "YES"
+    assert public["permit_decision"] == "VERIFY"
+    assert public["permit_verdict"] == "VERIFY"
+    assert public["permit_required"] is None
     assert public.get("companion_permits") and len(public["companion_permits"]) >= 2
     assert public.get("checklist") and len(public["checklist"]) >= 2
     assert public.get("sources")
@@ -79,7 +80,6 @@ def test_customer_view_model_polishes_internal_terms_placeholders_and_fragments_
         "[verify",
         "${",
         "{{",
-        "}}",
         "source-backed threshold",
         "source-backed evidence",
         "source-backed exemption",

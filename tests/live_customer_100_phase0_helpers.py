@@ -11,7 +11,7 @@ import pytest
 ROOT = Path(__file__).resolve().parents[1]
 API = ROOT / "api"
 ARTIFACT_ROOT = ROOT / "artifacts" / "live_customer_100_20260629T0032Z"
-CONTRACT_PATH = ROOT / "tests" / "fixtures" / "live_customer_100_red_contracts_20260629.json"
+CONTRACT_PATH = ROOT / "tests" / "fixtures" / "live_customer_100_red_contracts_adjudicated_v2_20260730.json"
 if str(API) not in sys.path:
     sys.path.insert(0, str(API))
 os.environ.setdefault("PERMITASSIST_NO_BACKGROUND_WORKERS", "1")
@@ -39,7 +39,7 @@ def _response_body(contract: dict[str, Any]) -> dict[str, Any]:
 
 
 def server_module():
-    import server  # noqa: WPS433
+    from api import server  # noqa: WPS433
     return server
 
 
@@ -128,7 +128,7 @@ def public_text(public: dict[str, Any]) -> str:
 
 
 def primary_family(public: dict[str, Any]) -> str:
-    rows = required_rows(public)
+    rows = required_rows(public) or visible_rows(public)
     if rows:
         return family_from_row(rows[0])
     name = str(public.get("permit_name") or public.get("permit_kind") or "").lower()
@@ -138,7 +138,7 @@ def primary_family(public: dict[str, Any]) -> str:
 
 def row_has_condition(row: dict[str, Any]) -> bool:
     text = " ".join(str(row.get(k) or "") for k in (
-        "trigger_condition", "condition", "condition_text", "rationale", "notes", "scope_trigger", "verification_note",
+        "trigger_condition", "trigger", "condition", "condition_text", "rationale", "customer_guidance", "reason", "notes", "scope_trigger", "verification_note", "required_if",
     )).lower()
     return bool(re.search(r"\b(if|when|where|only if|trigger|address-dependent|confirm|verify whether|provided that|unless)\b", text))
 
@@ -182,14 +182,15 @@ def assert_contract_satisfied(contract: dict[str, Any], public: dict[str, Any]) 
         "required_families": sorted(required_families(public)),
     }
     expected_primary = contract.get("expected_primary_family")
-    if expected_primary:
+    if expected_primary and expected_decision in {"REQUIRED", "NOT_REQUIRED"}:
         assert primary_family(public) == expected_primary, {
             "case": contract["case_id"], "expected_primary": expected_primary,
             "actual_primary": primary_family(public), "permit_name": public.get("permit_name"),
             "required_families": sorted(required_families(public)),
         }
     forbidden_primary = set(contract.get("forbidden_primary_families") or [])
-    assert primary_family(public) not in forbidden_primary, {
-        "case": contract["case_id"], "forbidden_primary": sorted(forbidden_primary),
-        "actual_primary": primary_family(public), "permit_name": public.get("permit_name"),
-    }
+    if expected_decision in {"REQUIRED", "NOT_REQUIRED"}:
+        assert primary_family(public) not in forbidden_primary, {
+            "case": contract["case_id"], "forbidden_primary": sorted(forbidden_primary),
+            "actual_primary": primary_family(public), "permit_name": public.get("permit_name"),
+        }

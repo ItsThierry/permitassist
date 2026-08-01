@@ -51,16 +51,20 @@ def test_phase0_no_neuter_a_anchors_keep_decision_and_packet_depth(anchor):
         ),
         None,
     )
-    if expected == "UNKNOWN":
-        assert public.get("permit_decision") == "UNKNOWN"
+    if expected in {"CONDITIONAL", "VERIFY", "NEEDS_INPUT"}:
+        assert public.get("permit_decision") == expected
         assert public.get("permit_required") is None
         assert not required_rows(public)
+    elif expected in {"REQUIRED", "NOT_REQUIRED"}:
+        assert public.get("permit_decision") == expected
+        assert public.get("permit_required") is (expected == "REQUIRED")
     else:
-        assert public.get("permit_decision") in {"REQUIRED", "NOT_REQUIRED"}
-        assert public.get("permit_required") in {True, False}
+        decision = public.get("permit_decision")
+        assert decision in {"REQUIRED", "NOT_REQUIRED", "CONDITIONAL", "VERIFY", "NEEDS_INPUT"}
+        assert public.get("permit_required") is ({"REQUIRED": True, "NOT_REQUIRED": False}.get(decision))
     grade = final_grades(anchor["root_id"])[anchor["case_id"]]
     assert grade == "A", {"anchor": anchor, "grade": grade}
-    assert public.get("permit_decision") == expected if expected else public.get("permit_decision") in {"REQUIRED", "NOT_REQUIRED"}
+    assert public.get("permit_decision") == expected if expected else public.get("permit_decision") in {"REQUIRED", "NOT_REQUIRED", "CONDITIONAL", "VERIFY", "NEEDS_INPUT"}
     min_visible_rows = int(anchor.get("min_visible_rows", 0))
     assert len(visible_rows(public)) >= min_visible_rows, {"anchor": anchor, "visible_rows": visible_rows(public)}
     assert_no_collapsed_package(public, anchor["case_id"])

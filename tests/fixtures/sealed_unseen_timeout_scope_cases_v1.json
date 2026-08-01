@@ -1,0 +1,137 @@
+{
+  "cases": [
+    {
+      "id": "SU-001",
+      "must_exclude": [],
+      "must_include": [
+        "electrical",
+        "plumbing"
+      ],
+      "scope": "Kitchen remodel with sink relocation and new island receptacles."
+    },
+    {
+      "id": "SU-002",
+      "must_exclude": [],
+      "must_include": [
+        "plumbing",
+        "mechanical"
+      ],
+      "scope": "Bathroom remodel with plumbing fixture relocation and a new exhaust fan."
+    },
+    {
+      "id": "SU-003",
+      "must_exclude": [
+        "plumbing",
+        "roofing"
+      ],
+      "must_include": [
+        "electrical"
+      ],
+      "scope": "Replace the electrical service panel and add circuits."
+    },
+    {
+      "id": "SU-004",
+      "must_exclude": [
+        "roofing"
+      ],
+      "must_include": [
+        "plumbing",
+        "mechanical"
+      ],
+      "scope": "Replace an existing gas water heater in kind."
+    },
+    {
+      "id": "SU-005",
+      "must_exclude": [
+        "roofing"
+      ],
+      "must_include": [
+        "mechanical"
+      ],
+      "scope": "Install a rooftop evaporative cooler with no roof replacement."
+    },
+    {
+      "id": "SU-006",
+      "must_exclude": [
+        "electrical",
+        "plumbing",
+        "mechanical"
+      ],
+      "must_include": [
+        "building"
+      ],
+      "scope": "Commercial tenant improvement with new interior partitions only."
+    },
+    {
+      "id": "SU-007",
+      "must_exclude": [
+        "electrical",
+        "plumbing",
+        "building"
+      ],
+      "must_include": [
+        "other"
+      ],
+      "scope": "Repaint interior walls and replace flooring; no electrical, plumbing, or structural work."
+    },
+    {
+      "id": "SU-008",
+      "must_exclude": [
+        "electrical",
+        "plumbing"
+      ],
+      "must_include": [
+        "other"
+      ],
+      "scope": "Replace cabinets without moving plumbing or electrical."
+    },
+    {
+      "id": "SU-009",
+      "must_exclude": [
+        "plumbing",
+        "mechanical"
+      ],
+      "must_include": [
+        "sign"
+      ],
+      "scope": "Install a new wall sign on a storefront."
+    },
+    {
+      "id": "SU-010",
+      "must_exclude": [
+        "plumbing",
+        "roofing"
+      ],
+      "must_include": [
+        "demolition"
+      ],
+      "scope": "Interior demolition of non-load-bearing partitions."
+    },
+    {
+      "id": "SU-011",
+      "must_exclude": [
+        "roofing"
+      ],
+      "must_include": [
+        "plumbing",
+        "electrical"
+      ],
+      "scope": "Install a new hand sink and lighting in a clinic suite."
+    },
+    {
+      "id": "SU-012",
+      "must_exclude": [
+        "roofing",
+        "building"
+      ],
+      "must_include": [
+        "mechanical"
+      ],
+      "scope": "Replace a rooftop HVAC unit in kind without structural changes."
+    }
+  ],
+  "fixture_sha256": "d0f3df4f27ee6a13ca5a00b3a0ea233c549f94c2f8c35091b7516b5c2436231c",
+  "purpose": "family-bearing nonbinary timeout fallback; no municipality-specific exceptions",
+  "schema_version": "permitassist.sealed-unseen-timeout-scope.v1",
+  "seed": 20260730
+}

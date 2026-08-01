@@ -169,24 +169,22 @@ print(json.dumps(public, sort_keys=True, default=str))
     public = _run_python_json(code)
     text = _blob(public)
 
-    assert public["permit_decision"] == "REQUIRED"
-    assert public["permit_required"] is True
+    assert public["permit_decision"] == "VERIFY"
+    assert public["permit_required"] is None
     assert public["permit_kind"] == "Plumbing"
     assert public["permit_name"] == "Residential Plumbing Permit — Water Heater Replacement"
-    assert len(public["permits_required"]) == 1
-    row = public["permits_required"][0]
+    assert public["permits_required"] == []
+    assert any(
+        row.get("filing_family") == "plumbing" and row.get("status") == "VERIFY"
+        for row in public.get("family_decisions", [])
+    )
+    row = next(row for row in public["family_decisions"] if row.get("filing_family") == "plumbing")
     assert row["permit_type"] == "Residential Plumbing Permit — Water Heater Replacement"
-    assert row["filing_family"] == "plumbing"
-    assert row["required"] is True
-    assert row["decision"] == "REQUIRED"
-    assert row["status"] == "REQUIRED"
-    assert row.get("scope_trigger") == "water_heater_replacement"
-    assert row.get("source_url") == PHSKC_URL
+    assert row["decision"] == "VERIFY"
+    assert row["status"] == "VERIFY"
     assert public["apply_url"] == PHSKC_URL
-    assert public["source_urls"] == [
-        PHSKC_URL,
-        "https://www.seattle.gov/sdci/permits/permits-we-issue-(a-z)/electrical-permit",
-    ]
+    assert str((public.get("apply_path") or {}).get("support_level") or "").lower() in {"verification required", "verify", "verified path"}
+    assert PHSKC_URL in public["source_urls"]
     assert "public health" in text
     assert "kingcounty.gov" in text
     assert "electrical circuit" in text

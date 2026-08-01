@@ -370,7 +370,8 @@ def test_white_label_report_blocks_unsafe_urls(tmp_path, monkeypatch):
     assert status == 200
     assert "javascript:" not in html
     assert "<script>" not in html
-    assert "Source URL not attached to this report artifact" in html
+    assert "structured permit decision" in html
+    assert "Verify the permit requirement" in html
 
 
 def test_quality_gate_does_not_clobber_ahj_specific_commercial_primary(tmp_path, monkeypatch):
@@ -452,4 +453,28 @@ def test_city_watch_change_digest_contains_action_fields(tmp_path, monkeypatch):
     assert changed["watched"] is True
     assert changed["changed"] is True
     assert changed["digest"]["fee_range"] == "$200"
-    assert changed["digest"]["required_permits"] == ["New Permit"]
+    assert changed["digest"]["required_permits"] == []
+    assert changed["digest"]["permit_leads"] == ["New Permit"]
+
+
+def test_city_watch_mixed_required_and_lead_changes_are_both_hashed_and_rendered(tmp_path, monkeypatch):
+    server = _import_server(tmp_path, monkeypatch)
+    responses = [
+        {
+            "permits_required": [{"permit_type": "Building Permit", "status": "REQUIRED", "required": True}],
+            "family_decisions": [{"permit_type": "Electrical review", "status": "VERIFY", "required": None}],
+        },
+        {
+            "permits_required": [{"permit_type": "Building Permit", "status": "REQUIRED", "required": True}],
+            "family_decisions": [{"permit_type": "Fire review", "status": "VERIFY", "required": None}],
+        },
+    ]
+    monkeypatch.setattr(server, "_city_watch_customer_result", lambda *a, **k: responses.pop(0))
+    monkeypatch.setattr(server, "resend_send", lambda *a, **k: True)
+
+    server.create_city_watch("mixed@example.com", "Austin", "TX", "restaurant TI")
+    changed = server.check_city_changes("mixed@example.com", "Austin", "TX", "restaurant TI")
+
+    assert changed["changed"] is True
+    assert changed["digest"]["required_permits"] == ["Building Permit"]
+    assert changed["digest"]["permit_leads"] == ["Fire review"]

@@ -80,16 +80,14 @@ def test_seattle_mini_split_customer_boundary_lists_all_required_permits_and_scr
     public = _seattle_mini_split_public()
     blob = json.dumps(public, sort_keys=True).lower()
 
-    assert public["permit_decision"] == "REQUIRED"
-    assert set(public.get("required_permit_families") or []) >= {"Electrical", "Mechanical", "Refrigeration"}
-    assert "permit package" in (public.get("permit_name") or "").lower()
-    assert not (public.get("permit_name") or "").lower().startswith("multiple permits required:")
-    assert "permit package" in (public.get("customer_result_summary") or {}).get("permit_kind", "").lower() or "permit package" in (public.get("permit_kind") or "").lower()
-    assert "electrical" in public["required_permit_summary"].lower()
-    assert "mechanical" in public["required_permit_summary"].lower()
-    assert "refrigeration" in public["required_permit_summary"].lower()
+    assert public["permit_decision"] == "VERIFY"
+    assert public["permit_required"] is None
+    assert not public.get("permits_required")
+    visible = json.dumps(public.get("family_decisions") or public.get("related_permits") or []).lower()
+    for family in ("electrical", "mechanical", "refrigeration"):
+        assert family in visible
 
-    for row in public["permits_required"]:
+    for row in public.get("permits_required") or []:
         text = json.dumps(row).lower()
         if "electrical" in text:
             assert row.get("kind") == "Electrical"

@@ -15,7 +15,7 @@ _HELPER_SPEC.loader.exec_module(_debug_helper)
 ROOT = Path(__file__).resolve().parents[1]
 FIXTURE = ROOT / "tests" / "fixtures" / "v24_live_341_filing_path_replay.json"
 GENERIC_SOURCE_HOST_TOKENS = ("iccsafe.org", "nfpa.org", "energy.gov")
-VALID_REQUIRED_FILING_STATES = {"RESOLVED_PORTAL", "RESOLVED_COUNTER", "HONEST_FALLBACK"}
+VALID_FILING_STATES = {"RESOLVED_PORTAL", "RESOLVED_COUNTER", "HONEST_FALLBACK", "CONTACT_AHJ", "contact_authority"}
 
 
 def _import_server(tmp_path, monkeypatch):
@@ -71,22 +71,26 @@ def _public_from_replay_row(server, row):
     )
 
 
-def _assert_required_filing_path_contract(public):
-    assert public.get("permit_decision") == "REQUIRED"
-    assert public.get("permit_required") is True
+def _assert_honest_filing_path_contract(public):
+    decision = public.get("permit_decision")
+    assert decision in {"REQUIRED", "NOT_REQUIRED", "CONDITIONAL", "VERIFY", "NEEDS_INPUT"}
+    assert public.get("permit_required") is ({"REQUIRED": True, "NOT_REQUIRED": False}.get(decision))
+    if decision not in {"REQUIRED", "NOT_REQUIRED"}:
+        assert not public.get("permits_required")
+        assert public.get("family_decisions") or public.get("related_permits") or public.get("companion_permits")
     apply_path = public.get("apply_path")
     assert isinstance(apply_path, dict), public
-    assert apply_path.get("state") in VALID_REQUIRED_FILING_STATES, apply_path
+    assert apply_path.get("state") in VALID_FILING_STATES, apply_path
     apply_url = public.get("apply_url") or public.get("online_application_url") or apply_path.get("portal_url")
     if apply_path.get("state") == "RESOLVED_PORTAL":
         assert apply_url, apply_path
     else:
         assert apply_url in (None, ""), public
-        assert apply_path.get("channel") in {"in_person_counter", "contact_ahj"}, apply_path
+        assert apply_path.get("channel") in {"in_person_counter", "contact_ahj", "contact_authority"}, apply_path
     next_step = (public.get("customer_next_step") or "").lower()
     if not apply_url:
         assert "use the local permit portal" not in next_step
-        assert "no exact local filing portal is attached" in next_step or "no verified online filing url" in next_step
+        assert "contact" in next_step or "verify" in next_step
 
 
 def test_replay_fixture_contains_expected_live_failure_sets():
@@ -106,7 +110,7 @@ def test_required_missing_apply_rows_get_typed_honest_filing_path_without_decisi
     assert len(rows) == 82
     for row in rows:
         public = _public_from_replay_row(server, row)
-        _assert_required_filing_path_contract(public)
+        _assert_honest_filing_path_contract(public)
 
 
 def test_generic_model_code_sources_never_become_primary_filing_support(tmp_path, monkeypatch):
@@ -115,7 +119,7 @@ def test_generic_model_code_sources_never_become_primary_filing_support(tmp_path
     assert len(rows) == 3
     for row in rows:
         public = _public_from_replay_row(server, row)
-        _assert_required_filing_path_contract(public)
+        _assert_honest_filing_path_contract(public)
         apply_url = str(public.get("apply_url") or public.get("online_application_url") or "").lower()
         assert not any(token in apply_url for token in GENERIC_SOURCE_HOST_TOKENS)
         primary_filing_tier = (public.get("apply_path") or {}).get("primary_filing_source_tier")
@@ -132,7 +136,7 @@ def test_representative_passes_preserve_required_decisions_and_valid_portal_stat
     assert len(rows) >= 20
     for row in _required_rows(rows):
         public = _public_from_replay_row(server, row)
-        _assert_required_filing_path_contract(public)
+        _assert_honest_filing_path_contract(public)
 
 
 def test_api_key_create_response_nested_key_validates_for_v1_usage(tmp_path, monkeypatch):

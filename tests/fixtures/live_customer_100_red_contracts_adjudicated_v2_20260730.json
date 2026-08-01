@@ -1,0 +1,1366 @@
+{
+  "adjudicated_at": "2026-07-30",
+  "adjudication_policy": "Hard REQUIRED and NOT_REQUIRED require exact-claim official evidence; broad office/portal links and historical output quality are insufficient. Unsupported companion families remain visible as CONDITIONAL or VERIFY. Historical v1 fixture is preserved unchanged.",
+  "artifact_root": "/home/boban/projects/permitassist/artifacts/live_customer_100_20260629T0032Z",
+  "contracts": [
+    {
+      "artifact_report_text_path": "/home/boban/projects/permitassist/artifacts/live_customer_100_20260629T0032Z/reports/R100-003_residential_sacramento_ca.txt",
+      "artifact_response_json_path": "/home/boban/projects/permitassist/artifacts/live_customer_100_20260629T0032Z/responses/R100-003_residential_sacramento_ca.json",
+      "bucket": "HVAC/mechanical",
+      "case_id": "R100-003",
+      "city": "Sacramento",
+      "evidence": [
+        {
+          "excerpt": "Official/source evidence surfaced in live response for Sacramento, CA.",
+          "title": "Official Sacramento source",
+          "url": "https://www.cityofsacramento.gov/community-development/building"
+        },
+        {
+          "excerpt": "Official/source evidence surfaced in live response for Sacramento, CA.",
+          "title": "California state reference",
+          "url": "https://www.cslb.ca.gov"
+        }
+      ],
+      "expected_decision": "VERIFY",
+      "expected_primary_family": "mechanical",
+      "expected_visible_families": [
+        {
+          "allowed_statuses": [
+            "REQUIRED",
+            "VERIFY"
+          ],
+          "condition_required_when_not_required": false,
+          "family": "mechanical"
+        },
+        {
+          "allowed_statuses": [
+            "REQUIRED",
+            "CONDITIONAL",
+            "VERIFY"
+          ],
+          "condition_required_when_not_required": true,
+          "family": "electrical"
+        }
+      ],
+      "final_grade": "C",
+      "forbidden_primary_families": [],
+      "forbidden_required_families": [],
+      "input_scope": "replace gas furnace with heat pump air handler and outdoor condenser, no panel upgrade",
+      "priority": "P2",
+      "segment": "residential",
+      "source_review_rationale": "**Auto-A miss:** furnace→heat pump adds an outdoor condenser (new circuit) — electrical family missing",
+      "state": "CA",
+      "authority_contract_migration": "URL-only, generic-source, or unquoted historical evidence cannot establish a hard REQUIRED claim; preserve typed family lanes as VERIFY."
+    },
+    {
+      "artifact_report_text_path": "/home/boban/projects/permitassist/artifacts/live_customer_100_20260629T0032Z/reports/R100-005_residential_pittsburgh_pa.txt",
+      "artifact_response_json_path": "/home/boban/projects/permitassist/artifacts/live_customer_100_20260629T0032Z/responses/R100-005_residential_pittsburgh_pa.json",
+      "bucket": "HVAC/mechanical",
+      "case_id": "R100-005",
+      "city": "Pittsburgh",
+      "evidence": [
+        {
+          "excerpt": "Official/source evidence surfaced in live response for Pittsburgh, PA.",
+          "title": "Official Pittsburgh source",
+          "url": "https://onestoppgh.pittsburghpa.gov"
+        },
+        {
+          "excerpt": "Official/source evidence surfaced in live response for Pittsburgh, PA.",
+          "title": "Official Pittsburgh source",
+          "url": "https://pittsburghpa.gov/dpw/building-inspection"
+        },
+        {
+          "excerpt": "Official/source evidence surfaced in live response for Pittsburgh, PA.",
+          "title": "Official Pittsburgh source",
+          "url": "https://www.pittsburghpa.gov/Business-Development/Permits-Licenses-and-Inspections/Permits/Commercial-Permits/HVAC-Permit"
+        },
+        {
+          "excerpt": "Official/source evidence surfaced in live response for Pittsburgh, PA.",
+          "title": "Official Pittsburgh source",
+          "url": "https://www.pittsburghpa.gov/Business-Development/Permits-Licenses-and-Inspections/OneStopPGH"
+        }
+      ],
+      "expected_decision": "VERIFY",
+      "expected_primary_family": "mechanical",
+      "expected_visible_families": [
+        {
+          "allowed_statuses": [
+            "REQUIRED",
+            "VERIFY"
+          ],
+          "condition_required_when_not_required": false,
+          "family": "mechanical"
+        },
+        {
+          "allowed_statuses": [
+            "REQUIRED",
+            "CONDITIONAL",
+            "VERIFY"
+          ],
+          "condition_required_when_not_required": true,
+          "family": "electrical"
+        }
+      ],
+      "final_grade": "C",
+      "forbidden_primary_families": [],
+      "forbidden_required_families": [],
+      "input_scope": "install new central air conditioning with ductwork in existing single family home",
+      "priority": "P2",
+      "segment": "residential",
+      "source_review_rationale": "New central AC + condenser needs electrical; electrical family entirely absent (not even VERIFY)",
+      "state": "PA",
+      "authority_contract_migration": "URL-only, generic-source, or unquoted historical evidence cannot establish a hard REQUIRED claim; preserve typed family lanes as VERIFY."
+    },
+    {
+      "artifact_report_text_path": "/home/boban/projects/permitassist/artifacts/live_customer_100_20260629T0032Z/reports/R100-006_residential_santa_monica_ca.txt",
+      "artifact_response_json_path": "/home/boban/projects/permitassist/artifacts/live_customer_100_20260629T0032Z/responses/R100-006_residential_santa_monica_ca.json",
+      "bucket": "HVAC/mechanical",
+      "case_id": "R100-006",
+      "city": "Santa Monica",
+      "evidence": [
+        {
+          "excerpt": "Some electrification projects require a City permit; Santa Monica specifically discusses heat pumps/mini splits and says permitted installation must use licensed contractors.",
+          "title": "Santa Monica — How to Electrify Your Home",
+          "url": "https://www.santamonica.gov/process-explainers/how-to-electrify-your-home"
+        }
+      ],
+      "expected_decision": "VERIFY",
+      "expected_primary_family": "mechanical",
+      "expected_visible_families": [
+        {
+          "allowed_statuses": [
+            "REQUIRED",
+            "VERIFY"
+          ],
+          "condition_required_when_not_required": false,
+          "family": "mechanical"
+        },
+        {
+          "allowed_statuses": [
+            "REQUIRED",
+            "CONDITIONAL",
+            "VERIFY"
+          ],
+          "condition_required_when_not_required": true,
+          "family": "electrical"
+        }
+      ],
+      "final_grade": "F",
+      "forbidden_primary_families": [],
+      "forbidden_required_families": [],
+      "input_scope": "install whole-house heat pump system replacing wall furnace, add outdoor condenser and condensate pump",
+      "priority": "P1",
+      "segment": "residential",
+      "source_review_rationale": "False NOT_REQUIRED on whole-house heat pump swap — should be REQUIRED mech+elec; customer-harmful",
+      "state": "CA",
+      "authority_contract_migration": "URL-only, generic-source, or unquoted historical evidence cannot establish a hard REQUIRED claim; preserve typed family lanes as VERIFY."
+    },
+    {
+      "artifact_report_text_path": "/home/boban/projects/permitassist/artifacts/live_customer_100_20260629T0032Z/reports/R100-007_residential_asheville_nc.txt",
+      "artifact_response_json_path": "/home/boban/projects/permitassist/artifacts/live_customer_100_20260629T0032Z/responses/R100-007_residential_asheville_nc.json",
+      "bucket": "HVAC/mechanical",
+      "case_id": "R100-007",
+      "city": "Asheville",
+      "evidence": [
+        {
+          "excerpt": "Official/source evidence surfaced in live response for Asheville, NC.",
+          "title": "Official Asheville source",
+          "url": "https://www.ashevillenc.gov/department/development-services/residential-permits-and-development/"
+        }
+      ],
+      "expected_decision": "VERIFY",
+      "expected_primary_family": "mechanical",
+      "expected_visible_families": [
+        {
+          "allowed_statuses": [
+            "REQUIRED",
+            "VERIFY"
+          ],
+          "condition_required_when_not_required": false,
+          "family": "mechanical"
+        },
+        {
+          "allowed_statuses": [
+            "REQUIRED",
+            "CONDITIONAL",
+            "VERIFY"
+          ],
+          "condition_required_when_not_required": true,
+          "family": "electrical"
+        }
+      ],
+      "final_grade": "F",
+      "forbidden_primary_families": [
+        "building",
+        "plumbing"
+      ],
+      "forbidden_required_families": [],
+      "input_scope": "install mini split in detached garage home office, no plumbing and no structural work",
+      "priority": "P1",
+      "segment": "residential",
+      "source_review_rationale": "Mirror contradiction: decision REQUIRED but apply_path NOT_APPLICABLE/no apply_url; primary mislabeled \"Detached Garage\" for a mini-split; commercial-TI timeline on residential",
+      "state": "NC",
+      "authority_contract_migration": "URL-only, generic-source, or unquoted historical evidence cannot establish a hard REQUIRED claim; preserve typed family lanes as VERIFY."
+    },
+    {
+      "artifact_report_text_path": "/home/boban/projects/permitassist/artifacts/live_customer_100_20260629T0032Z/reports/R100-010_residential_albuquerque_nm.txt",
+      "artifact_response_json_path": "/home/boban/projects/permitassist/artifacts/live_customer_100_20260629T0032Z/responses/R100-010_residential_albuquerque_nm.json",
+      "bucket": "HVAC/mechanical",
+      "case_id": "R100-010",
+      "city": "Albuquerque",
+      "evidence": [
+        {
+          "excerpt": "Official/source evidence surfaced in live response for Albuquerque, NM.",
+          "title": "Official Albuquerque source",
+          "url": "https://www.cabq.gov/building-safety"
+        },
+        {
+          "excerpt": "Official/source evidence surfaced in live response for Albuquerque, NM.",
+          "title": "Official Albuquerque source",
+          "url": "https://cabq.gov/building-safety/permits"
+        }
+      ],
+      "expected_decision": "VERIFY",
+      "expected_primary_family": "mechanical",
+      "expected_visible_families": [
+        {
+          "allowed_statuses": [
+            "REQUIRED",
+            "VERIFY"
+          ],
+          "condition_required_when_not_required": false,
+          "family": "mechanical"
+        }
+      ],
+      "final_grade": "F",
+      "forbidden_primary_families": [
+        "roofing",
+        "building"
+      ],
+      "forbidden_required_families": [],
+      "input_scope": "replace rooftop evaporative cooler with new ducted evaporative cooler, same location",
+      "priority": "P1",
+      "segment": "residential",
+      "source_review_rationale": "Wrong primary: \"Roofing Permit\" for an evaporative-cooler swap; required mechanical family missing",
+      "state": "NM",
+      "authority_contract_migration": "URL-only, generic-source, or unquoted historical evidence cannot establish a hard REQUIRED claim; preserve typed family lanes as VERIFY."
+    },
+    {
+      "artifact_report_text_path": "/home/boban/projects/permitassist/artifacts/live_customer_100_20260629T0032Z/reports/R100-022_residential_denver_co.txt",
+      "artifact_response_json_path": "/home/boban/projects/permitassist/artifacts/live_customer_100_20260629T0032Z/responses/R100-022_residential_denver_co.json",
+      "bucket": "Plumbing",
+      "case_id": "R100-022",
+      "city": "Denver",
+      "evidence": [
+        {
+          "excerpt": "Official/source evidence surfaced in live response for Denver, CO.",
+          "title": "Official Denver source",
+          "url": "https://www.denvergov.org/CPD"
+        },
+        {
+          "excerpt": "Official/source evidence surfaced in live response for Denver, CO.",
+          "title": "Official Denver source",
+          "url": "https://www.denvergov.org/Government/Agencies-Departments-Offices/Agencies-Departments-Offices-Directory/Community-Planning-and-Development/Plan-Review-Permits-and-Inspections"
+        },
+        {
+          "excerpt": "Official/source evidence surfaced in live response for Denver, CO.",
+          "title": "Official Denver source",
+          "url": "https://www.denvergov.org/Government/Agencies-Departments-Offices/Agencies-Departments-Offices-Directory/Department-of-Transportation-and-Infrastructure/Documents/Wastewater-Permits"
+        },
+        {
+          "excerpt": "Official/source evidence surfaced in live response for Denver, CO.",
+          "title": "Official Denver source",
+          "url": "https://aca-prod.accela.com/denver/default.aspx"
+        }
+      ],
+      "expected_decision": "VERIFY",
+      "expected_primary_family": "plumbing",
+      "expected_visible_families": [
+        {
+          "allowed_statuses": [
+            "REQUIRED",
+            "VERIFY"
+          ],
+          "condition_required_when_not_required": false,
+          "family": "plumbing"
+        }
+      ],
+      "final_grade": "F",
+      "forbidden_primary_families": [
+        "building",
+        "foundation",
+        "roofing"
+      ],
+      "forbidden_required_families": [],
+      "input_scope": "replace private sewer line from foundation to property line using trenchless liner",
+      "priority": "P1",
+      "segment": "residential",
+      "source_review_rationale": "Wrong primary: \"Building – Foundation Repair\" for a sewer-lateral reline; required plumbing missing",
+      "state": "CO",
+      "authority_contract_migration": "URL-only, generic-source, or unquoted historical evidence cannot establish a hard REQUIRED claim; preserve typed family lanes as VERIFY."
+    },
+    {
+      "artifact_report_text_path": "/home/boban/projects/permitassist/artifacts/live_customer_100_20260629T0032Z/reports/R100-023_residential_queens_ny.txt",
+      "artifact_response_json_path": "/home/boban/projects/permitassist/artifacts/live_customer_100_20260629T0032Z/responses/R100-023_residential_queens_ny.json",
+      "bucket": "Plumbing",
+      "case_id": "R100-023",
+      "city": "Queens",
+      "evidence": [
+        {
+          "excerpt": "Work involving alteration, rearrangement, relocation, or permanent removal of piping must be supervised by a Licensed Master Plumber, who must obtain permits from DOB.",
+          "title": "NYC DOB Plumbing Permits",
+          "url": "https://www.nyc.gov/site/buildings/property-or-business-owner/plumbing-permits.page"
+        }
+      ],
+      "expected_decision": "VERIFY",
+      "expected_primary_family": "plumbing",
+      "expected_visible_families": [
+        {
+          "allowed_statuses": [
+            "VERIFY"
+          ],
+          "condition_required_when_not_required": false,
+          "family": "plumbing"
+        },
+        {
+          "allowed_statuses": [
+            "VERIFY"
+          ],
+          "condition_required_when_not_required": true,
+          "family": "building"
+        }
+      ],
+      "final_grade": "F",
+      "forbidden_primary_families": [],
+      "forbidden_required_families": [
+        "building",
+        "plumbing"
+      ],
+      "input_scope": "replace bathtub with walk in shower and relocate drain six inches, no electrical work",
+      "priority": "P1",
+      "segment": "residential",
+      "source_review_rationale": "False NOT_REQUIRED — drain relocation is permitted plumbing/building work; customer-harmful",
+      "state": "NY",
+      "authority_contract_migration": "Historical excerpt/URL is not an authenticated exact-claim snapshot; preserve typed family visibility as VERIFY without minting binary authority."
+    },
+    {
+      "artifact_report_text_path": "/home/boban/projects/permitassist/artifacts/live_customer_100_20260629T0032Z/reports/R100-028_residential_baltimore_md.txt",
+      "artifact_response_json_path": "/home/boban/projects/permitassist/artifacts/live_customer_100_20260629T0032Z/responses/R100-028_residential_baltimore_md.json",
+      "bucket": "Plumbing",
+      "case_id": "R100-028",
+      "city": "Baltimore",
+      "evidence": [
+        {
+          "excerpt": "Official/source evidence surfaced in live response for Baltimore, MD.",
+          "title": "Official Baltimore source",
+          "url": "https://dhcd.baltimorecity.gov/permits"
+        },
+        {
+          "excerpt": "Official/source evidence surfaced in live response for Baltimore, MD.",
+          "title": "Official Baltimore source",
+          "url": "https://baltimorecity.gov/ePermits"
+        },
+        {
+          "excerpt": "Official/source evidence surfaced in live response for Baltimore, MD.",
+          "title": "Official Baltimore source",
+          "url": "https://www.baltimorecity.gov/dhcd/our-work/permits-inspections/building-permits"
+        }
+      ],
+      "expected_decision": "VERIFY",
+      "expected_primary_family": "plumbing",
+      "expected_visible_families": [
+        {
+          "allowed_statuses": [
+            "VERIFY"
+          ],
+          "condition_required_when_not_required": true,
+          "family": "plumbing"
+        }
+      ],
+      "final_grade": "C",
+      "forbidden_primary_families": [
+        "building",
+        "foundation"
+      ],
+      "forbidden_required_families": [],
+      "input_scope": "replace sump pump and discharge line in basement, no foundation work",
+      "priority": "P2",
+      "segment": "residential",
+      "source_review_rationale": "Generic \"Building Permit\" mislabels a plumbing (sump/discharge) scope; plumbing family not visible",
+      "state": "MD",
+      "authority_contract_migration": "URL-only, generic-source, or unquoted historical evidence cannot establish a hard REQUIRED claim; preserve typed family lanes as VERIFY."
+    },
+    {
+      "artifact_report_text_path": "/home/boban/projects/permitassist/artifacts/live_customer_100_20260629T0032Z/reports/R100-040_residential_seattle_wa.txt",
+      "artifact_response_json_path": "/home/boban/projects/permitassist/artifacts/live_customer_100_20260629T0032Z/responses/R100-040_residential_seattle_wa.json",
+      "bucket": "ADU/DADU/garage conversion",
+      "case_id": "R100-040",
+      "city": "Seattle",
+      "evidence": [
+        {
+          "excerpt": "Official/source evidence surfaced in live response for Seattle, WA.",
+          "title": "Official Seattle source",
+          "url": "https://www.seattle.gov/sdci"
+        },
+        {
+          "excerpt": "Official/source evidence surfaced in live response for Seattle, WA.",
+          "title": "Official Seattle source",
+          "url": "https://cosaccela.seattle.gov"
+        },
+        {
+          "excerpt": "Official/source evidence surfaced in live response for Seattle, WA.",
+          "title": "Official Seattle source",
+          "url": "https://www.seattle.gov/sdci/permits/permit-and-inspection-services"
+        },
+        {
+          "excerpt": "Official/source evidence surfaced in live response for Seattle, WA.",
+          "title": "Official Seattle source",
+          "url": "https://www.seattle.gov/sdci/permits/permit-fees"
+        }
+      ],
+      "expected_decision": "VERIFY",
+      "expected_primary_family": "building",
+      "expected_visible_families": [
+        {
+          "allowed_statuses": [
+            "VERIFY"
+          ],
+          "condition_required_when_not_required": false,
+          "family": "building"
+        },
+        {
+          "allowed_statuses": [
+            "VERIFY"
+          ],
+          "condition_required_when_not_required": true,
+          "family": "electrical"
+        },
+        {
+          "allowed_statuses": [
+            "VERIFY"
+          ],
+          "condition_required_when_not_required": true,
+          "family": "plumbing"
+        },
+        {
+          "allowed_statuses": [
+            "VERIFY"
+          ],
+          "condition_required_when_not_required": true,
+          "family": "mechanical"
+        },
+        {
+          "allowed_statuses": [
+            "VERIFY",
+            "CONDITIONAL"
+          ],
+          "condition_required_when_not_required": true,
+          "family": "planning"
+        }
+      ],
+      "final_grade": "F",
+      "forbidden_primary_families": [
+        "mechanical"
+      ],
+      "forbidden_required_families": [
+        "building",
+        "electrical",
+        "mechanical",
+        "planning",
+        "plumbing"
+      ],
+      "input_scope": "build new detached backyard cottage with kitchenette, bathroom and heat pump",
+      "priority": "P1",
+      "segment": "residential",
+      "source_review_rationale": "New DADU reduced to \"Mechanical – HVAC System Replacement\"; building/electrical/plumbing missing — severe",
+      "state": "WA",
+      "authority_contract_migration": "Historical excerpt/URL is not an authenticated exact-claim snapshot; preserve typed family visibility as VERIFY without minting binary authority."
+    },
+    {
+      "artifact_report_text_path": "/home/boban/projects/permitassist/artifacts/live_customer_100_20260629T0032Z/reports/R100-041_residential_denver_co.txt",
+      "artifact_response_json_path": "/home/boban/projects/permitassist/artifacts/live_customer_100_20260629T0032Z/responses/R100-041_residential_denver_co.json",
+      "bucket": "ADU/DADU/garage conversion",
+      "case_id": "R100-041",
+      "city": "Denver",
+      "evidence": [
+        {
+          "excerpt": "Official/source evidence surfaced in live response for Denver, CO.",
+          "title": "Official Denver source",
+          "url": "https://www.denvergov.org/CPD"
+        },
+        {
+          "excerpt": "Official/source evidence surfaced in live response for Denver, CO.",
+          "title": "Official Denver source",
+          "url": "https://www.denvergov.org/Government/Agencies-Departments-Offices/Agencies-Departments-Offices-Directory/Community-Planning-and-Development/Plan-Review-Permits-and-Inspections"
+        },
+        {
+          "excerpt": "Official/source evidence surfaced in live response for Denver, CO.",
+          "title": "Official Denver source",
+          "url": "https://aca-prod.accela.com/denver/default.aspx"
+        }
+      ],
+      "expected_decision": "VERIFY",
+      "expected_primary_family": "building",
+      "expected_visible_families": [
+        {
+          "allowed_statuses": [
+            "REQUIRED",
+            "VERIFY"
+          ],
+          "condition_required_when_not_required": false,
+          "family": "building"
+        },
+        {
+          "allowed_statuses": [
+            "VERIFY"
+          ],
+          "condition_required_when_not_required": true,
+          "family": "electrical"
+        },
+        {
+          "allowed_statuses": [
+            "VERIFY"
+          ],
+          "condition_required_when_not_required": true,
+          "family": "plumbing"
+        },
+        {
+          "allowed_statuses": [
+            "VERIFY"
+          ],
+          "condition_required_when_not_required": true,
+          "family": "mechanical"
+        }
+      ],
+      "final_grade": "C",
+      "forbidden_primary_families": [],
+      "forbidden_required_families": [],
+      "input_scope": "finish basement apartment with kitchen, bath, sleeping room, egress and separate electrical panel",
+      "priority": "P2",
+      "segment": "residential",
+      "source_review_rationale": "Mechanical missing; plumbing downgraded to VERIFY despite explicit kitchen+bath",
+      "state": "CO",
+      "authority_contract_migration": "URL-only, generic-source, or unquoted historical evidence cannot establish a hard REQUIRED claim; preserve typed family lanes as VERIFY."
+    },
+    {
+      "artifact_report_text_path": "/home/boban/projects/permitassist/artifacts/live_customer_100_20260629T0032Z/reports/R100-043_residential_austin_tx.txt",
+      "artifact_response_json_path": "/home/boban/projects/permitassist/artifacts/live_customer_100_20260629T0032Z/responses/R100-043_residential_austin_tx.json",
+      "bucket": "ADU/DADU/garage conversion",
+      "case_id": "R100-043",
+      "city": "Austin",
+      "evidence": [
+        {
+          "excerpt": "Official/source evidence surfaced in live response for Austin, TX.",
+          "title": "Official Austin source",
+          "url": "https://abc.austintexas.gov/citizenportal[REDACTED]"
+        },
+        {
+          "excerpt": "Official/source evidence surfaced in live response for Austin, TX.",
+          "title": "Official Austin source",
+          "url": "https://www.austintexas.gov/department/development-services"
+        },
+        {
+          "excerpt": "Official/source evidence surfaced in live response for Austin, TX.",
+          "title": "Official Austin source",
+          "url": "https://www.austintexas.gov/page/residential-permits"
+        },
+        {
+          "excerpt": "Official/source evidence surfaced in live response for Austin, TX.",
+          "title": "Official Austin source",
+          "url": "https://www.austintexas.gov/page/inspections"
+        }
+      ],
+      "expected_decision": "VERIFY",
+      "expected_primary_family": "building",
+      "expected_visible_families": [
+        {
+          "allowed_statuses": [
+            "REQUIRED",
+            "VERIFY"
+          ],
+          "condition_required_when_not_required": false,
+          "family": "building"
+        },
+        {
+          "allowed_statuses": [
+            "VERIFY"
+          ],
+          "condition_required_when_not_required": true,
+          "family": "plumbing"
+        },
+        {
+          "allowed_statuses": [
+            "VERIFY"
+          ],
+          "condition_required_when_not_required": true,
+          "family": "electrical"
+        },
+        {
+          "allowed_statuses": [
+            "VERIFY"
+          ],
+          "condition_required_when_not_required": true,
+          "family": "mechanical"
+        }
+      ],
+      "final_grade": "C",
+      "forbidden_primary_families": [],
+      "forbidden_required_families": [],
+      "input_scope": "convert attached garage into bedroom and bathroom suite with new window and plumbing",
+      "priority": "P2",
+      "segment": "residential",
+      "source_review_rationale": "Garage→bedroom/bath: electrical and mechanical both missing",
+      "state": "TX",
+      "authority_contract_migration": "URL-only, generic-source, or unquoted historical evidence cannot establish a hard REQUIRED claim; preserve typed family lanes as VERIFY."
+    },
+    {
+      "adjudication_note": "v2: statuses follow claim-bound official-evidence floor; unsupported hard companions are retained as nonbinary, not removed.",
+      "artifact_report_text_path": "/home/boban/projects/permitassist/artifacts/live_customer_100_20260629T0032Z/reports/R100-048_residential_raleigh_nc.txt",
+      "artifact_response_json_path": "/home/boban/projects/permitassist/artifacts/live_customer_100_20260629T0032Z/responses/R100-048_residential_raleigh_nc.json",
+      "bucket": "Like-for-like / repair-only traps",
+      "case_id": "R100-048",
+      "city": "Raleigh",
+      "evidence": [
+        {
+          "excerpt": "No permit is required for replacement of windows, doors, exterior siding, or listed deck/porch components when otherwise meeting subsection requirements.",
+          "title": "N.C. Gen. Stat. § 160D-1110(c)",
+          "url": "https://www.ncleg.gov/EnactedLegislation/Statutes/HTML/BySection/Chapter_160D/GS_160D-1110.html"
+        },
+        {
+          "excerpt": "Official/source evidence surfaced in live response for Raleigh, NC.",
+          "title": "Official Raleigh source",
+          "url": "https://raleighnc.gov/permits"
+        },
+        {
+          "excerpt": "Official/source evidence surfaced in live response for Raleigh, NC.",
+          "title": "Official Raleigh source",
+          "url": "https://permits.raleighnc.gov"
+        },
+        {
+          "excerpt": "Official/source evidence surfaced in live response for Raleigh, NC.",
+          "title": "Official Raleigh source",
+          "url": "https://raleighnc.gov/permits/services/how-get-residential-permit"
+        },
+        {
+          "excerpt": "Official/source evidence surfaced in live response for Raleigh, NC.",
+          "title": "Official Raleigh source",
+          "url": "https://cityofraleigh0drupal.blob.core.usgovcloudapi.net/drupal-prod/COR15/ResidentialPermitApplication.pdf"
+        }
+      ],
+      "expected_decision": "VERIFY",
+      "expected_primary_family": "other",
+      "expected_visible_families": [],
+      "final_grade": "F",
+      "forbidden_primary_families": [
+        "building"
+      ],
+      "forbidden_required_families": [
+        "building",
+        "electrical",
+        "plumbing",
+        "mechanical"
+      ],
+      "input_scope": "replace interior prehung door same size, no wall framing or header changes",
+      "priority": "P2",
+      "segment": "residential",
+      "source_review_rationale": "False REQUIRED on exempt like-for-like interior door; fee line (\"$0 if no permit required\") contradicts REQUIRED decision",
+      "state": "NC"
+    },
+    {
+      "artifact_report_text_path": "/home/boban/projects/permitassist/artifacts/live_customer_100_20260629T0032Z/reports/C100-010_commercial_phoenix_az.txt",
+      "artifact_response_json_path": "/home/boban/projects/permitassist/artifacts/live_customer_100_20260629T0032Z/responses/C100-010_commercial_phoenix_az.json",
+      "bucket": "Change of use / occupancy",
+      "case_id": "C100-010",
+      "city": "Phoenix",
+      "evidence": [
+        {
+          "excerpt": "Official/source evidence surfaced in live response for Phoenix, AZ.",
+          "title": "Official Phoenix source",
+          "url": "https://www.phoenix.gov/pdd"
+        },
+        {
+          "excerpt": "Official/source evidence surfaced in live response for Phoenix, AZ.",
+          "title": "Arizona state reference",
+          "url": "https://roc.az.gov"
+        },
+        {
+          "excerpt": "Official/source evidence surfaced in live response for Phoenix, AZ.",
+          "title": "Official Phoenix source",
+          "url": "https://www.phoenix.gov/residents/residential-building-permits.html"
+        },
+        {
+          "excerpt": "Official/source evidence surfaced in live response for Phoenix, AZ.",
+          "title": "Official Phoenix source",
+          "url": "https://www.phoenix.gov/content/dam/phoenix/waterservicessite/documents/FOG_BMP_Manual_2024_06.pdf"
+        }
+      ],
+      "expected_decision": "VERIFY",
+      "expected_primary_family": "building",
+      "expected_visible_families": [
+        {
+          "allowed_statuses": [
+            "REQUIRED",
+            "VERIFY"
+          ],
+          "condition_required_when_not_required": false,
+          "family": "building"
+        },
+        {
+          "allowed_statuses": [
+            "VERIFY"
+          ],
+          "condition_required_when_not_required": true,
+          "family": "electrical"
+        },
+        {
+          "allowed_statuses": [
+            "VERIFY"
+          ],
+          "condition_required_when_not_required": true,
+          "family": "mechanical"
+        },
+        {
+          "allowed_statuses": [
+            "VERIFY"
+          ],
+          "condition_required_when_not_required": true,
+          "family": "plumbing"
+        },
+        {
+          "allowed_statuses": [
+            "CONDITIONAL",
+            "VERIFY"
+          ],
+          "condition_required_when_not_required": true,
+          "family": "health"
+        },
+        {
+          "allowed_statuses": [
+            "VERIFY"
+          ],
+          "condition_required_when_not_required": true,
+          "family": "fire"
+        },
+        {
+          "allowed_statuses": [
+            "CONDITIONAL",
+            "VERIFY"
+          ],
+          "condition_required_when_not_required": true,
+          "family": "wastewater"
+        },
+        {
+          "allowed_statuses": [
+            "REQUIRED",
+            "CONDITIONAL",
+            "VERIFY"
+          ],
+          "condition_required_when_not_required": true,
+          "family": "planning"
+        },
+        {
+          "allowed_statuses": [
+            "REQUIRED",
+            "CONDITIONAL",
+            "VERIFY"
+          ],
+          "condition_required_when_not_required": true,
+          "family": "co"
+        }
+      ],
+      "final_grade": "C",
+      "forbidden_primary_families": [],
+      "forbidden_required_families": [],
+      "input_scope": "convert vacant retail suite to quick service restaurant with kitchen equipment, hood, grease interceptor and dining",
+      "priority": "P2",
+      "segment": "commercial",
+      "source_review_rationale": "Full QSR buildout missing electrical (a major trade)",
+      "state": "AZ",
+      "authority_contract_migration": "URL-only, generic-source, or unquoted historical evidence cannot establish a hard REQUIRED claim; preserve typed family lanes as VERIFY."
+    },
+    {
+      "artifact_report_text_path": "/home/boban/projects/permitassist/artifacts/live_customer_100_20260629T0032Z/reports/C100-012_commercial_portland_or.txt",
+      "artifact_response_json_path": "/home/boban/projects/permitassist/artifacts/live_customer_100_20260629T0032Z/responses/C100-012_commercial_portland_or.json",
+      "bucket": "Change of use / occupancy",
+      "case_id": "C100-012",
+      "city": "Portland",
+      "evidence": [
+        {
+          "excerpt": "Official/source evidence surfaced in live response for Portland, OR.",
+          "title": "Official Portland source",
+          "url": "https://www.portland.gov/bds"
+        },
+        {
+          "excerpt": "Official/source evidence surfaced in live response for Portland, OR.",
+          "title": "Official Portland source",
+          "url": "https://aca-prod.accela.com/PORTLAND"
+        }
+      ],
+      "expected_decision": "VERIFY",
+      "expected_primary_family": "building",
+      "expected_visible_families": [
+        {
+          "allowed_statuses": [
+            "VERIFY"
+          ],
+          "condition_required_when_not_required": true,
+          "family": "building"
+        },
+        {
+          "allowed_statuses": [
+            "VERIFY"
+          ],
+          "condition_required_when_not_required": true,
+          "family": "electrical"
+        },
+        {
+          "allowed_statuses": [
+            "REQUIRED",
+            "VERIFY"
+          ],
+          "condition_required_when_not_required": false,
+          "family": "mechanical"
+        },
+        {
+          "allowed_statuses": [
+            "VERIFY"
+          ],
+          "condition_required_when_not_required": true,
+          "family": "plumbing"
+        },
+        {
+          "allowed_statuses": [
+            "VERIFY"
+          ],
+          "condition_required_when_not_required": true,
+          "family": "health"
+        },
+        {
+          "allowed_statuses": [
+            "REQUIRED",
+            "CONDITIONAL",
+            "VERIFY"
+          ],
+          "condition_required_when_not_required": true,
+          "family": "fire"
+        },
+        {
+          "allowed_statuses": [
+            "REQUIRED",
+            "CONDITIONAL",
+            "VERIFY"
+          ],
+          "condition_required_when_not_required": true,
+          "family": "planning"
+        },
+        {
+          "allowed_statuses": [
+            "REQUIRED",
+            "CONDITIONAL",
+            "VERIFY"
+          ],
+          "condition_required_when_not_required": true,
+          "family": "co"
+        }
+      ],
+      "final_grade": "C",
+      "forbidden_primary_families": [],
+      "forbidden_required_families": [],
+      "input_scope": "convert warehouse bay to brewery taproom with tasting room, restrooms and small production area",
+      "priority": "P2",
+      "segment": "commercial",
+      "source_review_rationale": "Brewery taproom missing electrical and health (both material)",
+      "state": "OR",
+      "authority_contract_migration": "URL-only, generic-source, or unquoted historical evidence cannot establish a hard REQUIRED claim; preserve typed family lanes as VERIFY."
+    },
+    {
+      "artifact_report_text_path": "/home/boban/projects/permitassist/artifacts/live_customer_100_20260629T0032Z/reports/C100-013_commercial_atlanta_ga.txt",
+      "artifact_response_json_path": "/home/boban/projects/permitassist/artifacts/live_customer_100_20260629T0032Z/responses/C100-013_commercial_atlanta_ga.json",
+      "bucket": "Change of use / occupancy",
+      "case_id": "C100-013",
+      "city": "Atlanta",
+      "evidence": [
+        {
+          "excerpt": "Official/source evidence surfaced in live response for Atlanta, GA.",
+          "title": "Official Atlanta source",
+          "url": "https://www.atlantaga.gov/government/departments/city-planning"
+        },
+        {
+          "excerpt": "Official/source evidence surfaced in live response for Atlanta, GA.",
+          "title": "Official Atlanta source",
+          "url": "https://www.atlantaga.gov/government/departments/city-planning/zoning-development-permitting-services/getting-started-with-our-zd-p-services"
+        },
+        {
+          "excerpt": "Official/source evidence surfaced in live response for Atlanta, GA.",
+          "title": "Official Atlanta source",
+          "url": "https://www.atlantaga.gov/i-want-to/obtain-a-building-permit"
+        }
+      ],
+      "expected_decision": "VERIFY",
+      "expected_primary_family": "building",
+      "expected_visible_families": [
+        {
+          "allowed_statuses": [
+            "REQUIRED",
+            "VERIFY"
+          ],
+          "condition_required_when_not_required": false,
+          "family": "building"
+        },
+        {
+          "allowed_statuses": [
+            "VERIFY"
+          ],
+          "condition_required_when_not_required": true,
+          "family": "electrical"
+        },
+        {
+          "allowed_statuses": [
+            "VERIFY"
+          ],
+          "condition_required_when_not_required": true,
+          "family": "plumbing"
+        },
+        {
+          "allowed_statuses": [
+            "REQUIRED",
+            "CONDITIONAL",
+            "VERIFY"
+          ],
+          "condition_required_when_not_required": true,
+          "family": "fire"
+        },
+        {
+          "allowed_statuses": [
+            "REQUIRED",
+            "CONDITIONAL",
+            "VERIFY"
+          ],
+          "condition_required_when_not_required": true,
+          "family": "planning"
+        },
+        {
+          "allowed_statuses": [
+            "REQUIRED",
+            "CONDITIONAL",
+            "VERIFY"
+          ],
+          "condition_required_when_not_required": true,
+          "family": "co"
+        }
+      ],
+      "final_grade": "C",
+      "forbidden_primary_families": [],
+      "forbidden_required_families": [],
+      "input_scope": "convert office suite to yoga studio assembly space, add showers and revise exit lighting",
+      "priority": "P2",
+      "segment": "commercial",
+      "source_review_rationale": "Assembly conversion with showers missing plumbing",
+      "state": "GA",
+      "authority_contract_migration": "URL-only, generic-source, or unquoted historical evidence cannot establish a hard REQUIRED claim; preserve typed family lanes as VERIFY."
+    },
+    {
+      "artifact_report_text_path": "/home/boban/projects/permitassist/artifacts/live_customer_100_20260629T0032Z/reports/C100-016_commercial_raleigh_nc.txt",
+      "artifact_response_json_path": "/home/boban/projects/permitassist/artifacts/live_customer_100_20260629T0032Z/responses/C100-016_commercial_raleigh_nc.json",
+      "bucket": "Change of use / occupancy",
+      "case_id": "C100-016",
+      "city": "Raleigh",
+      "evidence": [
+        {
+          "excerpt": "Official/source evidence surfaced in live response for Raleigh, NC.",
+          "title": "Official Raleigh source",
+          "url": "https://raleighnc.gov/permits"
+        },
+        {
+          "excerpt": "Official/source evidence surfaced in live response for Raleigh, NC.",
+          "title": "Official Raleigh source",
+          "url": "https://permits.raleighnc.gov"
+        },
+        {
+          "excerpt": "Official/source evidence surfaced in live response for Raleigh, NC.",
+          "title": "Official Raleigh source",
+          "url": "https://cityofraleigh0drupal.blob.core.usgovcloudapi.net/drupal-prod/COR15/DevelopmentFeeGuide.pdf"
+        },
+        {
+          "excerpt": "Official/source evidence surfaced in live response for Raleigh, NC.",
+          "title": "Official Raleigh source",
+          "url": "https://cityofraleigh0drupal.blob.core.usgovcloudapi.net/drupal-prod/COR15/ResidentialPermitApplication.pdf"
+        }
+      ],
+      "expected_decision": "VERIFY",
+      "expected_primary_family": "building",
+      "expected_visible_families": [
+        {
+          "allowed_statuses": [
+            "REQUIRED",
+            "VERIFY"
+          ],
+          "condition_required_when_not_required": false,
+          "family": "building"
+        },
+        {
+          "allowed_statuses": [
+            "VERIFY"
+          ],
+          "condition_required_when_not_required": true,
+          "family": "electrical"
+        },
+        {
+          "allowed_statuses": [
+            "VERIFY"
+          ],
+          "condition_required_when_not_required": true,
+          "family": "mechanical"
+        },
+        {
+          "allowed_statuses": [
+            "VERIFY"
+          ],
+          "condition_required_when_not_required": true,
+          "family": "plumbing"
+        },
+        {
+          "allowed_statuses": [
+            "REQUIRED",
+            "CONDITIONAL",
+            "VERIFY"
+          ],
+          "condition_required_when_not_required": true,
+          "family": "fire"
+        },
+        {
+          "allowed_statuses": [
+            "REQUIRED",
+            "CONDITIONAL",
+            "VERIFY"
+          ],
+          "condition_required_when_not_required": true,
+          "family": "planning"
+        },
+        {
+          "allowed_statuses": [
+            "REQUIRED",
+            "CONDITIONAL",
+            "VERIFY"
+          ],
+          "condition_required_when_not_required": true,
+          "family": "co"
+        }
+      ],
+      "final_grade": "C",
+      "forbidden_primary_families": [],
+      "forbidden_required_families": [],
+      "input_scope": "convert retail space to outpatient medical clinic with exam rooms, sinks and medical gas storage closet",
+      "priority": "P2",
+      "segment": "commercial",
+      "source_review_rationale": "Medical clinic buildout missing electrical",
+      "state": "NC",
+      "authority_contract_migration": "URL-only, generic-source, or unquoted historical evidence cannot establish a hard REQUIRED claim; preserve typed family lanes as VERIFY."
+    },
+    {
+      "artifact_report_text_path": "/home/boban/projects/permitassist/artifacts/live_customer_100_20260629T0032Z/reports/C100-020_commercial_orlando_fl.txt",
+      "artifact_response_json_path": "/home/boban/projects/permitassist/artifacts/live_customer_100_20260629T0032Z/responses/C100-020_commercial_orlando_fl.json",
+      "bucket": "Commercial mechanical/electrical",
+      "case_id": "C100-020",
+      "city": "Orlando",
+      "evidence": [
+        {
+          "excerpt": "Official/source evidence surfaced in live response for Orlando, FL.",
+          "title": "Official Orlando source",
+          "url": "https://www.orlando.gov/Building-Development/Permits-Inspections/Get-a-Permit"
+        },
+        {
+          "excerpt": "Official/source evidence surfaced in live response for Orlando, FL.",
+          "title": "Official Orlando source",
+          "url": "https://www.orlando.gov/Our-Government/Departments-Offices/Economic-Development/Permitting-Services"
+        }
+      ],
+      "expected_decision": "VERIFY",
+      "expected_primary_family": "electrical",
+      "expected_visible_families": [
+        {
+          "allowed_statuses": [
+            "REQUIRED",
+            "VERIFY"
+          ],
+          "condition_required_when_not_required": false,
+          "family": "electrical"
+        },
+        {
+          "allowed_statuses": [
+            "REQUIRED",
+            "CONDITIONAL",
+            "VERIFY"
+          ],
+          "condition_required_when_not_required": true,
+          "family": "mechanical"
+        }
+      ],
+      "final_grade": "C",
+      "forbidden_primary_families": [
+        "building"
+      ],
+      "forbidden_required_families": [
+        "building"
+      ],
+      "input_scope": "install emergency generator and automatic transfer switch for outpatient clinic, no building expansion",
+      "priority": "P2",
+      "segment": "commercial",
+      "source_review_rationale": "Generator/ATS missing mechanical (fuel/exhaust); Building added despite \"no expansion\"",
+      "state": "FL",
+      "authority_contract_migration": "URL-only, generic-source, or unquoted historical evidence cannot establish a hard REQUIRED claim; preserve typed family lanes as VERIFY."
+    },
+    {
+      "artifact_report_text_path": "/home/boban/projects/permitassist/artifacts/live_customer_100_20260629T0032Z/reports/C100-032_commercial_los_angeles_ca.txt",
+      "artifact_response_json_path": "/home/boban/projects/permitassist/artifacts/live_customer_100_20260629T0032Z/responses/C100-032_commercial_los_angeles_ca.json",
+      "bucket": "Multi-family/mixed-use",
+      "case_id": "C100-032",
+      "city": "Los Angeles",
+      "evidence": [
+        {
+          "excerpt": "Official/source evidence surfaced in live response for Los Angeles, CA.",
+          "title": "Official Los Angeles source",
+          "url": "https://dbs.lacity.gov/"
+        },
+        {
+          "excerpt": "Official/source evidence surfaced in live response for Los Angeles, CA.",
+          "title": "Official Los Angeles source",
+          "url": "https://www.ladbs.org"
+        },
+        {
+          "excerpt": "Official/source evidence surfaced in live response for Los Angeles, CA.",
+          "title": "Official Los Angeles source",
+          "url": "https://www.ladbs.org/services/apply-for-a-permit"
+        }
+      ],
+      "expected_decision": "VERIFY",
+      "expected_primary_family": "building",
+      "expected_visible_families": [
+        {
+          "allowed_statuses": [
+            "REQUIRED",
+            "VERIFY"
+          ],
+          "condition_required_when_not_required": false,
+          "family": "building"
+        },
+        {
+          "allowed_statuses": [
+            "VERIFY"
+          ],
+          "condition_required_when_not_required": true,
+          "family": "electrical"
+        },
+        {
+          "allowed_statuses": [
+            "VERIFY"
+          ],
+          "condition_required_when_not_required": true,
+          "family": "mechanical"
+        },
+        {
+          "allowed_statuses": [
+            "CONDITIONAL",
+            "VERIFY"
+          ],
+          "condition_required_when_not_required": true,
+          "family": "health"
+        },
+        {
+          "allowed_statuses": [
+            "VERIFY"
+          ],
+          "condition_required_when_not_required": true,
+          "family": "plumbing"
+        },
+        {
+          "allowed_statuses": [
+            "CONDITIONAL",
+            "VERIFY"
+          ],
+          "condition_required_when_not_required": true,
+          "family": "wastewater"
+        },
+        {
+          "allowed_statuses": [
+            "REQUIRED",
+            "CONDITIONAL",
+            "VERIFY"
+          ],
+          "condition_required_when_not_required": true,
+          "family": "fire"
+        },
+        {
+          "allowed_statuses": [
+            "REQUIRED",
+            "CONDITIONAL",
+            "VERIFY"
+          ],
+          "condition_required_when_not_required": true,
+          "family": "planning"
+        },
+        {
+          "allowed_statuses": [
+            "REQUIRED",
+            "CONDITIONAL",
+            "VERIFY"
+          ],
+          "condition_required_when_not_required": true,
+          "family": "co"
+        }
+      ],
+      "final_grade": "C",
+      "forbidden_primary_families": [],
+      "forbidden_required_families": [],
+      "input_scope": "mixed-use building ground-floor cafe tenant improvement below apartments with new grease interceptor",
+      "priority": "P2",
+      "segment": "commercial",
+      "source_review_rationale": "Cafe buildout missing electrical, mechanical, health",
+      "state": "CA",
+      "authority_contract_migration": "URL-only, generic-source, or unquoted historical evidence cannot establish a hard REQUIRED claim; preserve typed family lanes as VERIFY."
+    },
+    {
+      "artifact_report_text_path": "/home/boban/projects/permitassist/artifacts/live_customer_100_20260629T0032Z/reports/C100-034_commercial_portland_or.txt",
+      "artifact_response_json_path": "/home/boban/projects/permitassist/artifacts/live_customer_100_20260629T0032Z/responses/C100-034_commercial_portland_or.json",
+      "bucket": "Multi-family/mixed-use",
+      "case_id": "C100-034",
+      "city": "Portland",
+      "evidence": [
+        {
+          "excerpt": "Official/source evidence surfaced in live response for Portland, OR.",
+          "title": "Official Portland source",
+          "url": "https://www.portland.gov/bds"
+        },
+        {
+          "excerpt": "Official/source evidence surfaced in live response for Portland, OR.",
+          "title": "Official Portland source",
+          "url": "https://aca-prod.accela.com/PORTLAND"
+        },
+        {
+          "excerpt": "Official/source evidence surfaced in live response for Portland, OR.",
+          "title": "Official Portland source",
+          "url": "https://www.oregon.gov/bcd/jurisdictions/Documents/2026-portland-proposed-fees.pdf"
+        }
+      ],
+      "expected_decision": "VERIFY",
+      "expected_primary_family": "building",
+      "expected_visible_families": [
+        {
+          "allowed_statuses": [
+            "REQUIRED",
+            "VERIFY"
+          ],
+          "condition_required_when_not_required": false,
+          "family": "building"
+        },
+        {
+          "allowed_statuses": [
+            "VERIFY"
+          ],
+          "condition_required_when_not_required": true,
+          "family": "plumbing"
+        },
+        {
+          "allowed_statuses": [
+            "REQUIRED",
+            "CONDITIONAL",
+            "VERIFY"
+          ],
+          "condition_required_when_not_required": true,
+          "family": "electrical"
+        },
+        {
+          "allowed_statuses": [
+            "REQUIRED",
+            "CONDITIONAL",
+            "VERIFY"
+          ],
+          "condition_required_when_not_required": true,
+          "family": "mechanical"
+        }
+      ],
+      "final_grade": "C",
+      "forbidden_primary_families": [],
+      "forbidden_required_families": [],
+      "input_scope": "build new shared laundry room in 6 unit apartment basement with dryers and floor drain",
+      "priority": "P2",
+      "segment": "commercial",
+      "source_review_rationale": "Laundry room missing electrical (dryer circuits) and mechanical (dryer exhaust)",
+      "state": "OR",
+      "authority_contract_migration": "URL-only, generic-source, or unquoted historical evidence cannot establish a hard REQUIRED claim; preserve typed family lanes as VERIFY."
+    },
+    {
+      "artifact_report_text_path": "/home/boban/projects/permitassist/artifacts/live_customer_100_20260629T0032Z/reports/C100-039_commercial_san_diego_ca.txt",
+      "artifact_response_json_path": "/home/boban/projects/permitassist/artifacts/live_customer_100_20260629T0032Z/responses/C100-039_commercial_san_diego_ca.json",
+      "bucket": "Signage/site work/grading",
+      "case_id": "C100-039",
+      "city": "San Diego",
+      "evidence": [
+        {
+          "excerpt": "Official/source evidence surfaced in live response for San Diego, CA.",
+          "title": "Official San Diego source",
+          "url": "https://www.sandiego.gov/development-services"
+        },
+        {
+          "excerpt": "Official/source evidence surfaced in live response for San Diego, CA.",
+          "title": "Official San Diego source",
+          "url": "https://aca.sandiego.gov"
+        },
+        {
+          "excerpt": "Official/source evidence surfaced in live response for San Diego, CA.",
+          "title": "Official San Diego source",
+          "url": "https://www.sandiego.gov/development-services/contact"
+        },
+        {
+          "excerpt": "Official/source evidence surfaced in live response for San Diego, CA.",
+          "title": "Official San Diego source",
+          "url": "https://www.sandiego.gov/development-services/permits/grading-permit"
+        }
+      ],
+      "expected_decision": "VERIFY",
+      "expected_primary_family": "grading",
+      "expected_visible_families": [
+        {
+          "allowed_statuses": [
+            "REQUIRED",
+            "CONDITIONAL",
+            "VERIFY"
+          ],
+          "condition_required_when_not_required": true,
+          "family": "grading"
+        },
+        {
+          "allowed_statuses": [
+            "REQUIRED",
+            "CONDITIONAL",
+            "VERIFY"
+          ],
+          "condition_required_when_not_required": true,
+          "family": "planning"
+        }
+      ],
+      "final_grade": "C",
+      "forbidden_primary_families": [
+        "building",
+        "health",
+        "fire",
+        "co",
+        "plumbing"
+      ],
+      "forbidden_required_families": [
+        "health",
+        "fire",
+        "co",
+        "plumbing"
+      ],
+      "input_scope": "minor grading and drainage improvements for restaurant outdoor patio expansion",
+      "priority": "P2",
+      "segment": "commercial",
+      "source_review_rationale": "Grading — the literal requested scope — missing, while overreaching into a full restaurant-TI package",
+      "state": "CA",
+      "authority_contract_migration": "URL-only, generic-source, or unquoted historical evidence cannot establish a hard REQUIRED claim; preserve typed family lanes as VERIFY."
+    }
+  ],
+  "schema_version": "permitassist-live-contracts-adjudicated-v2",
+  "supersedes_fixture": "live_customer_100_red_contracts_20260629.json"
+}

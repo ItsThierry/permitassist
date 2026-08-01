@@ -141,8 +141,8 @@ def test_residential_north_salt_lake_addition_does_not_emit_commercial_apply_url
         job_category="residential",
         explicit_vertical="residential",
     )
-    assert public["permit_decision"] == "REQUIRED"
-    assert public["permit_required"] is True
+    assert public["permit_decision"] == "VERIFY"
+    assert public["permit_required"] is None
     assert "commercial-permits" not in str(public.get("apply_url") or "").lower()
     assert "commercial-permits" not in str((public.get("apply_path") or {}).get("portal_url") or "").lower()
     assert "apply online" not in str(public.get("customer_next_step") or "").lower()

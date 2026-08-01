@@ -14,6 +14,7 @@ PERMIT_DECISION_REQUIRED = "REQUIRED"
 PERMIT_DECISION_NOT_REQUIRED = "NOT_REQUIRED"
 PERMIT_DECISION_CONDITIONAL = "CONDITIONAL"
 PERMIT_DECISION_VERIFY = "VERIFY"
+PERMIT_DECISION_NEEDS_INPUT = "NEEDS_INPUT"
 
 _REQUIRED_KIND_RULES: tuple[tuple[str, tuple[str, ...]], ...] = (
     ("ADU / Accessory Dwelling Unit", ("adu", "accessory dwelling", "garage conversion", "in-law suite", "granny flat")),
@@ -501,7 +502,11 @@ def resolve_customer_decision(ctx: dict[str, Any] | None) -> dict[str, Any]:
     not_required_allowed_for_segment = (not commercial_default) or source_backed_exemption_evidence
     source_adjudicated_not_required_reason = _source_adjudicated_not_required_reason(city, state, job_text)
     explicit_not_required = supplied_decision == PERMIT_DECISION_NOT_REQUIRED or supplied_required is False or supplied_verdict in {"NO", "NOT_REQUIRED"}
-    explicit_nonbinary = supplied_decision if supplied_decision in {PERMIT_DECISION_CONDITIONAL, PERMIT_DECISION_VERIFY} else ""
+    explicit_nonbinary = supplied_decision if supplied_decision in {
+        PERMIT_DECISION_CONDITIONAL,
+        PERMIT_DECISION_VERIFY,
+        PERMIT_DECISION_NEEDS_INPUT,
+    } else ""
 
     # Preserve an explicit non-binary answer when no authenticated Decision Cell
     # has replaced it upstream. Generic scope classification may enrich the
@@ -521,6 +526,9 @@ def resolve_customer_decision(ctx: dict[str, Any] | None) -> dict[str, Any]:
         if decision == PERMIT_DECISION_CONDITIONAL:
             headline = f"Permit requirement depends on a verified threshold: {permit_names[0]}."
             next_step = _norm(result.get("customer_next_step")) or f"Confirm the source-backed trigger or threshold with {department}; file under {permit_names[0]} if it applies."
+        elif decision == PERMIT_DECISION_NEEDS_INPUT:
+            headline = "Permit requirement needs project details."
+            next_step = _norm(result.get("customer_next_step")) or f"Provide the missing scope details, then verify the listed filing lanes with {department} before work starts."
         else:
             headline = "Permit requirement needs verification."
             next_step = f"Verify the permit requirement and filing category with {department} before work starts."
@@ -624,6 +632,12 @@ def resolve_customer_decision(ctx: dict[str, Any] | None) -> dict[str, Any]:
     primary_name = permit_names[0] if permit_names else ""
     display_kind = _display_permit_kind(primary_kind, kinds, result) if decision in {PERMIT_DECISION_REQUIRED, PERMIT_DECISION_CONDITIONAL} else "Other"
     permits_required = _permit_payloads_for_names(permit_names, kinds, result)
+    if decision in {PERMIT_DECISION_CONDITIONAL, PERMIT_DECISION_VERIFY, PERMIT_DECISION_NEEDS_INPUT}:
+        for row in permits_required:
+            row["required"] = None
+            row["status"] = decision
+            row["decision"] = decision
+            row["required_status"] = decision
 
     permit_required_value = (
         True if decision == PERMIT_DECISION_REQUIRED
@@ -639,10 +653,15 @@ def resolve_customer_decision(ctx: dict[str, Any] | None) -> dict[str, Any]:
     return {
         "permit_required": permit_required_value,
         "permit_decision": decision,
+        "permit_verdict": (
+            "YES" if decision == PERMIT_DECISION_REQUIRED
+            else "NO" if decision == PERMIT_DECISION_NOT_REQUIRED
+            else decision
+        ),
         "permit_kind": display_kind,
         "permit_kinds": kinds,
         "permit_name": permit_name_value,
-        "permits_required": permits_required if decision == PERMIT_DECISION_REQUIRED else [],
+        "permits_required": permits_required if decision != PERMIT_DECISION_NOT_REQUIRED else [],
         "not_required_reason": reason if decision == PERMIT_DECISION_NOT_REQUIRED else "",
         "customer_headline": headline,
         "customer_next_step": next_step,

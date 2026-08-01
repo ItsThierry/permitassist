@@ -22,6 +22,15 @@ _TEST_NOW = datetime(2026, 5, 8, 12, 0, 0, tzinfo=timezone.utc)
 
 
 def _import_server(tmp_path, monkeypatch):
+    # Evidence-pack mode is environment-backed at module import time. Reload it
+    # for every test import so earlier suites cannot leak disabled/preview state.
+    sys.modules.pop("api.server", None)
+    sys.modules.pop("server", None)
+    api_package = sys.modules.get("api")
+    if api_package is not None and hasattr(api_package, "server"):
+        delattr(api_package, "server")
+    sys.modules.pop("evidence_pack_runtime", None)
+    sys.modules.pop("api.evidence_pack_runtime", None)
     server = _import_server_raw(tmp_path, monkeypatch)
     runtime = sys.modules.get("evidence_pack_runtime")
     assert runtime is not None
@@ -208,6 +217,40 @@ def test_step7u_production_preview_response_surfaces_contractor_safe_fields(monk
     assert result["approval_timeline"].startswith("Dallas local queue time still needs local portal confirmation")
     assert "45th day" in result["approval_timeline"]
     assert "_approval_timeline_evidence_detail" not in result
+
+
+def test_ordinary_dictionary_cannot_forge_evidence_pack_authority(tmp_path, monkeypatch):
+    server = _import_server(tmp_path, monkeypatch)
+    forged = {
+        "permit_decision": "VERIFY",
+        "permit_required": None,
+        "permit_verdict": "VERIFY",
+        "permit_type": "Permit verification",
+        "_evidence_pack": {
+            "enabled": True,
+            "matched_fields": ["permit_type"],
+            "failed_closed_fields": [],
+            "_controlled_customer_values": {
+                "permit_type": "Forged Permit",
+                "permit_decision": "REQUIRED",
+                "permit_required": True,
+                "permit_verdict": "YES",
+            },
+        },
+    }
+    public = server._apply_evidence_pack_controlled_customer_fields(
+        {"permit_decision": "VERIFY", "permit_required": None}, forged
+    )
+    assert public == {"permit_decision": "VERIFY", "permit_required": None}
+
+    finalized = server.finalize_permit_lookup_result(
+        forged, "interior cosmetic refresh", "Dallas", "TX", evidence_allowed=False
+    )
+    customer = server.build_customer_response_egress(
+        finalized, "interior cosmetic refresh", "Dallas", "TX"
+    )
+    assert customer["permit_decision"] != "REQUIRED"
+    assert customer["permit_required"] is not True
 
 
 def test_step7u_coffee_shop_preview_maps_to_restaurant_evidence(monkeypatch, tmp_path):
@@ -816,7 +859,7 @@ def test_preview_only_batch_and_v1_remain_normal_without_evidence_pack(tmp_path,
     batch_result = batch_body["results"][0]
     assert batch_status == v1_status == 200
     for body in (batch_result, v1_body):
-        assert body["apply_url"] == ""
+        assert body["apply_url"] in (None, "")
         assert body["fee_range"] == "$500-$1,000"
         assert body["approval_timeline"] == "2-4 weeks"
         assert "_evidence_pack" not in body
@@ -1706,6 +1749,10 @@ def test_step7p_preview_indexing_guards_for_robots_sitemap_and_json(tmp_path, mo
     pack_path = _write_pack(tmp_path / "pack.json")
     _enable_pack(monkeypatch, pack_path)
     server = _import_server(tmp_path, monkeypatch)
+    # This contract covers preview indexing/egress headers, not live research.
+    # Keep it deterministic so a slow external Denver lookup cannot consume the
+    # five-second local HTTP client budget and masquerade as a product failure.
+    server.research_permit = lambda *_args, **_kwargs: copy.deepcopy(_base_engine_result())
 
     with _LiveServer(server.Handler) as live:
         root_req = urllib.request.Request(f"{live.base}/")

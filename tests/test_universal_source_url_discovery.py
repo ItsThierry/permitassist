@@ -72,9 +72,10 @@ def _final_public(server, result):
     return server.build_customer_permit_view_model(out, "commercial office tenant improvement", "Dallas", "TX")
 
 
-def _assert_required_with_official_local_source(public, url=DALLAS_PORTAL):
-    assert public["permit_decision"] == "REQUIRED"
-    assert public["permit_verdict"] == "YES"
+def _assert_typed_verify_with_official_local_context(public, url=DALLAS_PORTAL):
+    assert public["permit_decision"] == "VERIFY"
+    assert public["permit_verdict"] == "VERIFY"
+    assert public["permit_required"] is None
     assert url in public.get("source_urls", [])
     assert any(
         src.get("url") == url and src.get("source_type") == "official_local"
@@ -90,7 +91,7 @@ def test_production_shape_inspection_booking_only_local_portal_satisfies_source_
 
     public = _final_public(server, result)
 
-    _assert_required_with_official_local_source(public)
+    _assert_typed_verify_with_official_local_context(public)
 
 
 def test_recorded_dallas_fixture_free_text_only_local_portal_satisfies_source_floor(tmp_path, monkeypatch):
@@ -107,7 +108,7 @@ def test_recorded_dallas_fixture_free_text_only_local_portal_satisfies_source_fl
 
     public = _final_public(server, result)
 
-    _assert_required_with_official_local_source(public)
+    _assert_typed_verify_with_official_local_context(public)
 
 
 def test_wrong_locality_free_text_url_is_not_promoted_and_is_hidden_after_required_resolution(tmp_path, monkeypatch):
@@ -120,8 +121,8 @@ def test_wrong_locality_free_text_url_is_not_promoted_and_is_hidden_after_requir
     public = _final_public(server, result)
     blob = json.dumps(public, sort_keys=True)
 
-    assert public["permit_decision"] == "REQUIRED"
-    assert public["permit_required"] is True
+    assert public["permit_decision"] == "VERIFY"
+    assert public["permit_required"] is None
     assert public.get("source_urls", []) == []
     assert public.get("sources", []) == []
     assert public.get("source_support", {}).get("decision_mutation_allowed") is False
@@ -142,8 +143,8 @@ def test_same_state_official_free_text_url_degrades_source_support_without_killi
 
     public = _final_public(server, result)
 
-    assert public["permit_decision"] == "REQUIRED"
-    assert public["permit_required"] is True
+    assert public["permit_decision"] == "VERIFY"
+    assert public["permit_required"] is None
     assert TEXAS_STATE_URL not in public.get("source_urls", [])
     assert public.get("source_support", {}).get("decision_mutation_allowed") is False
     assert not any(src.get("url") == TEXAS_STATE_URL for src in public.get("sources", []))
@@ -155,15 +156,15 @@ def test_required_resolution_strips_bad_urls_but_valid_required_result_keeps_goo
     good = _base_required_result()
     good["inspection_booking"] = f"Book through {DALLAS_PORTAL}."
     good_public = _final_public(server, copy.deepcopy(good))
-    assert good_public["permit_decision"] == "REQUIRED"
+    assert good_public["permit_decision"] == "VERIFY"
     assert DALLAS_PORTAL in json.dumps(good_public, sort_keys=True)
 
     bad = _base_required_result()
     bad["inspection_booking"] = f"Do not leak unsupported URL {SOUTHLAKE_URL}. Keep this non-URL text."
     bad_public = _final_public(server, bad)
     bad_blob = json.dumps(bad_public, sort_keys=True)
-    assert bad_public["permit_decision"] == "REQUIRED"
-    assert bad_public["permit_required"] is True
+    assert bad_public["permit_decision"] == "VERIFY"
+    assert bad_public["permit_required"] is None
     assert SOUTHLAKE_URL not in bad_blob
     assert bad_public.get("source_support", {}).get("decision_mutation_allowed") is False
     assert "Keep this non-URL text" in bad_blob
@@ -188,8 +189,8 @@ def test_internal_rejected_debug_urls_are_not_promoted_by_free_text_walker(tmp_p
 
     public = _final_public(server, result)
 
-    assert public["permit_decision"] == "REQUIRED"
-    assert public["permit_required"] is True
+    assert public["permit_decision"] == "VERIFY"
+    assert public["permit_required"] is None
     assert public.get("source_urls", []) == []
     assert public.get("source_support", {}).get("decision_mutation_allowed") is False
     assert not any(src.get("url") == DALLAS_PORTAL for src in public.get("sources", []))
@@ -207,7 +208,7 @@ def test_recursive_free_text_walker_finds_non_debug_nested_customer_text(tmp_pat
 
     public = _final_public(server, result)
 
-    _assert_required_with_official_local_source(public)
+    _assert_typed_verify_with_official_local_context(public)
 
 
 def test_source_url_discovery_is_idempotent_for_repeated_view_model_builds(tmp_path, monkeypatch):
@@ -219,7 +220,7 @@ def test_source_url_discovery_is_idempotent_for_repeated_view_model_builds(tmp_p
     first = _final_public(server, result)
     second = server.build_customer_permit_view_model(first, "commercial office tenant improvement", "Dallas", "TX")
 
-    assert first["permit_decision"] == second["permit_decision"] == "REQUIRED"
+    assert first["permit_decision"] == second["permit_decision"] == "VERIFY"
     assert first.get("source_urls", []) == [DALLAS_PORTAL]
     assert second.get("source_urls", []) == [DALLAS_PORTAL]
     assert [src.get("url") for src in second.get("sources", [])].count(DALLAS_PORTAL) == 1

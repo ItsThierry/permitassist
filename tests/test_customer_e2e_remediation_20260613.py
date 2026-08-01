@@ -127,7 +127,8 @@ def test_source_adjudicated_not_required_rules_do_not_downgrade_commercial_scope
     ]
     for city, state, job in cases:
         public = build_customer_permit_view_model(copy.deepcopy(response), job, city, state, job_category="commercial")
-        assert public["permit_decision"] == "REQUIRED"
+        assert public["permit_decision"] == "VERIFY"
+        assert public["permit_required"] is None
         assert "Commercial Building / Tenant Improvement" in json.dumps(public)
 
 

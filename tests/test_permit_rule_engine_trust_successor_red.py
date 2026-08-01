@@ -325,6 +325,7 @@ def _consume_snapshot(
     job_type: str = "commercial tenant improvement",
     city: str = "Matanuska-Susitna Borough",
     state: str = "AK",
+    job_category: str = "commercial",
 ):
     function = getattr(
         server,
@@ -337,6 +338,7 @@ def _consume_snapshot(
         job_type,
         city,
         state,
+        job_category=job_category,
         owner_scope=owner_scope,
     )
 
@@ -538,10 +540,11 @@ def test_snapshot_row_is_keyed_and_covers_output_request_owner_ttl_and_counter(s
     ):
         assert required in joined, f"snapshot row omits authenticated {required!r} state"
     customer_column = next(column for column in columns if "customer" in column and "json" in column)
-    assert json.loads(row[customer_column]) == customer
+    expected_customer = server.project_customer_response_egress(customer)
+    assert json.loads(row[customer_column]) == expected_customer
     hmac_column = next(column for column in columns if "hmac" in column)
     assert re.fullmatch(r"[0-9a-f]{64}", str(row[hmac_column]))
-    assert str(row[hmac_column]) != hashlib.sha256(_canonical(customer).encode()).hexdigest()
+    assert str(row[hmac_column]) != hashlib.sha256(_canonical(expected_customer).encode()).hexdigest()
 
 
 def test_snapshot_exact_dto_request_and_owner_binding(server):
@@ -660,7 +663,12 @@ def test_recomputed_unkeyed_projection_hash_cannot_bless_tamper_and_no_private_s
             [corrupted_json, recomputed_unkeyed_hash, row["handle_sha256"]],
         )
     assert server.consume_verified_projection_handoff(
-        handle, corrupted, case["job_type"], case["city"], case["state"]
+        handle,
+        corrupted,
+        case["job_type"],
+        case["city"],
+        case["state"],
+        job_category=case["job_category"],
     ) is None
 
 
