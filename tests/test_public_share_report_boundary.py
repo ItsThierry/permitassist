@@ -220,12 +220,10 @@ def test_public_share_report_payload_is_allowlisted_across_scope_matrix(
     # cannot mint a sealed Manifest when Manifest mode is inactive.
     assert public_result["permit_decision"] == "VERIFY"
     assert public_result["permit_required"] is None
-    manifest = public_result.get("permit_manifest")
-    assert isinstance(manifest, dict)
-    assert manifest.get("schema_version") == "permit_manifest_v1"
-    assert manifest.get("permit_decision") == "VERIFY"
-    assert manifest.get("primary", {}).get("status") in {"VERIFY", "CONDITIONAL", "NEEDS_INPUT"}
-    assert "authority_tag" not in manifest
+    # An ordinary caller-supplied mapping has no private server capability.
+    # The hardened boundary must not echo or synthesize a canonical-looking
+    # Manifest for it, even after safely demoting the outer result to VERIFY.
+    assert public_result.get("permit_manifest") is None
     assert public_result["customer_headline"].startswith("Verify")
     assert public_result["customer_next_step"]
 

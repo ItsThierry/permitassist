@@ -27,6 +27,7 @@ class AhjRule:
     family: str
     status: str
     scope_patterns: tuple[str, ...]
+    scope_exclusion_patterns: tuple[str, ...]
     source_url: str
     source_title: str
     source_quote: str
@@ -37,6 +38,12 @@ class AhjRule:
 
     def matches_scope(self, job_type: str) -> bool:
         text = str(job_type or "")
+        # Claim-local exclusions are evaluated before positive patterns.  This
+        # prevents a retained rule from treating references to work "by
+        # others", excluded alternates, or future options as the caller's
+        # actual filing scope.
+        if any(re.search(pattern, text, re.I) for pattern in self.scope_exclusion_patterns):
+            return False
         for pattern in self.scope_patterns:
             for match in re.finditer(pattern, text, re.I):
                 if not _term_is_locally_negated(text, match.start()):
@@ -72,6 +79,13 @@ def _load_rules() -> tuple[AhjRule, ...]:
                 raise ValueError(f"AHJ rule has no scope patterns: {path}")
             for pattern in patterns:
                 re.compile(pattern)
+            exclusion_patterns = tuple(
+                str(value)
+                for value in raw.get("scope_exclusion_patterns") or []
+                if str(value)
+            )
+            for pattern in exclusion_patterns:
+                re.compile(pattern)
             rules.append(AhjRule(
                 rule_id=str(raw.get("rule_id") or ""),
                 state=str(jurisdiction.get("state") or "").upper(),
@@ -80,6 +94,7 @@ def _load_rules() -> tuple[AhjRule, ...]:
                 family=str(raw.get("family") or "").lower(),
                 status=status,
                 scope_patterns=patterns,
+                scope_exclusion_patterns=exclusion_patterns,
                 source_url=url,
                 source_title=str(source.get("title") or ""),
                 source_quote=quote,

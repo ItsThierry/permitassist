@@ -670,11 +670,10 @@ def test_historical_active_core_finalize_then_egress_keeps_authoritative_require
     required_rows = public.get("permits_required") or []
     assert required_rows
     assert {str(row.get("filing_family") or row.get("family") or "").lower() for row in required_rows} == {"building"}
-    manifest = public.get("permit_manifest")
-    assert isinstance(manifest, dict)
-    assert manifest.get("schema_version") == "permit_manifest_v1"
-    assert manifest.get("permit_decision") == "REQUIRED"
-    assert "authority_tag" not in manifest
+    # Manifest mode is disabled in this regression. The historical sealed core
+    # DTO must preserve its decision and family rows, but it must not mint a
+    # public Manifest outside the separately gated Manifest authority lane.
+    assert public.get("permit_manifest") is None
     assert public["permit_decision"] == "REQUIRED"
     assert public["permit_required"] is True
     assert public["permit_verdict"] == "YES"
