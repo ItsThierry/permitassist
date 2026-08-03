@@ -40,14 +40,14 @@ CASES = (
         "payload": {"job_type": "commercial tenant improvement", "city": "Matanuska-Susitna Borough", "state": "AK", "zip_code": "", "job_category": "commercial"},
         "core": True,
         "decision": "REQUIRED",
-        "families": [["building", "REQUIRED"], ["electrical", "VERIFY"], ["fire", "VERIFY"], ["health", "VERIFY"], ["liquor", "VERIFY"], ["mechanical", "VERIFY"], ["occupancy", "VERIFY"], ["plumbing", "VERIFY"], ["wastewater", "VERIFY"], ["zoning", "VERIFY"]],
+        "families": [["building", "REQUIRED"], ["electrical", "VERIFY"], ["fire", "VERIFY"], ["health", "VERIFY"], ["liquor", "VERIFY"], ["mechanical", "VERIFY"], ["occupancy", "VERIFY"], ["plumbing", "VERIFY"], ["wastewater", "VERIFY"], ["planning", "VERIFY"]],
     },
     {
         "id": "eau-claire-alias-route",
         "payload": {"job_type": "commercial tenant improvement", "city": "Eau Claire", "state": "WI", "zip_code": "", "job_category": "commercial"},
         "core": True,
         "decision": "REQUIRED",
-        "families": [["building", "REQUIRED"], ["electrical", "VERIFY"], ["fire", "VERIFY"], ["health", "VERIFY"], ["liquor", "VERIFY"], ["mechanical", "VERIFY"], ["occupancy", "VERIFY"], ["plumbing", "VERIFY"], ["wastewater", "VERIFY"], ["zoning", "VERIFY"]],
+        "families": [["building", "REQUIRED"], ["electrical", "VERIFY"], ["fire", "VERIFY"], ["health", "VERIFY"], ["liquor", "VERIFY"], ["mechanical", "VERIFY"], ["occupancy", "VERIFY"], ["plumbing", "VERIFY"], ["wastewater", "VERIFY"], ["planning", "VERIFY"]],
     },
     {
         "id": "phoenix-unallowlisted-legacy-control",

@@ -7,13 +7,8 @@
     "RULE_OR_EXEMPTION_MISSING": 4,
     "SCOPE_TAXONOMY_UNSUPPORTED": 12
   },
-  "check_count": 39,
+  "check_count": 29,
   "checks": [
-    {
-      "check": "protected_successor_binds_opening_baseline",
-      "detail": "expected=1af9aacae2f02025c6a8dd0a83645245d16253734b9853a58aa3de666581b837 actual=1af9aacae2f02025c6a8dd0a83645245d16253734b9853a58aa3de666581b837",
-      "pass": true
-    },
     {
       "check": "authoritative_hash:benchmarks/permit_accuracy_v1_1/PERMIT_ACCURACY_FINAL_BOUNDED_PLAN.md",
       "detail": "expected=c799b18e51c108a40a12320fa6eb8d94e9f07de4843c60a176767eac64856029 actual=c799b18e51c108a40a12320fa6eb8d94e9f07de4843c60a176767eac64856029",
@@ -40,93 +35,48 @@
       "pass": true
     },
     {
-      "check": "protected_successor_opening_hash:api/decision_resolver.py",
+      "check": "protected_hash:api/decision_resolver.py",
       "detail": "expected=154d8fc8799fd26b29cf5d83fcbbaa5b372168a9bfc7940852740a7ecdb9402f actual=154d8fc8799fd26b29cf5d83fcbbaa5b372168a9bfc7940852740a7ecdb9402f",
       "pass": true
     },
     {
-      "check": "protected_hash:api/decision_resolver.py",
-      "detail": "expected=6d3e44d76ff0fb4e5ae74f048762fbb038dbccd94c790f40432edff01cb75a45 actual=6d3e44d76ff0fb4e5ae74f048762fbb038dbccd94c790f40432edff01cb75a45",
-      "pass": true
-    },
-    {
-      "check": "protected_successor_opening_hash:api/permit_decision.py",
+      "check": "protected_hash:api/permit_decision.py",
       "detail": "expected=5201cbc42293a58d48d9711135590e4fc92c06d4f6f979a2b1ac3fb2cc7d53bb actual=5201cbc42293a58d48d9711135590e4fc92c06d4f6f979a2b1ac3fb2cc7d53bb",
       "pass": true
     },
     {
-      "check": "protected_hash:api/permit_decision.py",
-      "detail": "expected=83463edb6cc9e6292d617861b0c8f292476e961f1c9e2fe72383ba4b7d937a76 actual=83463edb6cc9e6292d617861b0c8f292476e961f1c9e2fe72383ba4b7d937a76",
-      "pass": true
-    },
-    {
-      "check": "protected_successor_opening_hash:api/research_engine.py",
+      "check": "protected_hash:api/research_engine.py",
       "detail": "expected=2942a1a56b848053ca3c03ee259a7a5e6f5993ff260d050a00640383477c567f actual=2942a1a56b848053ca3c03ee259a7a5e6f5993ff260d050a00640383477c567f",
       "pass": true
     },
     {
-      "check": "protected_hash:api/research_engine.py",
-      "detail": "expected=786fd139bd3517e9f34ac65aa553c0bfdbde83c716ae654fa4569edd2b3f2e69 actual=786fd139bd3517e9f34ac65aa553c0bfdbde83c716ae654fa4569edd2b3f2e69",
-      "pass": true
-    },
-    {
-      "check": "protected_successor_opening_hash:api/scope_contract.py",
+      "check": "protected_hash:api/scope_contract.py",
       "detail": "expected=dc34e73714a3207df2d180d50c89c2fbe272c742aebd1b16b5de01abe828f237 actual=dc34e73714a3207df2d180d50c89c2fbe272c742aebd1b16b5de01abe828f237",
       "pass": true
     },
     {
-      "check": "protected_hash:api/scope_contract.py",
-      "detail": "expected=17aede95783f37ccf041aa11549ccaa6418b888f098387c0672be4b15998e0cd actual=17aede95783f37ccf041aa11549ccaa6418b888f098387c0672be4b15998e0cd",
-      "pass": true
-    },
-    {
-      "check": "protected_successor_opening_hash:api/server.py",
+      "check": "protected_hash:api/server.py",
       "detail": "expected=38e46a451e2d93e5f8397c90254fed85f7c6c5f31aa2368fd6f824c91d342fa6 actual=38e46a451e2d93e5f8397c90254fed85f7c6c5f31aa2368fd6f824c91d342fa6",
       "pass": true
     },
     {
-      "check": "protected_hash:api/server.py",
-      "detail": "expected=6cafc179d82030afefe1dfd83885c8bc61e495326bc943e4fef10abf76221782 actual=6cafc179d82030afefe1dfd83885c8bc61e495326bc943e4fef10abf76221782",
-      "pass": true
-    },
-    {
-      "check": "protected_successor_opening_hash:api/v231_decision_cells.py",
+      "check": "protected_hash:api/v231_decision_cells.py",
       "detail": "expected=0013487bd97ec38bf4abddacac6a0cc46cc7fa76f3ed304427c58233d0eab41d actual=0013487bd97ec38bf4abddacac6a0cc46cc7fa76f3ed304427c58233d0eab41d",
       "pass": true
     },
     {
-      "check": "protected_hash:api/v231_decision_cells.py",
-      "detail": "expected=2256f379d291c6b7fecc8224e8f7704ae615cedda5cb93713ac12a0f47b5d3f0 actual=2256f379d291c6b7fecc8224e8f7704ae615cedda5cb93713ac12a0f47b5d3f0",
-      "pass": true
-    },
-    {
-      "check": "protected_successor_opening_hash:api/v24_decision_cells.py",
+      "check": "protected_hash:api/v24_decision_cells.py",
       "detail": "expected=a81e81853a34886a2a77986a1b07ccba4483f280d1418dea42cbea207011b9c4 actual=a81e81853a34886a2a77986a1b07ccba4483f280d1418dea42cbea207011b9c4",
       "pass": true
     },
     {
-      "check": "protected_hash:api/v24_decision_cells.py",
-      "detail": "expected=bf3246ed532e3e8abd18c41427c6c11d9cd3fc33102c984e30449c1f01d68b65 actual=bf3246ed532e3e8abd18c41427c6c11d9cd3fc33102c984e30449c1f01d68b65",
-      "pass": true
-    },
-    {
-      "check": "protected_successor_opening_hash:tests/test_permit_decision_contract.py",
+      "check": "protected_hash:tests/test_permit_decision_contract.py",
       "detail": "expected=8ef1792ae4591ed0d9c83a76364f3c0188060a2d08ba1e0d343f4830352b6119 actual=8ef1792ae4591ed0d9c83a76364f3c0188060a2d08ba1e0d343f4830352b6119",
       "pass": true
     },
     {
-      "check": "protected_hash:tests/test_permit_decision_contract.py",
-      "detail": "expected=5ae0ed0a4e23da761b137c2b7dae7662423b08abc561bb1bef03630a6b881640 actual=5ae0ed0a4e23da761b137c2b7dae7662423b08abc561bb1bef03630a6b881640",
-      "pass": true
-    },
-    {
-      "check": "protected_successor_opening_hash:tests/test_v24_runtime_package.py",
-      "detail": "expected=38aab6282913d6700f32c996631a32660dab5aa0b66f3528f7031636a125dbab actual=38aab6282913d6700f32c996631a32660dab5aa0b66f3528f7031636a125dbab",
-      "pass": true
-    },
-    {
       "check": "protected_hash:tests/test_v24_runtime_package.py",
-      "detail": "expected=d13b3c853c8cadfd4c11ceec33fcdda7cde5536986f3163f087c81bc8be55bd2 actual=d13b3c853c8cadfd4c11ceec33fcdda7cde5536986f3163f087c81bc8be55bd2",
+      "detail": "expected=38aab6282913d6700f32c996631a32660dab5aa0b66f3528f7031636a125dbab actual=38aab6282913d6700f32c996631a32660dab5aa0b66f3528f7031636a125dbab",
       "pass": true
     },
     {
@@ -210,7 +160,7 @@
     "limitation": "Required-companion recall is correctly N/A on the supportable v1.2 denominator (0 REQUIRED items).",
     "measurement": "500 rows and all mismatch dimensions independently reconcile to raw hashes.",
     "ontology": "117 observed labels close into the canonical enum.",
-    "runtime_boundary": "Protected paths match either the sealed opening baseline or an explicitly bound authorized successor.",
+    "runtime_boundary": "Opening protected-path hashes remain unchanged.",
     "truth": "93/93 empty companion sets are truth-incomplete; no empty set is rewarded as confirmed-none."
   },
   "review_method": "independent deterministic implementation; benchmark_v12.py not imported",

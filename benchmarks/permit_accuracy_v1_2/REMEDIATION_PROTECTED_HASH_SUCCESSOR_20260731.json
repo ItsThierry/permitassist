@@ -1,9 +1,9 @@
 {
   "schema": "permitassist.remediation.protected_hash_successor.v1",
-  "created_utc": "2026-08-02T22:53:39Z",
+  "created_utc": "2026-08-01T05:55:00Z",
   "base_record": "benchmarks/permit_accuracy_v1_2/SESSION1_OPENING_BASELINE.json",
   "base_record_sha256": "1af9aacae2f02025c6a8dd0a83645245d16253734b9853a58aa3de666581b837",
-  "authorization_scope": "Exact-claim authority remediation, fail-closed public projection, typed nonbinary family continuity, retained claim-bound Seattle HPWH authority continuity, and associated contract migrations.",
+  "authorization_scope": "Exact-claim authority remediation, fail-closed public projection, typed nonbinary family continuity, and associated contract migrations.",
   "benchmark_gate_successor": {
     "path": "benchmarks/permit_accuracy_v1_2/test_benchmark_v12.py",
     "opening_sha256": "0435199886e13c80739ff106ea2a52a815c042bd2f7058f170f5f40d8d106c09",
@@ -24,11 +24,7 @@
     },
     "api/server.py": {
       "opening_sha256": "38e46a451e2d93e5f8397c90254fed85f7c6c5f31aa2368fd6f824c91d342fa6",
-      "candidate_sha256": "6cafc179d82030afefe1dfd83885c8bc61e495326bc943e4fef10abf76221782"
-    },
-    "api/scope_contract.py": {
-      "opening_sha256": "dc34e73714a3207df2d180d50c89c2fbe272c742aebd1b16b5de01abe828f237",
-      "candidate_sha256": "17aede95783f37ccf041aa11549ccaa6418b888f098387c0672be4b15998e0cd"
+      "candidate_sha256": "65a89dab38bc14f3647d2463e71339196aba75240506d49d88b3f080f828d293"
     },
     "api/v231_decision_cells.py": {
       "opening_sha256": "0013487bd97ec38bf4abddacac6a0cc46cc7fa76f3ed304427c58233d0eab41d",
@@ -45,26 +41,6 @@
     "tests/test_v24_runtime_package.py": {
       "opening_sha256": "38aab6282913d6700f32c996631a32660dab5aa0b66f3528f7031636a125dbab",
       "candidate_sha256": "d13b3c853c8cadfd4c11ceec33fcdda7cde5536986f3163f087c81bc8be55bd2"
-    }
-  },
-  "independent_review_successor": {
-    "path": "benchmarks/permit_accuracy_v1_2/independent_review_v12.py",
-    "opening_sha256": "efbed50f1531cf9feed26bf001e5ed7a590b62d0a24a25176021b4696dc4fc1c",
-    "candidate_sha256": "1eaca473a904496e105bfd4e7d3d847de916364d4fc99ac242a32fa84327a060",
-    "reason": "Bind the independent offline checker to the sealed opening baseline and explicitly authorized remediation successors instead of falsely rejecting every approved protected-path change."
-  },
-  "retained_authority_records": {
-    "knowledge/ahj_rules/us-wa-seattle-replacement-water-heater-v1.json": {
-      "candidate_sha256": "2a17f729f85c019e2cb319b63dafedc4508f376aa5f588e43e5047f122ee6c7b",
-      "rule_id": "us-wa-seattle-replacement-water-heater-required-v1",
-      "source_claim_sha256": "4c45142789f1bfabff7ebbdd8a8d28c4e15579119b820c48fa772c0dc1c0a913"
-    }
-  },
-  "retained_authority_runtime": {
-    "api/ahj_rule_packs.py": {
-      "base_sha256": "6fc07c52ef1e24966c0733ba0506921652ee909bc11e8958ba7fc4859429a6ab",
-      "candidate_sha256": "842f7f056b8d0e01ca56b73bc5a800c0525df830fa17d6c3a6db12d5ab2e700e",
-      "reason": "Evaluate claim-local exclusion patterns before positive exact-AHJ scope patterns so excluded, by-others, future, and alternate work cannot gain binary authority."
     }
   }
 }
