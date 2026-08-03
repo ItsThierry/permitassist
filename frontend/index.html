@@ -3196,7 +3196,8 @@ function renderResults(d, job, city, state) {
   window._lastLookupState = state || '';
   const verdict = verdictState(d);
   const customerStatus = canonicalCustomerStatus(d);
-  const permits = d.permits_required || [];
+  const familyView = buildPermitFamilyView(d);
+  const permits = familyView.requiredRows;
   const insps = normalizeInspectionItems(d.inspections || []);
   const tips = d.pro_tips || [];
   const mistakes = d.common_mistakes || [];

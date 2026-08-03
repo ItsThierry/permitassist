@@ -102,14 +102,34 @@ def test_all_nonbinary_result_has_verify_contact_copy_and_no_required_lane(path:
     assert "contact" in rendered
 
 
+def _function_body(page: str, name: str) -> str:
+    marker = f"function {name}("
+    start = page.index(marker)
+    candidates = [
+        page.find("\nfunction ", start + 1),
+        page.find("\nasync function ", start + 1),
+    ]
+    candidates = [index for index in candidates if index != -1]
+    end = min(candidates) if candidates else len(page)
+    return page[start:end]
+
+
 @pytest.mark.parametrize("path", SURFACES, ids=lambda path: path.name)
-def test_surface_wires_required_and_verification_lanes_into_rendering(path: Path):
+def test_surface_builds_family_view_inside_render_results_before_first_use(path: Path):
     page = path.read_text()
-    assert "const familyView = buildPermitFamilyView(d);" in page
-    assert "const permits = familyView.requiredRows;" in page
-    assert "const companionPermits = familyView.verificationRows;" in page
-    assert "html += renderPermitFamilyMatrix(familyView, office);" in page
-    assert "if (permits.length > 0) {" in page
+    render_results = _function_body(page, "renderResults")
+    declaration = "const familyView = buildPermitFamilyView(d);"
+    required_lane = "const permits = familyView.requiredRows;"
+    matrix_use = "html += renderPermitFamilyMatrix(familyView, office);"
+    verification_lane = "const companionPermits = familyView.verificationRows;"
+    assert declaration in render_results
+    assert required_lane in render_results
+    assert verification_lane in render_results
+    assert matrix_use in render_results
+    assert render_results.index(declaration) < render_results.index(required_lane)
+    assert render_results.index(declaration) < render_results.index(matrix_use)
+    assert render_results.index(declaration) < render_results.index(verification_lane)
+    assert "if (permits.length > 0) {" in render_results
     if "/trades/" in path.as_posix():
         assert "if(!d.apply_url || !permits.length) return '';" in page
-        assert "if (verdict === 'yes') {" in page
+        assert "if (verdict === 'yes') {" in render_results

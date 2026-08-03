@@ -3268,7 +3268,8 @@ function renderResults(d, job, city, state) {
   window._lastLookupCity = city || '';
   window._lastLookupState = state || '';
   const verdict = verdictState(d);
-  const permits = d.permits_required || [];
+  const familyView = buildPermitFamilyView(d);
+  const permits = familyView.requiredRows;
   const insps = d.inspections || [];
   const tips = d.pro_tips || [];
   const mistakes = d.common_mistakes || [];
