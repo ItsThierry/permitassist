@@ -25,7 +25,16 @@ def check(condition: bool, name: str, detail: str, checks: list[dict]) -> None:
 
 def main() -> int:
     checks: list[dict] = []
-    baseline = json.loads((HERE / "SESSION1_OPENING_BASELINE.json").read_text())
+    baseline_path = HERE / "SESSION1_OPENING_BASELINE.json"
+    baseline = json.loads(baseline_path.read_text())
+    successor = json.loads((HERE / "REMEDIATION_PROTECTED_HASH_SUCCESSOR_20260731.json").read_text())
+    authorized = successor["authorized_successors"]
+    check(
+        sha(baseline_path) == successor["base_record_sha256"],
+        "protected_successor_binds_opening_baseline",
+        f"expected={successor['base_record_sha256']} actual={sha(baseline_path)}",
+        checks,
+    )
     ontology = json.loads((HERE / "permit_family_ontology_v1.json").read_text())
     closure = json.loads((HERE / "ontology_enum_closure.json").read_text())
     audit = json.loads((HERE / "truth_audit_v12.json").read_text())
@@ -38,6 +47,15 @@ def main() -> int:
         actual = sha(REPO / relative)
         check(actual == expected, f"authoritative_hash:{relative}", f"expected={expected} actual={actual}", checks)
     for relative, expected in baseline["protected_path_sha256"].items():
+        replacement = authorized.get(relative)
+        if replacement is not None:
+            check(
+                replacement["opening_sha256"] == expected,
+                f"protected_successor_opening_hash:{relative}",
+                f"expected={expected} actual={replacement['opening_sha256']}",
+                checks,
+            )
+            expected = replacement["candidate_sha256"]
         actual = sha(REPO / relative)
         check(actual == expected, f"protected_hash:{relative}", f"expected={expected} actual={actual}", checks)
 
@@ -115,7 +133,7 @@ def main() -> int:
             "truth": "93/93 empty companion sets are truth-incomplete; no empty set is rewarded as confirmed-none.",
             "measurement": "500 rows and all mismatch dimensions independently reconcile to raw hashes.",
             "ontology": f"{len(mapped)} observed labels close into the canonical enum.",
-            "runtime_boundary": "Opening protected-path hashes remain unchanged.",
+            "runtime_boundary": "Protected paths match either the sealed opening baseline or an explicitly bound authorized successor.",
             "limitation": "Required-companion recall is correctly N/A on the supportable v1.2 denominator (0 REQUIRED items)."
         },
         "category_counts": dict(sorted(Counter(cat for row in forensics for cat in row["categories"]).items())),

@@ -195,3 +195,281 @@ print(json.dumps(public, sort_keys=True, default=str))
     assert "refrigeration permit" not in text
     assert "tip424" not in text
     assert "commercial and multifamily" not in text
+
+
+def test_valid_seattle_hpwh_lookup_returns_binary_required_through_server_pipeline():
+    """A valid paid lookup may not terminate at VERIFY/NEEDS_INPUT.
+
+    Direct untrusted ViewModel input above remains fail-closed.  This regression
+    exercises the trusted server finalizer + customer-egress path used by
+    ``/api/permit`` and requires the source-backed Seattle water-heater lane to
+    produce the binary answer promised to customers.
+    """
+    raw = {
+        "permit_required": None,
+        "permit_decision": "VERIFY",
+        "permit_verdict": "VERIFY",
+        "permit_kind": "Plumbing",
+        "permit_name": "Residential Plumbing Permit — Water Heater Replacement",
+        "applying_office": "Public Health — Seattle & King County Plumbing and Gas Piping Program",
+        "apply_url": PHSKC_URL,
+        "sources": [{
+            "url": PHSKC_URL,
+            "title": "Public Health — Seattle & King County plumbing and gas piping permits",
+        }],
+        "source_urls": [PHSKC_URL],
+        "family_decisions": [{
+            "family": "plumbing",
+            "status": "VERIFY",
+            "decision": "VERIFY",
+            "required": None,
+            "permit_type": "Residential Plumbing Permit — Water Heater Replacement",
+        }],
+    }
+
+    code = f"""
+import json, os, sys
+sys.path.insert(0, {os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))!r})
+os.environ.setdefault('PERMITASSIST_NO_BACKGROUND_WORKERS', '1')
+os.environ.setdefault('OPENAI_API_KEY', 'test-not-real-key-for-import-only')
+from api.server import _mark_server_owned_result, finalize_permit_lookup_result, build_customer_response_egress
+raw = {raw!r}
+job = {HPWH_JOB!r}
+finalized = finalize_permit_lookup_result(
+    _mark_server_owned_result(raw),
+    job,
+    'Seattle',
+    'WA',
+    job_category='residential',
+    evidence_allowed=False,
+)
+public = build_customer_response_egress(
+    finalized, job, 'Seattle', 'WA', job_category='residential',
+)
+print(json.dumps(public, sort_keys=True, default=str))
+"""
+    public = _run_python_json(code)
+    text = _blob(public)
+
+    assert public["permit_decision"] == "REQUIRED"
+    assert public["permit_required"] is True
+    assert public["permit_verdict"] == "YES"
+    assert public["permit_kind"] == "Plumbing"
+    assert "water heater replacement" in str(public.get("permit_name") or "").lower()
+    assert any(
+        row.get("filing_family") == "plumbing"
+        and (row.get("status") == "REQUIRED" or row.get("required") is True)
+        for row in public.get("family_decisions", [])
+    )
+    assert public["apply_url"] == PHSKC_URL
+    assert PHSKC_URL in public["source_urls"]
+    assert "electrical circuit" in text
+    assert "conditional" in text
+    assert "panel upgrade" not in text
+    assert "mechanical permit" not in text
+    assert "refrigeration permit" not in text
+
+
+def test_seattle_hpwh_binary_continuity_requires_retained_exact_ahj_rule():
+    """Server ownership alone cannot promote VERIFY without retained authority."""
+    raw = {
+        "permit_required": None,
+        "permit_decision": "VERIFY",
+        "permit_verdict": "VERIFY",
+        "permit_kind": "Plumbing",
+        "permit_name": "Residential Plumbing Permit — Water Heater Replacement",
+        "applying_office": "Public Health — Seattle & King County Plumbing and Gas Piping Program",
+        "apply_url": PHSKC_URL,
+        "sources": [{"url": PHSKC_URL, "title": "Official plumbing permit page"}],
+        "source_urls": [PHSKC_URL],
+    }
+
+    code = f"""
+import json, os, sys
+sys.path.insert(0, {os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))!r})
+os.environ.setdefault('PERMITASSIST_NO_BACKGROUND_WORKERS', '1')
+os.environ.setdefault('OPENAI_API_KEY', 'test-not-real-key-for-import-only')
+from api import ahj_rule_packs
+ahj_rule_packs.AHJ_RULES = ()
+sys.modules['ahj_rule_packs'] = ahj_rule_packs
+from api.server import _mark_server_owned_result, finalize_permit_lookup_result, build_customer_response_egress
+raw = {raw!r}
+job = {HPWH_JOB!r}
+finalized = finalize_permit_lookup_result(
+    _mark_server_owned_result(raw), job, 'Seattle', 'WA',
+    job_category='residential', evidence_allowed=False,
+)
+public = build_customer_response_egress(
+    finalized, job, 'Seattle', 'WA', job_category='residential',
+)
+print(json.dumps(public, sort_keys=True, default=str))
+"""
+    public = _run_python_json(code)
+
+    assert public["permit_decision"] in {"VERIFY", "NEEDS_INPUT"}
+    assert public["permit_required"] is None
+    assert public["permit_verdict"] in {"VERIFY", "NEEDS_INPUT"}
+    manifest = public.get("permit_manifest")
+    if isinstance(manifest, dict):
+        assert manifest.get("permit_decision") in {"VERIFY", "NEEDS_INPUT"}
+        assert "authority_tag" not in manifest
+
+
+def test_seattle_hpwh_negative_mentions_cannot_trigger_binary_promotion():
+    """Incidental or negated water-heater mentions stay nonbinary."""
+    jobs = [
+        "replace a sink; water heater remains unchanged",
+        "replace plumbing fixtures adjacent to the existing water heater",
+        "inspect the water heater before replacing a kitchen faucet",
+        "no water heater replacement; replace the bathroom faucet only",
+        "replace water heater supply line only",
+        "replace water heater-supply line only",
+        "replace the water heater's supply line only",
+        "replace water heater insulation blanket only",
+        "replace water heater expansion tank only",
+        "replace water heater anode rod only",
+        "water heater replacement by others; our scope is faucet only",
+        "water heater replacement is excluded from our scope",
+        "water heater replacement not included; replace faucet only",
+        "future water heater replacement; current scope is faucet only",
+        "quoted alternate water heater replacement; base scope is faucet only",
+        "replace water heater in the future; today replace faucet only",
+        "option to replace water heater; base scope is faucet only",
+        "quote to replace water heater; authorized scope is faucet only",
+        "estimate to replace water heater; no work authorized",
+        "Owner declined to replace water heater; repair faucet only",
+        "Replace water heater: valve only",
+        "Replace water heater, valve only",
+        "Replace faucet (water heater replacement by owner)",
+        "Water heater replacement completed by others; our scope is faucet only",
+        "Water heater replacement performed by others; our scope is faucet only",
+        "Water heater replacement to be completed by others; our scope is faucet only",
+        "Water heater replacement under a separate contract; our scope is faucet only",
+        "Future owner will replace water heater; current scope is faucet only",
+        "Phase 2 will replace water heater; current scope is faucet only",
+        "Water heater replacement is a future phase; current scope is faucet only",
+        "Allowance only to replace water heater; no work is authorized",
+    ]
+    code = f"""
+import json, os, sys
+sys.path.insert(0, {os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))!r})
+os.environ.setdefault('PERMITASSIST_NO_BACKGROUND_WORKERS', '1')
+os.environ.setdefault('OPENAI_API_KEY', 'test-not-real-key-for-import-only')
+from api.server import _mark_server_owned_result, finalize_permit_lookup_result, build_customer_response_egress
+jobs = {jobs!r}
+raw = {{
+    'permit_required': None,
+    'permit_decision': 'VERIFY',
+    'permit_verdict': 'VERIFY',
+    'permit_kind': 'Plumbing',
+    'permit_name': 'Verify plumbing scope',
+}}
+results = []
+for job in jobs:
+    finalized = finalize_permit_lookup_result(
+        _mark_server_owned_result(raw), job, 'Seattle', 'WA',
+        job_category='residential', evidence_allowed=False,
+    )
+    public = build_customer_response_egress(
+        finalized, job, 'Seattle', 'WA', job_category='residential',
+    )
+    results.append({{
+        'job': job,
+        'permit_decision': public.get('permit_decision'),
+        'permit_required': public.get('permit_required'),
+        'permit_verdict': public.get('permit_verdict'),
+    }})
+print(json.dumps(results, sort_keys=True))
+"""
+    results = _run_python_json(code)
+
+    assert len(results) == len(jobs)
+    for result in results:
+        assert result["permit_decision"] in {"VERIFY", "NEEDS_INPUT"}, result
+        assert result["permit_required"] is None, result
+        assert result["permit_verdict"] in {"VERIFY", "NEEDS_INPUT"}, result
+
+
+def test_public_family_compatibility_prefers_explicit_plumbing_kind():
+    """HPWH descriptive text must not override an explicit typed Plumbing kind."""
+    code = f"""
+import json, os, sys
+sys.path.insert(0, {os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))!r})
+os.environ.setdefault('PERMITASSIST_NO_BACKGROUND_WORKERS', '1')
+os.environ.setdefault('OPENAI_API_KEY', 'test-not-real-key-for-import-only')
+from api.server import project_customer_response_egress
+with_kind = project_customer_response_egress({{
+    'permit_decision': 'REQUIRED',
+    'permits_required': [{{
+        'permit_kind': 'Plumbing',
+        'permit_type': 'Heat Pump Water Heater Replacement Permit',
+        'required': True,
+    }}],
+}})
+without_kind = project_customer_response_egress({{
+    'permit_decision': 'REQUIRED',
+    'permits_required': [{{
+        'permit_type': 'Heat Pump Water Heater Replacement Permit',
+        'required': True,
+    }}],
+}})
+print(json.dumps({{'with_kind': with_kind, 'without_kind': without_kind}}, sort_keys=True))
+"""
+    payload = _run_python_json(code)
+
+    assert payload["with_kind"]["permits_required"][0]["filing_family"] == "plumbing"
+    assert "filing_family" not in payload["without_kind"]["permits_required"][0]
+
+
+def test_seattle_hpwh_evidence_pack_fail_closed_fields_cannot_be_resurrected():
+    """The deterministic HPWH lane must not bypass evidence-pack controls."""
+    raw = {
+        "permit_required": None,
+        "permit_decision": "VERIFY",
+        "permit_verdict": "VERIFY",
+        "permit_kind": "Plumbing",
+        "permit_name": "Residential Plumbing Permit — Water Heater Replacement",
+        "applying_office": "Public Health — Seattle & King County Plumbing and Gas Piping Program",
+        "apply_url": PHSKC_URL,
+        "sources": [{
+            "url": PHSKC_URL,
+            "title": "Public Health — Seattle & King County plumbing and gas piping permits",
+        }],
+        "source_urls": [PHSKC_URL],
+    }
+
+    code = f"""
+import json, os, sys
+sys.path.insert(0, {os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))!r})
+os.environ.setdefault('PERMITASSIST_NO_BACKGROUND_WORKERS', '1')
+os.environ.setdefault('OPENAI_API_KEY', 'test-not-real-key-for-import-only')
+from api.server import _issue_evidence_pack_authorized_result, finalize_permit_lookup_result, build_customer_response_egress
+raw = {raw!r}
+job = {HPWH_JOB!r}
+finalized = finalize_permit_lookup_result(
+    raw,
+    job,
+    'Seattle',
+    'WA',
+    job_category='residential',
+    evidence_allowed=False,
+)
+controlled = dict(finalized)
+controlled['_evidence_pack'] = {{
+    'enabled': True,
+    'matched_fields': [],
+    'failed_closed_fields': ['permit_type', 'apply_url'],
+}}
+authorized = _issue_evidence_pack_authorized_result(controlled)
+public = build_customer_response_egress(
+    authorized, job, 'Seattle', 'WA', job_category='residential',
+)
+print(json.dumps(public, sort_keys=True, default=str))
+"""
+    public = _run_python_json(code)
+
+    assert public["permit_decision"] in {"VERIFY", "NEEDS_INPUT"}
+    assert public["permit_required"] is None
+    assert public["permit_verdict"] in {"VERIFY", "NEEDS_INPUT"}
+    assert public.get("apply_url") in {None, ""}
+    assert public.get("online_application_url") in {None, ""}

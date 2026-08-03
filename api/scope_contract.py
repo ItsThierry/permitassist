@@ -41,7 +41,7 @@ _PANEL_ACTION_TERMS = (
 _SOLAR_TERMS = ("solar", "pv", "photovoltaic", "solarapp")
 _HVAC_TERMS = ("hvac", "air conditioner", "air conditioning", "a/c", "heat pump", "furnace", "mini split", "mini-split", "condenser")
 _HVAC_SPECIFIC_TERMS = ("hvac", "air conditioner", "air conditioning", "a/c", "furnace", "mini split", "mini-split", "condenser", "ductwork", "ducting", "air handler")
-_WATER_HEATER_TERMS = ("water heater",)
+_WATER_HEATER_TERMS = ("water heater", "hpwh")
 _ROOF_TERMS = ("reroof", "re-roof", "roof replacement", "tear-off", "tear off", "shingle roof")
 _EV_CHARGER_TERMS = ("ev charger", "electric vehicle charger", "level 2 charger", "level ii charger", "car charger")
 _WINDOW_TERMS = ("window replacement", "replace window", "replace windows", "replace same-size windows", "replace same size windows", "same-size window", "same-size windows", "same size window", "same size windows")
@@ -128,7 +128,7 @@ _CONSTRUCTION_PATTERNS: tuple[tuple[str, tuple[str, ...]], ...] = (
 _TRADE_SIGNAL_PATTERNS: dict[str, tuple[str, ...]] = {
     "electrical": ("electrical", "new lighting", "lighting", "outlets", "receptacles", "gfci", "electrical panel", "service panel", "breaker panel", "load center", "600 amp", "600a", "electrical service", "service upgrade", "amp service", "x ray", "x-ray", "grow lights", "disconnect", "fire alarm wiring", "new circuit"),
     "mechanical_fuelgas": ("mechanical", "hvac", "mini split", "mini-split", "ductless", "heat pump", "rtu", "rooftop unit", "ventilation", "exhaust", "makeup air", "gas-fired", "gas fired", "gas dryer", "gas dryers", "fuel gas", "gas line", "gas piping", "radiant heat", "furnace"),
-    "plumbing_fog": ("plumbing", "grease interceptor", "fog", "floor drain", "floor drains", "water heater", "shampoo bowls", "sink", "sinks", "toilets", "restroom", "shower drain", "gas line", "fixture"),
+    "plumbing_fog": ("plumbing", "grease interceptor", "fog", "floor drain", "floor drains", "water heater", "hpwh", "shampoo bowls", "sink", "sinks", "toilets", "restroom", "shower drain", "gas line", "fixture"),
     "fire": ("fire alarm", "sprinkler", "hood", "commercial hood", "type i hood", "type 1 hood", "hood suppression", "fire suppression", "ansul", "wet-chemical", "wet chemical", "high pile", "hazardous", "fuel dispenser"),
     "building_structural": ("foundation repair", "foundation replacement", "new foundation", "structural", "canopy", "demising wall", "partition", "partitions", "partition walls", "addition", "load bearing", "framing", "new window", "exterior door"),
     "wastewater_fog": ("grease interceptor", "fog", "pretreatment", "floor drain", "floor drains"),

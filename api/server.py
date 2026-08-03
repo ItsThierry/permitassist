@@ -1280,6 +1280,31 @@ def project_customer_response_egress(value: dict) -> dict:
                 if isinstance(row, dict)
             )
         for row in family_rows:
+            # Preserve a stable filing-family identity on every public permit
+            # row. Older sealed core projections carried only ``permit_kind``
+            # and ``permit_type``; downstream share/checklist consumers then
+            # saw an authoritative REQUIRED row with no machine-readable
+            # family. Infer only when identity is absent and the existing
+            # customer-row classifier finds a concrete family.
+            if not str(
+                row.get("filing_family")
+                or row.get("family")
+                or row.get("permit_family")
+                or ""
+            ).strip():
+                # Use the row's explicit typed kind only. Descriptive permit
+                # names can contain several trades (for example "heat pump
+                # water heater") and the broad companion classifier may choose
+                # mechanical before plumbing. A typed ``permit_kind`` is the
+                # safe compatibility source for older core projections.
+                explicit_kind = str(row.get("permit_kind") or "").strip()
+                inferred_family = (
+                    _customer_row_family({"permit_kind": explicit_kind})
+                    if explicit_kind
+                    else ""
+                )
+                if inferred_family and inferred_family != "other":
+                    row["filing_family"] = inferred_family
             family = str(row.get("family") or "").strip().lower()
             if family in {"co", "occupancy_co", "certificate_of_occupancy"}:
                 row["family"] = "occupancy"
@@ -1373,7 +1398,13 @@ def _apply_evidence_pack_controlled_customer_fields(public: dict, internal: dict
             if field in internal:
                 public[field] = copy.deepcopy(internal[field])
         if "apply_url" in failed_closed_fields:
+            # Every public mirror of the failed filing route must fail closed.
+            # Leaving ``online_application_url`` populated would resurrect the
+            # same unverified destination under a compatibility alias.
             public["apply_url"] = None
+            public["online_application_url"] = None
+            public["portal_url"] = None
+            public["inspection_booking"] = None
             public["apply_path"] = {
                 "support_level": "not available",
                 "url": None,
@@ -1431,6 +1462,7 @@ def _issue_evidence_pack_authorized_result(payload: dict) -> _EvidencePackAuthor
 
 _VERIFIED_CUSTOMER_PROJECTION_SEAL = object()
 _SERVER_OWNED_LEGACY_SEAL = object()
+_TRUSTED_VIEW_MODEL_BUILD_SEAL = object()
 
 
 class _VerifiedCustomerProjection(dict):
@@ -1571,6 +1603,7 @@ def _build_trusted_customer_response_egress(
         state,
         job_category=job_category,
         explicit_vertical=explicit_vertical,
+        _trusted_egress_seal=_TRUSTED_VIEW_MODEL_BUILD_SEAL,
     )
     if (
         isinstance(public, _VerifiedCustomerProjection)
@@ -4259,7 +4292,7 @@ def _live60_row_allowed(row: dict, family: str, profile: dict) -> bool:
 def _live60_normalize_rows(public: dict, job_type: str, city: str, state: str, scope_contract: dict | None = None) -> dict:
     out = copy.deepcopy(public) if isinstance(public, dict) else {}
     if isinstance(scope_contract, dict) and "_apply_seattle_hpwh_output_contract" in globals() and _is_seattle_residential_water_heater(scope_contract, city, state):
-        return _apply_seattle_hpwh_output_contract(out, scope_contract, city, state)
+        return _apply_seattle_hpwh_output_contract(out, scope_contract, city, state, job_type)
     profile = _live60_profile(job_type, scope_contract)
     if str(out.get("permit_decision") or "").upper() == "NOT_REQUIRED" or out.get("permit_required") is False:
         # Abstain/fallback fail-safe: exterior cladding and accessory-structure
@@ -4645,6 +4678,28 @@ def apply_final_customer_egress_contract(public: dict, job_type: str = "", city:
 _HPWH_PHSKC_URL = "https://kingcounty.gov/en/dept/dph/health-safety/environmental-health/plumbing-gas-piping/applications-and-permits"
 _HPWH_PHSKC_OFFICE = "Public Health — Seattle & King County Plumbing and Gas Piping Program"
 _HPWH_SDCI_ELECTRICAL_URL = "https://www.seattle.gov/sdci/permits/permits-we-issue-(a-z)/electrical-permit"
+_HPWH_EXACT_RULE_ID = "us-wa-seattle-replacement-water-heater-required-v1"
+
+
+def _has_retained_seattle_hpwh_authority(
+    job_type: str, city: str, state: str
+) -> bool:
+    """Require the integrity-checked exact-AHJ rule before binary continuity."""
+    try:
+        from ahj_rule_packs import resolve_ahj_rule
+
+        rule = resolve_ahj_rule(city, state, job_type, {})
+    except Exception as exc:
+        print(f"[hpwh-authority] retained rule unavailable: {exc}")
+        return False
+    return bool(
+        rule is not None
+        and rule.rule_id == _HPWH_EXACT_RULE_ID
+        and rule.status == "REQUIRED"
+        and rule.family == "plumbing"
+        and rule.source_url == _HPWH_PHSKC_URL
+        and bool(rule.source_claim_sha256)
+    )
 
 
 def _is_seattle_residential_water_heater(scope_contract: dict, city: str, state: str) -> bool:
@@ -5481,7 +5536,13 @@ def _research_permit_with_budget(job_type: str, city: str, state: str, zip_code:
         executor.shutdown(wait=False, cancel_futures=True)
 
 
-def _apply_seattle_hpwh_output_contract(public: dict, scope_contract: dict, city: str, state: str) -> dict:
+def _apply_seattle_hpwh_output_contract(
+    public: dict,
+    scope_contract: dict,
+    city: str,
+    state: str,
+    job_type: str,
+) -> dict:
     """Last-mile invariant gate for Seattle residential HPWH/water-heater output.
 
     This makes the observed failure class mechanically impossible at the customer
@@ -5489,6 +5550,8 @@ def _apply_seattle_hpwh_output_contract(public: dict, scope_contract: dict, city
     mechanical, refrigeration, or SDCI plumbing filing guidance.
     """
     if not isinstance(public, dict) or not _is_seattle_residential_water_heater(scope_contract, city, state):
+        return public if isinstance(public, dict) else {}
+    if not _has_retained_seattle_hpwh_authority(job_type, city, state):
         return public if isinstance(public, dict) else {}
 
     out = copy.deepcopy(public)
@@ -5689,7 +5752,7 @@ def _normalize_segment_scope_labels(result: dict, scope_contract: dict) -> dict:
     return result
 
 
-def build_customer_permit_view_model(result: dict, job_type: str = "", city: str = "", state: str = "", job_category: str | None = None, explicit_vertical: str | None = None) -> dict:
+def build_customer_permit_view_model(result: dict, job_type: str = "", city: str = "", state: str = "", job_category: str | None = None, explicit_vertical: str | None = None, *, _trusted_egress_seal: object | None = None) -> dict:
     """Allowlisted customer ViewModel used by API, share, report, and checklist surfaces."""
     original_apply_path = dict(result.get("apply_path") or {}) if isinstance(result, dict) and isinstance(result.get("apply_path"), dict) else {}
     original_documents = (
@@ -6149,7 +6212,13 @@ def build_customer_permit_view_model(result: dict, job_type: str = "", city: str
                 state,
             )
             final_public["customer_first_screen_summary"] = _build_customer_first_screen_summary(final_public["customer_result_summary"])
-        final_public = _apply_seattle_hpwh_output_contract(final_public if isinstance(final_public, dict) else {}, scope_contract, city, state)
+        final_public = _apply_seattle_hpwh_output_contract(
+            final_public if isinstance(final_public, dict) else {},
+            scope_contract,
+            city,
+            state,
+            job_type,
+        )
         final_public = _pa20_add_trigger_conditions_to_visible_floor_rows(final_public if isinstance(final_public, dict) else {}, job_type)
         if isinstance(final_public, dict) and original_required_rows_for_companion_contract:
             final_public["_original_permits_required_for_companion_contract"] = original_required_rows_for_companion_contract
@@ -6373,6 +6442,7 @@ def build_customer_permit_view_model(result: dict, job_type: str = "", city: str
             scope_contract,
             city,
             state,
+            job_type,
         )
         if isinstance(final_public, dict) and isinstance(final_public.get("permit_manifest"), dict):
             # Absolute terminal seal: every late compatibility adapter above is
@@ -6533,7 +6603,41 @@ def build_customer_permit_view_model(result: dict, job_type: str = "", city: str
                 for row in final_public.get(collection_key) or []:
                     if isinstance(row, dict) and not str(row.get("segment") or "").strip():
                         row["segment"] = public_segment
-        return project_customer_response_egress(final_public) if isinstance(final_public, dict) else {}
+        projected = (
+            project_customer_response_egress(final_public)
+            if isinstance(final_public, dict)
+            else {}
+        )
+        evidence_pack: dict = {}
+        if (
+            isinstance(result, dict)
+            and isinstance(result.get("_evidence_pack"), dict)
+        ):
+            evidence_pack = result["_evidence_pack"]
+        evidence_controls_active = bool(
+            evidence_pack.get("enabled") is True
+            or (
+                isinstance(result, _EvidencePackAuthorizedResult)
+                and result.has_intact_evidence_pack_payload()
+            )
+        )
+        if (
+            _trusted_egress_seal is _TRUSTED_VIEW_MODEL_BUILD_SEAL
+            and not evidence_controls_active
+            and _is_seattle_residential_water_heater(scope_contract, city, state)
+            and _has_retained_seattle_hpwh_authority(job_type, city, state)
+            and str(projected.get("permit_decision") or "").upper().strip()
+            == "REQUIRED"
+            and projected.get("permit_required") is True
+            and _HPWH_PHSKC_URL in (projected.get("source_urls") or [])
+        ):
+            # The integrity-checked exact-AHJ rule established this binary claim
+            # from a retained official quote and digest. Issue a mutation-sensitive
+            # private projection capability so trusted egress serializes it once
+            # instead of semantically re-finalizing the public DTO after its
+            # Manifest MAC has intentionally been stripped.
+            return _issue_verified_customer_projection(projected)
+        return projected
     return {}
 
 
