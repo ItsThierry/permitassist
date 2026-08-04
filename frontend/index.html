@@ -1374,6 +1374,7 @@
           </div>
         </div>
 
+        <div id="lookup-decline" role="alert" aria-live="assertive" style="display:none;margin:12px 0;padding:14px 16px;border:1px solid #f59e0b;border-radius:12px;background:rgba(245,158,11,.10);color:var(--text);font-weight:600"></div>
         <div class="trust-note">🧠 Not a chatbot. A permit expert. PermitAssist indexes <strong>5,000+ verified cities and counties across all 50 states</strong> with portal links, fee schedules, and the exact code sections your inspector will cite — purpose-built for contractors, not a generic AI wrapper.</div>
         <button class="lookup-btn" id="lookup-btn" type="submit">🔍 &nbsp;Find Permit Requirements</button>
       </div>
@@ -2113,7 +2114,17 @@ const ADU_FAIL_POINTS = [
   'No backwater valve at sewer connection where required by jurisdiction',
 ];
 
+function isSourceBackedSupported(result) {
+  return result?.coverage_outcome === 'SUPPORTED'
+    && result?.data_source === 'launch_coverage_registry'
+    && result?.ai_generated === false
+    && Array.isArray(result?.sources)
+    && result.sources.length > 0
+    && result?.jurisdiction_match?.match_level === 'exact_scope_contract';
+}
+
 function getInspectionFailPoints(jobType, result) {
+  if (isSourceBackedSupported(result)) return [];
   const primaryScope = result?._primary_scope || '';
   const commercialScope = inferCommercialPrimaryScopeFromCustomerResult(result);
   // Commercial primary scopes — return commercial fail points instead of letting
@@ -2183,6 +2194,7 @@ const INSPECTION_CHECKLISTS = {
 };
 
 function getInspectionChecklist(jobType, result) {
+  if (isSourceBackedSupported(result)) return null;
   // 2026-04-28: suppress this hardcoded residential-trade card on commercial
   // scopes — INSPECTION_CHECKLISTS contains residential GFCI/AFCI/breaker
   // items only, which leaked into commercial restaurant + office + retail TI
@@ -2949,6 +2961,14 @@ function getHpcHint(city, state, address) {
 }
 
 function getJurisdictionDisplay(d, city, state, jobAddress) {
+  if (isSourceBackedSupported(d)) {
+    return {
+      badge: '🟢 Official source-backed exact scope',
+      matchedTo: `Exact source-backed scope contract for ${city}, ${state}`,
+      why: 'The stated scope, jurisdiction, decision, permit families, and filing route are frozen from attached official sources.',
+      lookupBasis: 'Exact launch-coverage contract; no AI estimate or fallback jurisdiction match.',
+    };
+  }
   const levelRaw = d.data_source || d._meta?.city_match_level || '';
   const level = ['city_database', 'city'].includes(levelRaw) ? 'city'
     : ['county_fallback', 'county'].includes(levelRaw) || d.county_fallback === true ? 'county'
@@ -3319,7 +3339,9 @@ function renderResults(d, job, city, state) {
   const dataSourceRaw = d.data_source || d._meta?.city_match_level || '';
   const isCountyFB = d.county_fallback === true;
   let confBadgeHtml = '';
-  if (dataSourceRaw === 'city_database' || dataSourceRaw === 'city') {
+  if (isSourceBackedSupported(d)) {
+    confBadgeHtml = `<span class="confidence-badge" style="background:rgba(16,185,129,0.15);color:#10b981;font-size:15px;font-weight:800;padding:8px 16px;border-radius:8px;display:inline-block">🟢 Official source-backed exact scope<span class="conf-tooltip">Exact scope contract backed by the attached official sources; no AI estimate or jurisdiction fallback.</span></span><div style="font-size:13px;color:#059669;margin-top:6px;font-weight:600">Official source-backed exact scope · verify if the scope changes</div>`;
+  } else if (dataSourceRaw === 'city_database' || dataSourceRaw === 'city') {
     confBadgeHtml = `<span class="confidence-badge" style="background:rgba(16,185,129,0.15);color:#10b981;font-size:15px;font-weight:800;padding:8px 16px;border-radius:8px;display:inline-block">🟢 Official path found<span class="conf-tooltip">Official building-department path found. Verify final requirements with the local building department before submitting.</span></span><div style="font-size:13px;color:#059669;margin-top:6px;font-weight:600">Official path found · verify with building department before submitting</div>`;
   } else if (dataSourceRaw === 'web_search') {
     confBadgeHtml = `<span class="confidence-badge" style="background:rgba(245,158,11,0.15);color:#f59e0b;font-size:15px;font-weight:800;padding:8px 16px;border-radius:8px;display:inline-block">🟡 Official path found<span class="conf-tooltip">Local source path found. Verify fee before quoting.</span></span><div style="font-size:13px;color:#b45309;margin-top:6px;font-weight:600">Official path found · verify fee before quoting</div><div style="background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:10px 14px;margin-top:8px;font-size:13px;color:#92400e">Verify fee before quoting this job.</div>`;
@@ -3825,7 +3847,7 @@ function renderResults(d, job, city, state) {
   // AHJ Disclaimer (Fix 2)
   html += `<div style="background:rgba(59,130,246,0.08); border:1px solid rgba(59,130,246,0.2); border-radius:12px; padding:16px 18px; margin-bottom:14px; display:flex; gap:10px; align-items:flex-start;">
     <div style="font-size:18px;">ℹ️</div>
-    <div style="font-size:13px; color:var(--text2); line-height:1.5;">Results are estimates based on publicly available data. Always verify requirements directly with your local building department before starting work.</div>
+    <div style="font-size:13px; color:var(--text2); line-height:1.5;">${isSourceBackedSupported(d) ? 'This exact scope is backed by the listed official sources. Re-verify if the project scope or jurisdiction changes.' : 'Results are estimates based on publicly available data. Always verify requirements directly with your local building department before starting work.'}</div>
   </div>`;
 
   // Action buttons
@@ -4870,6 +4892,7 @@ function reloadResult(i) {
 }
 
 // ── Main lookup ──────────────────────────────────────────────────────────────
+const STRUCTURED_PRECHARGE_OUTCOMES = new Set(['UNSUPPORTED', 'NEEDS_FACT', 'INFRA_FAILURE']);
 async function doLookup() {
   const raw = document.getElementById('query').value.trim();
   const address = document.getElementById('address')?.value.trim() || '';
@@ -4904,6 +4927,9 @@ async function doLookup() {
     showGate(true); return;
   }
 
+  const declineEl = document.getElementById('lookup-decline');
+  if (declineEl) { declineEl.style.display = 'none'; declineEl.textContent = ''; }
+  window._lastCompletedLookup = null;
   document.getElementById('search-form').style.display = 'none';
   document.getElementById('disambig-box').classList.remove('show');
   document.getElementById('loading').style.display = 'block';
@@ -4933,13 +4959,32 @@ async function doLookup() {
       showGate(true);
       return;
     }
+    const isStructuredDecline = !res.ok && data &&
+      STRUCTURED_PRECHARGE_OUTCOMES.has(data.coverage_outcome) &&
+      data.report_created === false &&
+      data.retained_charge === false;
+    if (isStructuredDecline) {
+      currentResult = null;
+      pendingResult = null;
+      document.getElementById('loading').style.display = 'none';
+      document.getElementById('results').style.display = 'none';
+      document.getElementById('results-inner').innerHTML = '';
+      document.getElementById('search-form').style.display = 'block';
+      if (declineEl) {
+        const declineMessage = data.message || 'PermitAssist could not create a report for this request.';
+        const declineReassurance = /no report.*(?:no (?:lookup|retained )?charge|retained charge)/i.test(declineMessage) ? '' : ' No report was created and no lookup was charged.';
+        declineEl.textContent = declineMessage + declineReassurance;
+        declineEl.style.display = 'block';
+      }
+      return;
+    }
+    if (!res.ok) throw new Error(data.message || data.error || 'Lookup could not be completed.');
     if (data.error) throw new Error(data.message||data.error);
     currentResult = { job: parsed.job_type, city: parsed.city, state: parsed.state, zip: parsed.zip_code, address, data, ts: Date.now() };
     renderCompletedLookupResult(currentResult);
     document.getElementById('page-search').scrollTop = 0;
   } catch (err) {
     stopProgress();
-    if (recoverCompletedLookupResult(err)) return;
     document.getElementById('loading').style.display = 'none';
     document.getElementById('search-form').style.display = 'block';
     alert('Error: ' + err.message);
@@ -4983,12 +5028,6 @@ function renderCompletedLookupResult(entry) {
     console.error('Completed lookup render failed:', err);
     return showCompletedLookupRecovery(entry, err);
   }
-}
-
-function recoverCompletedLookupResult(err) {
-  const entry = window._lastCompletedLookup;
-  if (!entry || !entry.data) return false;
-  return showCompletedLookupRecovery(entry, err);
 }
 
 // ── Voice Input ──────────────────────────────────────────────────────────────

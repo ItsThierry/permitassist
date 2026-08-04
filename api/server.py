@@ -65,6 +65,7 @@ from scope_contract import build_scope_contract, customer_text_has_forbidden_sco
 from permit_decision import apply_permit_decision_contract, _get_decision_cell_primary_lock, enforce_decision_cell_primary, apply_contact_sanitization
 from permit_manifest import (
     build_permit_manifest_projection,
+    canonical_family as canonical_manifest_family,
     is_authenticated_permit_manifest,
     permit_manifest_mode_enabled,
     seal_permit_manifest_projection,
@@ -1267,12 +1268,23 @@ def project_customer_response_egress(value: dict) -> dict:
                 or (first_row or {}).get("verdict")
                 or ""
             ).strip().upper()
+            canonical_row_family = canonical_manifest_family(row_family)
+            canonical_primary_family = canonical_manifest_family(primary_family)
+            family_is_coherent = (
+                canonical_row_family == canonical_primary_family != "VERIFY"
+                or (
+                    canonical_row_family == canonical_primary_family == "VERIFY"
+                    and row_family == primary_family
+                )
+            )
             if not (
                 outer_decision
                 and outer_decision == manifest_decision == row_status
                 and primary_family
                 and row_family
-                and row_family == primary_family
+                # Distinct unknown families both canonicalize to VERIFY, so only
+                # exact normalized identity is coherent in that closed-fail lane.
+                and family_is_coherent
             ):
                 prepared.pop("permit_manifest", None)
     projected = project(prepared)

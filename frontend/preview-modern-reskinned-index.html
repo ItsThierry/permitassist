@@ -1743,6 +1743,7 @@
           </div>
         </div>
 
+        <div id="lookup-decline" role="alert" aria-live="assertive" style="display:none;margin:12px 0;padding:14px 16px;border:1px solid #f59e0b;border-radius:12px;background:rgba(245,158,11,.10);color:var(--text);font-weight:600"></div>
         <div class="trust-note">🧠 Not a chatbot. A permit expert. PermitAssist knows 250+ jurisdictions, local fee schedules, and the exact code sections your inspector will cite — purpose-built for contractors, not a generic AI wrapper.</div>
         <button class="lookup-btn" id="lookup-btn" type="submit">🔍 &nbsp;Find Permit Requirements</button>
       </div>
@@ -2457,7 +2458,17 @@ function handleTradeWizardInput() {
   renderTradeWizard();
 }
 
+function isSourceBackedSupported(result) {
+  return result?.coverage_outcome === 'SUPPORTED'
+    && result?.data_source === 'launch_coverage_registry'
+    && result?.ai_generated === false
+    && Array.isArray(result?.sources)
+    && result.sources.length > 0
+    && result?.jurisdiction_match?.match_level === 'exact_scope_contract';
+}
+
 function getInspectionFailPoints(jobType, result) {
+  if (isSourceBackedSupported(result)) return [];
   const permitText = [jobType, result?.permit_name, result?.permit_type, ...(result?.permits_required || []).map(p => p?.permit_type || ''), ...(result?.permits_required || []).map(p => p?.portal_selection || '')].join(' ').toLowerCase();
   const tradeKey = detectTradeKey(permitText);
   return INSPECTION_FAIL_POINTS[tradeKey] || [];
@@ -2501,7 +2512,8 @@ const INSPECTION_CHECKLISTS = {
   default: ["Work matches permit scope", "Materials match approved plans", "Safety measures in place", "Permit posted on-site"]
 };
 
-function getInspectionChecklist(jobType) {
+function getInspectionChecklist(jobType, result) {
+  if (isSourceBackedSupported(result)) return null;
   const j = (jobType || '').toLowerCase();
   if (/hvac|heating|cooling|\bac\b|furnace|heat pump|air condition/.test(j)) return { trade: 'HVAC', items: INSPECTION_CHECKLISTS.hvac };
   if (/electric|panel|service|wiring|breaker/.test(j)) return { trade: 'Electrical', items: INSPECTION_CHECKLISTS.electrical };
@@ -3136,6 +3148,15 @@ function getPermitDisplayName(d) {
 }
 
 function getJurisdictionDisplay(d, city, state, jobAddress) {
+  if (isSourceBackedSupported(d)) {
+    return {
+      level: 'exact_scope_contract',
+      badge: '🟢 Official exact-scope contract',
+      matchedTo: `Official exact-scope match for ${city}, ${state}`,
+      lookupBasis: jobAddress ? 'Address-assisted exact official-source contract' : 'Exact official-source city/state/scope contract',
+      why: 'This result resolved through a validated launch-coverage contract backed by the official sources shown below; no AI estimate or jurisdiction fallback was used.'
+    };
+  }
   const levelRaw = d.data_source || d._meta?.city_match_level || '';
   const level = ['city_database', 'city'].includes(levelRaw) ? 'city'
     : ['county_fallback', 'county'].includes(levelRaw) || d.county_fallback === true ? 'county'
@@ -3187,6 +3208,7 @@ function getNextSteps(d, job, city, state) {
 }
 
 function normalizeBadgeState(d) {
+  if (isSourceBackedSupported(d)) return 'verified';
   const raw = String(d?.badge_state || '').toLowerCase().replace(/[\s-]+/g, '_');
   if (raw === 'verified' || raw === 'ai_researched' || raw === 'limited') return raw;
   const dataSource = d?.data_source || d?._meta?.city_match_level || '';
@@ -3214,7 +3236,12 @@ function buildResultTrustBadge(d, city, state) {
   const updatedRaw = d.last_verified_at || d._meta?.generated_at || d.verified_at || '';
   const updatedLabel = formatBadgeDate(updatedRaw);
   const sourceCount = countAttachedSources(d);
-  const badgeCopy = {
+  const badgeCopy = isSourceBackedSupported(d) ? {
+    label: 'Official source-backed exact scope',
+    sub: `Attached official sources · checked ${updatedLabel}`,
+    caveat: 'This decision applies to the exact stated scope. Run a new lookup if the scope or address facts change.',
+    call: 'Call the AHJ if the job address is outside the stated jurisdiction or the scope changes.'
+  } : {
     verified: {
       label: 'VERIFIED',
       sub: `Sources verified ${updatedLabel}`,
@@ -3611,8 +3638,9 @@ function renderResults(d, job, city, state) {
 
   // Inspection checklist (collapsible, hardcoded by trade)
   if (verdict !== 'no') {
-    const inspChecklist = getInspectionChecklist(job);
-    html += `<div class="card">
+    const inspChecklist = getInspectionChecklist(job, d);
+    if (inspChecklist) {
+      html += `<div class="card">
       <div class="checklist-toggle" onclick="toggleChecklist(this)">
         <div class="checklist-toggle-text">📋 ${esc(inspChecklist.trade)} Inspection Checklist</div>
         <div class="checklist-toggle-arrow">▼</div>
@@ -3621,6 +3649,7 @@ function renderResults(d, job, city, state) {
         ${inspChecklist.items.map(item => `<div class="checklist-item">${esc(item)}</div>`).join('')}
       </div>
     </div>`;
+    }
   }
 
   // Estimated timeline
@@ -3717,7 +3746,7 @@ function renderResults(d, job, city, state) {
   // AHJ Disclaimer (Fix 2)
   html += `<div style="background:rgba(59,130,246,0.08); border:1px solid rgba(59,130,246,0.2); border-radius:12px; padding:16px 18px; margin-bottom:14px; display:flex; gap:10px; align-items:flex-start;">
     <div style="font-size:18px;">ℹ️</div>
-    <div style="font-size:13px; color:var(--text2); line-height:1.5;">Results are estimates based on publicly available data. Always verify requirements directly with your local Authority Having Jurisdiction (AHJ) before starting work.</div>
+    <div style="font-size:13px; color:var(--text2); line-height:1.5;">${isSourceBackedSupported(d) ? 'This exact scope is backed by the listed official sources. Re-verify if the project scope or jurisdiction changes.' : 'Results are estimates based on publicly available data. Always verify requirements directly with your local building department before starting work.'}</div>
   </div>`;
 
   // Action buttons
@@ -4603,6 +4632,7 @@ function reloadResult(i) {
 }
 
 // ── Main lookup ──────────────────────────────────────────────────────────────
+const STRUCTURED_PRECHARGE_OUTCOMES = new Set(['UNSUPPORTED', 'NEEDS_FACT', 'INFRA_FAILURE']);
 async function doLookup() {
   const raw = document.getElementById('query').value.trim();
   const address = document.getElementById('address')?.value.trim() || '';
@@ -4637,6 +4667,8 @@ async function doLookup() {
     showGate(true); return;
   }
 
+  const declineEl = document.getElementById('lookup-decline');
+  if (declineEl) { declineEl.style.display = 'none'; declineEl.textContent = ''; }
   document.getElementById('search-form').style.display = 'none';
   document.getElementById('disambig-box').classList.remove('show');
   document.getElementById('loading').style.display = 'block';
@@ -4665,6 +4697,26 @@ async function doLookup() {
       showGate(true);
       return;
     }
+    const isStructuredDecline = !res.ok && data &&
+      STRUCTURED_PRECHARGE_OUTCOMES.has(data.coverage_outcome) &&
+      data.report_created === false &&
+      data.retained_charge === false;
+    if (isStructuredDecline) {
+      currentResult = null;
+      pendingResult = null;
+      document.getElementById('loading').style.display = 'none';
+      document.getElementById('results').style.display = 'none';
+      document.getElementById('results-inner').innerHTML = '';
+      document.getElementById('search-form').style.display = 'block';
+      if (declineEl) {
+        const declineMessage = data.message || 'PermitAssist could not create a report for this request.';
+        const declineReassurance = /no report.*(?:no (?:lookup|retained )?charge|retained charge)/i.test(declineMessage) ? '' : ' No report was created and no lookup was charged.';
+        declineEl.textContent = declineMessage + declineReassurance;
+        declineEl.style.display = 'block';
+      }
+      return;
+    }
+    if (!res.ok) throw new Error(data.message || data.error || 'Lookup could not be completed.');
     if (data.error) throw new Error(data.message||data.error);
     currentResult = { job: parsed.job_type, city: parsed.city, state: parsed.state, zip: parsed.zip_code, address, data, ts: Date.now() };
     saveToHistory(currentResult);

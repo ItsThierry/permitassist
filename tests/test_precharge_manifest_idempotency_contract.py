@@ -170,3 +170,33 @@ def test_all_customer_entry_pages_send_idempotency_key():
         assert "function getPermitLookupHeaders(payload)" in source, page
         assert "h['Idempotency-Key']=key" in source, page
         assert "headers: getPermitLookupHeaders(permitPayload)" in source, page
+
+
+def _signature_free_manifest_payload(row_family: str, primary_family: str) -> dict:
+    return {
+        "permit_decision": "CONDITIONAL",
+        "family_decisions": [
+            {"canonical_family": row_family, "status": "CONDITIONAL"}
+        ],
+        "permit_manifest": {
+            "schema_version": "permit_manifest_v1",
+            "permit_decision": "CONDITIONAL",
+            "primary": {"family": primary_family, "status": "CONDITIONAL"},
+        },
+    }
+
+
+def test_signature_free_manifest_rejects_distinct_unknown_families():
+    projected = server.project_customer_response_egress(
+        _signature_free_manifest_payload("TOTALLY_UNKNOWN_ROW", "OTHER_UNKNOWN_PRIMARY")
+    )
+    assert "permit_manifest" not in projected
+
+
+def test_signature_free_manifest_preserves_known_family_alias_equivalence():
+    projected = server.project_customer_response_egress(
+        _signature_free_manifest_payload("OCCUPANCY", "CERTIFICATE_OF_OCCUPANCY")
+    )
+    assert server.canonical_manifest_family(
+        projected["permit_manifest"]["primary"]["family"]
+    ) == server.canonical_manifest_family("CERTIFICATE_OF_OCCUPANCY")

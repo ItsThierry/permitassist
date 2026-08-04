@@ -33,14 +33,15 @@ def _surface_text(value) -> str:
 def test_lookup_success_uses_deterministic_render_recovery_not_history_only():
     html = FRONTEND_INDEX.read_text(encoding="utf-8")
     assert "function renderCompletedLookupResult(" in html
-    assert "function recoverCompletedLookupResult(" in html
+    assert "function showCompletedLookupRecovery(" in html
     assert "window._lastCompletedLookup" in html
     assert "open recovered result" in html.lower()
 
     success_block = html[html.index("async function doLookup()") : html.index("// ── Voice Input")]
     assert "renderCompletedLookupResult(currentResult);" in success_block
     catch_block = success_block[success_block.index("} catch (err) {") :]
-    assert "if (recoverCompletedLookupResult(err)) return;" in catch_block
+    assert "recoverCompletedLookupResult" not in catch_block
+    assert "window._lastCompletedLookup = null;" in success_block
 
 
 def test_wrong_state_specific_customer_claims_are_removed_but_cross_applicable_ada_remains(tmp_path, monkeypatch):
@@ -328,7 +329,7 @@ def test_cached_customer_fixture_matrix_quality_contract(tmp_path, monkeypatch):
         )
 
     html = FRONTEND_INDEX.read_text(encoding="utf-8")
-    assert "function recoverCompletedLookupResult(" in html
+    assert "function showCompletedLookupRecovery(" in html
     assert "function renderCompletedLookupResult(" in html
     assert "window._lastCompletedLookup" in html
     assert "Open recovered result" in html
