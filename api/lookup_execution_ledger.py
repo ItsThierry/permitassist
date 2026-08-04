@@ -80,6 +80,7 @@ class LookupExecutionLedger:
                 CREATE TABLE IF NOT EXISTS served_decisions (
                     owner_scope TEXT NOT NULL,
                     idempotency_key TEXT NOT NULL,
+                    request_id TEXT,
                     execution_token TEXT NOT NULL,
                     request_fingerprint TEXT NOT NULL,
                     response_digest TEXT NOT NULL,
@@ -98,6 +99,8 @@ class LookupExecutionLedger:
                 # Historical rows used a globally unique caller request ID. The
                 # new column is populated only for fenced completions.
                 conn.execute("ALTER TABLE served_decisions ADD COLUMN execution_token TEXT")
+            if "request_id" not in served_columns:
+                conn.execute("ALTER TABLE served_decisions ADD COLUMN request_id TEXT")
 
     def claim(
         self,
@@ -199,7 +202,7 @@ class LookupExecutionLedger:
                     """INSERT OR REPLACE INTO served_decisions
                        (owner_scope,idempotency_key,request_id,execution_token,request_fingerprint,response_digest,http_status,completed_at)
                        VALUES (?,?,?,?,?,?,?,?)""",
-                    (owner_scope, idempotency_key, execution_token, execution_token, request_fingerprint, digest, int(http_status), now),
+                    (owner_scope, idempotency_key, request_id, execution_token, request_fingerprint, digest, int(http_status), now),
                 )
             else:
                 conn.execute(

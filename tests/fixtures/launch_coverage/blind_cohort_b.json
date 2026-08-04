@@ -1,0 +1,297 @@
+[
+  {
+    "blind_id": "B-001",
+    "city": "Boston",
+    "conditional_families": [],
+    "correct_ahj": "City of Boston Inspectional Services Department (ISD)",
+    "expected_decision": "REQUIRED",
+    "job_type": "Install a brand-new roof deck on an existing owner-occupied two-family dwelling, including new structural framing, decking, guards, and attachment to the existing building. The work changes the structure but does not change occupancy and includes no electrical, plumbing, mechanical, or fire-alarm work. The property is not a designated landmark or in a historic district.",
+    "official_sources": [
+      {
+        "supports": [
+          "Boston states that repairing or installing a roof deck requires either a Short-Form or Long-Form permit depending on the work.",
+          "The project-specific permit path is through Boston Inspectional Services.",
+          "Because this case is a brand-new structurally attached roof deck rather than a nonstructural repair, it proceeds as structural alteration work."
+        ],
+        "title": "Install or Repair a Roof Deck",
+        "url": "https://www.boston.gov/boston-permitting/repair-projects/install-or-repair-roof-deck"
+      },
+      {
+        "supports": [
+          "A Long-Form permit may be needed for major alterations or renovations that change a building's structure.",
+          "Boston identifies Long Form/Alteration/Change of Occupancy as the application type for structural work in an existing building.",
+          "The City of Boston Inspectional Services Department issues Long-Form permits.",
+          "The page provides the actionable Inspectional Services Online Portal application link."
+        ],
+        "title": "Long-Form Permits",
+        "url": "https://www.boston.gov/boston-permitting/permits/long-form-permits"
+      },
+      {
+        "supports": [
+          "Official actionable online application path for the required ISD Long-Form permit."
+        ],
+        "title": "City of Boston Inspectional Services Online Permitting Portal",
+        "url": "https://onlinepermitsandlicenses.boston.gov/isdpermits/Views/Login.aspx?ReturnUrl=%2fisdpermits%2f"
+      },
+      {
+        "supports": [
+          "Identifies Boston Inspectional Services as the permit office.",
+          "Lists the office at 1010 Massachusetts Avenue, 5th Floor, Boston, MA 02118.",
+          "Maps query target: City of Boston Inspectional Services Department, Boston, MA."
+        ],
+        "title": "Inspectional Services",
+        "url": "https://www.boston.gov/departments/inspectional-services"
+      }
+    ],
+    "prohibited": [
+      "electrical",
+      "plumbing",
+      "mechanical",
+      "fire",
+      "demolition"
+    ],
+    "required_families": [
+      "building — Long-Form alteration permit"
+    ],
+    "segment": "residential",
+    "state": "MA",
+    "zip_code": "02118"
+  },
+  {
+    "blind_id": "B-002",
+    "city": "Columbus",
+    "conditional_families": [],
+    "correct_ahj": "City of Columbus Department of Building and Zoning Services",
+    "expected_decision": "REQUIRED",
+    "job_type": "Alter an existing commercial office suite by constructing new non-load-bearing interior partitions and installing interior doors. There is no change of occupancy or use, no exterior work, and no electrical, plumbing, mechanical, fire-alarm, or fire-suppression work. The property is outside every historic district and commission area.",
+    "official_sources": [
+      {
+        "supports": [
+          "Columbus states that any alteration to a commercial or mixed-use building requires a building permit.",
+          "Additional specialty permits depend on the project's scope; this case expressly contains no specialty-trade work.",
+          "A Certificate of Appropriateness is required for projects in historic districts or commission areas; the stated case is outside those areas.",
+          "The page identifies Building and Zoning Services as the responsible permit office and lists 111 North Front Street, Columbus, OH 43215.",
+          "The page links the Building Permit Application and Citizen Access Portal.",
+          "Maps query target: City of Columbus Building and Zoning Services, Columbus, OH."
+        ],
+        "title": "Commercial and Mixed Use Building Permits",
+        "url": "https://www.columbus.gov/Business-Development/Get-a-Permit/Commercial-and-Mixed-Use-Building-Permits"
+      },
+      {
+        "supports": [
+          "The permitting process begins by submitting an application and any required plans.",
+          "Applications may be submitted online through the Citizen Access Portal.",
+          "The City identifies Building and Zoning Services at 111 North Front Street as the in-person application office."
+        ],
+        "title": "Get or Track a Building Permit",
+        "url": "https://www.columbus.gov/Business-Development/Get-a-Permit/Get-or-Track-a-Building-Permit"
+      },
+      {
+        "supports": [
+          "Official actionable online application path for the commercial building alteration permit."
+        ],
+        "title": "City of Columbus Citizen Access Portal",
+        "url": "https://ca.columbus.gov/ca/"
+      },
+      {
+        "supports": [
+          "Official City of Columbus building-permit application form.",
+          "The form includes commercial structure work and identifies Columbus Building and Zoning Services."
+        ],
+        "title": "Building Permit Application",
+        "url": "https://www.columbus.gov/files/sharedassets/city/v/5/building-and-zoning/document-library/building-permit-application-2026.pdf"
+      }
+    ],
+    "prohibited": [
+      "electrical",
+      "plumbing",
+      "mechanical",
+      "fire alarm",
+      "fire suppression",
+      "demolition",
+      "certificate of appropriateness"
+    ],
+    "required_families": [
+      "commercial building alteration permit"
+    ],
+    "segment": "commercial",
+    "state": "OH",
+    "zip_code": "43215"
+  },
+  {
+    "blind_id": "B-003",
+    "city": "Raleigh",
+    "conditional_families": [
+      "residential building permit if the accessory structure exceeds 12 feet in any direction"
+    ],
+    "correct_ahj": "City of Raleigh Planning and Development Department",
+    "expected_decision": "REQUIRED",
+    "job_type": "Place a detached prefabricated residential storage shed measuring exactly 10 feet long by 10 feet wide by 10 feet high on a one-family property. The shed has no electricity, plumbing, mechanical equipment, conditioned space, or habitable use. The property has public water and sewer and is not in a historic district or designated as a Raleigh Historic Landmark.",
+    "official_sources": [
+      {
+        "supports": [
+          "Raleigh requires a permit regardless of accessory-structure size.",
+          "An accessory structure under 12 feet in every direction receives a zoning permit.",
+          "A building permit applies if the structure exceeds 12 feet in any direction.",
+          "Storage sheds are expressly identified as accessory structures.",
+          "For structures under 12 feet in every direction, the completed application and supporting documents are submitted to DowntownDS@raleighnc.gov.",
+          "The page identifies City of Raleigh Planning and Development as the lead department."
+        ],
+        "title": "Accessory Structures and Additions",
+        "url": "https://raleighnc.gov/permits/services/accessory-structures-and-additions"
+      },
+      {
+        "supports": [
+          "Official actionable application form required for residential accessory structures."
+        ],
+        "title": "City of Raleigh Residential Permit Application",
+        "url": "https://cityofraleigh0drupal.blob.core.usgovcloudapi.net/drupal-prod/COR15/ResidentialPermitApplication.pdf"
+      },
+      {
+        "supports": [
+          "Official permit-assistance office for Raleigh Planning and Development.",
+          "The center assists with permits and plans.",
+          "Maps query target: Planning and Development Customer Service Center, Raleigh, NC."
+        ],
+        "title": "Planning and Development Customer Service Center",
+        "url": "https://raleighnc.gov/permits/places/planning-and-development-customer-service-center"
+      }
+    ],
+    "prohibited": [
+      "residential building permit for the stated 10-by-10-by-10-foot shed",
+      "electrical",
+      "plumbing",
+      "mechanical",
+      "certificate of appropriateness"
+    ],
+    "required_families": [
+      "residential zoning permit"
+    ],
+    "segment": "residential",
+    "state": "NC",
+    "zip_code": "27601"
+  },
+  {
+    "blind_id": "B-004",
+    "city": "Nashville",
+    "conditional_families": [
+      "building permit if the work expands beyond roof replacement or repair into structural alteration",
+      "electrical, plumbing, or mechanical permit if corresponding trade work is added"
+    ],
+    "correct_ahj": "Metropolitan Government of Nashville and Davidson County Department of Codes and Building Safety",
+    "expected_decision": "NOT_REQUIRED",
+    "job_type": "Perform a like-for-like replacement of asphalt shingles and underlayment over the complete roof of an existing single-family residence. No rafters, trusses, roof framing, building footprint, electrical system, plumbing system, HVAC equipment, gas equipment, or solar equipment will be altered, and the property is not subject to historic-overlay approval.",
+    "official_sources": [
+      {
+        "supports": [
+          "Metro Nashville expressly states that building permits are no longer required for roof replacements or repairs.",
+          "The same page states that permits are required for heating, ventilation, mechanical, electrical, and plumbing systems, none of which are included in this case.",
+          "The responsible office is the Metro Codes Department.",
+          "The office is identified as the Codes Department, Metro Office Building, 800 President Ronald Reagan Way, Nashville, TN 37210.",
+          "Maps query target: Metro Nashville Codes Department, Nashville, TN."
+        ],
+        "title": "Property Standard Code Violation Types",
+        "url": "https://www.nashville.gov/departments/codes/property-standards/code-enforcement/codes-violation-types"
+      },
+      {
+        "supports": [
+          "Identifies the Metropolitan Department of Codes and Building Safety as the residential permitting authority.",
+          "Explains the residential building-permit application procedure and provides the official ePermits link for registered contractors.",
+          "Supports the conditional distinction between normal roof maintenance or repair and broader structural or trade work."
+        ],
+        "title": "Residential Building Permit Procedures",
+        "url": "https://www.nashville.gov/departments/codes/construction-and-permits/residential-building-permits"
+      },
+      {
+        "supports": [
+          "Official actionable permit application portal if the stated scope changes and a permit becomes required.",
+          "No application is required for the roof-replacement-only facts in this case."
+        ],
+        "title": "Metro Nashville ePermits",
+        "url": "https://epermits.nashville.gov/#/"
+      }
+    ],
+    "prohibited": [
+      "building permit for the stated roof replacement alone",
+      "electrical",
+      "plumbing",
+      "mechanical",
+      "gas",
+      "demolition"
+    ],
+    "required_families": [],
+    "segment": "residential",
+    "state": "TN",
+    "zip_code": "37210"
+  },
+  {
+    "blind_id": "B-005",
+    "city": "Pittsburgh",
+    "conditional_families": [
+      "commercial electrical permit if illumination or other electrical-system work is added",
+      "Department of Mobility and Infrastructure permit if the scope enters or occupies the public right-of-way"
+    ],
+    "correct_ahj": "City of Pittsburgh Department of Permits, Licenses, and Inspections, coordinated with the Department of City Planning through the Building and Development Application",
+    "expected_decision": "REQUIRED",
+    "job_type": "Install one new non-illuminated wall-mounted business-identification sign on the exterior facade of an existing occupied commercial retail storefront. The sign requires facade attachment but has no internal or external illumination, no electrical connection, no structural building alteration beyond ordinary sign anchors, no sidewalk occupation, and no change of use or occupancy.",
+    "official_sources": [
+      {
+        "supports": [
+          "Pittsburgh states that a commercial sign permit is required for installation of a new commercial sign.",
+          "The stated project is a new sign on an existing commercial structure."
+        ],
+        "title": "Sign Permit",
+        "url": "https://www.pittsburghpa.gov/Business-Development/Permits-Licenses-and-Inspections/Permits/Commercial-Permits/Sign-Permit"
+      },
+      {
+        "supports": [
+          "Pittsburgh's Building and Development Application replaces the former separate Zoning Development Review and Building Permit applications.",
+          "The BDA is the typical initial application for a construction or development project.",
+          "Each BDA is reviewed by relevant departments, including Permits, Licenses, and Inspections and the Department of City Planning.",
+          "If a Department of Mobility and Infrastructure permit is required, a reviewer creates a sub-permit and informs the applicant."
+        ],
+        "title": "Building and Development Application",
+        "url": "https://www.pittsburghpa.gov/Business-Development/Permits-Licenses-and-Inspections/Permits/Commercial-Permits/Sign-Permit"
+      },
+      {
+        "supports": [
+          "A commercial electrical permit is required for installation of a new electrical system or alteration of an existing electrical system.",
+          "The stated non-illuminated sign includes no electrical work, so that family is not required unless the scope changes."
+        ],
+        "title": "Electrical Permit",
+        "url": "https://www.pittsburghpa.gov/Business-Development/Permits-Licenses-and-Inspections/Permits/Commercial-Permits/Electrical-Permit"
+      },
+      {
+        "supports": [
+          "OneStopPGH is Pittsburgh's official system for applying for, paying for, and obtaining permits.",
+          "The page links the actionable online OneStopPGH application portal.",
+          "The in-person OneStopPGH counter is located at 412 Boulevard of the Allies in Pittsburgh.",
+          "Maps query target: OneStopPGH Permit Counter, Pittsburgh, PA."
+        ],
+        "title": "OneStopPGH",
+        "url": "https://www.pittsburghpa.gov/Business-Development/Permits-Licenses-and-Inspections/OneStopPGH"
+      },
+      {
+        "supports": [
+          "Official actionable online application path for the required Building and Development Application and commercial sign review."
+        ],
+        "title": "OneStopPGH Online Portal",
+        "url": "https://onestoppgh.pittsburghpa.gov/"
+      }
+    ],
+    "prohibited": [
+      "electrical permit for the stated non-illuminated sign",
+      "mechanical",
+      "plumbing",
+      "fire alarm",
+      "demolition",
+      "occupancy permit"
+    ],
+    "required_families": [
+      "commercial sign permit through a Building and Development Application"
+    ],
+    "segment": "commercial",
+    "state": "PA",
+    "zip_code": "15219"
+  }
+]

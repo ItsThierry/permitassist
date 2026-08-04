@@ -1829,6 +1829,7 @@ function setSessionToken(t){if(t)localStorage.setItem(SESSION_KEY,t)}
 function clearSessionToken(){localStorage.removeItem(SESSION_KEY)}
 function isLoggedIn(){return !!getSessionToken()}
 function getAuthHeaders(){const t=getSessionToken();const h={'Content-Type':'application/json','X-Client-Fingerprint':getClientFingerprint()};if(t)h['X-Session-Token']=t;if(_isSampleLookup)h['X-Sample-Demo']='1';return h;}
+function getPermitLookupHeaders(payload){const h=getAuthHeaders();const canonical=JSON.stringify([payload.job_type||'',payload.city||'',payload.state||'',payload.zip_code||'',payload.job_category||'']);const storageKey='pa_lookup_idempotency_'+hashString(canonical);let key=sessionStorage.getItem(storageKey);if(!key){key=(self.crypto&&crypto.randomUUID)?crypto.randomUUID():('pa-'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2));sessionStorage.setItem(storageKey,key);}h['Idempotency-Key']=key;return h;}
 
 // Fire Google Ads conversion when user lands after successful Stripe payment
 (function(){
@@ -3674,9 +3675,10 @@ async function doLookup() {
   startProgress();
 
   try {
+    const permitPayload = { job_type: parsed.job_type, city: parsed.city, state: parsed.state, zip_code: parsed.zip_code, job_category: jobCategory };
     const res = await fetch('/api/permit', {
-      method: 'POST', headers: getAuthHeaders(),
-      body: JSON.stringify({ job_type: parsed.job_type, city: parsed.city, state: parsed.state, zip_code: parsed.zip_code, job_category: jobCategory })
+      method: 'POST', headers: getPermitLookupHeaders(permitPayload),
+      body: JSON.stringify(permitPayload)
     });
     stopProgress();
     const data = await res.json();

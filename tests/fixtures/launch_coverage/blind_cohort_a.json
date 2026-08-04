@@ -1,0 +1,237 @@
+[
+  {
+    "blind_id": "A-001",
+    "city": "Portland",
+    "conditional_families": [
+      "land_use_or_historic_review_only_if_the_property_is_a_Historic_Landmark_or_is_subject_to_an_overlay_plan_district_or_prior_land_use_condition"
+    ],
+    "correct_ahj": "City of Portland — Portland Permitting & Development",
+    "expected_decision": "NOT_REQUIRED",
+    "job_type": "Repaint the exterior siding and trim of an existing one-family house inside Portland city limits; no siding replacement, structural work, electrical/mechanical/plumbing work, tree work, or public-right-of-way work; property is not a Historic Landmark and is not in a design, environmental, historic-resource-protection, or other overlay/plan district that restricts exterior painting.",
+    "official_sources": [
+      {
+        "supports": [
+          "Defines residential as one- or two-family homes and identifies the City of Portland permitting authority.",
+          "Lists painting buildings under outside work that does not require a residential building permit.",
+          "Explains that historic review may be required to paint a Historic Landmark and that overlay zones, plan districts, and land-use conditions can add review requirements."
+        ],
+        "title": "Do You Need a Permit for Your Residential Project?",
+        "url": "https://www.portland.gov/sites/default/files/2022/2_res_permit_need_0122.pdf"
+      },
+      {
+        "supports": [
+          "Official application path: apply online through Development Hub PDX (DevHub).",
+          "Identifies the Development Services Center as the in-person permit location.",
+          "maps_query_target: Development Services Center, Portland, OR"
+        ],
+        "title": "Apply for permits",
+        "url": "https://www.portland.gov/ppd/get-permit/apply-permits"
+      }
+    ],
+    "prohibited": [
+      "residential_building_permit_for_painting_only",
+      "electrical_permit",
+      "mechanical_permit",
+      "plumbing_permit",
+      "fire_permit"
+    ],
+    "required_families": [],
+    "segment": "residential",
+    "state": "OR",
+    "zip_code": "97206"
+  },
+  {
+    "blind_id": "A-002",
+    "city": "Raleigh",
+    "conditional_families": [],
+    "correct_ahj": "City of Raleigh — Planning and Development",
+    "expected_decision": "REQUIRED",
+    "job_type": "Build a detached, nonhabitable backyard storage shed at a one-family house inside Raleigh city limits; shed dimensions are 14 feet long by 10 feet wide by 10 feet high, with no electricity, plumbing, HVAC, or gas; parcel uses municipal water and sewer, is not in a historic district, and is not a Raleigh Historic Landmark.",
+    "official_sources": [
+      {
+        "supports": [
+          "A permit is required regardless of accessory-structure size.",
+          "An accessory structure exceeding 12 feet in any direction receives a building permit; this 14-foot-long shed crosses that threshold.",
+          "Provides the Residential Permit Application, plan requirements, and directs over-threshold applications to the Permit and Development Portal.",
+          "Identifies Planning and Development as the lead department and permit authority."
+        ],
+        "title": "Accessory Structures and Additions",
+        "url": "https://raleighnc.gov/permits/services/accessory-structures-and-additions"
+      },
+      {
+        "supports": [
+          "Official actionable online application URL for accessory structures exceeding 12 feet in any direction."
+        ],
+        "title": "City of Raleigh Permit and Development Portal",
+        "url": "https://permitportal.raleighnc.gov/"
+      },
+      {
+        "supports": [
+          "The center handles application and plan intake for private residential and commercial development projects.",
+          "maps_query_target: Planning and Development Customer Service Center, Raleigh, NC"
+        ],
+        "title": "Planning and Development Customer Service Center",
+        "url": "https://raleighnc.gov/permits/places/planning-and-development-customer-service-center"
+      }
+    ],
+    "prohibited": [
+      "zoning_only_accessory_structure_permit",
+      "electrical_permit",
+      "plumbing_permit",
+      "mechanical_permit",
+      "gas_permit",
+      "historic_certificate_of_appropriateness",
+      "Wake_County_private_well_or_septic_approval"
+    ],
+    "required_families": [
+      "building"
+    ],
+    "segment": "residential",
+    "state": "NC",
+    "zip_code": "27609"
+  },
+  {
+    "blind_id": "A-003",
+    "city": "Denver",
+    "conditional_families": [],
+    "correct_ahj": "City and County of Denver — Community Planning and Development, Development Services (coordinating DDPHE, SUDP, and fire reviews)",
+    "expected_decision": "REQUIRED",
+    "job_type": "Convert a vacant retail tenant suite inside Denver city limits into a new full-service restaurant through an extensive interior remodel: new commercial cooking line and Type I hood, hood fire-suppression system, grease interceptor, new sinks and plumbing, new HVAC/hood exhaust, and new electrical branch circuits; change the primary use to an eating-and-drinking establishment; no alcohol service, no exterior work, no outdoor seating, and the property is not a landmark or in a historic district.",
+    "official_sources": [
+      {
+        "supports": [
+          "All Denver businesses require a zoning use permit.",
+          "Virtually all restaurant and commercial-kitchen projects need building permits and inspections.",
+          "Major restaurant projects include building, mechanical, electrical, plumbing, public-health, sewer-use-and-drainage, and fire reviews.",
+          "DDPHE performs full plan review for a change of use or extensive remodel, and SUDP reviews food-service pretreatment/grease-interceptor scope.",
+          "Submitting the building-log application in E-permits starts the coordinated reviews; zoning and building may be submitted concurrently.",
+          "Identifies Denver Community Planning and Development/Development Services as the permitting workflow owner.",
+          "maps_query_target: Denver Community Planning and Development, Denver, CO"
+        ],
+        "title": "Permits for Restaurants and Commercial Kitchens",
+        "url": "https://www.denvergov.org/Government/Agencies-Departments-Offices/Agencies-Departments-Offices-Directory/Community-Planning-and-Development/Plan-Review-Permits-and-Inspections/Commercial-and-Multifamily-Projects/Restaurants-and-Commercial-Kitchen-Permits"
+      },
+      {
+        "supports": [
+          "Official actionable online application URL for Denver development permit applications.",
+          "E-permits accepts permit applications, fees, permit downloads, and inspection scheduling."
+        ],
+        "title": "Welcome to E-permits",
+        "url": "https://www.denvergov.org/Government/Agencies-Departments-Offices/Agencies-Departments-Offices-Directory/Community-Planning-and-Development/E-permits"
+      }
+    ],
+    "prohibited": [
+      "liquor_license",
+      "landmark_certificate_of_appropriateness",
+      "outdoor_places_permit",
+      "sign_permit"
+    ],
+    "required_families": [
+      "building",
+      "zoning_use",
+      "public_health_plan_review",
+      "sewer_use_and_drainage",
+      "fire",
+      "electrical",
+      "mechanical",
+      "plumbing"
+    ],
+    "segment": "commercial",
+    "state": "CO",
+    "zip_code": "80205"
+  },
+  {
+    "blind_id": "A-004",
+    "city": "Phoenix",
+    "conditional_families": [],
+    "correct_ahj": "City of Phoenix — Planning & Development Department and Phoenix Fire Department Fire Prevention",
+    "expected_decision": "REQUIRED",
+    "job_type": "Install a new 8 kW AC-nameplate roof-mounted photovoltaic system on a legally permitted detached single-family house inside Phoenix city limits; no battery energy storage, no generator, and no structural roof alteration beyond standard racking attachments.",
+    "official_sources": [
+      {
+        "supports": [
+          "City of Phoenix Planning & Development accepts residential PV designs for application and permitting.",
+          "Directs applicants to apply through the Planning & Development online permit portal.",
+          "States that Phoenix Fire Department requires a separate permit for photovoltaic systems.",
+          "maps_query_target: City of Phoenix Planning & Development Department, Phoenix, AZ"
+        ],
+        "title": "SolarAPP/Photovoltaic Projects",
+        "url": "https://www.phoenix.gov/administration/departments/pdd/residential-building/resident-plan-reviews/solarapp-photovoltaic.html"
+      },
+      {
+        "supports": [
+          "Phoenix Fire Code requires plan review, permitting, and inspection for energy systems.",
+          "Residential PV systems from 3 kW through 15 kW AC nameplate qualify for an over-the-counter fire construction permit; this 8 kW system is within that band.",
+          "A separate Planning & Development Department permit is required for all photovoltaic systems.",
+          "Provides the actionable fire-permit application path by email to pfd.energy.systems@phoenix.gov.",
+          "maps_query_target: Phoenix Fire Department Fire Prevention, Phoenix, AZ"
+        ],
+        "title": "Plan Review, Permit, Inspection Criteria for Energy Systems",
+        "url": "https://www.phoenix.gov/content/dam/phoenix/firesite/documents/solar%20permit%20process.pdf"
+      },
+      {
+        "supports": [
+          "Official portal states that new permit applications are submitted through SHAPE PHX and links to the actionable SHAPE PHX Portal.",
+          "Confirms a separate Phoenix Fire Department permit is required for residential photovoltaic installation."
+        ],
+        "title": "PDD Online",
+        "url": "https://apps-secure.phoenix.gov/PDD"
+      }
+    ],
+    "prohibited": [
+      "battery_energy_storage_permit",
+      "commercial_solar_plan_review",
+      "generator_permit"
+    ],
+    "required_families": [
+      "photovoltaic_PDD",
+      "fire_construction"
+    ],
+    "segment": "residential",
+    "state": "AZ",
+    "zip_code": "85016"
+  },
+  {
+    "blind_id": "A-005",
+    "city": "Seattle",
+    "conditional_families": [],
+    "correct_ahj": "City of Seattle — Seattle Department of Construction and Inspections (SDCI)",
+    "expected_decision": "REQUIRED",
+    "job_type": "Replace an existing ductless mini-split heat pump serving a detached single-family house inside Seattle city limits with a same-capacity new outdoor heat-pump unit and indoor head at the same locations; reuse the existing approved electrical circuit and disconnect; no new electrical wiring, plumbing, gas piping, refrigeration work outside the factory heat-pump system, structural work, or shoreline/environmentally critical-area work.",
+    "official_sources": [
+      {
+        "supports": [
+          "A mechanical permit enables installation of new heating, ventilation, and air-conditioning equipment.",
+          "A mechanical permit may be obtained separately from a construction permit.",
+          "Directs applicants to start the Building and Land Use Pre-Application in the Seattle Services Portal and provides an Apply for a Permit link.",
+          "Identifies SDCI as the agency issuing construction and trade permits and gives its office location.",
+          "maps_query_target: Seattle Department of Construction and Inspections, Seattle, WA"
+        ],
+        "title": "Mechanical Permit",
+        "url": "https://www.seattle.gov/sdci/permits/permits-we-issue-(a-z)/mechanical-permit"
+      },
+      {
+        "supports": [
+          "Official actionable application portal for trade, construction, and land-use permits.",
+          "The portal expressly includes permits for installing mechanical equipment."
+        ],
+        "title": "Permits, Licenses and Regulatory Compliance — Seattle Services Portal",
+        "url": "https://services.seattle.gov/Portal/Customization/SEATTLE/welcome.aspx"
+      }
+    ],
+    "prohibited": [
+      "building_permit",
+      "electrical_permit",
+      "plumbing_permit",
+      "gas_piping_permit",
+      "sprinkler_permit",
+      "boiler_pressure_vessel_permit"
+    ],
+    "required_families": [
+      "mechanical"
+    ],
+    "segment": "residential",
+    "state": "WA",
+    "zip_code": "98115"
+  }
+]

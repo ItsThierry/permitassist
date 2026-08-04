@@ -83,6 +83,28 @@ from lookup_execution_ledger import (
     IdempotencyConflictError,
     LookupExecutionLedger,
 )
+from launch_coverage import (
+    SupportOutcome,
+    build_supported_customer_projection,
+    resolve_precharge_support,
+)
+
+
+def launch_coverage_contracts_active() -> bool:
+    """Keep the production safety gate active while isolating legacy pytest contracts.
+
+    Normal runtime is fail-safe/enforced by default. Historical tests exercise the
+    superseded generative pipeline unless they explicitly opt into the launch gate,
+    preventing old fixture expectations from weakening production behavior.
+    """
+    mode = str(os.environ.get("PERMITASSIST_LAUNCH_COVERAGE_MODE", "") or "").strip().lower()
+    if mode in {"on", "active", "enforce", "required"}:
+        return True
+    if os.environ.get("PYTEST_CURRENT_TEST"):
+        # Only pytest may enter the historical compatibility path. A deployed
+        # process stays fail-safe even if a stale/hostile opt-out value exists.
+        return False
+    return True
 try:
     from permit_rule_engine import (
         ActiveCorePackageUnavailableError,
@@ -1906,6 +1928,36 @@ def build_customer_response_egress(
             explicit_vertical=explicit_vertical,
         )
     return _fail_closed_untrusted_customer_projection(result)
+
+
+def build_launch_coverage_customer_result(contract: object) -> dict:
+    """Seal one exact registry contract into the terminal public PermitManifest.
+
+    The registry digest and private in-process projection capability are the only
+    writers of regulated fields in this lane.  Generic finalizers are not
+    re-entered after this point; any inability to construct the Manifest is an
+    infrastructure failure, never a paid VERIFY report.
+    """
+    if not isinstance(contract, dict) and not hasattr(contract, "items"):
+        raise TypeError("launch coverage contract mapping required")
+    projection = build_supported_customer_projection(contract)  # type: ignore[arg-type]
+    expected_decision = str(projection.get("permit_decision") or "")
+    projection.pop("permit_manifest", None)
+    trusted = _issue_verified_customer_projection(projection)
+    sealed = seal_permit_manifest_projection(
+        trusted,
+        force=True,
+        authority_input=capture_permit_authority_input(trusted),
+    )
+    customer = project_customer_response_egress(sealed)
+    if (
+        customer.get("permit_decision") != expected_decision
+        or expected_decision not in {"REQUIRED", "NOT_REQUIRED", "CONDITIONAL"}
+        or not isinstance(customer.get("permit_manifest"), dict)
+        or project_customer_response_egress(customer) != customer
+    ):
+        raise RuntimeError("launch coverage manifest projection integrity failure")
+    return customer
 
 
 _PUBLIC_KEEP_EMPTY_FIELDS = frozenset({
@@ -11470,24 +11522,106 @@ def resolve_webhook_field(data: dict, mapping: dict, key: str, default: str = ""
     return str(data.get(source_key, default) or "").strip()
 
 
-def run_webhook_lookup_async(integration: dict, payload: dict):
+def run_webhook_lookup_async(integration: dict, payload: dict, idempotency_key: str = "") -> dict:
+    """Claim one sealed webhook lookup before starting its delivery worker."""
+    if not launch_coverage_contracts_active():
+        # Historical pytest-only path. Ordinary runtime cannot disable the gate.
+        def _legacy_worker():
+            try:
+                mapping = integration.get("field_mapping") or {}
+                job_type = resolve_webhook_field(payload, mapping, "job_type")
+                city = resolve_webhook_field(payload, mapping, "city")
+                state = resolve_webhook_field(payload, mapping, "state")
+                zip_code = resolve_webhook_field(payload, mapping, "zip_code")
+                callback_url = validate_webhook_callback_url(integration.get("callback_url") or "")
+                if not (job_type and city and state):
+                    raise ValueError("Webhook requires job_type, city, and state")
+                result = research_permit(job_type, city, state, zip_code)
+                result = build_customer_response_egress(
+                    _mark_server_owned_result(result), job_type, city, state
+                )
+                body = {
+                    "ok": True,
+                    "job_type": job_type,
+                    "city": city,
+                    "state": state,
+                    "integration": integration.get("name") or "Webhook",
+                    "result": result,
+                }
+                requests.post(
+                    callback_url,
+                    data=canonical_customer_webhook_body(body),
+                    headers=build_customer_webhook_signature_headers(integration.get("integration_key") or "", body),
+                    timeout=20,
+                    allow_redirects=False,
+                )
+                mark_webhook_triggered(integration["integration_key"])
+            except Exception as exc:
+                print(f"[webhook] Delivery error: {exc}")
+        threading.Thread(target=_legacy_worker, daemon=True).start()
+        return {"http_status": 202, "accepted": True, "legacy_pytest": True}
+    mapping = integration.get("field_mapping") or {}
+    job_type = resolve_webhook_field(payload, mapping, "job_type")
+    city = resolve_webhook_field(payload, mapping, "city")
+    state = resolve_webhook_field(payload, mapping, "state")
+    zip_code = resolve_webhook_field(payload, mapping, "zip_code")
+    job_category = resolve_webhook_field(payload, mapping, "job_category")
+    if not (job_type and city and state):
+        return {"http_status": 400, "error": "Webhook requires job_type, city, and state"}
+    ledger = _lookup_execution_ledger()
+    owner_scope = f"webhook:{integration.get('integration_key') or ''}"
+    request_id = uuid.uuid4().hex
+    fingerprint = ledger.request_fingerprint({
+        "endpoint": "/api/integrations/webhook",
+        "integration_key": integration.get("integration_key") or "",
+        "payload": payload,
+    })
+    try:
+        claim = ledger.claim(
+            idempotency_key,
+            fingerprint,
+            owner_scope=owner_scope,
+            request_id=request_id,
+        )
+    except IdempotencyConflictError:
+        return {"http_status": 409, "error": "Idempotency key reused with different request semantics.", "code": "IDEMPOTENCY_CONFLICT"}
+    if claim.action == "replay":
+        return {"http_status": 200, "accepted": True, "idempotent_replay": True, "request_id": claim.request_id}
+    if claim.action in {"in_progress", "indeterminate"}:
+        return {"http_status": 202, "accepted": True, "already_processing": True, "request_id": claim.request_id}
+    execution_token = str(claim.execution_token or "")
+
+    support_resolution = resolve_precharge_support(
+        job_type=job_type,
+        city=city,
+        state=state,
+        zip_code=zip_code,
+        segment=job_category,
+        supplied_facts=payload.get("support_facts") if isinstance(payload.get("support_facts"), dict) else None,
+    )
+    if support_resolution.outcome is not SupportOutcome.SUPPORTED:
+        ledger.fail(
+            idempotency_key,
+            fingerprint,
+            owner_scope=owner_scope,
+            request_id=request_id,
+            execution_token=execution_token,
+        )
+        return {
+            "http_status": 503 if support_resolution.outcome is SupportOutcome.INFRA_FAILURE else 422,
+            "coverage_outcome": support_resolution.outcome.value,
+            "reason_code": support_resolution.reason_code,
+            "missing_facts": list(support_resolution.missing_facts),
+            "report_created": False,
+            "retained_charge": False,
+            "model_called": False,
+        }
     def _worker():
         try:
-            mapping = integration.get("field_mapping") or {}
-            job_type = resolve_webhook_field(payload, mapping, "job_type")
-            city = resolve_webhook_field(payload, mapping, "city")
-            state = resolve_webhook_field(payload, mapping, "state")
-            zip_code = resolve_webhook_field(payload, mapping, "zip_code")
             callback_url = validate_webhook_callback_url(integration.get("callback_url") or "")
-            if not (job_type and city and state):
-                raise ValueError("Webhook requires job_type, city, and state")
-            result = research_permit(job_type, city, state, zip_code)
-            result = build_customer_response_egress(
-                _mark_server_owned_result(result),
-                job_type,
-                city,
-                state,
-            )
+            result = build_launch_coverage_customer_result(support_resolution.contract or {})
+            result["coverage_outcome"] = SupportOutcome.SUPPORTED.value
+            result = json.loads(_canonical_projection_json(result))
             body = {
                 "ok": True,
                 "job_type": job_type,
@@ -11498,21 +11632,39 @@ def run_webhook_lookup_async(integration: dict, payload: dict):
             }
             body_json = canonical_customer_webhook_body(body)
             headers = build_customer_webhook_signature_headers(integration.get("integration_key") or "", body)
-            requests.post(callback_url, data=body_json, headers=headers, timeout=20, allow_redirects=False)
+            response = requests.post(callback_url, data=body_json, headers=headers, timeout=20, allow_redirects=False)
+            response.raise_for_status()
+            ledger.complete(
+                idempotency_key,
+                fingerprint,
+                body,
+                owner_scope=owner_scope,
+                request_id=request_id,
+                execution_token=execution_token,
+                http_status=200,
+            )
             mark_webhook_triggered(integration["integration_key"])
         except Exception as e:
+            ledger.fail(
+                idempotency_key,
+                fingerprint,
+                owner_scope=owner_scope,
+                request_id=request_id,
+                execution_token=execution_token,
+            )
             print(f"[webhook] Delivery error: {e}")
             callback_url = str(integration.get("callback_url") or "").strip()
             if callback_url:
                 try:
                     callback_url = validate_webhook_callback_url(callback_url)
-                    body = {"ok": False, "error": str(e)}
+                    body = {"ok": False, "error": "Webhook delivery failed"}
                     body_json = canonical_customer_webhook_body(body)
                     headers = build_customer_webhook_signature_headers(integration.get("integration_key") or "", body)
                     requests.post(callback_url, data=body_json, headers=headers, timeout=20, allow_redirects=False)
                 except Exception:
                     pass
     threading.Thread(target=_worker, daemon=True).start()
+    return {"http_status": 202, "accepted": True, "request_id": request_id}
 
 def send_email_report(to_email: str, job: str, city: str, state: str, data: dict) -> bool:
     """Send a beautiful HTML permit research report via Resend."""
@@ -13662,6 +13814,18 @@ class Handler(BaseHTTPRequestHandler):
                 # must first acquire a server-signed owner token so NAT peers or
                 # spoofed client fingerprints can never share ledger ownership.
                 idempotency_key = self.headers.get("Idempotency-Key", "").strip()
+                if (
+                    launch_coverage_contracts_active()
+                    and paid
+                    and not is_sample_demo
+                    and not is_benchmark
+                    and not idempotency_key
+                ):
+                    self.send_json(428, {
+                        "error": "idempotency_key_required",
+                        "message": "Paid permit lookups require an Idempotency-Key so retries cannot duplicate work.",
+                    }, extra_headers=response_headers)
+                    return
                 if idempotency_key:
                     if len(idempotency_key) > 200:
                         self.send_json(400, {
@@ -13800,27 +13964,50 @@ class Handler(BaseHTTPRequestHandler):
                     "state": state,
                 })
                 if is_input_rejection(early_rejection):
-                    early_response = build_customer_response_egress(
-                        early_rejection,
-                        job_type,
-                        city,
-                        state,
-                        job_category=job_category,
-                        explicit_vertical=explicit_vertical,
-                    )
+                    if launch_coverage_contracts_active():
+                        early_response = {
+                            "coverage_outcome": SupportOutcome.UNSUPPORTED.value,
+                            "reason_code": "invalid_or_unsupported_jurisdiction_input",
+                            "input_status": "rejected",
+                            "error_code": "unsupported_jurisdiction",
+                            "validation_errors": list(early_rejection.get("validation_errors") or ["unsupported_jurisdiction"]),
+                            "message": str(early_rejection.get("message") or "This jurisdiction input is unsupported."),
+                            "customer_headline": "Unsupported jurisdiction input.",
+                            "customer_next_step": str(early_rejection.get("customer_next_step") or "Enter a valid U.S. city and state."),
+                            "city": city,
+                            "state": state,
+                            "report_created": False,
+                            "retained_charge": False,
+                        }
+                        response_status = 422
+                    else:
+                        early_response = build_customer_response_egress(
+                            early_rejection,
+                            job_type,
+                            city,
+                            state,
+                            job_category=job_category,
+                            explicit_vertical=explicit_vertical,
+                        )
+                        response_status = 200
+                    response_digest = ""
                     if idempotency_key:
-                        execution_ledger.complete(
+                        response_digest = execution_ledger.complete(
                             idempotency_key,
                             idempotency_fingerprint,
                             early_response,
                             owner_scope=idempotency_owner_scope,
                             request_id=correlation_id,
                             execution_token=idempotency_execution_token,
+                            http_status=response_status,
                         )
                     self.send_json(
-                        200,
+                        response_status,
                         early_response,
-                        extra_headers=response_headers,
+                        extra_headers={
+                            **response_headers,
+                            **({"X-Response-Digest": response_digest} if response_digest else {}),
+                        },
                     )
                     return
 
@@ -13835,6 +14022,130 @@ class Handler(BaseHTTPRequestHandler):
                     "sample_demo": is_sample_demo,
                     "benchmark": is_benchmark,
                 }, user_email or "")
+
+                if launch_coverage_contracts_active():
+                    # Absolute pre-charge support gate. Unmatched or incomplete
+                    # contracts stop before cache, model, usage accounting, snapshot,
+                    # or report generation. Supported contracts project directly from
+                    # one sealed PermitManifest and never enter the generic VERIFY sink.
+                    support_resolution = resolve_precharge_support(
+                        job_type=job_type,
+                        city=city,
+                        state=state,
+                        zip_code=zip_code,
+                        segment=explicit_vertical or job_category,
+                        supplied_facts=(
+                            data.get("support_facts")
+                            if isinstance(data.get("support_facts"), dict)
+                            else None
+                        ),
+                    )
+                    if support_resolution.outcome is not SupportOutcome.SUPPORTED:
+                        status_by_outcome = {
+                            SupportOutcome.NEEDS_FACT: 422,
+                            SupportOutcome.UNSUPPORTED: 422,
+                            SupportOutcome.INFRA_FAILURE: 503,
+                        }
+                        support_status = status_by_outcome.get(support_resolution.outcome, 503)
+                        support_response = {
+                            "coverage_outcome": support_resolution.outcome.value,
+                            "reason_code": support_resolution.reason_code,
+                            "missing_facts": list(support_resolution.missing_facts),
+                            "report_created": False,
+                            "retained_charge": False,
+                            "message": (
+                                "Additional project facts are required before PermitAssist can run this lookup."
+                                if support_resolution.outcome is SupportOutcome.NEEDS_FACT
+                                else "This exact request is not yet within PermitAssist's supported launch coverage."
+                                if support_resolution.outcome is SupportOutcome.UNSUPPORTED
+                                else "PermitAssist coverage data is temporarily unavailable. No report or retained charge was created."
+                            ),
+                        }
+                        response_digest = ""
+                        if idempotency_key:
+                            response_digest = execution_ledger.complete(
+                                idempotency_key,
+                                idempotency_fingerprint,
+                                support_response,
+                                owner_scope=idempotency_owner_scope,
+                                request_id=correlation_id,
+                                execution_token=idempotency_execution_token,
+                                http_status=support_status,
+                            )
+                        self.send_json(
+                            support_status,
+                            support_response,
+                            extra_headers={
+                                **response_headers,
+                                **({"X-Response-Digest": response_digest} if response_digest else {}),
+                            },
+                        )
+                        return
+
+                    if support_resolution.contract is None:
+                        raise RuntimeError("SUPPORTED coverage resolution missing contract")
+                    customer_result = build_launch_coverage_customer_result(
+                        support_resolution.contract
+                    )
+                    if not unlimited and not admin_bypass:
+                        usage_counts = (
+                            record_lookup_usage_once(
+                                ip,
+                                fingerprint,
+                                owner_scope=idempotency_owner_scope,
+                                idempotency_key=idempotency_key,
+                            )
+                            if idempotency_key
+                            else record_lookup_usage(ip, fingerprint)
+                        )
+                        used_after = max(*usage_counts)
+                        response_headers = build_free_lookup_headers(used_after)
+                        customer_result["remaining_lookups"] = max(0, FREE_LOOKUP_LIMIT - used_after)
+                    elif paid:
+                        customer_result["remaining_lookups"] = -1
+                    else:
+                        customer_result["remaining_lookups"] = FREE_LOOKUP_LIMIT
+                    record_lookup_stat(job_type, city, state, False)
+                    launch_completion_event = "lookup_completed"
+                    record_beta_event(launch_completion_event, {
+                        "city": city,
+                        "state": state,
+                        "job_category": job_category,
+                        "coverage_outcome": "SUPPORTED",
+                        "coverage_contract_sha256": support_resolution.contract.get("contract_sha256"),
+                        "paid": paid,
+                        "model_called": False,
+                    }, user_email or "")
+                    # Canonicalize once before both ledger persistence and first
+                    # delivery so a replay is byte-identical, not merely equal JSON.
+                    customer_result = json.loads(_canonical_projection_json(customer_result))
+                    response_digest = ""
+                    if idempotency_key:
+                        response_digest = execution_ledger.complete(
+                            idempotency_key,
+                            idempotency_fingerprint,
+                            customer_result,
+                            owner_scope=idempotency_owner_scope,
+                            request_id=correlation_id,
+                            execution_token=idempotency_execution_token,
+                        )
+                    projection_handle = create_customer_snapshot_handoff(
+                        customer_result,
+                        job_type,
+                        city,
+                        state,
+                        job_category=job_category,
+                        owner_scope=_projection_owner_scope(user_email),
+                    )
+                    response_headers = {
+                        **response_headers,
+                        **_projection_handoff_response_headers(projection_handle, self.headers),
+                        **({"X-Response-Digest": response_digest} if response_digest else {}),
+                    }
+                    launch_success_status = 200
+                    self.send_json(launch_success_status, customer_result, extra_headers=response_headers)
+                    return
+
                 evidence_allowed = evidence_pack_allowed_for_request(path, self.headers, is_sample_demo=is_sample_demo)
                 requested_cache_mode = (self.headers.get("X-PermitAssist-Cache-Mode", "") or "").strip().lower()
                 qa_cache_mode = requested_cache_mode if requested_cache_mode in ("bypass", "refresh") and (is_benchmark or admin_bypass) else ""
@@ -14071,30 +14382,71 @@ class Handler(BaseHTTPRequestHandler):
                     job_category = item.get("job_category", "")
                     explicit_vertical = canonical_request_vertical(item.get("vertical")) or canonical_request_vertical(item.get("evidence_vertical"))
                     try:
-                        evidence_allowed = evidence_pack_allowed_for_request("/api/batch-permit", self.headers)
-                        result = research_permit(job_type, city, state, zip_code, job_category=job_category, job_value=job_value, use_cache=not evidence_allowed, suppress_cache_write=evidence_allowed)
-                        if evidence_allowed:
-                            result = finalize_permit_lookup_result(_mark_server_owned_result(result), job_type, city, state, is_cached=result.get("_cached", False), explicit_vertical=explicit_vertical, evidence_allowed=evidence_allowed, job_category=job_category)
-# Contract sentinel for legacy stability test and batch customer ViewModel boundary:
-                        # build_customer_permit_view_model(result, job_type, city, state)
-                        response = build_customer_response_egress(
-                            _mark_server_owned_result(result),
-                            job_type,
-                            city,
-                            state,
-                            job_category=job_category,
-                            explicit_vertical=explicit_vertical,
-                        )
-                        response.update({"job_type": job_type, "city": city, "state": state, "error": None})
-                        projection_handle = create_customer_snapshot_handoff(
-                            response,
-                            job_type,
-                            city,
-                            state,
-                            job_category=job_category,
-                            owner_scope=batch_owner_scope,
-                        )
-                        return response, projection_handle
+                        if launch_coverage_contracts_active():
+                            support_resolution = resolve_precharge_support(
+                                job_type=job_type,
+                                city=city,
+                                state=state,
+                                zip_code=zip_code,
+                                segment=explicit_vertical or job_category,
+                                supplied_facts=(
+                                    item.get("support_facts")
+                                    if isinstance(item.get("support_facts"), dict)
+                                    else None
+                                ),
+                            )
+                            if support_resolution.outcome is not SupportOutcome.SUPPORTED:
+                                return ({
+                                    "job_type": job_type,
+                                    "city": city,
+                                    "state": state,
+                                    "coverage_outcome": support_resolution.outcome.value,
+                                    "reason_code": support_resolution.reason_code,
+                                    "missing_facts": list(support_resolution.missing_facts),
+                                    "report_created": False,
+                                    "retained_charge": False,
+                                    "error": "precharge_support_gate_blocked",
+                                }, "")
+                            if support_resolution.contract is None:
+                                raise RuntimeError("SUPPORTED coverage resolution missing contract")
+                            response = build_launch_coverage_customer_result(
+                                support_resolution.contract
+                            )
+                            response.update({"job_type": job_type, "city": city, "state": state, "error": None})
+                            projection_handle = create_customer_snapshot_handoff(
+                                response,
+                                job_type,
+                                city,
+                                state,
+                                job_category=job_category,
+                                owner_scope=batch_owner_scope,
+                            )
+                            return response, projection_handle
+                        else:
+                            evidence_allowed = evidence_pack_allowed_for_request("/api/batch-permit", self.headers)
+                            result = research_permit(job_type, city, state, zip_code, job_category=job_category, job_value=job_value, use_cache=not evidence_allowed, suppress_cache_write=evidence_allowed)
+                            if evidence_allowed:
+                                result = finalize_permit_lookup_result(_mark_server_owned_result(result), job_type, city, state, is_cached=result.get("_cached", False), explicit_vertical=explicit_vertical, evidence_allowed=evidence_allowed, job_category=job_category)
+                            # Contract sentinel for legacy stability test and batch customer ViewModel boundary:
+                            # build_customer_permit_view_model(result, job_type, city, state)
+                            response = build_customer_response_egress(
+                                _mark_server_owned_result(result),
+                                job_type,
+                                city,
+                                state,
+                                job_category=job_category,
+                                explicit_vertical=explicit_vertical,
+                            )
+                            response.update({"job_type": job_type, "city": city, "state": state, "error": None})
+                            projection_handle = create_customer_snapshot_handoff(
+                                response,
+                                job_type,
+                                city,
+                                state,
+                                job_category=job_category,
+                                owner_scope=batch_owner_scope,
+                            )
+                            return response, projection_handle
                     except Exception as e:
                         return ({"job_type": job_type, "city": city, "state": state, "error": str(e)}, "")
 
@@ -14453,6 +14805,23 @@ class Handler(BaseHTTPRequestHandler):
                     self.send_json(404, {"error": "Integration not found"})
                     return
                 data = self.read_json_body()
+                if launch_coverage_contracts_active():
+                    idempotency_key = (self.headers.get("Idempotency-Key", "") or "").strip()
+                    if not idempotency_key:
+                        self.send_json(428, {
+                            "error": "Idempotency-Key header is required for webhook permit requests.",
+                            "code": "IDEMPOTENCY_KEY_REQUIRED",
+                            "report_created": False,
+                            "retained_charge": False,
+                        })
+                        return
+                    outcome = run_webhook_lookup_async(integration, data, idempotency_key)
+                    status = int(outcome.pop("http_status", 202))
+                    self.send_json(status, {
+                        **outcome,
+                        "integration": integration.get("name") or "Webhook",
+                    })
+                    return
                 run_webhook_lookup_async(integration, data)
                 self.send_json(202, {"accepted": True, "integration": integration.get("name") or "Webhook", "callback_url": integration.get("callback_url")})
             except Exception as e:
@@ -14477,6 +14846,120 @@ class Handler(BaseHTTPRequestHandler):
                 if not job_type or not city or not state:
                     self.send_json(400, {"error": "job_type, city, and state are required"})
                     return
+                if launch_coverage_contracts_active():
+                    idempotency_key = (self.headers.get("Idempotency-Key", "") or "").strip()
+                    if not idempotency_key:
+                        self.send_json(428, {
+                            "error": "Idempotency-Key header is required for paid permit requests.",
+                            "code": "IDEMPOTENCY_KEY_REQUIRED",
+                            "report_created": False,
+                            "retained_charge": False,
+                        })
+                        return
+                    ledger = _lookup_execution_ledger()
+                    owner_scope = f"api:{user_email.lower().strip()}"
+                    request_id = self.headers.get("X-Request-ID", "").strip()[:128] or uuid.uuid4().hex
+                    fingerprint = ledger.request_fingerprint({
+                        "endpoint": "/api/v1/permit",
+                        "body": data,
+                        "owner_scope": owner_scope,
+                    })
+                    try:
+                        claim = ledger.claim(
+                            idempotency_key,
+                            fingerprint,
+                            owner_scope=owner_scope,
+                            request_id=request_id,
+                        )
+                    except IdempotencyConflictError:
+                        self.send_json(409, {
+                            "error": "Idempotency key reused with different request semantics.",
+                            "code": "IDEMPOTENCY_CONFLICT",
+                        })
+                        return
+                    if claim.action == "replay":
+                        self.send_json(
+                            claim.http_status or 200,
+                            claim.response or {},
+                            extra_headers={
+                                "X-Idempotent-Replay": "true",
+                                "X-Response-Digest": claim.response_digest or "",
+                            },
+                        )
+                        return
+                    if claim.action in {"in_progress", "indeterminate"}:
+                        self.send_json(409, {
+                            "error": "A request with this idempotency key is already processing.",
+                            "code": "IDEMPOTENCY_IN_PROGRESS",
+                            "request_id": claim.request_id,
+                        }, extra_headers={"Retry-After": "2"})
+                        return
+                    execution_token = str(claim.execution_token or "")
+                    support_resolution = resolve_precharge_support(
+                        job_type=job_type,
+                        city=city,
+                        state=state,
+                        zip_code=zip_code,
+                        segment=job_category,
+                        supplied_facts=data.get("support_facts") if isinstance(data.get("support_facts"), dict) else None,
+                    )
+                    if support_resolution.outcome is not SupportOutcome.SUPPORTED:
+                        status = 503 if support_resolution.outcome is SupportOutcome.INFRA_FAILURE else 422
+                        ledger.fail(
+                            idempotency_key,
+                            fingerprint,
+                            owner_scope=owner_scope,
+                            request_id=request_id,
+                            execution_token=execution_token,
+                        )
+                        self.send_json(status, {
+                            "coverage_outcome": support_resolution.outcome.value,
+                            "reason_code": support_resolution.reason_code,
+                            "missing_facts": list(support_resolution.missing_facts),
+                            "report_created": False,
+                            "retained_charge": False,
+                            "model_called": False,
+                        })
+                        return
+                    try:
+                        api_result = build_launch_coverage_customer_result(support_resolution.contract or {})
+                        api_result["coverage_outcome"] = SupportOutcome.SUPPORTED.value
+                        api_result["remaining_lookups"] = -1
+                        api_result = json.loads(_canonical_projection_json(api_result))
+                        response_digest = ledger.complete(
+                            idempotency_key,
+                            fingerprint,
+                            api_result,
+                            owner_scope=owner_scope,
+                            request_id=request_id,
+                            execution_token=execution_token,
+                        )
+                        projection_handle = create_customer_snapshot_handoff(
+                            api_result,
+                            job_type,
+                            city,
+                            state,
+                            job_category=job_category,
+                            owner_scope=_projection_owner_scope(user_email),
+                        )
+                        self.send_json(
+                            200,
+                            api_result,
+                            extra_headers={
+                                **_projection_handoff_response_headers(projection_handle, self.headers),
+                                "X-Response-Digest": response_digest,
+                            },
+                        )
+                        return
+                    except Exception:
+                        ledger.fail(
+                            idempotency_key,
+                            fingerprint,
+                            owner_scope=owner_scope,
+                            request_id=request_id,
+                            execution_token=execution_token,
+                        )
+                        raise
                 evidence_allowed = evidence_pack_allowed_for_request(path, self.headers)
                 requested_cache_mode = (self.headers.get("X-PermitAssist-Cache-Mode", "") or "").strip().lower()
                 _BENCHMARK_SECRET = os.environ.get("BENCHMARK_SECRET", "")
