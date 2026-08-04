@@ -5468,7 +5468,6 @@ async function deleteJobItem(id) {
 }
 
 // ── Init ─────────────────────────────────────────────────────────────────────
-document.getElementById('lookup-btn').onclick = doLookupWithOffline;
 ['query', 'address', 'city', 'zip'].forEach(id => {
   const el = document.getElementById(id);
   if (el) el.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); doLookupWithOffline(); } });
